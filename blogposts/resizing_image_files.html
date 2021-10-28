@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Renomad</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8"/>
+    <link rel="icon" type="image/png" href="../favicon.ico" sizes="16x16">
+    <link rel="stylesheet" href="../main.css" />
+  </head>
+
+  <body>
+
+    <div class="prime">
+      <div class="secondary">
+
+        <div class="content banner">
+          <div class="content_interior" >
+            <h2 class="titleheader"><a href="../index.html">Renomad</a></h2>
+            <p class="quote">"I never knew words could be so confusing,"
+              Milo said to Tock as he bent down to scratch the dog's ear.
+              "Only when you use a lot to say a little," answered Tock.
+              Milo thought this was quite the wisest thing he'd heard all
+              day.
+              <br />
+              -- Norton Juster, <em>The Phantom Tollbooth</em>
+            </p>
+          </div>
+        </div>
+
+        <div class="content nav">
+          <div class="content_interior" >
+            <nav>
+              <ul class="navmenu">
+
+                <li class="menu_item" >
+                  <a class="typ_link " href="../index.html" >
+                    Blog
+                  </a>
+                </li>
+
+                <li class="menu_item" >
+                  <a class="typ_link " href="../play.html" >
+                    Play
+                  </a>
+                </li>
+
+                <li class="menu_item" >
+                  <a class="typ_link " href="../work.html" >
+                    Work
+                  </a>
+                </li>
+
+              </ul>
+            </nav>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="content_interior" >
+            <!-- content goes here.  this is the end of the header -->
+
+<div class="entry">
+  <p class="content-header">
+  Resizing sixteen thousand images
+  </p>
+  <div class="date">August 5, 2018</div>
+  <p class="content-body">
+  Over the years I have collected or taken thousands of photographs,
+  ranging in size up to about ten megabytes.  The large files are
+  unnecessarily large for simply printing 4x6's, not to mention that
+  putting those online becomes cumbersome.
+	</p>
+
+  <p class="content-body">
+  In order to solve this problem, I decided to write some scripts that
+  would do everything for me.
+	</p>
+
+  <p class="content-body">
+  Here's what I came up with (after many fits and starts):
+	</p>
+  <p class="content-body">
+  Step 1: list all the files
+	</p>
+<pre><code>find . > all_files.txt</code></pre>
+
+  <p class="content-body">
+  Step 2: 
+  <br>
+  split up the list of files into sections (this way, we'll have an
+  indicator of how far we have progressed as we run through our script).  Split
+  into files with 300 lines each:
+	</p>
+<pre><code>split all_files.txt -l300</code></pre>
+
+  <p class="content-body">
+  Step 3: 
+  <br>
+  Write a file we'll run to process our files:
+	</p>
+<pre><code>$ cat go.sh
+#!/usr/bin/bash
+# make newlines the only separator
+# This way, each line in the file will get processed as an entirety.  Otherwise,
+# our loop will break tokens up by whitespace.
+IFS=$'\n'       
+
+# loop through all the split files (consisting of 300 lines each of files to process)
+for x in $(ls x*); do
+  echo "processing $x"
+  # for each line in the file, run "do_convert" on it.  Send stdout and stderr logs to conversion_log.txt
+  (for i in $(cat $x); do do_convert "$i"; done) >>../conversion_log.txt 2>&1
+done
+</code></pre>
+
+  <p class="content-body">
+  Step 4:
+  <br>
+  In our previous code we implied the existence of a program that processes each
+  file: do_convert.  Let's look at that:
+	</p>
+<pre><code>$ cat do_convert
+
+#!/usr/bin/bash
+
+# assign some constants.
+UUID=$(random)
+NEWDIRECTORY="../smallerpics/"
+SUFFIX=$(suffix "$1")
+COUNT_OF_WORD_IMAGE=$(file "$1"|grep -c "image")
+
+echo "inspecting $1"
+if [ "$COUNT_OF_WORD_IMAGE" -gt "0" ]; then
+  echo "converting \"$1\" to $NEWDIRECTORY$UUID.$SUFFIX"
+  
+  # The following line uses "convert" from the Imagemagick suite.
+  # The resize syntax - "800>" - says to make the larger side no more than 800 pixels
+  convert "$1" -resize "800>" $NEWDIRECTORY$UUID.$SUFFIX
+fi
+</code></pre>
+
+  <p class="content-body">
+  Step 5:
+  <br>
+  This file implies the existence of two other files: random, which gives us a
+  uuid (we'll use that as our new filename), and suffix (which gives us the
+  suffix of a file).  Here they are:
+	</p>
+<pre><code>$ cat random
+#!/usr/bin/python
+
+import uuid
+print uuid.uuid4()
+</code></pre>
+<pre><code>$ cat suffix
+#!/usr/bin/python
+
+import re
+import sys
+
+# looks complex, but it's reversing the input, getting text up to the first period,
+# then, reversing that.  Gives us the suffix to nasty stuff like:
+# /a/b/c/blah_blah/ bleh/ foo/ /-/ bar.jpg  
+#    gives us: "jpg"
+print (re.match("^[^.]+", (sys.argv[1][::-1])).group(0))[::-1]
+</code></pre>
+
+  <p class="content-body">
+  Also note that I was using the Imagemagick suite to do the actual image
+  conversions.  The program I used was called "convert"
+	</p>
+
+  <p class="content-body">
+  Step 6:
+  <br>
+  Now we simply run the command.
+	</p>
+
+<pre><code>$ ./go.sh</code></pre>
+
+  <p class="content-body">
+  This will put data into the log file mentioned previously.  It's good to keep
+  an eye on that, as well as what the program is printing on the command line
+  about which file it is processing.  Like I said, it went in fits and starts as
+  I encountered issues.  For example, I didn't have double-quotes around the file
+  I was processing in my scripts at first.  This led to issues when my code would
+  try to parse something having spaces.  Similarly, as mentioned above, I needed
+  to include IFS=$'\n' so my loop would only break on newlines rather than
+  whitespace when processing.
+  </p>
+
+  <p class="content-body">
+  To make videos smaller using ffmpeg, this command line will do the
+  trick.  It uses lib264, which has good video compression, and makes the 
+  video smaller but doesn't ruin its aspect ratio.
+  </p>
+  <pre><code>ffmpeg -i INPUT_FILE -c:v libx264 -s 320x240 -preset veryfast OUTPUT_FILE.mp4</code></pre>
+
+  <p class="content-body">
+  To create tiny-sized thumbnails, where the priority is smallest size with just
+  a sense of the content of the photo.  It uses only 4 colors in the output photo
+  and removes all metadata, highly compresses the file, and makes it 100x100 in size.
+  <p>
+  <pre><code>convert $i -strip -thumbnail "100x100" -dither FloydSteinberg -colors 4 t/$i.png</code></pre>
+
+
+</div>
+
+            <!-- content ends here.  Footer continues below -->
+          </div>
+        </div>
+        <div class="content">
+          <div class="content-interior" >
+            <p>Contact me at byronka (at) msn.com</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </body>
+</html>
+
