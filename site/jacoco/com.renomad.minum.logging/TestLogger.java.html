@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestLogger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.logging</a> &gt; <span class="el_source">TestLogger.java</span></div><h1>TestLogger.java</h1><pre class="source lang-java linenums">package com.renomad.minum.logging;
+
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.utils.MyThread;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * This implementation of {@link Logger} has a few
+ * extra functions that only apply to tests, like {@link #test(String)}
+ */
+public final class TestLogger extends Logger {
+
+private final Queue&lt;String&gt; recentLogLines;
+    public static final int MAX_CACHE_SIZE = 30;
+    private final ReentrantLock loggingLock;
+<span class="fc" id="L21">    private int testCount = 0;</span>
+
+    /**
+     * See {@link TestLogger}
+     */
+    public TestLogger(Constants constants, ExecutorService executorService, String name) {
+<span class="fc" id="L27">        super(constants, executorService, name);</span>
+<span class="fc" id="L28">        this.recentLogLines = new TestLoggerQueue(MAX_CACHE_SIZE);</span>
+<span class="fc" id="L29">        this.loggingLock = new ReentrantLock();</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * A helper to get the string message value out of a
+     * {@link ThrowingSupplier}
+     */
+    private String extractMessage(ThrowingSupplier&lt;String, Exception&gt; msg) {
+        String receivedMessage;
+        try {
+<span class="fc" id="L39">            receivedMessage = msg.get();</span>
+<span class="fc" id="L40">        } catch (Exception ex) {</span>
+<span class="fc" id="L41">            receivedMessage = &quot;EXCEPTION DURING GET: &quot; + ex;</span>
+<span class="fc" id="L42">        }</span>
+<span class="fc" id="L43">        return receivedMessage;</span>
+    }
+
+    /**
+     * Keeps a record of the recently-added log messages, which is
+     * useful for some tests.
+     */
+    private void addToCache(ThrowingSupplier&lt;String, Exception&gt; msg) {
+        // put log messages into the tail of the queue
+<span class="fc" id="L52">        String message = extractMessage(msg);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        String safeMessage = message == null ? &quot;(null message)&quot; : message;</span>
+<span class="fc" id="L54">        recentLogLines.add(safeMessage);</span>
+<span class="fc" id="L55">    }</span>
+
+    @Override
+    public void logDebug(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L59">        loggingLock.lock();</span>
+        try {
+<span class="fc" id="L61">            addToCache(msg);</span>
+<span class="fc" id="L62">            super.logDebug(msg);</span>
+        } finally {
+<span class="fc" id="L64">            loggingLock.unlock();</span>
+        }
+<span class="fc" id="L66">    }</span>
+
+    @Override
+    public void logTrace(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L70">        loggingLock.lock();</span>
+        try {
+<span class="fc" id="L72">            addToCache(msg);</span>
+<span class="fc" id="L73">            super.logTrace(msg);</span>
+        } finally {
+<span class="fc" id="L75">            loggingLock.unlock();</span>
+        }
+<span class="fc" id="L77">    }</span>
+
+    @Override
+    public void logAudit(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L81">        loggingLock.lock();</span>
+        try {
+<span class="fc" id="L83">            addToCache(msg);</span>
+<span class="fc" id="L84">            super.logAudit(msg);</span>
+        } finally {
+<span class="fc" id="L86">            loggingLock.unlock();</span>
+        }
+<span class="fc" id="L88">    }</span>
+
+    @Override
+    public void logAsyncError(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L92">        loggingLock.lock();</span>
+        try {
+<span class="fc" id="L94">            addToCache(msg);</span>
+<span class="fc" id="L95">            super.logAsyncError(msg);</span>
+        } finally {
+<span class="fc" id="L97">            loggingLock.unlock();</span>
+        }
+<span class="fc" id="L99">    }</span>
+
+    /**
+     * Provides an ability to search over the recent past log messages,
+     * case-insensitively.
+     * @param lines number of lines of log messages to look back through,
+     *              up to {@link #MAX_CACHE_SIZE}
+     */
+    public String findFirstMessageThatContains(String value, int lines) {
+<span class="fc" id="L108">        List&lt;String&gt; values = findMessage(value, lines, recentLogLines);</span>
+<span class="fc" id="L109">        List&lt;String&gt; logsBeingSearched = logLinesToSearch(lines, recentLogLines);</span>
+<span class="fc" id="L110">        return checkValidityOfResults(value, values, logsBeingSearched);</span>
+    }
+
+    /**
+     * This is used in {@link #findFirstMessageThatContains(String, int)} to
+     * handle exceptional situations with the results.  Specifically, exceptions
+     * are:
+     * &lt;ol&gt;
+     *    &lt;li&gt;If there were no results found&lt;/li&gt;
+     *    &lt;li&gt;If there were multiple results found&lt;/li&gt;
+     * &lt;/ol&gt;
+     */
+    static String checkValidityOfResults(String value, List&lt;String&gt; values, List&lt;String&gt; recentLogLines) {
+<span class="fc" id="L123">        int size = values.size();</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (size == 0) {</span>
+<span class="fc" id="L125">            throw new TestLoggerException(value + &quot; was not found in \n\t&quot; + String.join(&quot;\n\t&quot;, recentLogLines));</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        } else if (size &gt;= 2) {</span>
+<span class="fc" id="L127">            throw new TestLoggerException(&quot;multiple values of &quot;+value+&quot; found in: &quot; + recentLogLines);</span>
+        } else {
+<span class="fc" id="L129">            return values.getFirst();</span>
+        }
+    }
+
+    /**
+     * Whether the given string exists in the log messages. May
+     * exist multiple times.
+     * @param value a string to search in the log
+     * @param lines how many lines back to examine
+     * @return whether this string was found, even if there
+     *      were multiple places it was found.
+     */
+    public boolean doesMessageExist(String value, int lines) {
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (! findMessage(value, lines, recentLogLines).isEmpty()) {</span>
+<span class="fc" id="L143">            return true;</span>
+        } else {
+<span class="fc" id="L145">            List&lt;String&gt; logsBeingSearched = logLinesToSearch(lines, recentLogLines);</span>
+<span class="fc" id="L146">            throw new TestLoggerException(value + &quot; was not found in \n\t&quot; + String.join(&quot;\n\t&quot;, logsBeingSearched));</span>
+        }
+    }
+
+    /**
+     * Whether the given string exists in the log messages. May
+     * exist multiple times.
+     * @param value a string to search in the log
+     * @return whether or not this string was found, even if there
+     * were multiple places it was found.
+     */
+    public boolean doesMessageExist(String value) {
+<span class="fc" id="L158">        return doesMessageExist(value, 3);</span>
+    }
+
+    static List&lt;String&gt; findMessage(String value, int lines, Queue&lt;String&gt; recentLogLines) {
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        if (lines &gt; MAX_CACHE_SIZE) {</span>
+<span class="fc" id="L163">            throw new TestLoggerException(String.format(&quot;Can only get up to %s lines from the log&quot;, MAX_CACHE_SIZE));</span>
+        }
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (lines &lt;= 0) {</span>
+<span class="fc" id="L166">            throw new TestLoggerException(&quot;number of recent log lines must be a positive number&quot;);</span>
+        }
+<span class="fc" id="L168">        MyThread.sleep(20);</span>
+<span class="fc" id="L169">        var lineList = logLinesToSearch(lines, recentLogLines);</span>
+<span class="fc" id="L170">        return lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
+
+    }
+
+    private static List&lt;String&gt; logLinesToSearch(int lines, Queue&lt;String&gt; recentLogLines) {
+<span class="fc" id="L175">        var fromIndex = Math.max(recentLogLines.size() - lines, 0);</span>
+<span class="fc" id="L176">        return recentLogLines.stream().toList().subList(fromIndex, recentLogLines.size());</span>
+    }
+
+    /**
+     * Looks back through the last 3 log messages for one that
+     * contains the provided value.  Returns the whole line if
+     * found and an exception if not found.
+     * &lt;p&gt;
+     *     See {@link #findFirstMessageThatContains(String, int)} if you
+     *     want to search through more than 3.  However, it is only
+     *     possible to search up to {@link #MAX_CACHE_SIZE}
+     * &lt;/p&gt;
+     */
+    public String findFirstMessageThatContains(String value) {
+<span class="fc" id="L190">        return findFirstMessageThatContains(value, 3);</span>
+    }
+
+    /**
+     * A helper function to log a test title prefixed with &quot;TEST:&quot;
+     * &lt;br&gt;
+     * Also collects data about the previously-run test
+     */
+    public void test(String msg) {
+        // put together some pretty-looking text graphics to show the suiteName of our test in log
+<span class="fc" id="L200">        loggingLock.lock();</span>
+        try {
+<span class="fc" id="L202">            final var baseLength = 11;</span>
+<span class="fc" id="L203">            final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
+
+<span class="fc" id="L205">            loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L206">                testCount += 1;</span>
+<span class="fc" id="L207">                System.out.printf(&quot;%n+%s+%n| TEST %d: %s |%n+%s+%n%n&quot;, dashes, testCount, msg, dashes);</span>
+<span class="fc" id="L208">                recentLogLines.add(msg);</span>
+<span class="fc" id="L209">            });</span>
+        } finally {
+<span class="fc" id="L211">            loggingLock.unlock();</span>
+        }
+<span class="fc" id="L213">    }</span>
+
+    public int getTestCount() {
+<span class="fc" id="L216">        return testCount;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L221">        return &quot;TestLogger using queue: &quot; + super.loggingActionQueue.toString();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

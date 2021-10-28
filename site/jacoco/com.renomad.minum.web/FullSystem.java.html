@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FullSystem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">FullSystem.java</span></div><h1>FullSystem.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import com.renomad.minum.queue.ActionQueueKiller;
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.logging.Logger;
+import com.renomad.minum.security.ITheBrig;
+import com.renomad.minum.security.TheBrig;
+import com.renomad.minum.state.Context;
+import com.renomad.minum.utils.*;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * This class is responsible for kicking off the entire system.
+ * In particular, look at {@link #start()}
+ */
+public final class FullSystem {
+
+    final ILogger logger;
+    private final Constants constants;
+    private final FileUtils fileUtils;
+    private IServer server;
+    private WebFramework webFramework;
+    private IServer sslServer;
+    Thread shutdownHook;
+    private ITheBrig theBrig;
+    final ExecutorService es;
+    private WebEngine webEngine;
+
+    /**
+     * This flag gives us some control if we need
+     * to call {@link #shutdown()} manually, so close()
+     * doesn't get run again when the shutdownHook
+     * tries calling it.  This is primarily an issue just during
+     * testing.
+     */
+    private boolean hasShutdown;
+
+    private final Context context;
+
+<span class="fc" id="L49">    public FullSystem(Context context) {</span>
+<span class="fc" id="L50">        this.logger = context.getLogger();</span>
+<span class="fc" id="L51">        this.constants = context.getConstants();</span>
+<span class="fc" id="L52">        this.fileUtils = new FileUtils(logger, constants);</span>
+<span class="fc" id="L53">        this.es = context.getExecutorService();</span>
+<span class="fc" id="L54">        this.context = context;</span>
+<span class="fc" id="L55">        context.setFullSystem(this);</span>
+<span class="fc" id="L56">    }</span>
+
+    /**
+     * Builds a context object that is appropriate as a
+     * parameter to constructing a {@link FullSystem}
+     */
+    public static Context buildContext() {
+<span class="fc" id="L63">        var constants = new Constants();</span>
+<span class="fc" id="L64">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
+<span class="fc" id="L65">        var logger = new Logger(constants, executorService, &quot;primary logger&quot;);</span>
+
+<span class="fc" id="L67">        var context = new Context(executorService, constants);</span>
+<span class="fc" id="L68">        context.setLogger(logger);</span>
+
+<span class="fc" id="L70">        return context;</span>
+    }
+
+    /**
+     * Expected entry point for typical system instantiation
+     */
+    public static FullSystem initialize() {
+<span class="fc" id="L77">        var context = buildContext();</span>
+<span class="fc" id="L78">        var fullSystem = new FullSystem(context);</span>
+<span class="fc" id="L79">        return fullSystem.start();</span>
+    }
+
+    /**
+     * Kicks off the various bits and pieces.
+     * 
+     * &lt;p&gt;
+     *     There's a number of components to be built and run
+     *     to get this application up and running.  Feel free
+     *     to peruse this method's code to get a sense of it.
+     * &lt;/p&gt;
+     * 
+     */
+    public FullSystem start() {
+        // create a file in our current working directory to indicate we are running
+<span class="fc" id="L94">        createSystemRunningMarker();</span>
+
+        // set up an action to take place if the user shuts us down
+<span class="fc" id="L97">        addShutdownHook();</span>
+        
+        // Add useful startup info to the logs
+<span class="fc" id="L100">        String serverComment = &quot;at http://&quot; + constants.hostName + &quot;:&quot; + constants.serverPort + &quot; and https://&quot; + constants.hostName + &quot;:&quot; + constants.secureServerPort;</span>
+<span class="fc" id="L101">        logger.logDebug(() -&gt; &quot; *** Minum is starting &quot;+serverComment+&quot; ***&quot;);</span>
+        
+        // instantiate our security code
+<span class="fc" id="L104">        theBrig = new TheBrig(context).initialize();</span>
+        
+        // the web framework handles the HTTP communications
+<span class="fc" id="L107">        webFramework = new WebFramework(context);</span>
+
+        // kick off the servers - low level internet handlers
+<span class="fc" id="L110">        webEngine = new WebEngine(context, webFramework);</span>
+<span class="fc" id="L111">        server = webEngine.startServer();</span>
+<span class="fc" id="L112">        sslServer = webEngine.startSslServer();</span>
+
+        // document how long to start up the system
+<span class="fc" id="L115">        var now = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;));</span>
+<span class="fc" id="L116">        var nowMillis = now.toInstant().toEpochMilli();</span>
+<span class="fc" id="L117">        var startupTime = nowMillis - constants.startTime;</span>
+<span class="fc" id="L118">        logger.logDebug(() -&gt; &quot; *** Minum has finished primary startup after &quot; + startupTime + &quot; milliseconds ***&quot;);</span>
+
+<span class="fc" id="L120">        return this;</span>
+    }
+
+    /**
+     * this adds a hook to the Java runtime, so that if the app is running
+     * and a user stops it - by pressing ctrl+c or a unix &quot;kill&quot; command - the
+     * server socket will be shutdown and some messages about closing the server
+     * will log
+     */
+    private void addShutdownHook() {
+<span class="fc" id="L130">        shutdownHook = new Thread(ThrowingRunnable.throwingRunnableWrapper(this::shutdown, logger));</span>
+<span class="fc" id="L131">        Runtime.getRuntime().addShutdownHook(shutdownHook);</span>
+<span class="fc" id="L132">    }</span>
+
+    /**
+     * this saves a file to the home directory, SYSTEM_RUNNING,
+     * that will indicate the system is active
+     */
+    private void createSystemRunningMarker() {
+<span class="fc" id="L139">        fileUtils.writeString(Path.of(&quot;SYSTEM_RUNNING&quot;), &quot;This file serves as a marker to indicate the system is running.\n&quot;);</span>
+<span class="fc" id="L140">        new File(&quot;SYSTEM_RUNNING&quot;).deleteOnExit();</span>
+<span class="fc" id="L141">    }</span>
+
+    IServer getServer() {
+<span class="fc" id="L144">        return server;</span>
+    }
+
+    IServer getSslServer() {
+<span class="fc" id="L148">        return sslServer;</span>
+    }
+
+    public WebFramework getWebFramework() {
+<span class="fc" id="L152">        return webFramework;</span>
+    }
+
+    public ITheBrig getTheBrig() {
+<span class="fc" id="L156">        return theBrig;</span>
+    }
+
+    public Context getContext() {
+<span class="fc" id="L160">        return context;</span>
+    }
+
+    WebEngine getWebEngine() {
+<span class="fc" id="L164">        return webEngine;</span>
+    }
+
+    public void shutdown() {
+
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (!hasShutdown) {</span>
+<span class="fc" id="L170">            logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L171">            closeCore(logger, context, server, sslServer, this.toString());</span>
+<span class="fc" id="L172">            hasShutdown = true;</span>
+        }
+<span class="fc" id="L174">    }</span>
+
+    /**
+     * The core code for closing resources
+     * @param fullSystemName the name of this FullSystem, in cases where several are running concurrently
+     */
+    static void closeCore(ILogger logger, Context context, IServer server, IServer sslServer, String fullSystemName) {
+        try {
+<span class="fc" id="L182">            logger.logDebug(() -&gt; &quot;Received shutdown command&quot;);</span>
+<span class="fc" id="L183">            logger.logDebug(() -&gt; &quot; Stopping the server: &quot; + server);</span>
+<span class="fc" id="L184">            server.close();</span>
+<span class="fc" id="L185">            logger.logDebug(() -&gt; &quot; Stopping the SSL server: &quot; + server);</span>
+<span class="fc" id="L186">            sslServer.close();</span>
+<span class="fc" id="L187">            logger.logDebug(() -&gt; &quot;Killing all the action queues: &quot; + context.getActionQueueState().aqQueueAsString());</span>
+<span class="fc" id="L188">            new ActionQueueKiller(context).killAllQueues();</span>
+<span class="fc" id="L189">            logger.logDebug(() -&gt; String.format(</span>
+<span class="fc" id="L190">                    &quot;%s %s says: Goodbye world!%n&quot;, TimeUtils.getTimestampIsoInstant(), fullSystemName));</span>
+<span class="fc" id="L191">        } catch (Exception e) {</span>
+<span class="fc" id="L192">            throw new WebServerException(e);</span>
+<span class="fc" id="L193">        }</span>
+<span class="fc" id="L194">    }</span>
+
+    /**
+     * A blocking call for our multi-threaded application.
+     * &lt;p&gt;
+     * This method is needed because the entire application is
+     * multi-threaded.  Let me help contextualize the problem
+     * for you:
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     For this application, multi-threaded means that we
+     *     are wrapping our code in {@link Thread} classes and
+     *     having them run using a {@link ExecutorService}.  It's
+     *     sort of like giving instructions to someone else to carry
+     *     out the work and sending them away, trusting the work will
+     *     get done, rather than doing it yourself.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     But, since our entire system is done this way, once we
+     *     have sent all our threads on their way, there's nothing
+     *     left for us to do! Continuing the analogy, it is like
+     *     our whole job is to give other people instructions, and
+     *     then just wait for them to return.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     That's the purpose of this method.  It's to wait for
+     *     the return.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     It's probably best to call this method as one of the
+     *     last statements in the main method, so it is clear where
+     *     execution is blocking.
+     * &lt;/p&gt;
+     */
+    public void block() {
+<span class="fc" id="L229">        blockCore(this.server, this.sslServer);</span>
+<span class="fc" id="L230">    }</span>
+
+    static void blockCore(IServer server, IServer sslServer) {
+        try {
+<span class="fc" id="L234">            server.getCentralLoopFuture().get();</span>
+<span class="fc" id="L235">            sslServer.getCentralLoopFuture().get();</span>
+<span class="fc" id="L236">        } catch (InterruptedException | ExecutionException | CancellationException ex) {</span>
+<span class="fc" id="L237">            Thread.currentThread().interrupt();</span>
+<span class="fc" id="L238">            throw new WebServerException(ex);</span>
+<span class="fc" id="L239">        }</span>
+<span class="fc" id="L240">    }</span>
+
+    /**
+     * Intentionally return just the default object toString, this is only used
+     * to differentiate between multiple instances in memory.
+     */
+    @Override
+    public String toString() {
+<span class="fc" id="L248">        return super.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

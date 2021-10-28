@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Server.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">Server.java</span></div><h1>Server.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.security.ITheBrig;
+import com.renomad.minum.state.Context;
+import com.renomad.minum.utils.ConcurrentSet;
+import com.renomad.minum.utils.StacktraceUtils;
+import com.renomad.minum.utils.ThrowingRunnable;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
+/**
+ * The purpose here is to make it marginally easier to
+ * work with a ServerSocket.
+ * &lt;p&gt;
+ * First, instantiate this class using a running serverSocket
+ * Then, by running the start method, we gain access to
+ * the server's socket.  This way we can easily test / control
+ * the server side but also tie it in with an ExecutorService
+ * for controlling lots of server threads.
+ */
+final class Server implements IServer {
+    private final ServerSocket serverSocket;
+    private final SetOfSws setOfSWs;
+    private final ExecutorService es;
+    private final HttpServerType serverType;
+    private final ILogger logger;
+    private final String serverName;
+    private final ITheBrig theBrig;
+    private final Constants constants;
+    private final WebFramework webFramework;
+
+    /**
+     * This is the future returned when we submitted the
+     * thread for the central server loop to the ExecutorService
+     */
+    private Future&lt;?&gt; centralLoopFuture;
+
+<span class="fc" id="L44">    Server(ServerSocket ss, Context context, String serverName, ITheBrig theBrig, WebFramework webFramework, ExecutorService es, HttpServerType serverType) {</span>
+<span class="fc" id="L45">        this.serverSocket = ss;</span>
+<span class="fc" id="L46">        this.logger = context.getLogger();</span>
+<span class="fc" id="L47">        this.constants = context.getConstants();</span>
+<span class="fc" id="L48">        this.webFramework = webFramework;</span>
+<span class="fc" id="L49">        this.serverName = serverName;</span>
+<span class="fc" id="L50">        this.theBrig = theBrig;</span>
+<span class="fc" id="L51">        setOfSWs = new SetOfSws(new ConcurrentSet&lt;&gt;(), logger, serverName);</span>
+<span class="fc" id="L52">        this.es = es;</span>
+<span class="fc" id="L53">        this.serverType = serverType;</span>
+<span class="fc" id="L54">    }</span>
+
+    @Override
+    public void start() {
+<span class="fc" id="L58">        ThrowingRunnable serverCode = buildMainServerLoop(es);</span>
+<span class="fc" id="L59">        Runnable t = ThrowingRunnable.throwingRunnableWrapper(serverCode, logger);</span>
+<span class="fc" id="L60">        this.centralLoopFuture = es.submit(t);</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * This code is the innermost loop of the server, waiting for incoming
+     * connections and then delegating their handling off to a handler.
+     *
+     * @param es         The ExecutorService helping us with the threads
+     */
+    private ThrowingRunnable buildMainServerLoop(ExecutorService es) {
+<span class="fc" id="L70">        return () -&gt; {</span>
+<span class="fc" id="L71">            Thread.currentThread().setName(&quot;Main Server&quot;);</span>
+            try {
+                // yes, this infinite loop can only exit by an exception.  But this is
+                // the beating heart of a server, and to the best of my current knowledge,
+                // when a server socket is force-closed it's going to throw an exception, and
+                // that's just part of its life cycle
+                //noinspection InfiniteLoopStatement
+                while (true) {
+<span class="fc" id="L79">                    logger.logTrace(() -&gt; serverName + &quot; waiting to accept connection&quot;);</span>
+<span class="fc" id="L80">                    Socket freshSocket = serverSocket.accept();</span>
+<span class="fc" id="L81">                    ISocketWrapper sw = new SocketWrapper(freshSocket, this, logger, constants.socketTimeoutMillis, constants.hostName);</span>
+<span class="fc" id="L82">                    logger.logTrace(() -&gt; String.format(&quot;client connected from %s&quot;, sw.getRemoteAddrWithPort()));</span>
+<span class="fc" id="L83">                    setOfSWs.add(sw);</span>
+<span class="fc" id="L84">                    ThrowingRunnable innerServerCode = this.webFramework.makePrimaryHttpHandler(sw, theBrig);</span>
+<span class="fc" id="L85">                    Runnable task = ThrowingRunnable.throwingRunnableWrapper(innerServerCode, logger);</span>
+<span class="fc" id="L86">                    es.submit(task);</span>
+<span class="fc" id="L87">                }</span>
+<span class="fc" id="L88">            } catch (IOException ex) {</span>
+<span class="fc" id="L89">                handleServerException(ex, logger);</span>
+            }
+<span class="fc" id="L91">        };</span>
+    }
+
+    static void handleServerException(IOException ex, ILogger logger) {
+<span class="fc bfc" id="L95" title="All 4 branches covered.">        if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
+<span class="fc" id="L96">            logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+        }
+<span class="fc" id="L98">    }</span>
+
+    @Override
+    public void close() throws IOException {
+        // close all the running sockets
+<span class="fc" id="L103">        setOfSWs.stopAllServers();</span>
+<span class="fc" id="L104">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+        // close the primary server socket
+<span class="fc" id="L106">        serverSocket.close();</span>
+<span class="fc" id="L107">    }</span>
+
+    @Override
+    public String getHost() {
+<span class="fc" id="L111">        return serverSocket.getInetAddress().getHostAddress();</span>
+    }
+
+    @Override
+    public int getPort() {
+<span class="fc" id="L116">        return serverSocket.getLocalPort();</span>
+    }
+
+    @Override
+    public void removeMyRecord(ISocketWrapper socketWrapper) {
+<span class="fc" id="L121">        setOfSWs.remove(socketWrapper);</span>
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * Returns the name of this server, which is set
+     * when the server is instantiated.
+     */
+    @Override
+    public String toString() {
+<span class="fc" id="L130">        return this.serverName;</span>
+    }
+
+    @Override
+    public Future&lt;?&gt; getCentralLoopFuture() {
+<span class="fc" id="L135">        return centralLoopFuture;</span>
+    }
+
+    @Override
+    public HttpServerType getServerType() {
+<span class="fc" id="L140">        return serverType;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

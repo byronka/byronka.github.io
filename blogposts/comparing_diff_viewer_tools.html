@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Renomad</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8"/>
+    <link rel="icon" type="image/png" href="../favicon.ico" sizes="16x16">
+    <link rel="stylesheet" href="../main.css" />
+  </head>
+
+  <body>
+
+    <div class="prime">
+      <div class="secondary">
+
+        <div class="content banner">
+          <div class="content_interior" >
+            <h2 class="titleheader"><a href="../index.html">Renomad</a></h2>
+          </div>
+        </div>
+
+        <div class="content nav">
+          <div class="content_interior" >
+            <nav>
+              <ul class="navmenu">
+
+                <li class="menu_item" >
+                  <a class="typ_link " href="../index.html" >Blog</a>
+                </li>
+
+                <li class="menu_item" >
+                  <a class="typ_link " href="../play.html" >Play</a>
+                </li>
+
+                <li class="menu_item" >
+                  <a class="typ_link " href="../work.html" >Work</a>
+                </li>
+
+                <li class="menu_item" >
+                  <a class="typ_link " href="../favorite_posts.html" >Favorite posts</a>
+                </li>
+
+              </ul>
+            </nav>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="content_interior" >
+            <!-- content goes here.  this is the end of the header -->
+
+<div class="entry">
+  <p class="content-header">
+    We were comparing diff-viewer tools at work today
+  </p>
+    <div class="date">June 3, 2014</div>
+  <p class="content-body">
+    Say you had a situation where someone changed code and also
+    used line breaks to reformat the code.  Most diff-viewer tools won't
+    handle that situation very well.  They indicate important changes
+    where it is merely a formatting change - an unimportant change, for
+    the most part.
+  </p>
+  <p class="content-body">
+    What we want to is for our diff viewer to ignore the carriage returns
+    as just more white space.
+</p>
+  <p class="content-body">
+    A good way to handle this follows: We know that "C like" languages
+    are often allowed to ignore whitespace (using symbols like
+    parenthesis, semicolon, and curly brackets to demarcate code).  We
+    can simply tokenize the input, put each token on its own line,
+    and then diff that.
+  </p>
+  <p class="content-body">
+    Let's see these files.
+  </p>
+  <p class="content-subheader">
+    test1.c
+</p>
+    <pre><code class=" language-c"
+>int main(int argc, char** argv) {
+  if (a && b && c && d) {
+    printf("Hello diff!\n");
+  }
+}</code></pre>
+  <p class="content-subheader">
+    test2.c
+</p>
+
+<pre><code class=" language-c"
+>int main(int argc, char** argv) {
+  if (a 
+      && b 
+      && c 
+      && d) {
+    printf("Hello diff!\n");
+  }
+}</code></pre>
+
+<p class="content-subheader">
+diff before and after using our tokenizing trick
+</p>
+<pre><code class=" language-bash"
+>$ diff -q  test1.c test2.c
+Files test1.c and test2.c differ
+
+$ diff -q  \
+> <(tr -s '[[:space:]]' '\n' < test2.c) \
+> <(tr -s '[[:space:]]' '\n' < test1.c)
+$ 
+</code></pre>
+
+<p class="content-body">
+  So diff is telling us they don't differ in the second case.
+</p>
+
+</div>
+
+            <!-- content ends here.  Footer continues below -->
+          </div>
+        </div>
+        <div class="content">
+          <div class="content-interior" >
+            <p>Contact me at byronka (at) msn.com</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </body>
+</html>
+

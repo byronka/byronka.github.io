@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Range.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">Range.java</span></div><h1>Range.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+final class Range {
+
+<span class="fc" id="L10">    private static final Pattern rangeHeaderPattern = Pattern.compile(&quot;^bytes=(?&lt;first&gt;[0-9]{0,13})-(?&lt;second&gt;[0-9]{0,13})$&quot;);</span>
+    private final Long rangeFirstPart;
+    private final Long rangeSecondPart;
+    private final Long length;
+    private final Long offset;
+    private final boolean hasRangeHeader;
+
+<span class="fc" id="L17">    public Range(Headers requestHeaders, long fullLength) {</span>
+<span class="fc" id="L18">        List&lt;String&gt; rangeHeaders = requestHeaders.valueByKey(&quot;range&quot;);</span>
+<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (rangeHeaders == null) {</span>
+<span class="fc" id="L20">            hasRangeHeader = false;</span>
+<span class="fc" id="L21">            rangeFirstPart = null;</span>
+<span class="fc" id="L22">            rangeSecondPart = null;</span>
+<span class="fc" id="L23">            length = fullLength;</span>
+<span class="fc" id="L24">            offset = 0L;</span>
+        } else {
+<span class="fc" id="L26">            hasRangeHeader = true;</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">            if (rangeHeaders.size() &gt; 1) {</span>
+<span class="fc" id="L28">                throw new InvalidRangeException(&quot;Error: Request contained more than one Range header&quot;);</span>
+            }
+            // the &quot;Range:&quot; header provides a desired range, and can request multiple ranges.
+            // this server does not currently handle multiple ranges, so if that is requested we
+            // will ignore the range header and return a 200 with the entire contents.
+<span class="fc" id="L33">            Matcher matcher = rangeHeaderPattern.matcher(rangeHeaders.getFirst());</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            if (matcher.matches()) {</span>
+<span class="fc" id="L35">                String firstPart = matcher.group(&quot;first&quot;);</span>
+<span class="fc" id="L36">                String secondPart = matcher.group(&quot;second&quot;);</span>
+
+<span class="fc bfc" id="L38" title="All 2 branches covered.">                if (!firstPart.isEmpty()) {</span>
+<span class="fc" id="L39">                    rangeFirstPart = Long.parseLong(firstPart);</span>
+                } else {
+<span class="fc" id="L41">                    rangeFirstPart = null;</span>
+                }
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">                if (!secondPart.isEmpty()) {</span>
+<span class="fc" id="L45">                    rangeSecondPart = Long.parseLong(secondPart);</span>
+                } else {
+<span class="fc" id="L47">                    rangeSecondPart = null;</span>
+                }
+
+                // options
+                // 1: there's a first and second part
+                // 2: only a second part
+                // 3: only a first part
+                // 4: (invalid) the first part is larger than the second part
+                // 5: (invalid) either of the range values are invalid longs
+<span class="fc bfc" id="L56" title="All 4 branches covered.">                if (rangeFirstPart != null &amp;&amp; rangeSecondPart != null) {</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                    if (rangeFirstPart &gt; rangeSecondPart) {</span>
+<span class="fc" id="L58">                        throw new InvalidRangeException(&quot;Error: The value of the first part of the range was larger than the second.&quot;);</span>
+                    } else {
+<span class="fc" id="L60">                        length = (rangeSecondPart - rangeFirstPart) + 1;</span>
+<span class="fc" id="L61">                        offset = rangeFirstPart;</span>
+                    }
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                } else if (rangeFirstPart != null) {</span>
+<span class="fc" id="L64">                    offset = rangeFirstPart;</span>
+<span class="fc" id="L65">                    length = fullLength - offset;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                } else if (rangeSecondPart != null) {</span>
+<span class="fc" id="L67">                    offset = fullLength - rangeSecondPart;</span>
+<span class="fc" id="L68">                    length = rangeSecondPart;</span>
+                } else {
+<span class="fc" id="L70">                    length = fullLength;</span>
+<span class="fc" id="L71">                    offset = 0L;</span>
+                }
+
+<span class="fc" id="L74">            } else {</span>
+<span class="fc" id="L75">                rangeFirstPart = null;</span>
+<span class="fc" id="L76">                rangeSecondPart = null;</span>
+<span class="fc" id="L77">                length = fullLength;</span>
+<span class="fc" id="L78">                offset = 0L;</span>
+            }
+        }
+<span class="fc" id="L81">    }</span>
+
+    public Long getRangeFirstPart() {
+<span class="fc" id="L84">        return rangeFirstPart;</span>
+    }
+
+    public Long getRangeSecondPart() {
+<span class="fc" id="L88">        return rangeSecondPart;</span>
+    }
+
+    public Long getLength() {
+<span class="fc" id="L92">        return length;</span>
+    }
+
+    public Long getOffset() {
+<span class="fc" id="L96">        return offset;</span>
+    }
+
+    public boolean hasRangeHeader() {
+<span class="fc" id="L100">        return hasRangeHeader;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L106" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L107">        Range range = (Range) o;</span>
+<span class="fc bfc" id="L108" title="All 10 branches covered.">        return hasRangeHeader == range.hasRangeHeader &amp;&amp; Objects.equals(rangeFirstPart, range.rangeFirstPart) &amp;&amp; Objects.equals(rangeSecondPart, range.rangeSecondPart) &amp;&amp; Objects.equals(length, range.length) &amp;&amp; Objects.equals(offset, range.offset);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L113">        return Objects.hash(rangeFirstPart, rangeSecondPart, length, offset, hasRangeHeader);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L118">        return &quot;Range{&quot; +</span>
+                &quot;rangeFirstPart=&quot; + rangeFirstPart +
+                &quot;, rangeSecondPart=&quot; + rangeSecondPart +
+                &quot;, length=&quot; + length +
+                &quot;, offset=&quot; + offset +
+                &quot;, hasRangeHeader=&quot; + hasRangeHeader +
+                '}';
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

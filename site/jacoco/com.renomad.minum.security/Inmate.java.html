@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Inmate.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.security</a> &gt; <span class="el_source">Inmate.java</span></div><h1>Inmate.java</h1><pre class="source lang-java linenums">package com.renomad.minum.security;
+
+
+import com.renomad.minum.database.DbData;
+
+import java.util.Objects;
+
+import static com.renomad.minum.utils.SerializationUtils.deserializeHelper;
+import static com.renomad.minum.utils.SerializationUtils.serializeHelper;
+
+/**
+ * Represents an inmate in our &quot;jail&quot;.  If someone does something we don't like, they do their time here.
+ */
+public final class Inmate extends DbData&lt;Inmate&gt; {
+
+    /**
+     * Builds an empty version of this class, except
+     * that it has a current Context object
+     */
+<span class="fc" id="L20">    public static final Inmate EMPTY = new Inmate(0L, &quot;&quot;, 0L);</span>
+    private Long index;
+    private final String clientId;
+    private final Long releaseTime;
+
+    /**
+     * Represents an inmate in our &quot;jail&quot;.  If someone does something we don't like, they do their time here.
+     * @param clientId a string representation of the client address plus a string representing the offense,
+     *                 for example, &quot;1.2.3.4_vuln_seeking&quot; - 1.2.3.4 was seeking out vulnerabilities.
+     * @param releaseTime the time, in milliseconds from the epoch, at which this inmate will be released
+     *                    from the brig.
+     */
+<span class="fc" id="L32">    public Inmate(Long index, String clientId, Long releaseTime) {</span>
+<span class="fc" id="L33">        this.index = index;</span>
+<span class="fc" id="L34">        this.clientId = clientId;</span>
+<span class="fc" id="L35">        this.releaseTime = releaseTime;</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public long getIndex() {
+<span class="fc" id="L40">        return index;</span>
+    }
+
+    @Override
+    public void setIndex(long index) {
+<span class="fc" id="L45">        this.index = index;</span>
+<span class="fc" id="L46">    }</span>
+
+    @Override
+    public String serialize() {
+<span class="fc" id="L50">        return serializeHelper(index, clientId, releaseTime);</span>
+    }
+
+    @Override
+    public Inmate deserialize(String serializedText) {
+<span class="fc" id="L55">        final var tokens = deserializeHelper(serializedText);</span>
+
+<span class="fc" id="L57">        return new Inmate(</span>
+<span class="fc" id="L58">                Long.parseLong(tokens.get(0)),</span>
+<span class="fc" id="L59">                tokens.get(1),</span>
+<span class="fc" id="L60">                Long.parseLong(tokens.get(2)));</span>
+    }
+
+    public String getClientId() {
+<span class="fc" id="L64">        return clientId;</span>
+    }
+
+    public Long getReleaseTime() {
+<span class="fc" id="L68">        return releaseTime;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L74" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L75">        Inmate inmate = (Inmate) o;</span>
+<span class="fc bfc" id="L76" title="All 6 branches covered.">        return Objects.equals(index, inmate.index) &amp;&amp; Objects.equals(clientId, inmate.clientId) &amp;&amp; Objects.equals(releaseTime, inmate.releaseTime);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L81">        return Objects.hash(index, clientId, releaseTime);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L86">        return &quot;Inmate{&quot; +</span>
+                &quot;index=&quot; + index +
+                &quot;, clientId='&quot; + clientId + '\'' +
+                &quot;, releaseTime=&quot; + releaseTime +
+                '}';
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

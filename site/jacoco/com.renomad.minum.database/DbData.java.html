@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DbData.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.database</a> &gt; <span class="el_source">DbData.java</span></div><h1>DbData.java</h1><pre class="source lang-java linenums">package com.renomad.minum.database;
+
+/**
+ * An abstract data type meant to be used with {@link Db}
+ */
+public abstract class DbData&lt;T&gt;{
+
+    /**
+     * Serializes this object into a string representation.  It will be
+     * the values of this object as strings, encoded with URL encoding,
+     * separated by pipe symbols.
+     * @return this type serialized to a string - use {@link com.renomad.minum.utils.SerializationUtils#serializeHelper(Object[])}
+     */
+    protected abstract String serialize();
+
+    /**
+     * deserializes the text back into an object.  See helper
+     * method {@link com.renomad.minum.utils.SerializationUtils#deserializeHelper(String)} to split a serialized
+     * string into tokens for rebuilding the object.  See
+     * also {@link #serialize()}
+     * @param serializedText the serialized string
+     * @return this type deserialized from a string
+     */
+    protected abstract T deserialize(String serializedText);
+
+    /**
+     * We need an index so that each piece of data is distinct, even if it has the same data.
+     *
+     * @return an index for this data, used to name a file for this particular instance of data
+     */
+    protected abstract long getIndex();
+
+    /**
+     * It is necessary for this method to exist because it is used
+     * by the {@link Db} code to add the new index into this data.
+     * &lt;p&gt;
+     *     Let me unpack that a bit.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     The way our database works, it's expected that when you are creating
+     *     a new instance of data, you won't know its index yet, because that
+     *     is something the database manages for you.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     The index is an {@link java.util.concurrent.atomic.AtomicLong} value
+     *     that allows us to create new data without worrying about race
+     *     conditions between threads (that is, we don't have to worry about
+     *     two threads accidentally adding the same index value to two different datas).
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     This value is also used as the name for the file of this data stored on disk.
+     * &lt;/p&gt;
+     */
+    protected abstract void setIndex(long index);
+
+<span class="fc" id="L56">    protected DbData() {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

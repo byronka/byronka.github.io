@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>LoggingActionQueue.java</h1>
+
+<table class="src">
+
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package com.renomad.minum.logging;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import com.renomad.minum.queue.AbstractActionQueue;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import com.renomad.minum.queue.ActionQueue;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import com.renomad.minum.state.Constants;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import com.renomad.minum.utils.*;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.Map;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.concurrent.*;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>/**</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * This class is very similar to {@link ActionQueue} but is</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * focused on Logging.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * &#60;p&#62;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> *     It is necessary to create independent classes for logging to avoid circular dependencies</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_16'/>
+16
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_16'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * &#60;/p&#62;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_17'/>
+17
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_17'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> */</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_18'/>
+18
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_18'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>final class LoggingActionQueue implements AbstractActionQueue {</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    private final String name;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    private final ExecutorService executorService;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_21'/>
+21
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_21'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    private final LinkedBlockingQueue&#60;RunnableWithDescription&#62; queue;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_22'/>
+22
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_22'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    private Thread queueThread;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_23'/>
+23
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_23'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    private boolean stop = false;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_24'/>
+24
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_24'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    private boolean isStoppedStatus = false;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_25'/>
+25
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_25'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    private final Map&#60;LoggingLevel, Boolean&#62; enabledLogLevels;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_26'/>
+26
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_26'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_27'/>
+27
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_27'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    LoggingActionQueue(String name, ExecutorService executorService, Constants constants) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_28'/>
+28
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_28'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        this.name = name;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_29'/>
+29
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_29'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        this.executorService = executorService;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_30'/>
+30
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_30'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        this.queue = new LinkedBlockingQueue&#60;&#62;();</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_31'/>
+31
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_31'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        this.enabledLogLevels = Logger.convertToMap(constants.logLevels);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_32'/>
+32
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_32'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_33'/>
+33
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_33'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_34'/>
+34
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_34'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    // Regarding the InfiniteLoopStatement - indeed, we expect that the while loop</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_35'/>
+35
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_35'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    // below is an infinite loop unless there&#39;s an exception thrown, that is what it is.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_36'/>
+36
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_36'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_37'/>
+37
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_37'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @SuppressWarnings(&#34;InfiniteLoopStatement&#34;)</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_38'/>
+38
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_38'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public AbstractActionQueue initialize() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_39'/>
+39
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_39'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        Runnable centralLoop = () -&#62; {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_40'/>
+40
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_40'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            Thread.currentThread().setName(name);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_41'/>
+41
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_41'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            this.queueThread = Thread.currentThread();</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_42'/>
+42
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_42'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            try {</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_43'/>
+43
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_43'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                while (true) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_44'/>
+44
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_44'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>                    runAction(queue.take());</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_45'/>
+45
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_45'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                }</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_46'/>
+46
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_46'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            } catch (InterruptedException ex) {</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_47'/>
+47
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_47'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                /*</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_48'/>
+48
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_48'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                this is what we expect to happen.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_49'/>
+49
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_49'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                once this happens, we just continue on.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_50'/>
+50
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_50'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                this only gets called when we are trying to shut everything</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_51'/>
+51
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_51'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                down cleanly</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_52'/>
+52
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_52'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                 */</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_53'/>
+53
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_53'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>                Logger.logHelper(() -&#62; String.format(&#34;%s LoggingActionQueue for %s is stopped.%n&#34;, TimeUtils.getTimestampIsoInstant(), name), LoggingLevel.DEBUG, enabledLogLevels, this);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_54'/>
+54
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_54'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>                Thread.currentThread().interrupt();</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_55'/>
+55
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_55'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            }</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_56'/>
+56
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_56'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        };</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_57'/>
+57
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_57'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        executorService.submit(centralLoop);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_58'/>
+58
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_58'>1</a>
+<span>
+
+1. initialize : replaced return value with null for com/renomad/minum/logging/LoggingActionQueue::initialize &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return this;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_59'/>
+59
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_59'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_60'/>
+60
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_60'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_61'/>
+61
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_61'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    static void runAction(RunnableWithDescription action) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_62'/>
+62
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_62'>1</a>
+<span>
+
+1. runAction : removed call to com/renomad/minum/utils/RunnableWithDescription::run &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        action.run();</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_63'/>
+63
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_63'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_64'/>
+64
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_64'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_65'/>
+65
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_65'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /**</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_66'/>
+66
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_66'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * Adds something to the queue to be processed.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_67'/>
+67
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_67'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_68'/>
+68
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_68'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_69'/>
+69
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_69'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public void enqueue(String description, ThrowingRunnable action) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_70'/>
+70
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_70'>1</a>
+<span>
+
+1. enqueue : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        if (! stop) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_71'/>
+71
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_71'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            queue.add(new RunnableWithDescription(action, description));</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_72'/>
+72
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_72'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        }</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_73'/>
+73
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_73'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_74'/>
+74
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_74'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_75'/>
+75
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_75'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /**</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_76'/>
+76
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_76'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * Stops the action queue</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_77'/>
+77
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_77'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * @param count how many loops to wait before we crash it closed</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_78'/>
+78
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_78'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * @param sleepTime how long to wait in milliseconds between loops</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_79'/>
+79
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_79'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_80'/>
+80
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_80'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_81'/>
+81
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_81'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public void stop(int count, int sleepTime) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_82'/>
+82
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_82'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        Logger.logHelper(() -&#62; String.format(&#34;%s Stopping queue %s%n&#34;, TimeUtils.getTimestampIsoInstant(), this), LoggingLevel.DEBUG, enabledLogLevels, this);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_83'/>
+83
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_83'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        stop = true;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_84'/>
+84
+</td>
+<td class='uncertain'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_84'>2</a>
+<span>
+
+1. stop : negated conditional &rarr; TIMED_OUT<br/>
+
+2. stop : changed conditional boundary &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='uncertain'>        for (int i = 0; i &#60; count; i++) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_85'/>
+85
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_85'>1</a>
+<span>
+
+1. stop : negated conditional &rarr; SURVIVED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='survived'>            if (queue.isEmpty()) return;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_86'/>
+86
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_86'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            Logger.logHelper(() -&#62; String.format(&#34;%s Queue not yet empty, has %d elements. waiting...%n&#34;, TimeUtils.getTimestampIsoInstant(), queue.size()), LoggingLevel.DEBUG, enabledLogLevels, this);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_87'/>
+87
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_87'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            MyThread.sleep(sleepTime);</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_88'/>
+88
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_88'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        }</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_89'/>
+89
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_89'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        isStoppedStatus = true;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_90'/>
+90
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_90'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        Logger.logHelper(() -&#62; String.format(&#34;%s Queue %s has %d elements left but we&#39;re done waiting.  Queue toString: %s&#34;,TimeUtils.getTimestampIsoInstant(), this, queue.size(), queue), LoggingLevel.DEBUG, enabledLogLevels, this);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_91'/>
+91
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_91'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_92'/>
+92
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_92'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_93'/>
+93
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_93'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /**</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_94'/>
+94
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_94'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * This will prevent any new actions being</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_95'/>
+95
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_95'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * queued (by setting the stop flag to true and thus</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_96'/>
+96
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_96'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * causing an exception to be thrown</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_97'/>
+97
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_97'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * when a call is made to [enqueue]) and will</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_98'/>
+98
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_98'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * block until the queue is empty.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_99'/>
+99
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_99'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_100'/>
+100
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_100'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_101'/>
+101
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_101'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public void stop() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_102'/>
+102
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_102'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        stop(5, 20);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_103'/>
+103
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_103'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_104'/>
+104
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_104'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_105'/>
+105
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_105'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public Thread getQueueThread() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_106'/>
+106
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_106'>1</a>
+<span>
+
+1. getQueueThread : replaced return value with null for com/renomad/minum/logging/LoggingActionQueue::getQueueThread &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return queueThread;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_107'/>
+107
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_107'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_108'/>
+108
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_108'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_109'/>
+109
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_109'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_110'/>
+110
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_110'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public LinkedBlockingQueue&#60;RunnableWithDescription&#62; getQueue() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_111'/>
+111
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_111'>1</a>
+<span>
+
+1. getQueue : replaced return value with null for com/renomad/minum/logging/LoggingActionQueue::getQueue &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return queue;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_112'/>
+112
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_112'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_113'/>
+113
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_113'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_114'/>
+114
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_114'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_115'/>
+115
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_115'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public String toString() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_116'/>
+116
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_116'>1</a>
+<span>
+
+1. toString : replaced return value with &#34;&#34; for com/renomad/minum/logging/LoggingActionQueue::toString &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return this.name;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_117'/>
+117
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_117'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_118'/>
+118
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_118'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_119'/>
+119
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_119'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_120'/>
+120
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_120'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public boolean isStopped() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_121'/>
+121
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_121'>2</a>
+<span>
+
+1. isStopped : replaced boolean return with false for com/renomad/minum/logging/LoggingActionQueue::isStopped &rarr; KILLED<br/>
+
+2. isStopped : replaced boolean return with true for com/renomad/minum/logging/LoggingActionQueue::isStopped &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return isStoppedStatus;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_122'/>
+122
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_122'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a54164d_123'/>
+123
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_123'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_58'>58</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_58'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>initialize<br/><b>Killed by : </b>com.renomad.minum.web.RequestTests.test_Request_ToString(com.renomad.minum.web.RequestTests)</span></span> replaced return value with null for com/renomad/minum/logging/LoggingActionQueue::initialize &rarr; KILLED</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_62'>62</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_62'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>runAction<br/><b>Killed by : </b>com.renomad.minum.logging.LoggingActionQueueTests.testErrorWhileRunningAction(com.renomad.minum.logging.LoggingActionQueueTests)</span></span> removed call to com/renomad/minum/utils/RunnableWithDescription::run &rarr; KILLED</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_70'>70</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_70'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>enqueue<br/><b>Killed by : </b>com.renomad.minum.logging.LoggingActionQueueTests.testGetQueue(com.renomad.minum.logging.LoggingActionQueueTests)</span></span> negated conditional &rarr; KILLED</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_84'>84</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_84'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>stop<br/><b>Killed by : </b>com.renomad.minum.database.DbTests.test_Locking(com.renomad.minum.database.DbTests)</span></span> changed conditional boundary &rarr; KILLED</p> <p class='TIMED_OUT'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>stop<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; TIMED_OUT</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_85'>85</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_85'/> 
+
+<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>stop<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; SURVIVED</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_106'>106</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_106'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>getQueueThread<br/><b>Killed by : </b>com.renomad.minum.logging.LoggingActionQueueTests.testGetQueueThread(com.renomad.minum.logging.LoggingActionQueueTests)</span></span> replaced return value with null for com/renomad/minum/logging/LoggingActionQueue::getQueueThread &rarr; KILLED</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_111'>111</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_111'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>getQueue<br/><b>Killed by : </b>com.renomad.minum.logging.LoggingActionQueueTests.testGetQueue(com.renomad.minum.logging.LoggingActionQueueTests)</span></span> replaced return value with null for com/renomad/minum/logging/LoggingActionQueue::getQueue &rarr; KILLED</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_116'>116</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_116'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>toString<br/><b>Killed by : </b>com.renomad.minum.web.RequestTests.test_Request_ToString(com.renomad.minum.web.RequestTests)</span></span> replaced return value with &#34;&#34; for com/renomad/minum/logging/LoggingActionQueue::toString &rarr; KILLED</p> 
+</td>
+</tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a54164d_121'>121</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a54164d_121'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isStopped<br/><b>Killed by : </b>com.renomad.minum.web.FullSystemTests.testFullSystem_EdgeCase_InstantlyClosed(com.renomad.minum.web.FullSystemTests)</span></span> replaced boolean return with false for com/renomad/minum/logging/LoggingActionQueue::isStopped &rarr; KILLED</p> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isStopped<br/><b>Killed by : </b>com.renomad.minum.web.FullSystemTests.testFullSystem(com.renomad.minum.web.FullSystemTests)</span></span> replaced boolean return with true for com/renomad/minum/logging/LoggingActionQueue::isStopped &rarr; KILLED</p> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+
+<li class='mutator'>EMPTY_RETURNS</li>
+
+<li class='mutator'>FALSE_RETURNS</li>
+
+<li class='mutator'>INCREMENTS</li>
+
+<li class='mutator'>INVERT_NEGS</li>
+
+<li class='mutator'>MATH</li>
+
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+
+<li class='mutator'>NULL_RETURNS</li>
+
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+
+<li class='mutator'>TRUE_RETURNS</li>
+
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>com.renomad.minum.web.FullSystemTests.test_BlockCore_RegularException(com.renomad.minum.web.FullSystemTests) (1 ms)</li><li>com.renomad.minum.logging.LoggerTests.testShowWhiteSpace(com.renomad.minum.logging.LoggerTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_Edge_Colon(com.renomad.minum.web.WebFrameworkTests) (0 ms)</li><li>com.renomad.minum.web.InputStreamUtilsTests.testReading_EdgeCase_DifferentCount(com.renomad.minum.web.InputStreamUtilsTests) (2 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_Edge_Directory(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_Edge_CurrentDirectory(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_ReadFile_Edge_ForwardSlashes(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_Edge_OutsideDirectory(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.InputStreamUtilsTests.testReadingLarge(com.renomad.minum.web.InputStreamUtilsTests) (5 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_EdgeCase(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_makePrimaryHttpHandler_throwingIOException(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.database.DbTests.testLoadDataCore_False(com.renomad.minum.database.DbTests) (7 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_Edge_ApplicationOctetStream(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_ImproperlyFormedUrlEncoded(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_JS(com.renomad.minum.web.WebFrameworkTests) (3 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_HTML(com.renomad.minum.web.WebFrameworkTests) (4 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getUrlEncoded_EdgeCase_ComplaintAfterGetBody(com.renomad.minum.web.RequestTests) (8 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_IOException(com.renomad.minum.web.WebFrameworkTests) (17 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_TestLogger_MultipleLogEntriesFound(com.renomad.minum.logging.TestLoggerTests) (27 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_TestLogger_ExceptionThrown(com.renomad.minum.logging.TestLoggerTests) (30 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_TestLogger_NullMessage(com.renomad.minum.logging.TestLoggerTests) (31 ms)</li><li>com.renomad.minum.logging.LoggingActionQueueTests.testErrorWhileRunningAction(com.renomad.minum.logging.LoggingActionQueueTests) (28 ms)</li><li>com.renomad.minum.utils.FileReaderTests.test_readTheFile_NoFileFound(com.renomad.minum.utils.FileReaderTests) (29 ms)</li><li>com.renomad.minum.database.DbTests.testWalkAndLoad(com.renomad.minum.database.DbTests) (14 ms)</li><li>com.renomad.minum.web.RequestLineTests.test_GetRawValue(com.renomad.minum.web.RequestLineTests) (28 ms)</li><li>com.renomad.minum.logging.LoggingActionQueueTests.testGetQueue(com.renomad.minum.logging.LoggingActionQueueTests) (29 ms)</li><li>com.renomad.minum.utils.ActionQueueKillerTests.test_KillAllQueues(com.renomad.minum.utils.ActionQueueKillerTests) (31 ms)</li><li>com.renomad.minum.utils.FileReaderTests.test_ReadFile_InCache(com.renomad.minum.utils.FileReaderTests) (31 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_HandleForbiddenUse(com.renomad.minum.web.WebFrameworkTests) (26 ms)</li><li>com.renomad.minum.utils.FileReaderTests.test_ReadFile_NoCache(com.renomad.minum.utils.FileReaderTests) (31 ms)</li><li>com.renomad.minum.utils.FileReaderTests.test_ReadFile_EmptyFile(com.renomad.minum.utils.FileReaderTests) (31 ms)</li><li>com.renomad.minum.database.DbTests.test_Serialization_SimpleCase(com.renomad.minum.database.DbTests) (30 ms)</li><li>com.renomad.minum.database.DbTests.test_Serialization_Null(com.renomad.minum.database.DbTests) (30 ms)</li><li>com.renomad.minum.web.FunctionalTestingTests.test_sendDealsWithException(com.renomad.minum.web.FunctionalTestingTests) (36 ms)</li><li>com.renomad.minum.utils.ActionQueueKillerTests.test_KillAllQueues_NeedingInterruption(com.renomad.minum.utils.ActionQueueKillerTests) (31 ms)</li><li>com.renomad.minum.database.DbTests.test_Serialization_Collection(com.renomad.minum.database.DbTests) (31 ms)</li><li>com.renomad.minum.web.InputStreamUtilsTests.testReading_EdgeCase_IOException(com.renomad.minum.web.InputStreamUtilsTests) (38 ms)</li><li>com.renomad.minum.database.DbTests.testLoadDataCore_True(com.renomad.minum.database.DbTests) (40 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_test(com.renomad.minum.logging.TestLoggerTests) (47 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_UrlEncoded_IOException(com.renomad.minum.web.RequestTests) (29 ms)</li><li>com.renomad.minum.logging.LoggingActionQueueTests.testGetQueueThread(com.renomad.minum.logging.LoggingActionQueueTests) (46 ms)</li><li>com.renomad.minum.database.DbTests.testReadAndDeserialize_nullFilename(com.renomad.minum.database.DbTests) (32 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_ImproperlyFormedUrlEncoded_NoKey(com.renomad.minum.web.RequestTests) (34 ms)</li><li>com.renomad.minum.web.HeadersTests (31 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_Multipart_ImproperlyFormed(com.renomad.minum.web.RequestTests) (29 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_Multipart_IOException_ReadingBody(com.renomad.minum.web.RequestTests) (31 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_UrlEncoded_ExcessiveCountOfKeyValuePairs(com.renomad.minum.web.RequestTests) (40 ms)</li><li>com.renomad.minum.utils.FileReaderTests.test_ReadFile_BadPath(com.renomad.minum.utils.FileReaderTests) (59 ms)</li><li>com.renomad.minum.logging.LoggerTests.testLogHelper_LoggingDisabled(com.renomad.minum.logging.LoggerTests) (61 ms)</li><li>com.renomad.minum.logging.LoggerTests.testLogHelper(com.renomad.minum.logging.LoggerTests) (61 ms)</li><li>com.renomad.minum.web.FullSystemTests.testFullSystem_EdgeCase_InstantlyClosed(com.renomad.minum.web.FullSystemTests) (21 ms)</li><li>com.renomad.minum.logging.LoggerTests.testLogHelper_EdgeCase_LoggingActionQueueStopping(com.renomad.minum.logging.LoggerTests) (62 ms)</li><li>com.renomad.minum.templating.TemplatingTests (41 ms)</li><li>com.renomad.minum.web.WebEngineTests (59 ms)</li><li>com.renomad.minum.database.DbTests.testStopping2(com.renomad.minum.database.DbTests) (78 ms)</li><li>com.renomad.minum.database.DbTests.test_Db_Delete_EdgeCase_NullValue(com.renomad.minum.database.DbTests) (92 ms)</li><li>com.renomad.minum.utils.ActionQueueKillerTests.test_KillAllQueues_WithoutDebug(com.renomad.minum.utils.ActionQueueKillerTests) (108 ms)</li><li>com.renomad.minum.database.DbTests.test_Edge_DeleteFileDoesNotExist(com.renomad.minum.database.DbTests) (93 ms)</li><li>com.renomad.minum.utils.ActionQueueKillerTests.test_KillAllQueues_WithDebug(com.renomad.minum.utils.ActionQueueKillerTests) (107 ms)</li><li>com.renomad.minum.database.DbTests.test_Db_Delete_EdgeCase_DoesNotExist(com.renomad.minum.database.DbTests) (93 ms)</li><li>com.renomad.minum.database.DbTests.testStopping(com.renomad.minum.database.DbTests) (101 ms)</li><li>com.renomad.minum.database.DbTests.testWrite_PositiveIndexNotExisting(com.renomad.minum.database.DbTests) (95 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_Multipart_ExcessiveCountOfPartitions(com.renomad.minum.web.RequestTests) (90 ms)</li><li>com.renomad.minum.database.DbTests.testWrite_NegativeIndex(com.renomad.minum.database.DbTests) (107 ms)</li><li>com.renomad.minum.utils.ThrowingRunnableTests (119 ms)</li><li>com.renomad.minum.database.DbTests.testDeserializerComplaints(com.renomad.minum.database.DbTests) (101 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.testHandleIoException(com.renomad.minum.web.WebFrameworkTests) (125 ms)</li><li>com.renomad.minum.database.DbTests.testWriteDeserializationComplaints(com.renomad.minum.database.DbTests) (123 ms)</li><li>com.renomad.minum.database.DbTests.testWriteDeserializationComplaints2(com.renomad.minum.database.DbTests) (124 ms)</li><li>com.renomad.minum.database.DbTests.testPoorlyNamedDbFile(com.renomad.minum.database.DbTests) (120 ms)</li><li>com.renomad.minum.web.SetOfSwsTests.test_SetOfSws(com.renomad.minum.web.SetOfSwsTests) (156 ms)</li><li>com.renomad.minum.web.ServerTests (163 ms)</li><li>com.renomad.minum.utils.ActionQueueTests (155 ms)</li><li>com.renomad.minum.web.FullSystemTests.testFullSystem(com.renomad.minum.web.FullSystemTests) (124 ms)</li><li>com.renomad.minum.web.FullSystemTests.testFullSystem_WithRedirect(com.renomad.minum.web.FullSystemTests) (137 ms)</li><li>com.renomad.minum.database.DbTests.test_Db_Delete_EdgeCase_FileGone(com.renomad.minum.database.DbTests) (189 ms)</li><li>com.renomad.minum.database.DbTests.test_Deserialization_EdgeCases(com.renomad.minum.database.DbTests) (200 ms)</li><li>com.renomad.minum.database.DbTests.test_Locking(com.renomad.minum.database.DbTests) (202 ms)</li><li>com.renomad.minum.utils.FileUtilsTests (245 ms)</li><li>com.renomad.minum.web.BodyProcessorTests (215 ms)</li><li>com.renomad.minum.security.TheBrigTests (711 ms)</li><li>com.renomad.minum.EqualsTests.equalsTest(com.renomad.minum.EqualsTests) (795 ms)</li><li>com.renomad.minum.database.DbTests.test_Performance(com.renomad.minum.database.DbTests) (823 ms)</li><li>com.renomad.minum.htmlparsing.HtmlParserTests (917 ms)</li><li>com.renomad.minum.web.WebTests (784 ms)</li><li>com.renomad.minum.database.DbTests.test_Db_Write_and_Read(com.renomad.minum.database.DbTests) (1275 ms)</li><li>com.renomad.minum.FunctionalTests (1662 ms)</li><li>com.renomad.minum.database.DbTests.test_GeneralCapability(com.renomad.minum.database.DbTests) (2951 ms)</li><li>com.renomad.minum.web.FullSystemTests.test_CloseCore(com.renomad.minum.web.FullSystemTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_readStaticFile_CSS(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_ToString(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findMessage_EdgeCase_NoLogs(com.renomad.minum.logging.TestLoggerTests) (1 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findFirstMessage_CheckValidity_TooMany(com.renomad.minum.logging.TestLoggerTests) (1 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_TestLogger_MaxLines(com.renomad.minum.logging.TestLoggerTests) (2 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findFirstMessage_CheckValidity_NotFound(com.renomad.minum.logging.TestLoggerTests) (1 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_testLoggerQueue_Basic(com.renomad.minum.logging.TestLoggerTests) (2 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findMessage_EdgeCase_NegativeValue(com.renomad.minum.logging.TestLoggerTests) (1 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findFirstMessage_CheckValidity_NoLogs(com.renomad.minum.logging.TestLoggerTests) (3 ms)</li><li>com.renomad.minum.web.EndpointTests.test_Endpoint_HappyPath(com.renomad.minum.web.EndpointTests) (1 ms)</li><li>com.renomad.minum.web.SocketWrapperTests.testSendingSingleByte(com.renomad.minum.web.SocketWrapperTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_7(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_6(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.utils.RingBufferTests.testIteratingPastLimit(com.renomad.minum.utils.RingBufferTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_5(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_1(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_2(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_9(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_8(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.testSimplerRequest(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.utils.RingBufferTests.test_RingBuffer_HappyPath(com.renomad.minum.utils.RingBufferTests) (3 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getMultipartIterable_EdgeCase_No_Valid_Boundary_2(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_ExtraMimeMappings(com.renomad.minum.web.WebFrameworkTests) (0 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getMultipartIterable_EdgeCase_No_Valid_Boundary(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getUrlEncoded_EdgeCase_MultipartData(com.renomad.minum.web.RequestTests) (3 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_ExtraMimeMappings_Null(com.renomad.minum.web.WebFrameworkTests) (0 ms)</li><li>com.renomad.minum.web.RequestTests.testSimplerRequest3(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.utils.RingBufferTests.testContains(com.renomad.minum.utils.RingBufferTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testSimplerRequest2(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_ExtraMimeMappings_NoValues(com.renomad.minum.web.WebFrameworkTests) (0 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getMultipartForm_EdgeCase_UrlEncodedData(com.renomad.minum.web.RequestTests) (3 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_10(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_13(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_3(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_BodyTooLong(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_ExtraMimeMappings_BadSyntax(com.renomad.minum.web.WebFrameworkTests) (0 ms)</li><li>com.renomad.minum.utils.RingBufferTests.testContainsAt(com.renomad.minum.utils.RingBufferTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_4(com.renomad.minum.web.RequestTests) (3 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_11(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.testRequest_ExpectComplaintAfterBegunReading_12(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getMultipartIterable_EdgeCase_Empty(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getUrlEncoded_EdgeCase_Empty(com.renomad.minum.web.RequestTests) (3 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.test_compressIfRequested(com.renomad.minum.web.WebFrameworkTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getUrlEncoded_EdgeCase_PlayingWithClose(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getMultipartIterable_EdgeCase_No_Valid_Boundary_3(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_ImproperlyFormedMultipart(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getUrlEncoded_EdgeCase_ContentLengthNotLongEnough(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getUrlEncoded_EdgeCase_ContentLengthTooLong(com.renomad.minum.web.RequestTests) (4 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findMessage(com.renomad.minum.logging.TestLoggerTests) (23 ms)</li><li>com.renomad.minum.web.RequestTests.test_GetSocketWrapper(com.renomad.minum.web.RequestTests) (22 ms)</li><li>com.renomad.minum.web.RequestTests.testReadingAStreamingUrlEncoded(com.renomad.minum.web.RequestTests) (11 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findMessage_EdgeCase_TooFewLinesRequested(com.renomad.minum.logging.TestLoggerTests) (28 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findMessage_EdgeCase_WordNotFound(com.renomad.minum.logging.TestLoggerTests) (29 ms)</li><li>com.renomad.minum.web.RequestTests.testReadingEmptyStreamingMultipart(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_Multipart_ImproperlyFormed_CorrectContentLength(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_findMessage_EdgeCase_MoreLinesThanExists(com.renomad.minum.logging.TestLoggerTests) (31 ms)</li><li>com.renomad.minum.logging.TestLoggerTests.test_doesMessageExist_NegativeCase(com.renomad.minum.logging.TestLoggerTests) (31 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getMultipartForm_EdgeCase_PlayingWithClose(com.renomad.minum.web.RequestTests) (4 ms)</li><li>com.renomad.minum.web.RequestTests.test_Request_getMultipartForm_EdgeCase_ComplaintAfterGetBody(com.renomad.minum.web.RequestTests) (1 ms)</li><li>com.renomad.minum.web.RequestTests.testReadingStreamingMultipart_AlternateCase_UsingBuffer(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.RequestTests.testReadingStreamingMultipart(com.renomad.minum.web.RequestTests) (2 ms)</li><li>com.renomad.minum.web.WebFrameworkTests.testReadTimedOut(com.renomad.minum.web.WebFrameworkTests) (30 ms)</li><li>com.renomad.minum.web.RequestTests.equalsTest(com.renomad.minum.web.RequestTests) (80 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.15.3
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoggingActionQueue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.logging</a> &gt; <span class="el_source">LoggingActionQueue.java</span></div><h1>LoggingActionQueue.java</h1><pre class="source lang-java linenums">package com.renomad.minum.logging;
+
+import com.renomad.minum.queue.AbstractActionQueue;
+import com.renomad.minum.queue.ActionQueue;
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.utils.*;
+
+import java.util.Map;
+import java.util.concurrent.*;
+
+/**
+ * This class is very similar to {@link ActionQueue} but is
+ * focused on Logging.
+ * &lt;p&gt;
+ *     It is necessary to create independent classes for logging to avoid circular dependencies
+ * &lt;/p&gt;
+ */
+final class LoggingActionQueue implements AbstractActionQueue {
+    private final String name;
+    private final ExecutorService executorService;
+    private final LinkedBlockingQueue&lt;RunnableWithDescription&gt; queue;
+    private Thread queueThread;
+<span class="fc" id="L23">    private boolean stop = false;</span>
+<span class="fc" id="L24">    private boolean isStoppedStatus = false;</span>
+    private final Map&lt;LoggingLevel, Boolean&gt; enabledLogLevels;
+
+<span class="fc" id="L27">    LoggingActionQueue(String name, ExecutorService executorService, Constants constants) {</span>
+<span class="fc" id="L28">        this.name = name;</span>
+<span class="fc" id="L29">        this.executorService = executorService;</span>
+<span class="fc" id="L30">        this.queue = new LinkedBlockingQueue&lt;&gt;();</span>
+<span class="fc" id="L31">        this.enabledLogLevels = Logger.convertToMap(constants.logLevels);</span>
+<span class="fc" id="L32">    }</span>
+
+    // Regarding the InfiniteLoopStatement - indeed, we expect that the while loop
+    // below is an infinite loop unless there's an exception thrown, that is what it is.
+    @Override
+    @SuppressWarnings(&quot;InfiniteLoopStatement&quot;)
+    public AbstractActionQueue initialize() {
+<span class="fc" id="L39">        Runnable centralLoop = () -&gt; {</span>
+<span class="fc" id="L40">            Thread.currentThread().setName(name);</span>
+<span class="fc" id="L41">            this.queueThread = Thread.currentThread();</span>
+            try {
+                while (true) {
+<span class="fc" id="L44">                    runAction(queue.take());</span>
+                }
+<span class="fc" id="L46">            } catch (InterruptedException ex) {</span>
+                /*
+                this is what we expect to happen.
+                once this happens, we just continue on.
+                this only gets called when we are trying to shut everything
+                down cleanly
+                 */
+<span class="fc" id="L53">                Logger.logHelper(() -&gt; String.format(&quot;%s LoggingActionQueue for %s is stopped.%n&quot;, TimeUtils.getTimestampIsoInstant(), name), LoggingLevel.DEBUG, enabledLogLevels, this);</span>
+<span class="fc" id="L54">                Thread.currentThread().interrupt();</span>
+            }
+<span class="fc" id="L56">        };</span>
+<span class="fc" id="L57">        executorService.submit(centralLoop);</span>
+<span class="fc" id="L58">        return this;</span>
+    }
+
+    static void runAction(RunnableWithDescription action) {
+<span class="fc" id="L62">        action.run();</span>
+<span class="fc" id="L63">    }</span>
+
+    /**
+     * Adds something to the queue to be processed.
+     */
+    @Override
+    public void enqueue(String description, ThrowingRunnable action) {
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (! stop) {</span>
+<span class="fc" id="L71">            queue.add(new RunnableWithDescription(action, description));</span>
+        }
+<span class="fc" id="L73">    }</span>
+
+    /**
+     * Stops the action queue
+     * @param count how many loops to wait before we crash it closed
+     * @param sleepTime how long to wait in milliseconds between loops
+     */
+    @Override
+    public void stop(int count, int sleepTime) {
+<span class="fc" id="L82">        Logger.logHelper(() -&gt; String.format(&quot;%s Stopping queue %s%n&quot;, TimeUtils.getTimestampIsoInstant(), this), LoggingLevel.DEBUG, enabledLogLevels, this);</span>
+<span class="fc" id="L83">        stop = true;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (int i = 0; i &lt; count; i++) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (queue.isEmpty()) return;</span>
+<span class="fc" id="L86">            Logger.logHelper(() -&gt; String.format(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;, TimeUtils.getTimestampIsoInstant(), queue.size()), LoggingLevel.DEBUG, enabledLogLevels, this);</span>
+<span class="fc" id="L87">            MyThread.sleep(sleepTime);</span>
+        }
+<span class="fc" id="L89">        isStoppedStatus = true;</span>
+<span class="fc" id="L90">        Logger.logHelper(() -&gt; String.format(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;,TimeUtils.getTimestampIsoInstant(), this, queue.size(), queue), LoggingLevel.DEBUG, enabledLogLevels, this);</span>
+<span class="fc" id="L91">    }</span>
+
+    /**
+     * This will prevent any new actions being
+     * queued (by setting the stop flag to true and thus
+     * causing an exception to be thrown
+     * when a call is made to [enqueue]) and will
+     * block until the queue is empty.
+     */
+    @Override
+    public void stop() {
+<span class="fc" id="L102">        stop(5, 20);</span>
+<span class="fc" id="L103">    }</span>
+
+    public Thread getQueueThread() {
+<span class="fc" id="L106">        return queueThread;</span>
+    }
+
+    @Override
+    public LinkedBlockingQueue&lt;RunnableWithDescription&gt; getQueue() {
+<span class="fc" id="L111">        return queue;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L116">        return this.name;</span>
+    }
+
+    @Override
+    public boolean isStopped() {
+<span class="fc" id="L121">        return isStoppedStatus;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

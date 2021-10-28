@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Db.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.database</a> &gt; <span class="el_source">Db.java</span></div><h1>Db.java</h1><pre class="source lang-java linenums">package com.renomad.minum.database;
+
+import com.renomad.minum.state.Context;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.queue.AbstractActionQueue;
+import com.renomad.minum.queue.ActionQueue;
+import com.renomad.minum.utils.FileUtils;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static com.renomad.minum.utils.Invariants.*;
+
+/**
+ * a memory-based disk-persisted database class.
+ * @param &lt;T&gt; the type of data we'll be persisting (must extend from {@link DbData}
+ */
+public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
+
+    /**
+     * The suffix we will apply to each database file
+     */
+    static final String DATABASE_FILE_SUFFIX = &quot;.ddps&quot;;
+    private final T emptyInstance;
+
+    // some locks we use for certain operations
+<span class="fc" id="L38">    private final Lock loadDataLock = new ReentrantLock();</span>
+<span class="fc" id="L39">    private final Lock writeLock = new ReentrantLock();</span>
+<span class="fc" id="L40">    private final Lock deleteLock = new ReentrantLock();</span>
+
+    /**
+     * This is a lock that goes around the code that modifies data in the
+     * map, so that it is not possible for two different modifications to
+     * interleave (that is, cause race conditions).
+     */
+<span class="fc" id="L47">    private final Lock modificationLock = new ReentrantLock();</span>
+
+    /**
+     * The full path to the file that contains the most-recent index
+     * for this data.  As we add new files, each gets its own index
+     * value.  When we start the program, we use this to determine
+     * where to start counting for new indexes.
+     */
+    private final Path fullPathForIndexFile;
+
+    final AtomicLong index;
+
+    private final Path dbDirectory;
+    private final AbstractActionQueue actionQueue;
+    private final ILogger logger;
+    private final Map&lt;Long, T&gt; data;
+    private final FileUtils fileUtils;
+    private boolean hasLoadedData;
+
+    /**
+     * Constructs an in-memory disk-persisted database.
+     * @param dbDirectory this uniquely names your database, and also sets the directory
+     *                    name for this data.  The expected use case is to name this after
+     *                    the data in question.  For example, &quot;users&quot;, or &quot;accounts&quot;.
+     * @param context used to provide important state data to several components
+     * @param instance an instance of the {@link DbData} object relevant for use in this database. Note
+     *                 that each database (that is, each instance of this class), focuses on just one
+     *                 data, which must be an implementation of {@link DbData}.
+     */
+<span class="fc" id="L76">    public Db(Path dbDirectory, Context context, T instance) {</span>
+<span class="fc" id="L77">        this.hasLoadedData = false;</span>
+<span class="fc" id="L78">        data = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L79">        actionQueue = new ActionQueue(&quot;DatabaseWriter &quot; + dbDirectory, context).initialize();</span>
+<span class="fc" id="L80">        this.logger = context.getLogger();</span>
+<span class="fc" id="L81">        this.dbDirectory = dbDirectory;</span>
+<span class="fc" id="L82">        this.fullPathForIndexFile = dbDirectory.resolve(&quot;index&quot; + DATABASE_FILE_SUFFIX);</span>
+<span class="fc" id="L83">        this.emptyInstance = instance;</span>
+<span class="fc" id="L84">        this.fileUtils = new FileUtils(logger, context.getConstants());</span>
+
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (Files.exists(fullPathForIndexFile)) {</span>
+            long indexValue;
+<span class="fc" id="L88">            try (var fileReader = new FileReader(fullPathForIndexFile.toFile(), StandardCharsets.UTF_8)) {</span>
+<span class="fc" id="L89">                try (BufferedReader br = new BufferedReader(fileReader)) {</span>
+<span class="fc" id="L90">                    String s = br.readLine();</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">                    if (s == null) throw new DbException(&quot;index file for &quot; + dbDirectory + &quot; returned null when reading a line from it&quot;);</span>
+<span class="fc" id="L92">                    mustBeFalse(s.isBlank(), &quot;Unless something is terribly broken, we expect a numeric value here&quot;);</span>
+<span class="fc" id="L93">                    String trim = s.trim();</span>
+<span class="fc" id="L94">                    indexValue = Long.parseLong(trim);</span>
+                }
+<span class="fc" id="L96">            } catch (Exception e) {</span>
+<span class="fc" id="L97">                throw new DbException(&quot;Exception while reading &quot;+fullPathForIndexFile+&quot; in Db constructor&quot;, e);</span>
+<span class="fc" id="L98">            }</span>
+
+<span class="fc" id="L100">            this.index = new AtomicLong(indexValue);</span>
+
+<span class="fc" id="L102">        } else {</span>
+<span class="fc" id="L103">            this.index = new AtomicLong(1);</span>
+        }
+
+<span class="fc" id="L106">        actionQueue.enqueue(&quot;create directory&quot; + dbDirectory, () -&gt; fileUtils.makeDirectory(dbDirectory));</span>
+<span class="fc" id="L107">    }</span>
+
+    /**
+     * This function will stop the minum.database persistence cleanly.
+     * &lt;p&gt;
+     * In order to do this, we need to wait for our threads
+     * to finish their work.  In particular, we
+     * have offloaded our file writes to [actionQueue], which
+     * has an internal thread for serializing all actions
+     * on our minum.database
+     * &lt;/p&gt;
+     */
+    public void stop() {
+<span class="fc" id="L120">        actionQueue.stop();</span>
+<span class="fc" id="L121">    }</span>
+
+    /**
+     * Similar to {@link #stop()} but gives more control over how long
+     * we'll wait before crashing it closed.  See {@link ActionQueue#stop(int, int)}
+     */
+    public void stop(int count, int sleepTime) {
+<span class="fc" id="L128">        actionQueue.stop(count, sleepTime);</span>
+<span class="fc" id="L129">    }</span>
+
+    /**
+     * Write data to the database.  Use an index of 0 to store new data, and a positive
+     * non-zero value to update data.
+     * &lt;p&gt;&lt;em&gt;
+     *     Example of adding new data to the database:
+     * &lt;/p&gt;&lt;/em&gt;
+     * {@snippet :
+     *          final var newSalt = StringUtils.generateSecureRandomString(10);
+     *          final var hashedPassword = CryptoUtils.createPasswordHash(newPassword, newSalt);
+     *          final var newUser = new User(0L, newUsername, hashedPassword, newSalt);
+     *          userDb.write(newUser);
+     * }
+     * &lt;p&gt;&lt;em&gt;
+     *     Example of updating data:
+     * &lt;/p&gt;&lt;/em&gt;
+     * {@snippet :
+     *         // write the updated salted password to the database
+     *         final var updatedUser = new User(
+     *                 user().getIndex(),
+     *                 user().getUsername(),
+     *                 hashedPassword,
+     *                 newSalt);
+     *         userDb.write(updatedUser);
+     * }
+     *
+     * @param newData the data we are writing
+     */
+    public T write(T newData) {
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (newData.getIndex() &lt; 0) throw new DbException(&quot;Negative indexes are disallowed&quot;);</span>
+<span class="fc" id="L160">        writeLock.lock();</span>
+        try {
+            // load data if needed
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            if (!hasLoadedData) loadData();</span>
+<span class="fc" id="L164">            boolean newIndexCreated = false;</span>
+
+<span class="fc" id="L166">            modificationLock.lock();</span>
+            try {
+                // *** deal with the in-memory portion ***
+
+                // create a new index for the data, if needed
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                if (newData.getIndex() == 0) {</span>
+<span class="fc" id="L172">                    newData.setIndex(index.getAndIncrement());</span>
+<span class="fc" id="L173">                    newIndexCreated = true;</span>
+                } else {
+                    // if the data does not exist, and a positive non-zero
+                    // index was provided, throw an exception.
+<span class="fc bfc" id="L177" title="All 2 branches covered.">                    boolean dataEntryExists = data.values().stream().anyMatch(x -&gt; x.getIndex() == newData.getIndex());</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                    if (! dataEntryExists) {</span>
+<span class="fc" id="L179">                        throw new DbException(</span>
+<span class="fc" id="L180">                                String.format(&quot;Positive indexes are only allowed when updating existing data. Index: %d&quot;,</span>
+<span class="fc" id="L181">                                        newData.getIndex()));</span>
+                    }
+                }
+                // if we got here, we are safe to proceed with putting the data into memory and disk
+<span class="fc" id="L185">                logger.logTrace(() -&gt; String.format(&quot;in thread %s, writing data %s&quot;, Thread.currentThread().getName(), newData));</span>
+<span class="fc" id="L186">                data.put(newData.getIndex(), newData);</span>
+            } finally {
+<span class="fc" id="L188">                modificationLock.unlock();</span>
+            }
+
+            // *** now handle the disk portion ***
+<span class="fc" id="L192">            boolean finalNewIndexCreated = newIndexCreated;</span>
+<span class="fc" id="L193">            actionQueue.enqueue(&quot;persist data to disk&quot;, () -&gt; {</span>
+<span class="fc" id="L194">                final Path fullPath = dbDirectory.resolve(newData.getIndex() + DATABASE_FILE_SUFFIX);</span>
+<span class="fc" id="L195">                logger.logTrace(() -&gt; String.format(&quot;writing data to %s&quot;, fullPath));</span>
+<span class="fc" id="L196">                String serializedData = newData.serialize();</span>
+<span class="fc bfc" id="L197" title="All 4 branches covered.">                mustBeFalse(serializedData == null || serializedData.isBlank(),</span>
+                        &quot;the serialized form of data must not be blank. &quot; +
+                                &quot;Is the serialization code written properly? Our datatype: &quot; + emptyInstance);
+<span class="fc" id="L200">                fileUtils.writeString(fullPath, serializedData);</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">                if (finalNewIndexCreated) {</span>
+<span class="fc" id="L202">                    fileUtils.writeString(fullPathForIndexFile, String.valueOf(newData.getIndex() + 1));</span>
+                }
+<span class="fc" id="L204">            });</span>
+
+            // returning the data at this point is the most convenient
+            // way users will have access to the new index of the data.
+<span class="fc" id="L208">            return newData;</span>
+        } finally {
+<span class="fc" id="L210">            writeLock.unlock();</span>
+        }
+    }
+
+    /**
+     * Delete data
+     * &lt;p&gt;&lt;em&gt;Example:&lt;/p&gt;&lt;/em&gt;
+     * {@snippet :
+     *      userDb.delete(user);
+     * }
+     * @param dataToDelete the data we are serializing and writing
+     */
+    public void delete(T dataToDelete) {
+<span class="fc" id="L223">        deleteLock.lock();</span>
+        try {
+            // load data if needed
+<span class="fc bfc" id="L226" title="All 2 branches covered.">            if (!hasLoadedData) loadData();</span>
+
+            boolean hasResetIndex;
+            long dataIndex;
+
+            // deal with the in-memory portion
+<span class="fc" id="L232">            modificationLock.lock();</span>
+            try {
+<span class="fc bfc" id="L234" title="All 2 branches covered.">                if (dataToDelete == null) {</span>
+<span class="fc" id="L235">                    throw new DbException(&quot;Db.delete was given a null value to delete&quot;);</span>
+                }
+<span class="fc" id="L237">                dataIndex = dataToDelete.getIndex();</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">                if (!data.containsKey(dataIndex)) {</span>
+<span class="fc" id="L239">                    throw new DbException(&quot;no data was found with index of &quot; + dataIndex);</span>
+                }
+<span class="fc" id="L241">                logger.logTrace(() -&gt; String.format(&quot;in thread %s, deleting data with index %d&quot;, Thread.currentThread().getName(), dataIndex));</span>
+<span class="fc" id="L242">                data.remove(dataIndex);</span>
+
+                // if all the data was just now deleted, we need to
+                // reset the index back to 1
+
+<span class="fc bfc" id="L247" title="All 2 branches covered.">                if (data.isEmpty()) {</span>
+<span class="fc" id="L248">                    index.set(1);</span>
+<span class="fc" id="L249">                    hasResetIndex = true;</span>
+                } else {
+<span class="fc" id="L251">                    hasResetIndex = false;</span>
+                }
+            } finally {
+<span class="fc" id="L254">                modificationLock.unlock();</span>
+            }
+
+            // now handle the disk portion
+<span class="fc" id="L258">            actionQueue.enqueue(&quot;delete data from disk&quot;, () -&gt; {</span>
+<span class="fc" id="L259">                final Path fullPath = dbDirectory.resolve(dataIndex + DATABASE_FILE_SUFFIX);</span>
+<span class="fc" id="L260">                logger.logTrace(() -&gt; String.format(&quot;deleting data at %s&quot;, fullPath));</span>
+                try {
+<span class="fc" id="L262">                    mustBeTrue(fullPath.toFile().exists(), fullPath + &quot; must already exist before deletion&quot;);</span>
+<span class="fc" id="L263">                    Files.delete(fullPath);</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                    if (hasResetIndex) {</span>
+<span class="fc" id="L265">                        fileUtils.writeString(fullPathForIndexFile, String.valueOf(1));</span>
+                    }
+<span class="fc" id="L267">                } catch (Exception ex) {</span>
+<span class="fc" id="L268">                    logger.logAsyncError(() -&gt; &quot;failed to delete file &quot; + fullPath + &quot; during deleteOnDisk. Exception: &quot; + ex);</span>
+<span class="fc" id="L269">                }</span>
+<span class="fc" id="L270">            });</span>
+        } finally {
+<span class="fc" id="L272">            deleteLock.unlock();</span>
+        }
+<span class="fc" id="L274">    }</span>
+
+    /**
+     * Grabs all the data from disk and returns it as a list.  This
+     * method is run by various programs when the system first loads.
+     */
+    void loadDataFromDisk() {
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (! Files.exists(dbDirectory)) {</span>
+<span class="fc" id="L282">            logger.logDebug(() -&gt; dbDirectory + &quot; directory missing, adding nothing to the data list&quot;);</span>
+<span class="fc" id="L283">            return;</span>
+        }
+
+<span class="fc" id="L286">        walkAndLoad(dbDirectory);</span>
+<span class="fc" id="L287">    }</span>
+
+    void walkAndLoad(Path dbDirectory) {
+        // walk through all the files in this directory, collecting
+        // all regular files (non-subdirectories) except for index.ddps
+<span class="fc" id="L292">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
+<span class="fc" id="L293">            final var listOfFiles = pathStream.filter(path -&gt;</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">                        Files.isRegularFile(path) &amp;&amp;</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">                        !path.getFileName().toString().startsWith(&quot;index&quot;)</span>
+<span class="fc" id="L296">            ).toList();</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
+<span class="fc" id="L298">                readAndDeserialize(p);</span>
+<span class="fc" id="L299">            }</span>
+<span class="fc" id="L300">        } catch (IOException e) {</span>
+<span class="fc" id="L301">            throw new DbException(e);</span>
+<span class="fc" id="L302">        }</span>
+<span class="fc" id="L303">    }</span>
+
+    /**
+     * Carry out the process of reading data files into our in-memory structure
+     * @param p the path of a particular file
+     */
+    void readAndDeserialize(Path p) throws IOException {
+<span class="fc" id="L310">        Path fileName = p.getFileName();</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">        if (fileName == null) throw new DbException(&quot;At readAndDeserialize, path &quot; + p + &quot; returned a null filename&quot;);</span>
+<span class="fc" id="L312">        String filename = fileName.toString();</span>
+<span class="fc" id="L313">        int startOfSuffixIndex = filename.indexOf('.');</span>
+<span class="fc bfc" id="L314" title="All 2 branches covered.">        if(startOfSuffixIndex == -1) {</span>
+<span class="fc" id="L315">            throw new DbException(&quot;the files must have a ddps suffix, like 1.ddps.  filename: &quot; + filename);</span>
+        }
+<span class="fc" id="L317">        String fileContents = Files.readString(p);</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">        if (fileContents.isBlank()) {</span>
+<span class="fc" id="L319">            logger.logDebug( () -&gt; fileName + &quot; file exists but empty, skipping&quot;);</span>
+        } else {
+            try {
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L323">                T deserializedData = (T) emptyInstance.deserialize(fileContents);</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">                mustBeTrue(deserializedData != null, &quot;deserialization of &quot; + emptyInstance +</span>
+                        &quot; resulted in a null value. Was the serialization method implemented properly?&quot;);
+<span class="fc" id="L326">                int fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">                mustBeTrue(deserializedData.getIndex() == fileNameIdentifier,</span>
+                        &quot;The filename must correspond to the data's index. e.g. 1.ddps must have an id of 1&quot;);
+
+                // put the data into the in-memory data structure
+<span class="fc" id="L331">                data.put(deserializedData.getIndex(), deserializedData);</span>
+<span class="fc" id="L332">            } catch (Exception e) {</span>
+<span class="fc" id="L333">                throw new DbException(&quot;Failed to deserialize &quot;+ p +&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;). Caused by: &quot; + e);</span>
+<span class="fc" id="L334">            }</span>
+        }
+<span class="fc" id="L336">    }</span>
+
+    /**
+     * This method provides read capability for the values of a database.
+     * &lt;br&gt;
+     * The returned collection is a read-only view over the data, through {@link Collections#unmodifiableCollection(Collection)}
+     *
+     * &lt;p&gt;&lt;em&gt;Example:&lt;/em&gt;&lt;/p&gt;
+     * {@snippet :
+     * boolean doesUserAlreadyExist(String username) {
+     *     return userDb.values().stream().anyMatch(x -&gt; x.getUsername().equals(username));
+     * }
+     * }
+     */
+    public Collection&lt;T&gt; values() {
+        // load data if needed
+<span class="fc bfc" id="L352" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
+
+<span class="fc" id="L354">        return Collections.unmodifiableCollection(data.values());</span>
+    }
+
+    /**
+     * This is what loads the data from disk the
+     * first time someone needs it.  Because it is
+     * locked, only one thread can enter at
+     * a time.  The first one in will load the data,
+     * and the second will encounter a branch which skips loading.
+     */
+    private void loadData() {
+<span class="fc" id="L365">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+        try {
+<span class="fc" id="L367">            loadDataCore(hasLoadedData, this::loadDataFromDisk);</span>
+<span class="fc" id="L368">            hasLoadedData = true;</span>
+        } finally {
+<span class="fc" id="L370">            loadDataLock.unlock();</span>
+        }
+<span class="fc" id="L372">    }</span>
+
+    static void loadDataCore(boolean hasLoadedData, Runnable loadDataFromDisk) {
+<span class="fc bfc" id="L375" title="All 2 branches covered.">        if (!hasLoadedData) {</span>
+<span class="fc" id="L376">            loadDataFromDisk.run();</span>
+        }
+<span class="fc" id="L378">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

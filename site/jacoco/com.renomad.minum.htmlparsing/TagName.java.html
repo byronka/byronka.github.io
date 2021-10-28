@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TagName.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.htmlparsing</a> &gt; <span class="el_source">TagName.java</span></div><h1>TagName.java</h1><pre class="source lang-java linenums">package com.renomad.minum.htmlparsing;
+
+
+import com.renomad.minum.utils.SearchUtils;
+
+import java.util.Arrays;
+
+/**
+ * Possible tag names per the W3C HTML spec.
+ * Pulled from &lt;a href=&quot;https://www.w3.org/TR/2012/WD-html-markup-20121025/elements.html&quot;&gt;The W3C spec&lt;/a&gt;
+ */
+<span class="fc" id="L12">public enum TagName {</span>
+<span class="fc" id="L13">    A(false), ABBR(false), ADDRESS(false), AREA(true), ARTICLE(false),</span>
+<span class="fc" id="L14">    ASIDE(false), AUDIO(false), B(false), BASE(true), BDI(false),</span>
+<span class="fc" id="L15">    BDO(false), BLOCKQUOTE(false), BODY(false), BR(true), BUTTON(false), CANVAS(false),</span>
+<span class="fc" id="L16">    CAPTION(false), CITE(false), CODE(false), COL(true), COLGROUP(false),</span>
+<span class="fc" id="L17">    COMMAND(true), DATALIST(false), DD(false), DEL(false), DETAILS(false),</span>
+<span class="fc" id="L18">    DFN(false), DIV(false), DL(false), DT(false), EM(false), EMBED(true),</span>
+<span class="fc" id="L19">    FIELDSET(false), FIGCAPTION(false), FIGURE(false), FOOTER(false),</span>
+<span class="fc" id="L20">    FORM(false), H1(false), H2(false), H3(false), H4(false), H5(false),</span>
+<span class="fc" id="L21">    H6(false), HEAD(false), HEADER(false), HGROUP(false), HR(true),</span>
+<span class="fc" id="L22">    HTML(false), I(false), IFRAME(false), IMG(true), INPUT(true),</span>
+<span class="fc" id="L23">    INS(false), KBD(false), KEYGEN(true), LABEL(false), LEGEND(false),</span>
+<span class="fc" id="L24">    LI(false), LINK(true), MAP(false), MARK(false), MENU(false),</span>
+<span class="fc" id="L25">    META(true), METER(false), NAV(false), NOSCRIPT(false), OBJECT(false),</span>
+<span class="fc" id="L26">    OL(false), OPTGROUP(false), OPTION(false), OUTPUT(false), P(false),</span>
+<span class="fc" id="L27">    PARAM(true), PRE(false), PROGRESS(false), Q(false), RP(false),</span>
+<span class="fc" id="L28">    RT(false), RUBY(false), S(false), SAMP(false), SCRIPT(false),</span>
+<span class="fc" id="L29">    SECTION(false), SELECT(false), SMALL(false), SOURCE(true),</span>
+<span class="fc" id="L30">    SPAN(false), STRONG(false), STYLE(false), SUB(false), SUMMARY(false),</span>
+<span class="fc" id="L31">    SUP(false), TABLE(false), TBODY(false), TD(false), TEMPLATE(false), TEXTAREA(false),</span>
+<span class="fc" id="L32">    TFOOT(false), TH(false), THEAD(false), TIME(false), TITLE(false),</span>
+<span class="fc" id="L33">    TR(false), TRACK(true), U(false), UL(false), VAR(false), VIDEO(false),</span>
+<span class="fc" id="L34">    WBR(true),SVG(false),MATH(false),</span>
+
+    /**
+     * In HTML, the doctype is the required preamble found at the top of
+     * all documents. Its sole purpose is to prevent a browser from
+     * switching into so-called &quot;quirks mode&quot; when rendering a document;
+     * that is, it ensures that the browser makes a best-effort attempt at
+     * following the relevant specifications, rather than using a
+     * different rendering mode that is incompatible with some specifications.
+     */
+<span class="fc" id="L44">     DOCTYPE(true),</span>
+
+
+    /**
+     * A special tag, meant for cases where we are scanning through unfamiliar
+     * namespaces, like svg or math.
+     */
+<span class="fc" id="L51">    UNRECOGNIZED(false),</span>
+
+    /**
+     * Used to indicate no tag
+     */
+<span class="fc" id="L56">    NULL(false)</span>
+    ;
+
+    /**
+     * Void elements are disallowed to have closing tags
+     */
+    public final boolean isVoidElement;
+
+    /**
+     * If this is a void element, then it is disallowed to have
+     * a closing tag.  (see &lt;a href=&quot;https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#void-element&quot;&gt;void elements&lt;/a&gt;)
+     */
+<span class="fc" id="L68">    TagName(boolean isVoidElement) {</span>
+<span class="fc" id="L69">        this.isVoidElement = isVoidElement;</span>
+<span class="fc" id="L70">    }</span>
+
+    public static TagName findMatchingTagname(String tagNameString) {
+<span class="fc" id="L73">        return SearchUtils.findExactlyOne(</span>
+<span class="fc" id="L74">                Arrays.stream(TagName.values()),</span>
+<span class="fc" id="L75">                x -&gt; x.toString().equalsIgnoreCase(tagNameString),</span>
+<span class="fc" id="L76">                () -&gt; UNRECOGNIZED);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConcurrentSet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.utils</a> &gt; <span class="el_source">ConcurrentSet.java</span></div><h1>ConcurrentSet.java</h1><pre class="source lang-java linenums">package com.renomad.minum.utils;
+
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * This uses a [ConcurrentHashMap] as its base.  We store
+ * the data in the keys only.  We provide some syntactic sugar
+ * so this seems similar to using a Set.
+ * &lt;p&gt;
+ * This is a thread-safe data structure.
+ */
+public final class ConcurrentSet&lt;T&gt; implements Iterable&lt;T&gt; {
+
+    private final ConcurrentHashMap&lt;T, NullEnum&gt; map;
+
+<span class="fc" id="L18">    public ConcurrentSet() {</span>
+<span class="fc" id="L19">        this.map = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L20">    }</span>
+
+    public void add(T element) {
+<span class="fc" id="L23">        map.putIfAbsent(element, NullEnum.NULL);</span>
+<span class="fc" id="L24">    }</span>
+
+    public void remove(T element) {
+<span class="fc" id="L27">        map.remove(element);</span>
+<span class="fc" id="L28">    }</span>
+
+    public int size() {
+<span class="fc" id="L31">        return map.size();</span>
+    }
+
+    @Override
+    public Iterator&lt;T&gt; iterator() {
+<span class="fc" id="L36">        return Collections.unmodifiableSet(map.keySet(NullEnum.NULL)).iterator();</span>
+    }
+
+<span class="fc" id="L39">    private enum NullEnum {</span>
+        /**
+         * This is just a token for the value in the ConcurrentHashMap, since
+         * we are only using the keys, never the values.
+         */
+<span class="fc" id="L44">        NULL</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

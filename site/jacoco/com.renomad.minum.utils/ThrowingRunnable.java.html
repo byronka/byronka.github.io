@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThrowingRunnable.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.utils</a> &gt; <span class="el_source">ThrowingRunnable.java</span></div><h1>ThrowingRunnable.java</h1><pre class="source lang-java linenums">package com.renomad.minum.utils;
+
+import com.renomad.minum.logging.ILogger;
+
+/**
+ * This exists so that we are able to slightly better manage
+ * exceptions in a highly threaded system.  Here's the thing:
+ * exceptions stop bubbling up at the thread invocation. If we
+ * don't take care to deal with that in some way, we can easily
+ * just lose the information.  Something could be badly broken and
+ * we could be totally oblivious to it.  This interface is to
+ * alleviate that situation.
+ */
+@FunctionalInterface
+public interface ThrowingRunnable {
+
+    /**
+     * The reason this throws an exception is so that lambdas
+     * don't need to try-catch their thrown exceptions when they
+     * use this.
+     */
+    void run() throws Exception;
+
+    static Runnable throwingRunnableWrapper(ThrowingRunnable throwingRunnable, ILogger logger) {
+<span class="fc" id="L25">        return () -&gt; {</span>
+            try {
+<span class="fc" id="L27">                throwingRunnable.run();</span>
+<span class="fc" id="L28">            } catch (Exception ex) {</span>
+<span class="fc" id="L29">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="fc" id="L30">            }</span>
+<span class="fc" id="L31">        };</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

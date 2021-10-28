@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplateSection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.templating</a> &gt; <span class="el_source">TemplateSection.java</span></div><h1>TemplateSection.java</h1><pre class="source lang-java linenums">package com.renomad.minum.templating;
+
+import java.util.List;
+import java.util.Map;
+
+import static com.renomad.minum.utils.Invariants.mustBeTrue;
+import static com.renomad.minum.utils.SerializationUtils.tokenizer;
+
+/**
+ * Represents one item in the list that will eventually be cooked
+ * up into a fully-rendered string.  This record is the magic
+ * ingredient to an easy templating system. If it has a key,
+ * then this object will be getting replaced during final string rendering.  If it has a substring,
+ * then the substring gets concatenated unchanged when the final string
+ * is rendered.
+ */
+class TemplateSection {
+
+    final String key;
+    private final String subString;
+    private final int indent;
+    private RenderingResult result;
+
+    /**
+     * @param indent the column number, measured from the left, of the first character of this template key.  This is used
+     *               to indent the subsequent lines of text when there are newlines in the replacement
+     *               text. For example, if the indent is 5, and the value is &quot;a&quot;, then it should indent like this:
+     *               &lt;br&gt;
+     *               &lt;pre&gt;{@code
+     *               12345
+     *                   a
+     *               }&lt;/pre&gt;
+     * @param key the name of the key, e.g. &quot;name&quot;, or &quot;color&quot;
+     * @param subString the template content around the keys.  For example, in the text
+     *                  of &quot;my favorite color is {{ color }} and I like it&quot;,
+     *                  it would generate three template sections - &quot;my favorite color is&quot; would be
+     *                  the first subString, then a key of &quot;color&quot;, then a third subString of &quot;and I like it&quot;
+     */
+<span class="fc" id="L39">    public TemplateSection(String key, String subString, int indent) {</span>
+<span class="fc" id="L40">        this.key = key;</span>
+<span class="fc" id="L41">        this.subString = subString;</span>
+<span class="fc" id="L42">        this.indent = indent;</span>
+<span class="fc" id="L43">    }</span>
+
+    /**
+     * It would be absurd to send a million lines to a browser, much
+     * less ten million.  This is here to set an upper limit on
+     * the tokenizer loop, to prevent certain attacks.
+     */
+    static final int MAXIMUM_LINES_ALLOWED = 10_000_000;
+
+    public RenderingResult render(Map&lt;String, String&gt; myMap) {
+<span class="fc bfc" id="L53" title="All 4 branches covered.">        mustBeTrue(subString != null || key != null, &quot;Either the key or substring must exist&quot;);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (subString != null) {</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            if (result == null) {</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">                mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
+<span class="fc" id="L57">                result = new RenderingResult(subString, null);</span>
+            }
+<span class="fc" id="L59">            return result;</span>
+        } else {
+<span class="fc" id="L61">            String value = myMap.get(key);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
+<span class="fc" id="L63">            List&lt;String&gt; lines = tokenizer(value, '\n', MAXIMUM_LINES_ALLOWED);</span>
+
+            // if, after splitting on newlines, we have more than one line, we'll indent the remaining
+            // lines so that they end up at the same column as the first line.
+<span class="fc" id="L67">            var stringBuilder = new StringBuilder(lines.getFirst());</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
+<span class="fc" id="L70">                    stringBuilder.append('\n');</span>
+                } else {
+<span class="fc" id="L72">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
+                }
+            }
+<span class="fc" id="L75">            return new RenderingResult(stringBuilder.toString(), key);</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

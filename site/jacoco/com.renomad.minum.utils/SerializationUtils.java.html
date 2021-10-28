@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SerializationUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.utils</a> &gt; <span class="el_source">SerializationUtils.java</span></div><h1>SerializationUtils.java</h1><pre class="source lang-java linenums">package com.renomad.minum.utils;
+
+import com.renomad.minum.security.ForbiddenUseException;
+import com.renomad.minum.security.Inmate;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class SerializationUtils {
+
+    private SerializationUtils() {
+        // not meant to be constructed.
+    }
+
+    /**
+     * This is a helper that will encode the values you give it
+     * in preparation for storage in a database file.
+     * &lt;p&gt;
+     *     The values will be encoded in URL-encoding (see {@link StringUtils#encode(String)})
+     *     and concatenated together with pipe-symbol &quot;|&quot; delimiters.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     &lt;em&gt;Please note&lt;/em&gt;: You need to keep track of value order,
+     *     and making sure all the values are accounted for.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     For example, see how this is used in {@link Inmate#serialize()}
+     * &lt;/p&gt;
+     */
+    public static String serializeHelper(Object... values) {
+<span class="fc" id="L31">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        for (int i = 0; i &lt; values.length-1; i++) {</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">            String value = values[i] == null ? null : values[i].toString();</span>
+<span class="fc" id="L34">            sb.append(StringUtils.encode(value)).append(&quot;|&quot;);</span>
+        }
+        // append the last value with no pipe symbol afterwards
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        String lastValue = values[values.length - 1] == null ? null : values[values.length - 1].toString();</span>
+<span class="fc" id="L38">        sb.append(StringUtils.encode(lastValue));</span>
+<span class="fc" id="L39">        return sb.toString();</span>
+    }
+
+    /**
+     * Splits up a string based on a pipe character.  See {@link #tokenizer(String, char, int)}
+     * &lt;p&gt;
+     *     This method is intended to be used as part of the database.  See
+     *     the package &quot;com.renomad.minum.database&quot;
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     For an example, see how this is used in {@link Inmate#deserialize(String)}
+     * &lt;/p&gt;
+     * @param serializedText the string we are splitting into tokens
+     */
+    public static List&lt;String&gt; deserializeHelper(String serializedText) {
+        /*
+         * As a general precaution, loops throughout the system have
+         * safety limits in place.  In this case, it would be unexpected
+         * to have databases of type {@link com.renomad.minum.database.DbData} that
+         * have this many fields.
+         */
+<span class="fc" id="L60">        int maximumDatabasePartitionsAllowed = 200;</span>
+<span class="fc" id="L61">        return tokenizer(serializedText, '|', maximumDatabasePartitionsAllowed).stream().map(StringUtils::decode).toList();</span>
+    }
+
+    /**
+     * Splits up a string into tokens.
+     *
+     * @param serializedText the string we are splitting up
+     * @param delimiter the character acting as a boundary between sections
+     * @param maxTokens the maximum tokens allowable.  Probably smart to include a number
+     *                  here, since otherwise you could get into some infinite loops.
+     * @return a list of strings.  If the delimiter is not found, we will just return the whole string
+     */
+    public static List&lt;String&gt; tokenizer(String serializedText, char delimiter, int maxTokens) {
+<span class="fc" id="L74">        final var resultList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L75">        var currentPlace = 0;</span>
+<span class="fc" id="L76">        for(int i = 0; ; i++) {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            if (i &gt;= maxTokens) {</span>
+<span class="fc" id="L78">                throw new ForbiddenUseException(&quot;Asked to split content into too many partitions in the tokenizer.  Current max: &quot; + maxTokens);</span>
+            }
+<span class="fc" id="L80">            final var nextDelimiterIndex = serializedText.indexOf(delimiter, currentPlace);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (nextDelimiterIndex == -1) {</span>
+                // if we don't see any delimiters ahead, grab the rest of the text from our current place
+<span class="fc" id="L83">                resultList.add(serializedText.substring(currentPlace));</span>
+<span class="fc" id="L84">                break;</span>
+            }
+<span class="fc" id="L86">            resultList.add(serializedText.substring(currentPlace, nextDelimiterIndex));</span>
+<span class="fc" id="L87">            currentPlace = nextDelimiterIndex + 1;</span>
+        }
+
+<span class="fc" id="L90">        return resultList;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

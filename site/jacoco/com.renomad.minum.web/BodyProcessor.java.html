@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BodyProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">BodyProcessor.java</span></div><h1>BodyProcessor.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.security.ForbiddenUseException;
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.state.Context;
+import com.renomad.minum.utils.StringUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * This code is responsible for extracting the {@link Body} from
+ * an HTTP request.
+ */
+final class BodyProcessor implements IBodyProcessor {
+
+    private final ILogger logger;
+    private final IInputStreamUtils inputStreamUtils;
+    private int countOfPartitions;
+    private final Constants constants;
+
+<span class="fc" id="L28">    BodyProcessor(Context context) {</span>
+<span class="fc" id="L29">        this.constants = context.getConstants();</span>
+<span class="fc" id="L30">        this.logger = context.getLogger();</span>
+<span class="fc" id="L31">        this.inputStreamUtils = new InputStreamUtils();</span>
+<span class="fc" id="L32">        this.countOfPartitions = 0;</span>
+<span class="fc" id="L33">    }</span>
+
+    @Override
+    public Body extractData(InputStream is, Headers h) {
+<span class="fc" id="L37">        final var contentType = h.contentType();</span>
+
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (h.contentLength() &gt;= 0) {</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            if (h.contentLength() &gt;= constants.maxReadSizeBytes) {</span>
+<span class="fc" id="L41">                throw new ForbiddenUseException(&quot;It is disallowed to process a body with a length more than &quot; + constants.maxReadSizeBytes + &quot; bytes&quot;);</span>
+            }
+        } else {
+            // we don't process chunked transfer encodings.  just bail.
+<span class="fc" id="L45">            List&lt;String&gt; transferEncodingHeaders = h.valueByKey(&quot;transfer-encoding&quot;);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (List.of(&quot;chunked&quot;).equals(transferEncodingHeaders)) {</span>
+<span class="fc" id="L47">                logger.logDebug(() -&gt; &quot;client sent chunked transfer-encoding.  Minum does not automatically read bodies of this type.&quot;);</span>
+            }
+<span class="fc" id="L49">            return Body.EMPTY;</span>
+        }
+
+<span class="fc" id="L52">        return extractBodyFromInputStream(h.contentLength(), contentType, is);</span>
+    }
+
+    /**
+     * Handles the parsing of the body data for either form-urlencoded or
+     * multipart/form-data
+     *
+     * @param contentType a mime value which must be either application/x-www-form-urlencoded
+     *                    or multipart/form-data.  Anything else will cause a new Body to
+     *                    be created with the body bytes, unparsed.  There are a number of
+     *                    cases where this makes sense - if the user is sending us plain text,
+     *                    html, json, or css, we want to simply accept the data and not try to parse it.
+     */
+    Body extractBodyFromInputStream(int contentLength, String contentType, InputStream is) {
+        // if the body is zero bytes long, just return
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (contentLength == 0) {</span>
+<span class="fc" id="L68">            logger.logDebug(() -&gt; &quot;the length of the body was 0, returning an empty Body&quot;);</span>
+<span class="fc" id="L69">            return Body.EMPTY;</span>
+        }
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (contentType.contains(&quot;application/x-www-form-urlencoded&quot;)) {</span>
+<span class="fc" id="L73">            return parseUrlEncodedForm(is, contentLength);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        } else if (contentType.contains(&quot;multipart/form-data&quot;)) {</span>
+<span class="fc" id="L75">            String boundaryValue = determineBoundaryValue(contentType);</span>
+<span class="fc" id="L76">            return parseMultipartForm(contentLength, boundaryValue, is);</span>
+        } else {
+<span class="fc" id="L78">            logger.logDebug(() -&gt; &quot;did not recognize a key-value pattern content-type, returning the raw bytes for the body.  Content-Type was: &quot; + contentType);</span>
+            // we can return the whole byte array here because we never read from it
+<span class="fc" id="L80">            return new Body(Map.of(), inputStreamUtils.read(contentLength, is), List.of(), BodyType.UNRECOGNIZED);</span>
+        }
+    }
+
+    /**
+     * Parse multipart/form protocol.
+     * @param contentLength the length of incoming data, found in the &quot;content-length&quot; header
+     * @param boundaryValue the randomly-generated boundary value between the partitions.  Research
+     *                      multipart/form data protocol for further information.
+     * @param inputStream A stream of bytes coming from the socket.
+     */
+    private Body parseMultipartForm(int contentLength, String boundaryValue, InputStream inputStream) {
+
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (boundaryValue.isBlank()) {</span>
+<span class="fc" id="L94">            logger.logDebug(() -&gt; &quot;The boundary value was blank for the multipart input. Returning an empty map&quot;);</span>
+<span class="fc" id="L95">            return new Body(Map.of(), new byte[0], List.of(), BodyType.UNRECOGNIZED);</span>
+        }
+
+<span class="fc" id="L98">        List&lt;Partition&gt; partitions = new ArrayList&lt;&gt;();</span>
+
+        try {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            for (StreamingMultipartPartition p : getMultiPartIterable(inputStream, boundaryValue, contentLength)) {</span>
+<span class="fc" id="L102">                countOfPartitions += 1;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                if (countOfPartitions &gt;= MAX_BODY_KEYS_URL_ENCODED) {</span>
+<span class="fc" id="L104">                    throw new WebServerException(&quot;Error: body had excessive number of partitions (&quot; + countOfPartitions + &quot;).  Maximum allowed: &quot; + MAX_BODY_KEYS_URL_ENCODED);</span>
+                }
+<span class="fc" id="L106">                partitions.add(new Partition(p.getHeaders(), p.readAllBytes(), p.getContentDisposition()));</span>
+<span class="fc" id="L107">            }</span>
+
+
+<span class="fc" id="L110">        } catch (Exception ex) {</span>
+<span class="fc" id="L111">            logger.logDebug(() -&gt; &quot;Unable to parse this body. returning what we have so far.  Exception message: &quot; + ex.getMessage());</span>
+            // we have to return nothing for the raw bytes, because at this point we are halfway through
+            // reading the inputstream and don't want to return broken data
+<span class="fc" id="L114">            return new Body(Map.of(), new byte[0], partitions, BodyType.MULTIPART);</span>
+<span class="fc" id="L115">        }</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (partitions.isEmpty()) {</span>
+<span class="fc" id="L117">            return new Body(Map.of(), new byte[0], List.of(), BodyType.UNRECOGNIZED);</span>
+        } else {
+<span class="fc" id="L119">            return new Body(Map.of(), new byte[0], partitions, BodyType.MULTIPART);</span>
+        }
+    }
+
+    /**
+     * Given the &quot;content-type&quot; header, determine the boundary value.  A typical
+     * multipart content-type header might look like this: &lt;pre&gt;Content-Type: multipart/form-data; boundary=i_am_a_boundary&lt;/pre&gt;
+     */
+    private static String determineBoundaryValue(String contentType) {
+<span class="fc" id="L128">        String boundaryKey = &quot;boundary=&quot;;</span>
+<span class="fc" id="L129">        String boundaryValue = &quot;&quot;;</span>
+<span class="fc" id="L130">        int indexOfBoundaryKey = contentType.indexOf(boundaryKey);</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (indexOfBoundaryKey &gt; 0) {</span>
+            // grab all the text after the key to obtain the boundary value
+<span class="fc" id="L133">            boundaryValue = contentType.substring(indexOfBoundaryKey + boundaryKey.length());</span>
+        }
+<span class="fc" id="L135">        return boundaryValue;</span>
+    }
+
+
+    /**
+     * Parse data formatted by application/x-www-form-urlencoded
+     * See &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST&quot;&gt;...&lt;/a&gt;
+     * &lt;p&gt;
+     * See here for the encoding: &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding&quot;&gt;...&lt;/a&gt;
+     * &lt;p&gt;
+     * for example, {@code valuea=3&amp;valueb=this+is+something}
+     */
+    Body parseUrlEncodedForm(InputStream is, int contentLength) {
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if (contentLength == 0) {</span>
+<span class="fc" id="L149">            return Body.EMPTY;</span>
+        }
+<span class="fc" id="L151">        final var postedPairs = new HashMap&lt;String, byte[]&gt;();</span>
+
+        try {
+
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            for (final var keyValue : getUrlEncodedDataIterable(is, contentLength)) {</span>
+<span class="fc" id="L156">                countOfPartitions += 1;</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                if (countOfPartitions &gt;= MAX_BODY_KEYS_URL_ENCODED) {</span>
+<span class="fc" id="L158">                    throw new WebServerException(&quot;Error: body had excessive number of partitions (&quot;+countOfPartitions+&quot;).  Maximum allowed: &quot; + MAX_BODY_KEYS_URL_ENCODED);</span>
+                }
+<span class="fc" id="L160">                String value = new String(keyValue.getUedg().readAllBytes(), StandardCharsets.US_ASCII);</span>
+<span class="fc" id="L161">                String key = keyValue.getKey();</span>
+<span class="fc" id="L162">                final var decodedValue = StringUtils.decode(value);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">                final var convertedValue = decodedValue == null ? &quot;&quot;.getBytes(StandardCharsets.UTF_8) : decodedValue.getBytes(StandardCharsets.UTF_8);</span>
+
+<span class="fc" id="L165">                final var result = postedPairs.put(key, convertedValue);</span>
+
+<span class="fc bfc" id="L167" title="All 2 branches covered.">                if (result != null) {</span>
+<span class="fc" id="L168">                    throw new WebServerException(&quot;Error: key (&quot; +key + &quot;) was duplicated in the post body - previous version was &quot; + new String(result, StandardCharsets.US_ASCII) + &quot; and recent data was &quot; + decodedValue);</span>
+                }
+<span class="fc" id="L170">            }</span>
+<span class="fc" id="L171">        } catch (Exception ex) {</span>
+<span class="fc" id="L172">            logger.logDebug(() -&gt; &quot;Unable to parse this body. returning what we have so far.  Exception message: &quot; + ex.getMessage());</span>
+            // we have to return nothing for the raw bytes, because at this point we are halfway through
+            // reading the inputstream and don't want to return broken data
+<span class="fc" id="L175">            return new Body(postedPairs, new byte[0], List.of(), BodyType.UNRECOGNIZED);</span>
+<span class="fc" id="L176">        }</span>
+        // we return nothing for the raw bytes because the code for parsing the streaming data
+        // doesn't begin with a fully-read byte array - it pulls data off the stream one byte
+        // at a time.
+<span class="fc" id="L180">        return new Body(postedPairs, new byte[0], List.of(), BodyType.FORM_URL_ENCODED);</span>
+    }
+
+    /**
+     * A regex used to extract the name value from the headers in multipart/form
+     * For example, in the following code, you can see that the name is &quot;image_uploads&quot;
+     * &lt;pre&gt;
+     * {@code
+     * --i_am_a_boundary
+     * Content-Type: text/plain
+     * Content-Disposition: form-data; name=&quot;text1&quot;
+     *
+     * I am a value that is text
+     * --i_am_a_boundary
+     * Content-Type: application/octet-stream
+     * Content-Disposition: form-data; name=&quot;image_uploads&quot;; filename=&quot;photo_preview.jpg&quot;
+     * }
+     * &lt;/pre&gt;
+     */
+<span class="fc" id="L199">    private static final Pattern multiformNameRegex = Pattern.compile(&quot;\\bname\\b=\&quot;(?&lt;namevalue&gt;.*?)\&quot;&quot;);</span>
+<span class="fc" id="L200">    private static final Pattern multiformFilenameRegex = Pattern.compile(&quot;\\bfilename\\b=\&quot;(?&lt;namevalue&gt;.*?)\&quot;&quot;);</span>
+
+    @Override
+    public Iterable&lt;UrlEncodedKeyValue&gt; getUrlEncodedDataIterable(InputStream inputStream, long contentLength) {
+<span class="fc" id="L204">        return () -&gt; new Iterator&lt;&gt;() {</span>
+
+<span class="fc" id="L206">            final CountBytesRead countBytesRead = new CountBytesRead();</span>
+
+            @Override
+            public boolean hasNext() {
+<span class="fc bfc" id="L210" title="All 2 branches covered.">                return countBytesRead.getCount() &lt; contentLength;</span>
+            }
+
+            @Override
+            public UrlEncodedKeyValue next() {
+<span class="fc bfc" id="L215" title="All 2 branches covered.">                if (!hasNext()) {</span>
+<span class="fc" id="L216">                    throw new NoSuchElementException();</span>
+                }
+<span class="fc" id="L218">                String key = &quot;&quot;;</span>
+<span class="fc" id="L219">                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+                while(true) {
+<span class="fc" id="L221">                    int result = 0;</span>
+                    try {
+<span class="fc" id="L223">                        result = inputStream.read();</span>
+<span class="fc" id="L224">                        countBytesRead.increment();</span>
+<span class="fc" id="L225">                    } catch (IOException e) {</span>
+<span class="fc" id="L226">                        throw new WebServerException(e);</span>
+<span class="fc" id="L227">                    }</span>
+                    // if this is true, the inputstream is closed
+<span class="fc bfc" id="L229" title="All 2 branches covered.">                    if (result == -1) break;</span>
+<span class="fc" id="L230">                    byte myByte = (byte) result;</span>
+                    // if this is true, we're done with the key
+<span class="fc bfc" id="L232" title="All 2 branches covered.">                    if (myByte == '=') {</span>
+                        // URL encoding is in ASCII only.
+<span class="fc" id="L234">                        key = byteArrayOutputStream.toString(StandardCharsets.US_ASCII);</span>
+<span class="fc" id="L235">                        break;</span>
+                    } else {
+<span class="fc bfc" id="L237" title="All 2 branches covered.">                        if (byteArrayOutputStream.size() &gt;= MAX_KEY_SIZE_BYTES) {</span>
+<span class="fc" id="L238">                            throw new WebServerException(&quot;Maximum size for name attribute is &quot; + MAX_KEY_SIZE_BYTES + &quot; ascii characters&quot;);</span>
+                        }
+<span class="fc" id="L240">                        byteArrayOutputStream.write(myByte);</span>
+                    }
+<span class="fc" id="L242">                }</span>
+
+<span class="fc bfc" id="L244" title="All 2 branches covered.">                if (key.isBlank()) {</span>
+<span class="fc" id="L245">                    throw new WebServerException(&quot;Unable to parse this body. no key found during parsing&quot;);</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">                } else if (countBytesRead.getCount() == contentLength) {</span>
+                    // if the only thing sent was the key and there's no further data, return the key with a null input stream
+                    // that will immediately return
+<span class="fc" id="L249">                    return new UrlEncodedKeyValue(key, new UrlEncodedDataGetter(InputStream.nullInputStream(), countBytesRead, contentLength));</span>
+                } else {
+<span class="fc" id="L251">                    return new UrlEncodedKeyValue(key, new UrlEncodedDataGetter(inputStream, countBytesRead, contentLength));</span>
+                }
+            }
+        };
+    }
+
+
+    @Override
+    public Iterable&lt;StreamingMultipartPartition&gt; getMultiPartIterable(InputStream inputStream, String boundaryValue, int contentLength) {
+<span class="fc" id="L260">        return () -&gt; new Iterator&lt;&gt;() {</span>
+
+<span class="fc" id="L262">            final CountBytesRead countBytesRead = new CountBytesRead();</span>
+<span class="fc" id="L263">            boolean hasReadFirstPartition = false;</span>
+
+            @Override
+            public boolean hasNext() {
+                // determining if we have more to read is a little tricky because we have a buffer
+                // filled by reading ahead, looking for the boundary value
+<span class="fc bfc" id="L269" title="All 2 branches covered.">                return (contentLength - countBytesRead.getCount()) &gt; boundaryValue.length();</span>
+            }
+
+            @Override
+            public StreamingMultipartPartition next() {
+<span class="fc bfc" id="L274" title="All 2 branches covered.">                if (!hasNext()) {</span>
+<span class="fc" id="L275">                    throw new NoSuchElementException();</span>
+                }
+                // confirm that the boundary value is as expected, as a sanity check,
+                // and avoid including the boundary value in the first set of headers
+<span class="fc bfc" id="L279" title="All 2 branches covered.">                if (! hasReadFirstPartition) {</span>
+                    String s;
+                    try {
+<span class="fc" id="L282">                        s = inputStreamUtils.readLine(inputStream);</span>
+<span class="fc" id="L283">                        countBytesRead.incrementBy(s.length() + 2);</span>
+<span class="fc" id="L284">                        hasReadFirstPartition = true;</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">                        if (!s.contains(boundaryValue)) {</span>
+<span class="fc" id="L286">                            throw new IOException(&quot;Error: First line must contain the expected boundary value. Expected to find: &quot;+ boundaryValue + &quot; in: &quot; + s);</span>
+                        }
+<span class="fc" id="L288">                    } catch (IOException e) {</span>
+<span class="fc" id="L289">                        throw new WebServerException(e);</span>
+<span class="fc" id="L290">                    }</span>
+                }
+<span class="fc" id="L292">                List&lt;String&gt; allHeaders = Headers.getAllHeaders(inputStream, inputStreamUtils);</span>
+<span class="fc" id="L293">                int lengthOfHeaders = allHeaders.stream().map(String::length).reduce(0, Integer::sum);</span>
+                // each line has a CR + LF (that's two bytes) and the headers end with a second pair of CR+LF.
+<span class="fc" id="L295">                int extraCrLfs = (2 * allHeaders.size()) + 2;</span>
+<span class="fc" id="L296">                countBytesRead.incrementBy(lengthOfHeaders + extraCrLfs);</span>
+
+<span class="fc" id="L298">                Headers headers = new Headers(allHeaders);</span>
+
+<span class="fc" id="L300">                List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">                if (cds == null) {</span>
+<span class="fc" id="L302">                    throw new WebServerException(&quot;Error: no Content-Disposition header on partition in Multipart/form data&quot;);</span>
+                }
+<span class="fc" id="L304">                String contentDisposition = String.join(&quot;;&quot;, cds);</span>
+
+<span class="fc" id="L306">                Matcher nameMatcher = multiformNameRegex.matcher(contentDisposition);</span>
+<span class="fc" id="L307">                Matcher filenameMatcher = multiformFilenameRegex.matcher(contentDisposition);</span>
+
+<span class="fc" id="L309">                String name = &quot;&quot;;</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">                if (nameMatcher.find()) {</span>
+<span class="fc" id="L311">                    name = nameMatcher.group(&quot;namevalue&quot;);</span>
+                } else {
+<span class="fc" id="L313">                    throw new WebServerException(&quot;Error: No name value set on multipart partition&quot;);</span>
+                }
+<span class="fc" id="L315">                String filename = &quot;&quot;;</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">                if (filenameMatcher.find()) {</span>
+<span class="fc" id="L317">                    filename = filenameMatcher.group(&quot;namevalue&quot;);</span>
+                }
+
+                // at this point our inputstream pointer is at the beginning of the
+                // body data.  From here until the end it's pure data.
+
+<span class="fc" id="L323">                return new StreamingMultipartPartition(headers, inputStream, new ContentDisposition(name, filename), boundaryValue, countBytesRead, contentLength);</span>
+            }
+
+
+        };
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

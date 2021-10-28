@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StringUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.utils</a> &gt; <span class="el_source">StringUtils.java</span></div><h1>StringUtils.java</h1><pre class="source lang-java linenums">package com.renomad.minum.utils;
+
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.security.SecureRandom;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static com.renomad.minum.utils.Invariants.mustNotBeNull;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+/**
+ * Some helper methods for Strings.
+ */
+public final class StringUtils {
+
+    private StringUtils() {
+        // making this private to be clearer it isn't supposed to be instantiated.
+    }
+
+
+    /**
+     * Returns text that has three symbols replaced -
+     * the less-than, greater-than, and ampersand.
+     * See &lt;a href=&quot;https://www.w3.org/International/questions/qa-escapes#use&quot;&gt;...&lt;/a&gt;
+     * &lt;br&gt;
+     * &lt;pre&gt;{@code
+     * This will protect against something like &lt;div&gt;$USERNAME&lt;/div&gt; allowing
+     * a username of
+     *      &lt;script&gt;alert(1)&lt;/script&gt;
+     * becoming
+     *      &lt;div&gt;&lt;script&gt;alert(1)&lt;/script&lt;/div&gt;
+     * and instead becomes
+     *      &lt;div&gt;&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;&lt;/div&gt;
+     * }&lt;/pre&gt;
+     * If the text is going inside an attribute (e.g. {@code &lt;div class=&quot;TEXT_GOES_HERE&quot;&gt;} )
+     * Then you need to escape slightly differently. In that case see [safeAttr]
+     */
+    public static String safeHtml(String input) {
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (input == null) {</span>
+<span class="fc" id="L42">            return &quot;&quot;;</span>
+        }
+<span class="fc" id="L44">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
+<span class="fc" id="L45">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="fc" id="L46">            .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;);</span>
+    }
+
+    /**
+     * Replace dangerous text that would go inside an HTML attribute.
+     * See {@link #safeHtml(String)}
+     * &lt;br&gt;&lt;br&gt;
+     * If we get a null string, just return an empty string
+     * &lt;br&gt;&lt;br&gt;
+     * &lt;pre&gt;{@code
+     * example:
+     *   Given
+     *      alert('XSS Attack')
+     *   Get
+     *      alert(&amp;apos;XSS Attack&amp;apos;)
+     * }&lt;/pre&gt;
+     */
+    public static String safeAttr(String input) {
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (input == null) {</span>
+<span class="fc" id="L65">            return &quot;&quot;;</span>
+        }
+<span class="fc" id="L67">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
+<span class="fc" id="L68">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="fc" id="L69">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
+<span class="fc" id="L70">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
+    }
+
+    /**
+     * Encodes UTF-8 text using URL-encoding
+     */
+    public static String encode(String str) {
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (str == null) {</span>
+<span class="fc" id="L78">            return &quot;%NULL%&quot;;</span>
+        }
+<span class="fc" id="L80">        return URLEncoder.encode(str, UTF_8);</span>
+    }
+
+    /**
+     * Decodes URL-encoded UTF-8 text, except that we
+     * first check if the string value is the token %NULL%,
+     * which is our way to signify null.
+     */
+    public static String decode(String str) {
+<span class="fc" id="L89">        mustNotBeNull(str);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
+<span class="fc" id="L91">            return null;</span>
+        }
+<span class="fc" id="L93">        return URLDecoder.decode(str, UTF_8);</span>
+    }
+
+    public static String generateSecureRandomString(int length) {
+<span class="fc" id="L97">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
+<span class="fc" id="L98">        final var sr = new SecureRandom();</span>
+
+<span class="fc" id="L100">        return IntStream.range(1, length+1)</span>
+<span class="fc" id="L101">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
+<span class="fc" id="L102">                .map(Object::toString)</span>
+<span class="fc" id="L103">                .collect(Collectors.joining());</span>
+    }
+
+    /**
+     * Converts a list of bytes to a string. Returns null if the input is null.
+     */
+    public static String byteListToString(List&lt;Byte&gt; byteList) {
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (byteList == null) return null;</span>
+<span class="fc" id="L111">        final int size = byteList.size();</span>
+<span class="fc" id="L112">        final var buf = new byte[size];</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        for (int i = 0; i &lt; size; i++) {</span>
+<span class="fc" id="L114">            buf[i] = byteList.get(i);</span>
+        }
+<span class="fc" id="L116">        return new String(buf, UTF_8);</span>
+    }
+
+    /**
+     * Converts an array of bytes to a string. Returns null if the input is null.
+     */
+    public static String byteArrayToString(byte[] byteArray) {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (byteArray == null) return null;</span>
+<span class="fc" id="L124">        return new String(byteArray, UTF_8);</span>
+    }
+
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

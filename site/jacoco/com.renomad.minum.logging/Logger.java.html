@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Logger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.logging</a> &gt; <span class="el_source">Logger.java</span></div><h1>Logger.java</h1><pre class="source lang-java linenums">package com.renomad.minum.logging;
+
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.queue.AbstractActionQueue;
+
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
+import static com.renomad.minum.utils.TimeUtils.getTimestampIsoInstant;
+
+/**
+ * Implementation of {@link ILogger}
+ */
+public class Logger implements ILogger {
+    /**
+     * The {@link LoggingActionQueue} that handles all
+     * our messages thread-safely by taking
+     * them off the top of a queue.
+     */
+    protected final AbstractActionQueue loggingActionQueue;
+    private final ExecutorService executorService;
+    private final Map&lt;LoggingLevel, Boolean&gt; activeLogLevels;
+
+    /**
+     * Constructor
+     * @param constants used for determining enabled log levels
+     * @param executorService provides thread handling for the logs, used to
+     *                        build a {@link LoggingActionQueue}
+     * @param name sets a name on the {@link LoggingActionQueue} to aid debugging, to
+     *             help distinguish queues.
+     */
+<span class="fc" id="L34">    public Logger(Constants constants, ExecutorService executorService, String name) {</span>
+<span class="fc" id="L35">        this.executorService = executorService;</span>
+<span class="fc" id="L36">        loggingActionQueue = new LoggingActionQueue(&quot;loggerPrinter&quot; + name, executorService, constants).initialize();</span>
+<span class="fc" id="L37">        activeLogLevels = convertToMap(constants.logLevels);</span>
+<span class="fc" id="L38">    }</span>
+
+    /**
+     * Convert the list of enabled log levels to a map of enum -&gt; boolean
+     */
+    static Map&lt;LoggingLevel, Boolean&gt; convertToMap(List&lt;LoggingLevel&gt; enabledLoggingLevels) {
+<span class="fc" id="L44">        Map&lt;LoggingLevel, Boolean&gt; activeLogLevels = new EnumMap&lt;&gt;(LoggingLevel.class);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
+<span class="fc" id="L46">            activeLogLevels.put(t, enabledLoggingLevels.contains(t));</span>
+        }
+<span class="fc" id="L48">        return activeLogLevels;</span>
+    }
+
+    @Override
+    public void logDebug(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L53">        logHelper(msg, LoggingLevel.DEBUG, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L54">    }</span>
+
+    @Override
+    public void logTrace(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L58">        logHelper(msg, LoggingLevel.TRACE, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L59">    }</span>
+
+    @Override
+    public void logAudit(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L63">        logHelper(msg, LoggingLevel.AUDIT, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L64">    }</span>
+
+    @Override
+    public void stop() {
+<span class="fc" id="L68">        this.loggingActionQueue.stop();</span>
+<span class="fc" id="L69">        this.executorService.shutdownNow();</span>
+<span class="fc" id="L70">    }</span>
+
+    @Override
+    public void logAsyncError(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L74">        logHelper(msg, LoggingLevel.ASYNC_ERROR, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L75">    }</span>
+
+    /**
+     * A helper method to reduce duplication
+     */
+    static void logHelper(
+            ThrowingSupplier&lt;String, Exception&gt; msg,
+            LoggingLevel loggingLevel,
+            Map&lt;LoggingLevel, Boolean&gt; activeLogLevels,
+            AbstractActionQueue loggingActionQueue
+            ) {
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (Boolean.TRUE.equals(activeLogLevels.get(loggingLevel))) {</span>
+        String receivedMessage;
+            try {
+<span class="fc" id="L89">                receivedMessage = msg.get();</span>
+<span class="fc" id="L90">            } catch (Exception ex) {</span>
+<span class="fc" id="L91">                receivedMessage = &quot;EXCEPTION DURING GET: &quot; + ex;</span>
+<span class="fc" id="L92">            }</span>
+<span class="fc" id="L93">            String finalReceivedMessage = receivedMessage;</span>
+<span class="fc bfc" id="L94" title="All 4 branches covered.">            if (loggingActionQueue == null || loggingActionQueue.isStopped()) {</span>
+<span class="fc" id="L95">                Object[] args = new Object[]{getTimestampIsoInstant(), loggingLevel.name(), showWhiteSpace(finalReceivedMessage)};</span>
+<span class="fc" id="L96">                System.out.printf(&quot;%s\t%s\t%s%n&quot;, args);</span>
+<span class="fc" id="L97">            } else {</span>
+<span class="fc" id="L98">                loggingActionQueue.enqueue(&quot;Logger#logHelper(&quot; + receivedMessage + &quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L99">                    Object[] args = new Object[]{getTimestampIsoInstant(), loggingLevel.name(), showWhiteSpace(finalReceivedMessage)};</span>
+<span class="fc" id="L100">                    System.out.printf(&quot;%s\t%s\t%s%n&quot;, args);</span>
+<span class="fc" id="L101">                });</span>
+            }
+        }
+<span class="fc" id="L104">    }</span>
+
+    /**
+     * Given a string that may have whitespace chars, render it in a way we can see
+     */
+    static String showWhiteSpace(String msg) {
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (msg == null) return &quot;(NULL)&quot;;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (msg.isEmpty()) return &quot;(EMPTY)&quot;;</span>
+
+        // if we have tabs, returns, newlines in the text, show them
+<span class="fc" id="L114">        String text = msg</span>
+<span class="fc" id="L115">                .replace(&quot;\t&quot;, &quot;\\t&quot;)</span>
+<span class="fc" id="L116">                .replace(&quot;\r&quot;, &quot;\\r&quot;)</span>
+<span class="fc" id="L117">                .replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
+
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (text.isBlank()) return &quot;(BLANK)&quot;;</span>
+<span class="fc" id="L120">        return text;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

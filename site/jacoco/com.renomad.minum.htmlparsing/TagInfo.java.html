@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TagInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.htmlparsing</a> &gt; <span class="el_source">TagInfo.java</span></div><h1>TagInfo.java</h1><pre class="source lang-java linenums">package com.renomad.minum.htmlparsing;
+
+import java.util.*;
+
+/**
+ * tagname and attributes inside an HTML5 tag
+ */
+public final class TagInfo {
+
+    private final TagName tagName;
+    private final Map&lt;String, String&gt; attributes;
+
+    public TagInfo(
+            TagName tagName,
+            Map&lt;String, String&gt; attributes
+<span class="fc" id="L16">    ) {</span>
+<span class="fc" id="L17">        this.tagName = tagName;</span>
+<span class="fc" id="L18">        this.attributes = new HashMap&lt;&gt;(attributes);</span>
+<span class="fc" id="L19">    }</span>
+
+    /**
+     * a null object
+     */
+<span class="fc" id="L24">    public static final TagInfo EMPTY = new TagInfo(TagName.NULL, Map.of());</span>
+
+    public TagName getTagName() {
+<span class="fc" id="L27">        return tagName;</span>
+    }
+
+    boolean containsAllAttributes(Set&lt;Map.Entry&lt;String, String&gt;&gt; entries) {
+<span class="fc" id="L31">        return attributes.entrySet().containsAll(entries);</span>
+    }
+
+    public String getAttribute(String key) {
+<span class="fc" id="L35">        return attributes.get(key);</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (!(o instanceof TagInfo tagInfo)) return false;</span>
+<span class="fc bfc" id="L42" title="All 4 branches covered.">        return tagName == tagInfo.tagName &amp;&amp; Objects.equals(attributes, tagInfo.attributes);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L47">        return Objects.hash(tagName, attributes);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L52">        return &quot;TagInfo{&quot; +</span>
+                &quot;tagName=&quot; + tagName +
+                &quot;, attributes=&quot; + attributes +
+                '}';
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
