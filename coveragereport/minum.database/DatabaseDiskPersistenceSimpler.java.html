@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseDiskPersistenceSimpler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.database</a> &gt; <span class="el_source">DatabaseDiskPersistenceSimpler.java</span></div><h1>DatabaseDiskPersistenceSimpler.java</h1><pre class="source lang-java linenums">package minum.database;
+
+import minum.logging.ILogger;
+import minum.utils.ActionQueue;
+import minum.utils.FileUtils;
+import minum.utils.StacktraceUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
+import static minum.utils.FileUtils.writeString;
+import static minum.utils.Invariants.mustBeTrue;
+
+/**
+ * This allows us to run some disk-persistence operations more consistently
+ * on any data that extends from {@link SimpleDataType}
+ * @param &lt;T&gt; the type of data we'll be persisting
+ */
+public class DatabaseDiskPersistenceSimpler&lt;T&gt; {
+
+    public static final String databaseFileSuffix = &quot;.ddps&quot;;
+
+    private final Path dbDirectory;
+    private final ActionQueue actionQueue;
+    private final ILogger logger;
+
+    /**
+     * Constructs a disk-persistence class well-suited for your data.
+     * &lt;p&gt;
+     * There is a bit of subtlety to its use, see documentation on the params.
+     * @param dbDirectory the directory where we will store this data, relative to
+     *                    the location from which we run the application.  Recommend that
+     *                    you use some consistency, and consider hierarchy.  For example,
+     *                    you might want to store all your data at db/foo - foo being the
+     *                    name of the type of data we're storing, and db being a place to
+     *                    collect together all your directories.
+     *&lt;p&gt;
+     *                    If you're consistent enough, you will have a top-level directory
+     *                    like &quot;db&quot;, with a bunch of sub-directories corresponding to the
+     *                    types of data.  But really there is a lot of flexibility, you
+     *                    can do it another way if you want.
+     * @param executorService The executorService is our interface to the system which we
+     *                        use for parallel processing.  We hand this sucker off to
+     *                        an internal {@link ActionQueue} which handles all these
+     *                        operations asynchronously, so that data is *eventually*
+     *                        written to disk.
+     */
+<span class="fc" id="L53">    public DatabaseDiskPersistenceSimpler(Path dbDirectory, ExecutorService executorService, ILogger logger) {</span>
+<span class="fc" id="L54">        this.dbDirectory = dbDirectory;</span>
+<span class="fc" id="L55">        actionQueue = new ActionQueue(&quot;DatabaseWriter &quot; + dbDirectory, executorService).initialize();</span>
+<span class="fc" id="L56">        this.logger = logger;</span>
+
+<span class="fc" id="L58">        actionQueue.enqueue(&quot;create directory&quot; + this.dbDirectory, () -&gt; {</span>
+            try {
+<span class="fc" id="L60">                FileUtils.makeDirectory(logger, this.dbDirectory);</span>
+<span class="nc" id="L61">            } catch (IOException ex) {</span>
+<span class="nc" id="L62">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="fc" id="L63">            }</span>
+<span class="fc" id="L64">            return null;</span>
+        });
+
+<span class="fc" id="L67">    }</span>
+
+    /**
+     * This function will stop the minum.database persistence cleanly.
+     * &lt;p&gt;
+     * In order to do this, we need to wait for our threads
+     * to finish their work.  In particular, we
+     * have offloaded our file writes to [actionQueue], which
+     * has an internal thread for serializing all actions
+     * on our minum.database
+     */
+    public void stop() {
+<span class="fc" id="L79">        actionQueue.stop();</span>
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * takes any serializable data and writes it to disk
+     *
+     * @param data the data we are writing
+     */
+    public void persistToDisk(SimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L88">        final String fullPath = makeFullPathFromData(data);</span>
+<span class="fc" id="L89">        actionQueue.enqueue(&quot;persist data to disk&quot;, () -&gt; {</span>
+<span class="fc" id="L90">            writeString(fullPath, data.serialize());</span>
+
+            // needs to return null because this is a Callable, which allows us to
+            // bubble exceptions back.
+<span class="fc" id="L94">            return null;</span>
+        });
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * Deletes a piece of data from the disk
+     *
+     * @param data the data we are serializing and writing
+     */
+    public void deleteOnDisk(SimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L104">        final String fullPath = makeFullPathFromData(data);</span>
+<span class="fc" id="L105">        actionQueue.enqueue(&quot;delete data from disk&quot;, () -&gt; {</span>
+            try {
+<span class="fc" id="L107">                Files.delete(Path.of(fullPath));</span>
+<span class="fc" id="L108">            } catch (Exception ex) {</span>
+<span class="fc" id="L109">                logger.logAsyncError(() -&gt; &quot;failed to delete file &quot;+fullPath+&quot; during deleteOnDisk&quot;);</span>
+<span class="fc" id="L110">            }</span>
+
+            // needs to return null because this is a Callable, which allows us to
+            // bubble exceptions back.
+<span class="fc" id="L114">            return null;</span>
+        });
+<span class="fc" id="L116">        }</span>
+
+
+    public void updateOnDisk(SimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L120">        final String fullPath = makeFullPathFromData(data);</span>
+<span class="fc" id="L121">        final var file = new File(fullPath);</span>
+
+<span class="fc" id="L123">        actionQueue.enqueue(&quot;update data on disk&quot;, () -&gt; {</span>
+            // if the file isn't already there, throw an exception
+<span class="fc" id="L125">            mustBeTrue(file.exists(), &quot;we were asked to update &quot;+file+&quot; but it doesn't exist&quot;);</span>
+<span class="fc" id="L126">            writeString(fullPath, data.serialize());</span>
+
+            // needs to return null because this is a Callable, which allows us to
+            // bubble exceptions back.
+<span class="fc" id="L130">            return null;</span>
+        });
+<span class="fc" id="L132">    }</span>
+
+    private String makeFullPathFromData(SimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L135">        return dbDirectory + &quot;/&quot; + data.getIndex() + databaseFileSuffix;</span>
+    }
+
+    /**
+     * Grabs all the data from disk and returns it as a list.  This
+     * method is run by various programs when the system first loads.
+     */
+    public List&lt;T&gt; readAndDeserialize(SimpleDataType&lt;T&gt; instance) {
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (! Files.exists(dbDirectory)) {</span>
+<span class="fc" id="L144">            logger.logDebug(() -&gt; dbDirectory + &quot; directory missing, creating empty list of data&quot;);</span>
+<span class="fc" id="L145">            return new ArrayList&lt;&gt;();</span>
+        }
+
+<span class="fc" id="L148">        final var data = new ArrayList&lt;T&gt;();</span>
+
+<span class="fc" id="L150">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
+<span class="pc bpc" id="L151" title="1 of 4 branches missed.">            final var listOfFiles = pathStream.filter(path -&gt; Files.exists(path) &amp;&amp; Files.isRegularFile(path)).toList();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
+                String fileContents;
+<span class="fc" id="L154">                fileContents = Files.readString(p);</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">                if (fileContents.isBlank()) {</span>
+<span class="fc" id="L156">                    logger.logDebug( () -&gt; p.getFileName() + &quot; file exists but empty, skipping&quot;);</span>
+                } else {
+                    try {
+<span class="fc" id="L159">                        data.add(instance.deserialize(fileContents));</span>
+<span class="fc" id="L160">                    } catch (Exception e) {</span>
+<span class="fc" id="L161">                        throw new RuntimeException(&quot;Failed to deserialize &quot;+p+&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;)&quot;);</span>
+<span class="fc" id="L162">                    }</span>
+                }
+<span class="fc" id="L164">            }</span>
+<span class="nc" id="L165">        } catch (IOException e) { // if we fail to walk() the dbDirectory.  I don't even know how to test this.</span>
+<span class="nc" id="L166">            throw new RuntimeException(e);</span>
+<span class="fc" id="L167">        }</span>
+<span class="fc" id="L168">        return data;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

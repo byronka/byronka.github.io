@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatusLine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">StatusLine.java</span></div><h1>StatusLine.java</h1><pre class="source lang-java linenums">package minum.web;
+
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static minum.utils.Invariants.mustBeTrue;
+
+/**
+ * This class represents the text that is sent back in a {@link Response}
+ */
+<span class="fc" id="L12">public record StatusLine(StatusCode status, WebEngine.HttpVersion version, String rawValue) {</span>
+
+    /**
+     * This is the regex used to analyze a status line sent by the server and
+     * read by the client.  Servers will send messages like: &quot;HTTP/1.1 200 OK&quot; or &quot;HTTP/1.1 500 Internal Server Error&quot;
+     */
+    static final String statusLinePattern = &quot;^HTTP/(1.1|1.0) (\\d{3}) (.*)$&quot;;
+<span class="fc" id="L19">    static final Pattern statusLineRegex = Pattern.compile(statusLinePattern);</span>
+
+    /**
+     * See see &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/HTTP/Status&quot;&gt;Status Codes&lt;/a&gt;
+     */
+<span class="fc" id="L24">    public enum StatusCode{</span>
+<span class="fc" id="L25">        _200_OK(200, &quot;OK&quot;),</span>
+<span class="fc" id="L26">        _201_CREATED(201, &quot;CREATED&quot;),</span>
+
+        /**
+         * Used a lot after receiving a post response.  The pattern is to
+         * receive the post, then redirect to a new page. See &lt;a href=&quot;https://en.wikipedia.org/wiki/Post/Redirect/Get&quot;&gt;...&lt;/a&gt;
+         */
+<span class="fc" id="L32">        _303_SEE_OTHER(303, &quot;SEE OTHER&quot;),</span>
+
+        /**
+         * If the user has not authenticated, we send this back as the response.  Note the
+         * confusing terminology - authorized and authenticated are different, this really
+         * refers to not being authenticated. (unauthenticated meaning we don't recognize their
+         * credentials, while non-authorized meaning even though we know
+         * who they are, they aren't allowed to see this data, in which case we should send
+         * back a 403)
+         */
+<span class="fc" id="L42">        _401_UNAUTHORIZED(401, &quot;UNAUTHORIZED&quot;),</span>
+<span class="fc" id="L43">        _429_TOO_MANY_REQUESTS(429, &quot;TOO MANY REQUESTS&quot;),</span>
+<span class="fc" id="L44">        _404_NOT_FOUND(404, &quot;NOT FOUND&quot;),</span>
+<span class="fc" id="L45">        _500_INTERNAL_SERVER_ERROR(500, &quot;INTERNAL SERVER ERROR&quot;)</span>
+        ;
+
+        public final int code;
+        public final String shortDescription;
+
+<span class="fc" id="L51">        StatusCode(int code, String shortDescription) {</span>
+<span class="fc" id="L52">            this.code = code;</span>
+<span class="fc" id="L53">            this.shortDescription = shortDescription;</span>
+<span class="fc" id="L54">        }</span>
+
+        static StatusCode findByCode(int code) {
+<span class="fc" id="L57">            return Arrays.stream(StatusCode.values())</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">                    .filter(x -&gt; x.code == code)</span>
+<span class="fc" id="L59">                    .findFirst()</span>
+<span class="fc" id="L60">                    .orElseThrow();</span>
+        }
+    }
+
+    public static StatusLine extractStatusLine(String value) {
+<span class="fc" id="L65">        Matcher mr = StatusLine.statusLineRegex.matcher(value);</span>
+<span class="fc" id="L66">        mustBeTrue(mr.matches(), String.format(&quot;%s must match the statusLinePattern: %s&quot;, value, statusLinePattern));</span>
+<span class="fc" id="L67">        String version = mr.group(1);</span>
+<span class="pc bpc" id="L68" title="2 of 3 branches missed.">        WebEngine.HttpVersion httpVersion = switch (version) {</span>
+<span class="fc" id="L69">            case &quot;1.1&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ONE;</span>
+<span class="nc" id="L70">            case &quot;1.0&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ZERO;</span>
+<span class="pc" id="L71">            default -&gt; throw new RuntimeException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
+        };
+<span class="fc" id="L73">        StatusCode status = StatusCode.findByCode(Integer.parseInt(mr.group(2)));</span>
+
+<span class="fc" id="L75">        return new StatusLine(status, httpVersion, value);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

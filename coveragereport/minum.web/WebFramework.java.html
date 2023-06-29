@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebFramework.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">WebFramework.java</span></div><h1>WebFramework.java</h1><pre class="source lang-java linenums">package minum.web;
+
+import minum.Constants;
+import minum.database.DatabaseDiskPersistenceSimpler;
+import minum.database.SimpleDataType;
+import minum.logging.ILogger;
+import minum.security.TheBrig;
+import minum.security.UnderInvestigation;
+import minum.utils.StacktraceUtils;
+import minum.utils.StopwatchUtils;
+import minum.utils.ThrowingConsumer;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static minum.web.InputStreamUtils.readLine;
+import static minum.web.StatusLine.StatusCode._404_NOT_FOUND;
+import static minum.web.WebEngine.HTTP_CRLF;
+
+/**
+ * Responsible for the logistics after socket connection
+ * &lt;p&gt;
+ * Relies on server sockets built in {@link WebEngine}.  Builds
+ * a function in {@link #makePrimaryHttpHandler()} that sort-of fits into a
+ * slot in WebEngine and handles HTTP protocol.  Also handles
+ * routing and static files.
+ */
+public class WebFramework implements AutoCloseable {
+
+    /**
+     * This is used as a key when registering endpoints
+     */
+<span class="fc" id="L43">    record VerbPath(StartLine.Verb verb, String path) { }</span>
+
+    /**
+     * The list of paths that our system is registered to handle.
+     */
+    private final Map&lt;VerbPath, Function&lt;Request, Response&gt;&gt; registeredDynamicPaths;
+
+    // This is just used for testing.  If it's null, we use the real time.
+    private final ZonedDateTime overrideForDateTime;
+    private final FullSystem fs;
+    private StaticFilesCache staticFilesCache;
+    private final ILogger logger;
+
+    /**
+     * This is the brains of how the server responds to web clients.  Whatever
+     * code lives here will be inserted into a slot within the server code.
+     * See {@link Server#start(ExecutorService, ThrowingConsumer)}
+     *
+     * @param handlerFinder bear with me...  This is a function, that takes a {@link StartLine}, and
+     *                      returns a {@link Function} that handles the {@link Request} -&gt; {@link Response}.
+     *                      Normally, you would just use {@link #makePrimaryHttpHandler()} and the default code at
+     *                      {@link #findEndpointForThisStartline(StartLine)} would be called.  However, you can provide
+     *                      a handler here if you want to override that behavior, for example in tests when
+     *                      you want a bit more control.
+     *                      &lt;br&gt;
+     *                      The common case definition of this is found at {@link #findEndpointForThisStartline}
+     */
+    ThrowingConsumer&lt;ISocketWrapper, IOException&gt; makePrimaryHttpHandler(Function&lt;StartLine, Function&lt;Request, Response&gt;&gt; handlerFinder) {
+
+        // build the handler
+
+<span class="fc" id="L74">        return (sw) -&gt; {</span>
+<span class="fc" id="L75">            try (sw) {</span>
+
+                // if we recognize this client as an attacker, dump them.
+<span class="pc bpc" id="L78" title="1 of 4 branches missed.">                TheBrig theBrig = (fs != null &amp;&amp; fs.getTheBrig() != null) ? fs.getTheBrig() : null;</span>
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">                if (theBrig != null &amp;&amp; Constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="nc" id="L80">                    String remoteClient = sw.getRemoteAddr();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">                    if (theBrig.isInJail(remoteClient + &quot;_vuln_seeking&quot;)) {</span>
+                        // if this client is a vulnerability seeker, just dump them unceremoniously
+<span class="nc" id="L83">                        logger.logDebug(() -&gt; &quot;closing the socket on &quot; + remoteClient);</span>
+<span class="nc" id="L84">                        sw.close();</span>
+<span class="nc" id="L85">                        return;</span>
+                    }
+                }
+
+<span class="fc" id="L89">                var fullStopwatch = new StopwatchUtils().startTimer();</span>
+<span class="fc" id="L90">                final var is = sw.getInputStream();</span>
+                // first grab the start line (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#start_line)
+                // e.g. GET /foo HTTP/1.1
+<span class="fc" id="L93">                final var rawStartLine = readLine(is);</span>
+                 /*
+                  if the rawStartLine is null, that means the client stopped talking.
+                  See ISocketWrapper.readLine()
+                  */
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">                if (rawStartLine == null) {</span>
+                    // no need to do any further work, just bail
+<span class="nc" id="L100">                    return;</span>
+                }
+
+<span class="fc" id="L103">                logger.logTrace(() -&gt; sw + &quot;: raw startline received: &quot; + rawStartLine);</span>
+<span class="fc" id="L104">                StartLine sl = StartLine.extractStartLine(rawStartLine);</span>
+<span class="fc" id="L105">                logger.logTrace(() -&gt; sw + &quot;: StartLine received: &quot; + sl);</span>
+
+                /*
+                At this point we have a start line.  That's enough to see whether a 404
+                would be an appropriate response.
+                 */
+<span class="fc" id="L111">                Function&lt;Request, Response&gt; endpoint = handlerFinder.apply(sl);</span>
+
+                // The response we will send to the client
+                Response resultingResponse;
+
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                if (endpoint == null) {</span>
+<span class="fc" id="L117">                    logger.logDebug(() -&gt; String.format(&quot;%s requested an unregistered path of %s.  Returning 404&quot;, sw, sl.pathDetails().isolatedPath()));</span>
+<span class="fc" id="L118">                    boolean isVulnSeeking = UnderInvestigation.isLookingForSuspiciousPaths(sl.pathDetails().isolatedPath());</span>
+<span class="fc" id="L119">                    logger.logDebug(() -&gt; &quot;Is &quot; + sw.getRemoteAddr() + &quot; looking for a vulnerability? &quot; + isVulnSeeking);</span>
+<span class="pc bpc" id="L120" title="5 of 6 branches missed.">                    if (isVulnSeeking &amp;&amp; theBrig != null &amp;&amp; Constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="nc" id="L121">                        theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, Constants.VULN_SEEKING_JAIL_DURATION);</span>
+                    }
+<span class="fc" id="L123">                    resultingResponse = new Response(_404_NOT_FOUND);</span>
+<span class="fc" id="L124">                } else {</span>
+                    /*
+                       next we will read the headers (e.g. Content-Type: foo/bar) one-by-one.
+
+                       by the way, the headers will tell us vital information about the
+                       body.  If, for example, we're getting a POST and receiving a
+                       www form url encoded, there will be a header of &quot;content-length&quot;
+                       that will mention how many bytes to read.  On the other hand, if
+                       we're receiving a multipart, there will be no content-length, but
+                       the content-type will include the boundary string.
+                    */
+<span class="fc" id="L135">                    Headers hi = Headers.extractHeaderInformation(sw.getInputStream());</span>
+
+<span class="fc" id="L137">                    var bp = new BodyProcessor(logger);</span>
+<span class="fc" id="L138">                    Body body = Body.EMPTY;</span>
+                    // Determine whether there is a body (a block of data) in this request
+<span class="fc bfc" id="L140" title="All 2 branches covered.">                    if (isThereIsABody(hi)) {</span>
+<span class="fc" id="L141">                        logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + hi.contentType());</span>
+<span class="fc" id="L142">                        body = bp.extractData(sw.getInputStream(), hi);</span>
+                    }
+
+<span class="fc" id="L145">                    var handlerStopwatch = new StopwatchUtils().startTimer();</span>
+<span class="fc" id="L146">                    resultingResponse = endpoint.apply(new Request(hi, sl, body, sw.getRemoteAddr()));</span>
+<span class="fc" id="L147">                    logger.logTrace(() -&gt; String.format(&quot;handler processing of %s %s took %d millis&quot;, sw, sl, handlerStopwatch.stopTimer()));</span>
+                }
+
+<span class="fc" id="L150">                String responseString = convertResponseToString(resultingResponse);</span>
+
+                // Here is where the bytes actually go out on the socket
+<span class="fc" id="L153">                sw.send(responseString);</span>
+<span class="fc" id="L154">                sw.send(resultingResponse.body());</span>
+<span class="fc" id="L155">                logger.logTrace(() -&gt; String.format(&quot;full processing (including communication time) of %s %s took %d millis&quot;, sw, sl, fullStopwatch.stopTimer()));</span>
+
+<span class="nc bnc" id="L157" title="All 4 branches missed.">            }</span>
+<span class="fc" id="L158">        };</span>
+    }
+
+    /**
+     * Determine whether the headers in this HTTP message indicate that
+     * a body is available to read
+     */
+    public static boolean isThereIsABody(Headers hi) {
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        return !hi.contentType().isBlank() &amp;&amp;</span>
+<span class="pc bpc" id="L167" title="3 of 4 branches missed.">                (hi.contentLength() &gt; 0 || hi.headersAsMap().get(&quot;transfer-encoding&quot;).stream().anyMatch(x -&gt; x.equalsIgnoreCase(&quot;chunked&quot;)));</span>
+    }
+
+    /**
+     * This is where our strongly-typed {@link Response} gets converted
+     * to a string and sent on the socket.
+     */
+    private String convertResponseToString(Response r) {
+<span class="fc" id="L175">        String date = Objects.requireNonNullElseGet(overrideForDateTime, () -&gt; ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;))).format(DateTimeFormatter.RFC_1123_DATE_TIME);</span>
+
+<span class="fc" id="L177">        return &quot;HTTP/1.1 &quot; + r.statusCode().code + &quot; &quot; + r.statusCode().shortDescription + HTTP_CRLF +</span>
+            &quot;Date: &quot; + date + HTTP_CRLF +
+            &quot;Server: minum&quot; + HTTP_CRLF +
+<span class="fc" id="L180">            r.extraHeaders().stream().map(x -&gt; x + HTTP_CRLF).collect(Collectors.joining()) +</span>
+<span class="fc" id="L181">            &quot;Content-Length: &quot; + r.body().length + HTTP_CRLF +</span>
+            HTTP_CRLF;
+    }
+
+    /**
+     * This is the brains of how the server responds to web clients. Whatever
+     * code lives here will be inserted into a slot within the server code
+     * This builds a handler {@link java.util.function.Consumer} that provides
+     * the code to be run in the web testing engine that selects which
+     * function to run for a particular HTTP request.  See {@link #makePrimaryHttpHandler(Function)}
+     */
+    ThrowingConsumer&lt;ISocketWrapper, IOException&gt; makePrimaryHttpHandler() {
+<span class="fc" id="L193">        return makePrimaryHttpHandler(this::findEndpointForThisStartline);</span>
+    }
+
+    /**
+     * Looks through the mappings of {@link VerbPath} and path to registered endpoints
+     * or the static cache and returns the appropriate one (If we
+     * do not find anything, return null)
+     */
+    private Function&lt;Request, Response&gt; findEndpointForThisStartline(StartLine sl) {
+<span class="fc" id="L202">        final var functionFound = registeredDynamicPaths.get(new VerbPath(sl.verb(), sl.pathDetails().isolatedPath().toLowerCase(Locale.ROOT)));</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (functionFound == null) {</span>
+
+            // if nothing was found in the registered dynamic endpoints, look
+            // through the static endpoints
+<span class="fc" id="L207">            final var staticResponseFound = staticFilesCache.getStaticResponse(sl.pathDetails().isolatedPath().toLowerCase(Locale.ROOT));</span>
+
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">            if (staticResponseFound != null) {</span>
+<span class="nc" id="L210">                return request -&gt; staticResponseFound;</span>
+            } else {
+<span class="fc" id="L212">                return null;</span>
+            }
+        }
+<span class="fc" id="L215">        return functionFound;</span>
+    }
+
+    public WebFramework(ILogger logger, ZonedDateTime default_zdt) {
+<span class="fc" id="L219">        this(null, logger, default_zdt);</span>
+<span class="fc" id="L220">    }</span>
+
+    /**
+     * This constructor is used for the real production system
+     */
+    public WebFramework(FullSystem fs) {
+<span class="fc" id="L226">        this(fs, null);</span>
+<span class="fc" id="L227">    }</span>
+
+    /**
+     * This provides the ZonedDateTime as a parameter so we
+     * can set the current date (for testing purposes)
+     * @param overrideForDateTime for those test cases where we need to control the time
+     */
+    public WebFramework(FullSystem fs, ZonedDateTime overrideForDateTime) {
+<span class="fc" id="L235">        this(fs, fs.logger, overrideForDateTime);</span>
+<span class="fc" id="L236">    }</span>
+
+<span class="fc" id="L238">    private WebFramework(FullSystem fs, ILogger logger, ZonedDateTime overrideForDateTime) {</span>
+<span class="fc" id="L239">        this.fs = fs;</span>
+<span class="fc" id="L240">        this.logger = logger;</span>
+<span class="fc" id="L241">        this.overrideForDateTime = overrideForDateTime;</span>
+<span class="fc" id="L242">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L243">        this.staticFilesCache = new StaticFilesCache(logger);</span>
+<span class="fc" id="L244">    }</span>
+
+    /**
+     * Add a new handler in the web application for a combination
+     * of a {@link minum.web.StartLine.Verb}, a path, and then provide
+     * the code to handle a request.
+     * &lt;br&gt;
+     * Note that the path text expected is *after* the first forward slash,
+     * so for example with {@code http://foo.com/mypath}, you provide us &quot;mypath&quot;
+     * here.
+     */
+    public void registerPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
+<span class="fc" id="L256">        registeredDynamicPaths.put(new VerbPath(verb, pathName), webHandler);</span>
+<span class="fc" id="L257">    }</span>
+
+
+    void registerStaticFiles(StaticFilesCache sfc) {
+<span class="fc" id="L261">        this.staticFilesCache = sfc;</span>
+<span class="fc" id="L262">    }</span>
+
+    /**
+     * Since this is a generic method, a bit of care is required when
+     * calling.  Try to use a pattern like this:
+     * &lt;pre&gt;
+     * {@code DatabaseDiskPersistenceSimpler&lt;Photograph&gt; photoDdps = wf.getDdps(&quot;photos&quot;);}
+     * &lt;/pre&gt;
+     */
+    public &lt;T extends SimpleDataType&lt;?&gt;&gt; DatabaseDiskPersistenceSimpler&lt;T&gt; getDdps(String name) {
+<span class="fc" id="L272">        var dbDir = Path.of(Constants.DB_DIRECTORY);</span>
+<span class="fc" id="L273">        return new DatabaseDiskPersistenceSimpler&lt;&gt;(dbDir.resolve(name), fs.es, fs.logger);</span>
+    }
+
+    public ILogger getLogger() {
+<span class="fc" id="L277">        return logger;</span>
+    }
+
+    public FullSystem getFullSystem() {
+<span class="fc" id="L281">        return this.fs;</span>
+    }
+
+    @Override
+    public void close() {
+<span class="fc" id="L286">        logger.logTrace(() -&gt; &quot;close called on &quot; + this + &quot;. Stacktrace:&quot; + StacktraceUtils.stackTraceToString(Thread.currentThread().getStackTrace()));</span>
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">        if (fs != null) {</span>
+            try {
+<span class="nc" id="L289">                getFullSystem().getServer().centralLoopFuture.get();</span>
+<span class="nc" id="L290">                getFullSystem().getSslServer().centralLoopFuture.get();</span>
+<span class="nc" id="L291">            } catch (Exception ex) {</span>
+<span class="nc" id="L292">                throw new RuntimeException(ex);</span>
+<span class="nc" id="L293">            }</span>
+<span class="nc" id="L294">            getFullSystem().close();</span>
+        }
+<span class="fc" id="L296">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

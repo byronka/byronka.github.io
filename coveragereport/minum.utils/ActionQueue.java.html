@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ActionQueue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.utils</a> &gt; <span class="el_source">ActionQueue.java</span></div><h1>ActionQueue.java</h1><pre class="source lang-java linenums">package minum.utils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+
+/**
+ * This class provides the ability to pop items into
+ * a queue thread-safely and know they'll happen later.
+ * &lt;p&gt;
+ * For example, this is helpful for minum.logging, or passing
+ * functions to a minum.database.  It lets us run a bit faster,
+ * since the I/O actions are happening on a separate
+ * thread and the only time required is passing the
+ * function of what we want to run later.
+ */
+public class ActionQueue {
+<span class="fc" id="L20">    private static final List&lt;ActionQueue&gt; allQueues = new ArrayList&lt;&gt;();</span>
+    private final String name;
+    private final ExecutorService queueExecutor;
+    private final LinkedBlockingQueue&lt;CallableWithDescription&gt; queue;
+<span class="fc" id="L24">    private boolean stop = false;</span>
+    private Thread queueThread;
+
+<span class="fc" id="L27">    public ActionQueue(String name, ExecutorService queueExecutor) {</span>
+<span class="fc" id="L28">        this.name = name;</span>
+<span class="fc" id="L29">        this.queueExecutor = queueExecutor;</span>
+<span class="fc" id="L30">        this.queue = new LinkedBlockingQueue&lt;&gt;();</span>
+<span class="fc" id="L31">        allQueues.add(this);</span>
+<span class="fc" id="L32">    }</span>
+
+    // Regarding the InfiniteLoopStatement - indeed, we expect that the while loop
+    // below is an infinite loop unless there's an exception thrown, that's what it is.
+    @SuppressWarnings(&quot;InfiniteLoopStatement&quot;)
+    public ActionQueue initialize() {
+<span class="fc" id="L38">        Callable&lt;Object&gt; queueThread = () -&gt; {</span>
+<span class="fc" id="L39">            Thread.currentThread().setName(name);</span>
+<span class="fc" id="L40">            this.queueThread = Thread.currentThread();</span>
+            try {
+                while (true) {
+<span class="fc" id="L43">                    Callable&lt;Void&gt; action = queue.take();</span>
+<span class="fc" id="L44">                    action.call();</span>
+<span class="fc" id="L45">                }</span>
+<span class="fc" id="L46">            } catch (InterruptedException ex) {</span>
+            /*
+            this is what we expect to happen.
+            once this happens, we just continue on.
+            this only gets called when we are trying to shut everything
+            down cleanly
+             */
+<span class="fc" id="L53">                System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ActionQueue for %s is stopped.%n&quot;, name);</span>
+<span class="nc" id="L54">            } catch (Exception ex) {</span>
+<span class="nc" id="L55">                System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ERROR: ActionQueue for %s has stopped unexpectedly. error: %s%n&quot;, name, ex);</span>
+<span class="nc" id="L56">                throw ex;</span>
+<span class="fc" id="L57">            }</span>
+<span class="fc" id="L58">            return null;</span>
+        };
+<span class="fc" id="L60">        queueExecutor.submit(queueThread);</span>
+<span class="fc" id="L61">        return this;</span>
+    }
+
+    /**
+     * Adds something to the queue to be processed.
+     * @param action an action to take with no return value.  (this uses callable so we can collect exceptions)
+     */
+    public void enqueue(String description, Callable&lt;Void&gt; action) {
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (! stop) {</span>
+<span class="fc" id="L70">            queue.add(new CallableWithDescription(action, description));</span>
+        }
+<span class="fc" id="L72">    }</span>
+
+    /**
+     * This will prevent any new actions being
+     * queued (by setting the stop flag to true and thus
+     * causing an exception to be thrown
+     * when a call is made to [enqueue]) and will
+     * block until the queue is empty.
+     */
+    public void stop() {
+<span class="fc" id="L82">        System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping queue &quot; + this);</span>
+<span class="fc" id="L83">        stop = true;</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 5; i++) {</span>
+<span class="fc" id="L85">            int size = queue.size();</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if (!(size &gt; 0)) return;</span>
+<span class="nc" id="L87">            System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue not yet empty, has %d elements. waiting...%n&quot;, size);</span>
+<span class="nc" id="L88">            MyThread.sleep(20);</span>
+        }
+<span class="nc" id="L90">        System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, this, queue.size(), queue);</span>
+<span class="nc" id="L91">    }</span>
+
+    public static void killAllQueues() {
+<span class="fc" id="L94">        System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Killing all queue threads&quot;);</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (var aq : allQueues) {</span>
+<span class="fc" id="L96">            aq.stop();</span>
+<span class="fc" id="L97">            System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; killing &quot; + aq.queueThread);</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">            if (aq.queueThread != null) {</span>
+<span class="fc" id="L99">                aq.queueThread.interrupt();</span>
+            }
+            // at this point, clear out the queue if anything is left in it.
+            // this feels imprecise. TODO: look into this deeply.
+<span class="fc" id="L103">            aq.queue.clear();</span>
+
+<span class="fc" id="L105">        }</span>
+<span class="fc" id="L106">        allQueues.clear();</span>
+<span class="fc" id="L107">    }</span>
+
+    @Override
+    public String toString() {
+<span class="fc" id="L111">        return this.name;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

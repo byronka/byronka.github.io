@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StringUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.utils</a> &gt; <span class="el_source">StringUtils.java</span></div><h1>StringUtils.java</h1><pre class="source lang-java linenums">package minum.utils;
+
+import minum.exceptions.ForbiddenUseException;
+
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static minum.Constants.MAX_TOKENIZER_PARTITIONS;
+import static minum.utils.Invariants.mustNotBeNull;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+/**
+ * Some helper methods for Strings.
+ */
+public class StringUtils {
+
+    private StringUtils() {
+        // using a private constructor to hide the implicit public one.
+    }
+
+
+    /**
+     * Returns text that has three symbols replaced -
+     * the less-than, greater-than, and ampersand.
+     * See &lt;a href=&quot;https://www.w3.org/International/questions/qa-escapes#use&quot;&gt;...&lt;/a&gt;
+     * &lt;br&gt;
+     * &lt;pre&gt;{@code
+     * This will protect against something like &lt;div&gt;$USERNAME&lt;/div&gt; allowing
+     * a username of
+     *      &lt;script&gt;alert(1)&lt;/script&gt;
+     * becoming
+     *      &lt;div&gt;&lt;script&gt;alert(1)&lt;/script&lt;/div&gt;
+     * and instead becomes
+     *      &lt;div&gt;&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;&lt;/div&gt;
+     * }&lt;/pre&gt;
+     * If the text is going inside an attribute (e.g. {@code &lt;div class=&quot;TEXT_GOES_HERE&quot;&gt;} )
+     * Then you need to escape slightly differently. In that case see [safeAttr]
+     */
+    public static String safeHtml(String input) {
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (input == null) {</span>
+<span class="fc" id="L46">            return &quot;&quot;;</span>
+        }
+<span class="fc" id="L48">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
+<span class="fc" id="L49">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="fc" id="L50">            .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;);</span>
+    }
+
+    /**
+     * Replace dangerous text that would go inside an HTML attribute.
+     * See {@link #safeHtml(String)}
+     * &lt;br&gt;&lt;br&gt;
+     * If we get a null string, just return an empty string
+     * &lt;br&gt;&lt;br&gt;
+     * &lt;pre&gt;{@code
+     * example:
+     *   Given
+     *      alert('XSS Attack')
+     *   Get
+     *      alert(&amp;apos;XSS Attack&amp;apos;)
+     * }&lt;/pre&gt;
+     */
+    public static String safeAttr(String input) {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (input == null) {</span>
+<span class="fc" id="L69">            return &quot;&quot;;</span>
+        }
+<span class="fc" id="L71">        return input</span>
+<span class="fc" id="L72">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
+<span class="fc" id="L73">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
+    }
+
+    /**
+     * Encodes UTF-8 text using URL-encoding
+     */
+    public static String encode(String str) {
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (str == null) {</span>
+<span class="fc" id="L81">            return &quot;%NULL%&quot;;</span>
+        }
+<span class="fc" id="L83">        return URLEncoder.encode(str, UTF_8);</span>
+    }
+
+    /**
+     * Decodes URL-encoded UTF-8 text... except that we
+     * first check if the string value is the token %NULL%,
+     * which is our way to signify null.
+     */
+    public static String decode(String str) {
+<span class="fc" id="L92">        mustNotBeNull(str);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
+<span class="fc" id="L94">            return null;</span>
+        }
+<span class="fc" id="L96">        return URLDecoder.decode(str, UTF_8);</span>
+    }
+
+    public static String generateSecureRandomString(int length) {
+<span class="fc" id="L100">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
+<span class="fc" id="L101">        final var sr = new SecureRandom();</span>
+
+<span class="fc" id="L103">        return IntStream.range(1, length+1)</span>
+<span class="fc" id="L104">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
+<span class="fc" id="L105">                .map(Object::toString)</span>
+<span class="fc" id="L106">                .collect(Collectors.joining());</span>
+    }
+
+    /**
+     * Converts a list of bytes to a string. Returns null if the input is null.
+     */
+    public static String byteListToString(List&lt;Byte&gt; byteList) {
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (byteList == null) return null;</span>
+<span class="fc" id="L114">        final int size = byteList.size();</span>
+<span class="fc" id="L115">        final var buf = new byte[size];</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (int i = 0; i &lt; size; i++) {</span>
+<span class="fc" id="L117">            buf[i] = byteList.get(i);</span>
+        }
+<span class="fc" id="L119">        return new String(buf, UTF_8);</span>
+    }
+
+    /**
+     * Converts an array of bytes to a string. Returns null if the input is null.
+     */
+    public static String byteArrayToString(byte[] byteArray) {
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (byteArray == null) return null;</span>
+<span class="fc" id="L127">        return new String(byteArray, UTF_8);</span>
+    }
+
+    /**
+     * Splits up a string into tokens.
+     * @param serializedText the string we are splitting up
+     * @param delimiter the character acting as a boundary between sections
+     * @return a list of strings.  If the delimiter is not found, we will just return the whole string
+     */
+    public static List&lt;String&gt; tokenizer(String serializedText, char delimiter) {
+<span class="fc" id="L137">        final var resultList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L138">        var currentPlace = 0;</span>
+        // when would we have a need to tokenize anything into more than MAX_TOKENIZER_PARTITIONS partitions?
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        for(int i = 0; i &lt;= MAX_TOKENIZER_PARTITIONS; i++) {</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            if (i == MAX_TOKENIZER_PARTITIONS) throw new ForbiddenUseException(&quot;Request made for too many partitions in the tokenizer.  Current max: &quot; + MAX_TOKENIZER_PARTITIONS);</span>
+<span class="fc" id="L142">            final var nextPipeSymbolIndex = serializedText.indexOf(delimiter, currentPlace);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            if (nextPipeSymbolIndex == -1) {</span>
+                // if we don't see any pipe symbols ahead, grab the rest of the text from our current place
+<span class="fc" id="L145">                resultList.add(serializedText.substring(currentPlace));</span>
+<span class="fc" id="L146">                break;</span>
+            }
+<span class="fc" id="L148">            resultList.add(serializedText.substring(currentPlace, nextPipeSymbolIndex));</span>
+<span class="fc" id="L149">            currentPlace = nextPipeSymbolIndex + 1;</span>
+        }
+
+<span class="fc" id="L152">        return resultList;</span>
+    }
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

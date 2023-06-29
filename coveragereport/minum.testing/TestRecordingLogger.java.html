@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestRecordingLogger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.testing</a> &gt; <span class="el_source">TestRecordingLogger.java</span></div><h1>TestRecordingLogger.java</h1><pre class="source lang-java linenums">package minum.testing;
+
+import minum.logging.ILogger;
+import minum.utils.ThrowingSupplier;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * This implementation of {@link ILogger} is specially
+ * designed to assist with tests where something goes
+ * awry in a separate thread.  This way, when something
+ * gets logged about an error condition there, we can
+ * easily search for it later in our test.
+ * &lt;pr&gt;
+ * Anything that is logged with this class will get
+ * stored into a publicly-available field, &quot;loggedMessages&quot;,
+ * which you can inspect afterwards.
+ */
+public class TestRecordingLogger implements ILogger {
+
+    public final List&lt;String&gt; loggedMessages;
+
+    /**
+     * See {@link TestRecordingLogger}
+     */
+<span class="fc" id="L27">    public TestRecordingLogger() {</span>
+<span class="fc" id="L28">        loggedMessages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L29">    }</span>
+
+    public void logDebug(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L32">        handleMessageForTests(msg);</span>
+<span class="fc" id="L33">    }</span>
+
+    @Override
+    public void logTrace(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="nc" id="L37">        handleMessageForTests(msg);</span>
+<span class="nc" id="L38">    }</span>
+
+    @Override
+    public void logAudit(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="nc" id="L42">        handleMessageForTests(msg);</span>
+<span class="nc" id="L43">    }</span>
+
+    @Override
+    public void logAsyncError(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L47">        handleMessageForTests(msg);</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * Store the log information into a data structure for easy access
+     * by tests, in those situations where we want to review what's been
+     * logged as part of a test.
+     */
+    private void handleMessageForTests(ThrowingSupplier&lt;String, Exception&gt; msg) {
+        try {
+<span class="fc" id="L57">            loggedMessages.add(msg.get());</span>
+<span class="nc" id="L58">        } catch (Exception e) {</span>
+<span class="nc" id="L59">            throw new RuntimeException(e);</span>
+<span class="fc" id="L60">        }</span>
+<span class="fc" id="L61">    }</span>
+
+    public String findFirstMessageThatContains(String value) {
+<span class="fc" id="L64">        return loggedMessages.stream().filter(x -&gt; x.contains(value)).findFirst().orElseThrow().replace('\\', '/');</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

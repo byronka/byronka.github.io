@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UnderInvestigation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.security</a> &gt; <span class="el_source">UnderInvestigation.java</span></div><h1>UnderInvestigation.java</h1><pre class="source lang-java linenums">package minum.security;
+
+import minum.Constants;
+
+import java.util.List;
+
+/**
+ * Looking for bad actors in our system
+ */
+<span class="nc" id="L10">public class UnderInvestigation {</span>
+
+    /**
+     * Check for the kinds of error messages we usually see when an attacker is trying
+     * their shenanigans on us.  Returns true if we recognize anything.
+     */
+    public static boolean isClientLookingForVulnerabilities(String exceptionMessage) {
+<span class="nc" id="L17">        List&lt;String&gt; suspiciousErrors = Constants.SUSPICIOUS_ERRORS;</span>
+<span class="nc" id="L18">        return suspiciousErrors.stream().anyMatch(exceptionMessage::contains);</span>
+    }
+
+
+    /**
+     * If the client is looking for paths like owa/auth/login.aspx, it means
+     * they are probably some low-effort script scouring the web.  In that case
+     * the client is under control by a bad actor and we can safely block them.
+     */
+    public static boolean isLookingForSuspiciousPaths(String isolatedPath) {
+<span class="fc" id="L28">        return Constants.SUSPICIOUS_PATHS.stream().anyMatch(isolatedPath::equals);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

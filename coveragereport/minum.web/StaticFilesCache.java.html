@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StaticFilesCache.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">StaticFilesCache.java</span></div><h1>StaticFilesCache.java</h1><pre class="source lang-java linenums">package minum.web;
+
+import minum.logging.ILogger;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
+import static minum.utils.Invariants.mustNotBeNull;
+
+/**
+ * This is a store of data for any static data we
+ * are sending to the client.
+ * &lt;p&gt;
+ * Static data is just data that rarely changes - images,
+ * CSS files, scripts.
+ * &lt;p&gt;
+ * Since by their nature these files only change between
+ * server restarts, it makes plenty sense to put all
+ * these data into one place for easy access.
+ * &lt;p&gt;
+ * the shape of this data is simply key -&gt; value. It's a
+ * map, but we wrap it in a custom class just to enable better
+ * documentation.
+ */
+public class StaticFilesCache {
+
+    /**
+     * in the resources, where we store our static files, like jpegs,
+     * css files, scripts
+     */
+    public static final String STATIC_FILES_DIRECTORY = &quot;resources/static/&quot;;
+
+    private final Map&lt;String, Response&gt; staticResponses;
+    private final ILogger logger;
+
+<span class="fc" id="L43">    public StaticFilesCache(ILogger logger) {</span>
+<span class="fc" id="L44">        staticResponses = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L45">        this.logger = logger;</span>
+<span class="fc" id="L46">    }</span>
+
+    public int getSize() {
+<span class="nc" id="L49">        return staticResponses.size();</span>
+    }
+
+    public Response getStaticResponse(String key) {
+<span class="fc" id="L53">        return staticResponses.get(key);</span>
+    }
+
+    /**
+     * This provides all the static files (e.g. .html, .css) in the resources/static directory
+     */
+    public StaticFilesCache loadStaticFiles() throws IOException {
+<span class="fc" id="L60">            final List&lt;URL&gt; urls = mustNotBeNull(</span>
+<span class="fc" id="L61">                    Collections.list(</span>
+<span class="fc" id="L62">                            StaticFilesCache.class.getClassLoader().getResources(STATIC_FILES_DIRECTORY)));</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            for (var url : urls) {</span>
+<span class="fc" id="L64">                URI uri = URI.create(&quot;&quot;);</span>
+                try {
+<span class="fc" id="L66">                    uri = url.toURI();</span>
+<span class="nc" id="L67">                } catch (URISyntaxException ex) {</span>
+<span class="nc" id="L68">                    logger.logDebug(() -&gt; &quot;Exception thrown when converting URI to URL for &quot;+url+&quot;: &quot;+ex);</span>
+<span class="fc" id="L69">                }</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">                if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
+                    /*
+                    This part is necessary because it's the only way we can set up to loop
+                    through paths (files) later.  That is to say, when we getResource(path), it works fine,
+                    but if we want to get a list of all the files in a directory inside our jar file,
+                    we have to do it this way.
+                     */
+<span class="nc" id="L78">                    try (final var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {</span>
+<span class="nc" id="L79">                        final var myPath = fileSystem.getPath(STATIC_FILES_DIRECTORY);</span>
+<span class="nc" id="L80">                        processPath(myPath);</span>
+                    }
+                } else {
+<span class="fc" id="L83">                    final var myPath = Paths.get(uri);</span>
+<span class="fc" id="L84">                    processPath(myPath);</span>
+                }
+<span class="fc" id="L86">            }</span>
+<span class="fc" id="L87">            return this;</span>
+        }
+
+    private void processPath(Path myPath) throws IOException {
+<span class="fc" id="L91">        try (final var pathsStream = Files.walk(myPath, Integer.MAX_VALUE)) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            for (var path : pathsStream.toList()) {</span>
+<span class="fc" id="L93">                byte[] fileContents = null;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                if (Set.of(&quot;.css&quot;,&quot;.js&quot;,&quot;.webp&quot;,&quot;.html&quot;,&quot;.htm&quot;).stream().anyMatch(x -&gt; path.getFileName().toString().contains(x) )) {</span>
+<span class="fc" id="L95">                    fileContents = Files.readAllBytes(path);</span>
+                }
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                if (fileContents == null) continue;</span>
+
+                Response result;
+<span class="fc bfc" id="L100" title="All 2 branches covered.">                if (path.toString().endsWith(&quot;.css&quot;)) {</span>
+<span class="fc" id="L101">                    result = createOkResponseForStaticFiles(fileContents,&quot;Content-Type: text/css&quot;);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                } else if (path.toString().endsWith(&quot;.js&quot;)) {</span>
+<span class="fc" id="L103">                    result = createOkResponseForStaticFiles(fileContents, &quot;Content-Type: application/javascript&quot;);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                } else if (path.toString().endsWith(&quot;.webp&quot;)) {</span>
+<span class="fc" id="L105">                    result = createOkResponseForStaticFiles(fileContents, &quot;Content-Type: image/webp&quot;);</span>
+<span class="pc bpc" id="L106" title="3 of 4 branches missed.">                } else if (path.toString().endsWith(&quot;.html&quot;) || path.toString().endsWith(&quot;.htm&quot;)) {</span>
+<span class="fc" id="L107">                    result = createOkResponseForStaticFiles(fileContents, &quot;Content-Type: text/html; charset=UTF-8&quot;);</span>
+                } else {
+<span class="nc" id="L109">                    result = createNotFoundResponse();</span>
+                }
+
+<span class="fc" id="L112">                String route = getRoute(path);</span>
+
+<span class="fc" id="L114">                logger.logTrace(() -&gt; &quot;Storing in cache - filename: &quot; + route);</span>
+<span class="fc" id="L115">                staticResponses.put(route, result);</span>
+<span class="fc" id="L116">            }</span>
+        }
+<span class="fc" id="L118">    }</span>
+
+    /**
+     * This crappy little method exists to get a consistent route to a
+     * static file, regardless of if we are running in a Zipfile, on a
+     * Windows machine, on Unix, etc.
+     */
+    private static String getRoute(Path path) {
+        // I imagine this function will be an endless source of mirth
+<span class="fc" id="L127">        String path2 = path.toUri().getPath();</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        String path1 = path2 == null ? path.toString() : path2;</span>
+<span class="fc" id="L129">        int indexToStartSubstring = path1.indexOf(&quot;static/&quot;) + &quot;static/&quot;.length();</span>
+<span class="fc" id="L130">        return path1.substring(indexToStartSubstring);</span>
+    }
+
+    private Response createNotFoundResponse() {
+<span class="nc" id="L134">        return new Response(</span>
+                StatusLine.StatusCode._404_NOT_FOUND,
+<span class="nc" id="L136">                List.of(&quot;Content-Type: text/html; charset=UTF-8&quot;),</span>
+                &quot;&lt;p&gt;404 not found&lt;/p&gt;&quot;);
+    }
+
+    /**
+     * All static responses will get a cache time of 60 seconds
+     */
+    private Response createOkResponseForStaticFiles(byte[] fileContents, String contentTypeHeader) {
+<span class="fc" id="L144">        return new Response(</span>
+                StatusLine.StatusCode._200_OK,
+<span class="fc" id="L146">                List.of(contentTypeHeader, &quot;Cache-Control: max-age=60&quot;),</span>
+                fileContents);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

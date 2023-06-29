@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BodyProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">BodyProcessor.java</span></div><h1>BodyProcessor.java</h1><pre class="source lang-java linenums">package minum.web;
+
+import minum.logging.ILogger;
+import minum.utils.InvariantException;
+import minum.utils.StringUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static minum.utils.Invariants.mustBeTrue;
+import static minum.utils.StringUtils.decode;
+import static minum.web.InputStreamUtils.readChunkedEncoding;
+import static minum.web.InputStreamUtils.readUntilEOF;
+
+/**
+ * This code is responsible for extracting the {@link Body} from
+ * an HTTP request.
+ */
+public class BodyProcessor {
+
+    private final ILogger logger;
+
+<span class="fc" id="L29">    public BodyProcessor(ILogger logger) {</span>
+<span class="fc" id="L30">        this.logger = logger;</span>
+<span class="fc" id="L31">    }</span>
+
+    /**
+     * read the body if one exists
+     * &lt;br&gt;
+     * There are really only two ways to read the body.
+     * 1. the client tells us how many bytes to read
+     * 2. the client uses &quot;transfer-encoding: chunked&quot;
+     * &lt;br&gt;
+     * In either case, it is absolutely critical that the client gives us
+     * a way to know ahead of time how many bytes to read, so we (the server)
+     * can stop reading at precisely the right point.  There's simply no
+     * other way to reasonably do this.
+     */
+    public Body extractData(InputStream is, Headers h) throws IOException {
+<span class="fc" id="L46">        final var contentType = h.contentType();</span>
+
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        byte[] bodyBytes = h.contentLength() &gt; 0 ?</span>
+<span class="fc" id="L49">                InputStreamUtils.read(h.contentLength(), is) :</span>
+<span class="pc" id="L50">                readChunkedEncoding(is);</span>
+
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">        if (h.contentLength() &gt; 0 &amp;&amp; contentType.contains(&quot;application/x-www-form-urlencoded&quot;)) {</span>
+<span class="fc" id="L53">            return parseUrlEncodedForm(StringUtils.byteArrayToString(bodyBytes));</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        } else if (contentType.contains(&quot;multipart/form-data&quot;)) {</span>
+<span class="fc" id="L55">            String boundaryKey = &quot;boundary=&quot;;</span>
+<span class="fc" id="L56">            int indexOfBoundaryKey = contentType.indexOf(boundaryKey);</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">            if (indexOfBoundaryKey &gt; 0) {</span>
+                // grab all the text after the key
+<span class="fc" id="L59">                String boundaryValue = contentType.substring(indexOfBoundaryKey + boundaryKey.length());</span>
+<span class="fc" id="L60">                return parseMultiform(bodyBytes, boundaryValue);</span>
+            }
+<span class="nc" id="L62">            logger.logDebug(() -&gt; &quot;Did not find a valid boundary value for the multipart input.  Returning an empty map for the body&quot;);</span>
+<span class="nc" id="L63">            return Body.EMPTY;</span>
+        } else {
+<span class="fc" id="L65">            logger.logDebug(() -&gt; &quot;Did not find a recognized content-type, returning an empty map and the raw bytes for the body&quot;);</span>
+<span class="fc" id="L66">            return new Body(Map.of(), bodyBytes);</span>
+        }
+    }
+
+
+    /**
+     * Parse data formatted by application/x-www-form-urlencoded
+     * See &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST&quot;&gt;...&lt;/a&gt;
+     * &lt;p&gt;
+     * See here for the encoding: &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding&quot;&gt;...&lt;/a&gt;
+     * &lt;p&gt;
+     * for example, {@code valuea=3&amp;valueb=this+is+something}
+     */
+    public static Body parseUrlEncodedForm(String input) {
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (input.isEmpty()) return Body.EMPTY;</span>
+
+<span class="fc" id="L82">        final var postedPairs = new HashMap&lt;String, byte[]&gt;();</span>
+<span class="fc" id="L83">        final var splitByAmpersand = StringUtils.tokenizer(input, '&amp;');</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for(final var s : splitByAmpersand) {</span>
+<span class="fc" id="L86">            final var pair = splitKeyAndValue(s);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">            mustBeTrue(pair.length == 2, &quot;Splitting on = should return 2 values.  Input was &quot; + s);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            mustBeTrue(! pair[0].isBlank(), &quot;The key must not be blank&quot;);</span>
+<span class="fc" id="L89">            final var value = decode(pair[1]);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            final var convertedValue = value == null ? &quot;&quot;.getBytes(StandardCharsets.UTF_8) : value.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L91">            final var result = postedPairs.put(pair[0], convertedValue);</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (result != null) {</span>
+<span class="fc" id="L93">                throw new InvariantException(pair[0] + &quot; was duplicated in the post body - had values of &quot;+StringUtils.byteArrayToString(result)+&quot; and &quot; + pair[1]);</span>
+            }
+<span class="fc" id="L95">        }</span>
+<span class="fc" id="L96">        return new Body(postedPairs, input.getBytes(StandardCharsets.UTF_8));</span>
+    }
+
+    /**
+     * This splits a key from its value, following the HTTP pattern
+     * of &quot;key=value&quot;. (that is, a key string, concatenated to an &quot;equals&quot;
+     * character, concatenated to the value, with no spaces [and the key
+     * and value are URL-encoded])
+     * @param formInputValue a string like &quot;key=value&quot;
+     */
+    private static String[] splitKeyAndValue(String formInputValue) {
+<span class="fc" id="L107">        final var locationOfEqual = formInputValue.indexOf(&quot;=&quot;);</span>
+<span class="fc" id="L108">        return new String[] {</span>
+<span class="fc" id="L109">                formInputValue.substring(0, locationOfEqual),</span>
+<span class="fc" id="L110">                formInputValue.substring(locationOfEqual+1)};</span>
+    }
+
+    /**
+     * A regex used to extract the name value from the headers in multipart/form
+     */
+<span class="fc" id="L116">    private static final Pattern multiformNameRegex = Pattern.compile(&quot;\\bname\\b=\&quot;(?&lt;namevalue&gt;.*?)\&quot;&quot;);</span>
+
+    /**
+     * Extract multipart/form data from a body.  See docs/http_protocol/returning_values_from_multipart_rfc_7578.txt
+     */
+    public Body parseMultiform(byte[] body, String boundaryValue) throws IOException {
+        // how to split this up? It's a mix of strings and bytes.
+<span class="fc" id="L123">        List&lt;byte[]&gt; partitions = split(body, &quot;--&quot; + boundaryValue);</span>
+<span class="fc" id="L124">        final String nameEquals = &quot;name=&quot;;</span>
+        // What we can bear in mind is that once we've read the headers, and gotten
+        // past the single blank line, *everything else* is pure data.
+<span class="fc" id="L127">        final var result = new HashMap&lt;String, byte[]&gt;();</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        for (var df : partitions) {</span>
+<span class="fc" id="L129">            final var is = new ByteArrayInputStream(df);</span>
+<span class="fc" id="L130">            Headers headers = Headers.extractHeaderInformation(is);</span>
+<span class="fc" id="L131">            String contentDisposition = headers.headerStrings().stream()</span>
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">                    .filter(x -&gt; x.toLowerCase().contains(&quot;form-data&quot;) &amp;&amp; x.contains(nameEquals)).collect(Collectors.joining());</span>
+
+<span class="fc" id="L134">            Matcher matcher = multiformNameRegex.matcher(contentDisposition);</span>
+
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">            if (matcher.find()) {</span>
+<span class="fc" id="L137">                String name = matcher.group(&quot;namevalue&quot;);</span>
+                // at this point our inputstream pointer is at the beginning of the
+                // body data.  From here until the end it's pure data.
+<span class="fc" id="L140">                byte[] data = readUntilEOF(is);</span>
+<span class="fc" id="L141">                result.put(name, data);</span>
+<span class="fc" id="L142">            }</span>
+            else {
+<span class="nc" id="L144">                logger.logDebug(() -&gt; &quot;no name found for one of the multipart partitions.  Bailing and returning an empty body&quot;);</span>
+<span class="nc" id="L145">                return Body.EMPTY;</span>
+            }
+
+<span class="fc" id="L148">        }</span>
+<span class="fc" id="L149">        return new Body(result, body);</span>
+    }
+
+    /**
+     * Given a multipart-formatted data, return a list of byte arrays
+     * between the boundary values
+     */
+    public List&lt;byte[]&gt; split(byte[] body, String boundaryValue) {
+<span class="fc" id="L157">        List&lt;byte[]&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L158">        List&lt;Integer&gt; indexesOfEndsOfBoundaries = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L159">        byte[] boundaryValueBytes = boundaryValue.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L160">        int indexIntoBoundaryValue = 0;</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (int i = 0; i &lt; body.length; i++) {</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">            if (body[i] == boundaryValueBytes[indexIntoBoundaryValue]) {</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">                if (indexIntoBoundaryValue == boundaryValueBytes.length - 1) {</span>
+                    // have to add two to account for *either* CR+LF or two dashes.  Multipart
+                    // form is so complicated!
+<span class="fc" id="L166">                    indexesOfEndsOfBoundaries.add(i + 2);</span>
+<span class="fc" id="L167">                    indexIntoBoundaryValue = 0;</span>
+                }
+<span class="fc" id="L169">                indexIntoBoundaryValue += 1;</span>
+            } else {
+<span class="fc" id="L171">                indexIntoBoundaryValue = 0;</span>
+            }
+        }
+        // now we know where the boundaries are in this hunk of data.  Partition time!
+<span class="fc" id="L175">        int indexInBody = 0;</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        for (int endOfBoundaryIndex : indexesOfEndsOfBoundaries) {</span>
+            // the minus one plus two silliness is to make clear that we're calculating for two extra chars after the boundary
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            if (indexInBody != endOfBoundaryIndex-(boundaryValue.length() + 2 - 1)) {</span>
+<span class="fc" id="L179">                result.add(Arrays.copyOfRange(body, indexInBody, endOfBoundaryIndex-(boundaryValue.length() + 2 -1)));</span>
+            }
+<span class="fc" id="L181">            indexInBody = endOfBoundaryIndex+1;</span>
+<span class="fc" id="L182">        }</span>
+<span class="fc" id="L183">        return result;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

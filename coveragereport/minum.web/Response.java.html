@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Response.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">Response.java</span></div><h1>Response.java</h1><pre class="source lang-java linenums">package minum.web;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Represents an HTTP response. This is what will get sent back to the
+ * client (that is, to the browser).  There are a variety of overloads
+ * of this record for different situations.  The overarching paradigm is
+ * to provide you high flexibility.
+ * &lt;p&gt;
+ * A response message is sent by a server to a client as a reply to its former request message.
+ * &lt;/p&gt;
+ * &lt;h3&gt;
+ * Response syntax
+ * &lt;/h3&gt;
+ * &lt;p&gt;
+ * A server sends response messages to the client, which consist of:
+ * &lt;/p&gt;
+ * &lt;ul&gt;
+ *     &lt;li&gt;
+ *      a status line, consisting of the protocol version, a space, the
+ *      response status code, another space, a possibly empty reason
+ *      phrase, a carriage return and a line feed, e.g.:
+ *      &lt;pre&gt;
+ *          HTTP/1.1 200 OK
+ *      &lt;/pre&gt;
+ *      &lt;/li&gt;
+ *
+ *      &lt;li&gt;
+ *          zero or more response header fields, each consisting of the case-insensitive
+ *          field name, a colon, optional leading whitespace, the field value, an
+ *          optional trailing whitespace and ending with a carriage return and a line feed, e.g.:
+ *          &lt;pre&gt;
+ *          Content-Type: text/html
+ *          &lt;/pre&gt;
+ *      &lt;/li&gt;
+ *
+ *      &lt;li&gt;
+ *          an empty line, consisting of a carriage return and a line feed;
+ *      &lt;/li&gt;
+ *
+ *      &lt;li&gt;
+ *          an optional message body.
+ *      &lt;/li&gt;
+ *&lt;/ul&gt;
+ * @param extraHeaders extra headers we want to return with the response.
+ */
+<span class="fc" id="L50">public record Response(StatusLine.StatusCode statusCode, List&lt;String&gt; extraHeaders,</span>
+                       byte[] body) {
+    public Response(StatusLine.StatusCode statusCode, byte[] body) {
+<span class="nc" id="L53">        this(statusCode, Collections.emptyList(), body);</span>
+<span class="nc" id="L54">    }</span>
+
+    public Response(StatusLine.StatusCode statusCode, String body) {
+<span class="nc" id="L57">        this(statusCode, Collections.emptyList(), body.getBytes());</span>
+<span class="nc" id="L58">    }</span>
+
+    public Response(StatusLine.StatusCode statusCode, String body, List&lt;String&gt; extraHeaders) {
+<span class="fc" id="L61">        this(statusCode, extraHeaders, body.getBytes());</span>
+<span class="fc" id="L62">    }</span>
+
+    public Response(StatusLine.StatusCode statusCode, byte[] body, List&lt;String&gt; extraHeaders) {
+<span class="fc" id="L65">        this(statusCode, extraHeaders, body);</span>
+<span class="fc" id="L66">    }</span>
+
+    public Response(StatusLine.StatusCode statusCode, List&lt;String&gt; extraHeaders) {
+<span class="fc" id="L69">        this(statusCode, extraHeaders, &quot;&quot;.getBytes());</span>
+<span class="fc" id="L70">    }</span>
+
+    public Response(StatusLine.StatusCode statusCode, List&lt;String&gt; extraHeaders, String body) {
+<span class="fc" id="L73">        this(statusCode, extraHeaders, body.getBytes());</span>
+<span class="fc" id="L74">    }</span>
+
+    public Response(StatusLine.StatusCode statusCode) {
+<span class="fc" id="L77">        this(statusCode, Collections.emptyList(), &quot;&quot;.getBytes());</span>
+<span class="fc" id="L78">    }</span>
+
+    public static Response redirectTo(String locationUrl) {
+<span class="fc" id="L81">        return new Response(StatusLine.StatusCode._303_SEE_OTHER, List.of(&quot;location: &quot; + locationUrl));</span>
+    }
+
+    /**
+     * If you are returning HTML text with a 200 ok, this is a helper that
+     * lets you skip some of the boilerplate. This version of the helper
+     * lets you add extra headers on top of the basic content-type headers
+     * that are needed to specify this is HTML.
+     */
+    public static Response htmlOk(String body, List&lt;String&gt; extraHeaders) {
+<span class="fc" id="L91">        var headers = Arrays.asList(&quot;Content-Type: text/html; charset=UTF-8&quot;);</span>
+<span class="fc" id="L92">        headers.addAll(extraHeaders);</span>
+<span class="fc" id="L93">        return new Response(StatusLine.StatusCode._200_OK, body, headers);</span>
+    }
+
+    /**
+     * If you are returning HTML text with a 200 ok, this is a helper that
+     * lets you skip some of the boilerplate.
+     */
+    public static Response htmlOk(String body) {
+<span class="fc" id="L101">        return htmlOk(body, List.of());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

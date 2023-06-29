@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeaderFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web.http2</a> &gt; <span class="el_source">HeaderFields.java</span></div><h1>HeaderFields.java</h1><pre class="source lang-java linenums">package minum.web.http2;
+
+import java.util.*;
+
+/**
+ * This class holds the static and dynamic header field tables.
+ * &lt;br&gt;
+ * The static table is instantiated in this class, and the
+ * dynamic table is a first-in first-out data structure
+ */
+public class HeaderFields {
+
+    private final Deque&lt;HeaderField&gt; headersDynamicTable;
+
+<span class="nc" id="L15">    public HeaderFields() {</span>
+<span class="nc" id="L16">        headersDynamicTable = new ArrayDeque&lt;&gt;();</span>
+<span class="nc" id="L17">    }</span>
+
+
+    /**
+     * These are alternately known as &quot;Header Fields&quot; (RFC 7541 )or
+     * &quot;Field Lines&quot; (RFC 9113)
+     */
+<span class="fc" id="L24">    public record HeaderField(String name, String value) {}</span>
+
+    /**
+     * These headers are defined in Appendix A of RFC 7541, HPACK
+     * compression for headers
+     *
+     * &lt;pre&gt;
+     *     Appendix A.  Static Table Definition
+     *
+     *    The static table (see Section 2.3.1) consists in a predefined and
+     *    unchangeable list of header fields.
+     *
+     *    The static table was created from the most frequent header fields
+     *    used by popular web sites, with the addition of HTTP/2-specific
+     *    pseudo-header fields (see Section 8.1.2.1 of [HTTP2]).  For header
+     *    fields with a few frequent values, an entry was added for each of
+     *    these frequent values.  For other header fields, an entry was added
+     *    with an empty value.
+     *
+     *    Table 1 lists the predefined header fields that make up the static
+     *    table and gives the index of each entry.
+     * &lt;/pre&gt;
+     */
+<span class="fc" id="L47">    public static final List&lt;HeaderField&gt; headersStaticTable = List.of(</span>
+      /* NOT USED */  new HeaderField(&quot;&quot;, &quot;&quot;),
+      /* 1 */   new HeaderField(&quot;:authority&quot;, &quot;&quot;),
+      /* 2 */   new HeaderField(&quot;:method&quot;, &quot;GET&quot;),
+      /* 3 */   new HeaderField(&quot;:method&quot;, &quot;POST&quot;),
+      /* 4 */   new HeaderField(&quot;:path&quot;, &quot;/&quot;),
+      /* 5 */   new HeaderField(&quot;:path&quot;, &quot;/index.html&quot;),
+      /* 6 */   new HeaderField(&quot;:scheme&quot;, &quot;http&quot;),
+      /* 7 */   new HeaderField(&quot;:scheme&quot;, &quot;https&quot;),
+      /* 8 */   new HeaderField(&quot;:status&quot;, &quot;200&quot;),
+      /* 9 */   new HeaderField(&quot;:status&quot;, &quot;204&quot;),
+      /* 10 */   new HeaderField(&quot;:status&quot;, &quot;206&quot;),
+      /* 11 */   new HeaderField(&quot;:status&quot;, &quot;304&quot;),
+      /* 12 */   new HeaderField(&quot;:status&quot;, &quot;400&quot;),
+      /* 13 */   new HeaderField(&quot;:status&quot;, &quot;404&quot;),
+      /* 14 */   new HeaderField(&quot;:status&quot;, &quot;500&quot;),
+      /* 15 */   new HeaderField(&quot;accept-charset&quot;, &quot;&quot;),
+      /* 16 */   new HeaderField(&quot;accept-encoding&quot;, &quot;gzip, deflate&quot;),
+      /* 17 */   new HeaderField(&quot;accept-language&quot;, &quot;&quot;),
+      /* 18 */   new HeaderField(&quot;accept-ranges&quot;, &quot;&quot;),
+      /* 19 */   new HeaderField(&quot;accept&quot;, &quot;&quot;),
+      /* 20 */   new HeaderField(&quot;access-control-allow-origin&quot;, &quot;&quot;),
+      /* 21 */   new HeaderField(&quot;age&quot;, &quot;&quot;),
+      /* 22 */   new HeaderField(&quot;allow&quot;, &quot;&quot;),
+      /* 23 */   new HeaderField(&quot;authorization&quot;, &quot;&quot;),
+      /* 24 */   new HeaderField(&quot;cache-control&quot;, &quot;&quot;),
+      /* 25 */   new HeaderField(&quot;content-disposition&quot;, &quot;&quot;),
+      /* 26 */   new HeaderField(&quot;content-encoding&quot;, &quot;&quot;),
+      /* 27 */   new HeaderField(&quot;content-language&quot;, &quot;&quot;),
+      /* 28 */   new HeaderField(&quot;content-length&quot;, &quot;&quot;),
+      /* 29 */   new HeaderField(&quot;content-location&quot;, &quot;&quot;),
+      /* 30 */   new HeaderField(&quot;content-range&quot;, &quot;&quot;),
+      /* 31 */   new HeaderField(&quot;content-type&quot;, &quot;&quot;),
+      /* 32 */   new HeaderField(&quot;cookie&quot;, &quot;&quot;),
+      /* 33 */   new HeaderField(&quot;date&quot;, &quot;&quot;),
+      /* 34 */   new HeaderField(&quot;etag&quot;, &quot;&quot;),
+      /* 35 */   new HeaderField(&quot;expect&quot;, &quot;&quot;),
+      /* 36 */   new HeaderField(&quot;expires&quot;, &quot;&quot;),
+      /* 37 */   new HeaderField(&quot;from&quot;, &quot;&quot;),
+      /* 38 */   new HeaderField(&quot;host&quot;, &quot;&quot;),
+      /* 39 */   new HeaderField(&quot;if-match&quot;, &quot;&quot;),
+      /* 40 */   new HeaderField(&quot;if-modified-since&quot;, &quot;&quot;),
+      /* 41 */   new HeaderField(&quot;if-none-match&quot;, &quot;&quot;),
+      /* 42 */   new HeaderField(&quot;if-range&quot;, &quot;&quot;),
+      /* 43 */   new HeaderField(&quot;if-unmodified-since&quot;, &quot;&quot;),
+      /* 44 */   new HeaderField(&quot;last-modified&quot;, &quot;&quot;),
+      /* 45 */   new HeaderField(&quot;link&quot;, &quot;&quot;),
+      /* 46 */   new HeaderField(&quot;location&quot;, &quot;&quot;),
+      /* 47 */   new HeaderField(&quot;max-forwards&quot;, &quot;&quot;),
+      /* 48 */   new HeaderField(&quot;proxy-authenticate&quot;, &quot;&quot;),
+      /* 49 */   new HeaderField(&quot;proxy-authorization&quot;, &quot;&quot;),
+      /* 50 */   new HeaderField(&quot;range&quot;, &quot;&quot;),
+      /* 51 */   new HeaderField(&quot;referer&quot;, &quot;&quot;),
+      /* 52 */   new HeaderField(&quot;refresh&quot;, &quot;&quot;),
+      /* 53 */   new HeaderField(&quot;retry-after&quot;, &quot;&quot;),
+      /* 54 */   new HeaderField(&quot;server&quot;, &quot;&quot;),
+      /* 55 */   new HeaderField(&quot;set-cookie&quot;, &quot;&quot;),
+      /* 56 */   new HeaderField(&quot;strict-transport-security&quot;, &quot;&quot;),
+      /* 57 */   new HeaderField(&quot;transfer-encoding&quot;, &quot;&quot;),
+      /* 58 */   new HeaderField(&quot;user-agent&quot;, &quot;&quot;),
+      /* 59 */   new HeaderField(&quot;vary&quot;, &quot;&quot;),
+      /* 60 */   new HeaderField(&quot;via&quot;, &quot;&quot;),
+      /* 61 */   new HeaderField(&quot;www-authenticate&quot;, &quot;&quot;)
+    );
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

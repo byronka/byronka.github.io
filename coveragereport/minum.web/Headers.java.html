@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Headers.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">Headers.java</span></div><h1>Headers.java</h1><pre class="source lang-java linenums">package minum.web;
+
+import minum.exceptions.ForbiddenUseException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static minum.Constants.MAX_HEADERS_COUNT;
+import static minum.utils.Invariants.mustBeTrue;
+import static minum.web.InputStreamUtils.readLine;
+
+/**
+ * Details extracted from the headers.  For example,
+ * is this a keep-alive connection? what is the content-length,
+ * and so on.
+ * Here is some detail from &lt;a href=&quot;https://en.wikipedia.org/wiki/List_of_HTTP_header_fields&quot;&gt;Wikipedia&lt;/a&gt; on the subject:
+ * &lt;p&gt;
+ * HTTP header fields are a list of strings sent and received by both
+ * the client program and server on every HTTP request and response. These
+ * headers are usually invisible to the end-user and are only processed or
+ * logged by the server and client applications. They define how information
+ * sent/received through the connection are encoded (as in Content-Encoding),
+ * the session verification and identification of the client (as in browser
+ * cookies, IP address, user-agent) or their anonymity thereof (VPN or
+ * proxy masking, user-agent spoofing), how the server should handle data
+ * (as in Do-Not-Track), the age (the time it has resided in a shared cache)
+ * of the document being downloaded, amongst others.
+ * &lt;/p&gt;
+ */
+<span class="fc" id="L33">public record Headers(</span>
+        /*
+         * Each line of the headers is read into this data structure
+         */
+        List&lt;String&gt; headerStrings
+) {
+
+<span class="fc" id="L40">    public static final Headers EMPTY = new Headers(List.of());</span>
+
+    /**
+     * Used for extracting the length of the body, in POSTs and
+     * responses from servers
+     */
+<span class="fc" id="L46">    private static final Pattern contentLengthRegex = Pattern.compile(&quot;^[cC]ontent-[lL]ength: (.*)$&quot;);</span>
+
+    /**
+     * Loops through reading text lines from the socket wrapper,
+     * returning a list of what it has found when it hits an empty line.
+     * This is the HTTP convention.
+     */
+    public static Headers extractHeaderInformation(InputStream is) throws IOException {
+<span class="fc" id="L54">        List&lt;String&gt; headers = getAllHeaders(is);</span>
+<span class="fc" id="L55">        return new Headers(headers);</span>
+    }
+
+    /**
+     * Obtain any desired header by looking it up in this map.  All keys
+     * are made lowercase.
+     */
+    public Map&lt;String, List&lt;String&gt;&gt; headersAsMap() {
+<span class="fc" id="L63">        var result = new HashMap&lt;String, List&lt;String&gt;&gt;();</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (var h : headerStrings) {</span>
+<span class="fc" id="L65">            var indexOfFirstColon = h.indexOf(&quot;:&quot;);</span>
+
+            // if the header is malformed, just move on
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">            if (indexOfFirstColon &lt;= 0) continue;</span>
+
+<span class="fc" id="L70">            String key = h.substring(0, indexOfFirstColon).toLowerCase(Locale.ROOT);</span>
+<span class="fc" id="L71">            String value = h.substring(indexOfFirstColon+1).trim();</span>
+
+
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (result.containsKey(key)) {</span>
+<span class="nc" id="L75">                var currentValue = result.get(key);</span>
+<span class="nc" id="L76">                currentValue.add(value);</span>
+<span class="nc" id="L77">                result.put(key, currentValue);</span>
+<span class="nc" id="L78">            } else {</span>
+<span class="fc" id="L79">                result.put(key, List.of(value));</span>
+            }
+
+<span class="fc" id="L82">        }</span>
+<span class="fc" id="L83">        return result;</span>
+    }
+
+    /**
+     * Gets the one content-type header, or returns an empty string
+     */
+    public String contentType() {
+        // find the header that starts with content-type
+<span class="fc" id="L91">        List&lt;String&gt; cts = headerStrings().stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).startsWith(&quot;content-type&quot;)).toList();</span>
+<span class="pc bpc" id="L92" title="1 of 4 branches missed.">        mustBeTrue(cts.isEmpty() || cts.size() == 1, &quot;The number of content-type headers must be exactly zero or one&quot;);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (!cts.isEmpty()) {</span>
+<span class="fc" id="L94">            return cts.get(0);</span>
+        }
+
+        // if we don't find a content-type header, or if we don't find one we can handle, return an empty string.
+<span class="fc" id="L98">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Given the list of headers, find the one with the length of the
+     * body of the POST and return that value as an integer. If
+     * we do not find a content length, return -1.
+     */
+    public int contentLength() {
+<span class="fc" id="L107">        List&lt;String&gt; cl = headerStrings().stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).startsWith(&quot;content-length&quot;)).toList();</span>
+<span class="pc bpc" id="L108" title="2 of 4 branches missed.">        mustBeTrue(cl.isEmpty() || cl.size() == 1, &quot;The number of content-length headers must be exactly zero or one&quot;);</span>
+<span class="fc" id="L109">        int contentLength = -1;</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (!cl.isEmpty()) {</span>
+<span class="fc" id="L111">            Matcher clMatcher = contentLengthRegex.matcher(cl.get(0));</span>
+<span class="fc" id="L112">            mustBeTrue(clMatcher.matches(), &quot;The content length header value must match the contentLengthRegex&quot;);</span>
+<span class="fc" id="L113">            contentLength = Integer.parseInt(clMatcher.group(1));</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">            mustBeTrue(contentLength &gt;= 0, &quot;Content-length cannot be negative&quot;);</span>
+        }
+
+<span class="fc" id="L117">        return contentLength;</span>
+    }
+
+    private static List&lt;String&gt; getAllHeaders(InputStream is) throws IOException {
+<span class="fc" id="L121">        List&lt;String&gt; headers = new ArrayList&lt;&gt;();</span>
+        // we'll only grab the first MAX_HEADERS_COUNT headers.
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        for (int i = 0; i &lt;= MAX_HEADERS_COUNT; i++) {</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (i == MAX_HEADERS_COUNT) throw new ForbiddenUseException(&quot;User tried sending too many headers.  Current max: &quot; + MAX_HEADERS_COUNT);</span>
+<span class="fc" id="L125">            String value = readLine(is);</span>
+<span class="pc bpc" id="L126" title="1 of 4 branches missed.">            if (value != null &amp;&amp; value.isBlank()) {</span>
+<span class="fc" id="L127">                break;</span>
+            } else {
+<span class="fc" id="L129">                headers.add(value);</span>
+            }
+        }
+<span class="fc" id="L132">        return headers;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
