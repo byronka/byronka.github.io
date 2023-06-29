@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"minum"},{"l":"minum.database"},{"l":"minum.exceptions"},{"l":"minum.htmlparsing"},{"l":"minum.logging"},{"l":"minum.security"},{"l":"minum.templating"},{"l":"minum.testing"},{"l":"minum.utils"},{"l":"minum.web"},{"l":"minum.web.http2"}];updateSearchResults();
