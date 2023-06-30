@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Config.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum</a> &gt; <span class="el_source">Config.java</span></div><h1>Config.java</h1><pre class="source lang-java linenums">package minum;
 
-<span class="nc" id="L3">public class Config {</span>
-    public static String getDefaultConfig() {
-<span class="nc" id="L5">        return &quot;&quot;&quot;</span>
+/**
+ * If the user has no configuration file, this class
+ * contains code that will run to assist them.
+ */
+<span class="nc" id="L7">public class Config {</span>
+
+    private static String getDefaultConfig() {
+<span class="nc" id="L10">        return &quot;&quot;&quot;</span>
                 ###
                 ### The following was generated as a stop-gap measure because the
                 ### mandatory config file was missing.  Please see the documentation
@@ -61,37 +66,44 @@
 
                 #LOG_LEVELS=DEBUG,TRACE,ASYNC_ERROR,AUDIT
 
-<span class="nc" id="L64">                &quot;&quot;&quot;.stripLeading();</span>
+<span class="nc" id="L69">                &quot;&quot;&quot;.stripLeading();</span>
     }
 
+    /**
+     * If the user has no app.config file in the location they
+     * run the software, this message will be shown to assist. It
+     * is required that they have a configuration file, to make it
+     * explicit where the &quot;knobs and dials&quot; of the application are
+     * located.
+     */
     public static void printConfigError() {
-<span class="nc" id="L68">        System.out.print(&quot;\n\n\n&quot;);</span>
-<span class="nc" id="L69">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
-<span class="nc" id="L70">        System.out.println(&quot;----------------- System misconfiguration ----------------------&quot;);</span>
-<span class="nc" id="L71">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
-<span class="nc" id="L72">        System.out.println();</span>
-<span class="nc" id="L73">        System.out.println(&quot;No properties file found at ./app.config&quot;);</span>
-<span class="nc" id="L74">        System.out.println();</span>
-<span class="nc" id="L75">        System.out.println(&quot;A file named app.config with the following contents must exist in&quot;);</span>
-<span class="nc" id="L76">        System.out.println(&quot;the directory you were at when running this program. Copy the&quot;);</span>
-<span class="nc" id="L77">        System.out.println(&quot;following text and save it as a file called app.config at that&quot;);</span>
-<span class="nc" id="L78">        System.out.println(&quot;location.&quot;);</span>
-<span class="nc" id="L79">        System.out.println();</span>
-<span class="nc" id="L80">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
+<span class="nc" id="L80">        System.out.print(&quot;\n\n\n&quot;);</span>
 <span class="nc" id="L81">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
+<span class="nc" id="L82">        System.out.println(&quot;----------------- System misconfiguration ----------------------&quot;);</span>
+<span class="nc" id="L83">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
+<span class="nc" id="L84">        System.out.println();</span>
+<span class="nc" id="L85">        System.out.println(&quot;No properties file found at ./app.config&quot;);</span>
+<span class="nc" id="L86">        System.out.println();</span>
+<span class="nc" id="L87">        System.out.println(&quot;A file named app.config with the following contents must exist in&quot;);</span>
+<span class="nc" id="L88">        System.out.println(&quot;the directory you were at when running this program. Copy the&quot;);</span>
+<span class="nc" id="L89">        System.out.println(&quot;following text and save it as a file called app.config at that&quot;);</span>
+<span class="nc" id="L90">        System.out.println(&quot;location.&quot;);</span>
+<span class="nc" id="L91">        System.out.println();</span>
+<span class="nc" id="L92">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
+<span class="nc" id="L93">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
 
 
-<span class="nc" id="L84">        System.out.print(&quot;\n\n&quot;);</span>
-<span class="nc" id="L85">        System.out.println(&quot;    ****   Copy after this line -v    ****&quot;);</span>
-<span class="nc" id="L86">        System.out.println(&quot;                       &quot;);</span>
+<span class="nc" id="L96">        System.out.print(&quot;\n\n&quot;);</span>
+<span class="nc" id="L97">        System.out.println(&quot;    ****   Copy after this line -v    ****&quot;);</span>
+<span class="nc" id="L98">        System.out.println(&quot;                       &quot;);</span>
 
-<span class="nc" id="L88">        String defaultConfig = Config.getDefaultConfig();</span>
-<span class="nc" id="L89">        System.out.print(defaultConfig);</span>
+<span class="nc" id="L100">        String defaultConfig = Config.getDefaultConfig();</span>
+<span class="nc" id="L101">        System.out.print(defaultConfig);</span>
 
-<span class="nc" id="L91">        System.out.println(&quot;                        &quot;);</span>
-<span class="nc" id="L92">        System.out.println(&quot;    ****   Copy before this line -^    ****&quot;);</span>
+<span class="nc" id="L103">        System.out.println(&quot;                        &quot;);</span>
+<span class="nc" id="L104">        System.out.println(&quot;    ****   Copy before this line -^    ****&quot;);</span>
 
-<span class="nc" id="L94">        System.exit(1);</span>
-<span class="nc" id="L95">    }</span>
+<span class="nc" id="L106">        System.exit(1);</span>
+<span class="nc" id="L107">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

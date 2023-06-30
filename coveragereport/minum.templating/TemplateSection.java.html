@@ -2,17 +2,30 @@
 
 import java.util.Map;
 
-<span class="fc" id="L5">public record TemplateSection(String key, String subString) {</span>
+import static minum.utils.Invariants.mustBeTrue;
+
+/**
+ * Represents one item in the list that will eventually be cooked
+ * up into a fully-rendered string.  This record is the magic
+ * ingredient to an easy templating system.  It's got two fields,
+ * key and substring, and .  If it has a key, then this object will be getting
+ * replaced during final string rendering.  If it has a substring,
+ * then the substring gets concatenated unchanged when the final string
+ * is rendered.
+ */
+<span class="fc" id="L16">public record TemplateSection(String key, String subString) {</span>
 
     public String render(Map&lt;String, String&gt; myMap) {
-<span class="fc bfc" id="L8" title="All 2 branches covered.">        if (subString != null) {</span>
-<span class="fc" id="L9">            return subString;</span>
-<span class="pc bpc" id="L10" title="1 of 2 branches missed.">        } else if (key != null) {</span>
-<span class="fc" id="L11">            var value = myMap.get(key);</span>
-<span class="fc bfc" id="L12" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
-<span class="fc" id="L13">            return value;</span>
+<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (subString != null) {</span>
+<span class="pc bpc" id="L20" title="1 of 2 branches missed.">            mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
+<span class="fc" id="L21">            return subString;</span>
+<span class="pc bpc" id="L22" title="1 of 2 branches missed.">        } else if (key != null) {</span>
+<span class="pc bpc" id="L23" title="1 of 2 branches missed.">            mustBeTrue(subString == null, &quot;If this object has a key, then it must not have a substring&quot;);</span>
+<span class="fc" id="L24">            var value = myMap.get(key);</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
+<span class="fc" id="L26">            return value;</span>
         } else {
-<span class="nc" id="L15">            return &quot;&quot;;</span>
+<span class="nc" id="L28">            return &quot;&quot;;</span>
         }
     }
 

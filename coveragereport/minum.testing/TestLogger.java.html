@@ -44,11 +44,11 @@ public class TestLogger extends Logger {
 <span class="fc" id="L44">        long totalTime = 0;</span>
 <span class="fc" id="L45">        long totalCountTests = 0;</span>
 <span class="fc bfc" id="L46" title="All 2 branches covered.">        for (TestSuite ts : testSuites) {</span>
-<span class="fc" id="L47">            List&lt;String&gt; testCaseStrings = ts.testCases().stream().map(x -&gt; String.format(&quot;\t\t&lt;testcase name=\&quot;%s\&quot; time=\&quot;%.3f\&quot; /&gt;&quot;, x.name, x.duration() / 1000.0)).toList();</span>
+<span class="fc" id="L47">            List&lt;String&gt; testCaseStrings = ts.testCases().stream().map(x -&gt; String.format(&quot;\t\t&lt;testcase classname=\&quot;%s\&quot; name=\&quot;%s\&quot; time=\&quot;%.3f\&quot; /&gt;&quot;, ts.className(), x.name, x.duration() / 1000.0)).toList();</span>
 <span class="fc" id="L48">            long sumOfTestCaseDurations = ts.testCases.stream().mapToLong(x -&gt; x.duration).sum();</span>
 <span class="fc" id="L49">            totalTime += sumOfTestCaseDurations;</span>
 <span class="fc" id="L50">            totalCountTests += testCaseStrings.size();</span>
-<span class="fc" id="L51">            String testSuiteString = String.format(&quot;\t&lt;testsuite name=\&quot;%s\&quot; time=\&quot;%.2f\&quot; tests=\&quot;%d\&quot;&gt;&quot;, ts.name, sumOfTestCaseDurations / 1000.0, testCaseStrings.size());</span>
+<span class="fc" id="L51">            String testSuiteString = String.format(&quot;\t&lt;testsuite name=\&quot;%s\&quot; time=\&quot;%.2f\&quot; tests=\&quot;%d\&quot;&gt;&quot;, ts.suiteName, sumOfTestCaseDurations / 1000.0, testCaseStrings.size());</span>
 <span class="fc" id="L52">            sb.append(String.format(&quot;%n&quot; + testSuiteString + &quot;%n&quot; + String.join(&quot;\n&quot;, testCaseStrings) + &quot;%n&quot; + &quot;\t&lt;/testsuite&gt;&quot; + &quot;%n&quot;));</span>
 <span class="fc" id="L53">        }</span>
 <span class="fc" id="L54">        innerXmlReport = &quot;&quot;&quot;</span>
@@ -61,13 +61,13 @@ public class TestLogger extends Logger {
 <span class="fc" id="L61">        FileUtils.writeString(&quot;out/reports/tests/tests.xml&quot;, innerXmlReport);</span>
 <span class="fc" id="L62">    }</span>
 
-    public void testSuite(String msg) {
-<span class="fc" id="L65">        currentTestSuite = new TestSuite(msg, new ArrayList&lt;&gt;());</span>
+    public void testSuite(String suiteName, String className) {
+<span class="fc" id="L65">        currentTestSuite = new TestSuite(suiteName, className, new ArrayList&lt;&gt;());</span>
 <span class="fc" id="L66">        testSuites.add(currentTestSuite);</span>
 <span class="fc" id="L67">    }</span>
 
 <span class="fc" id="L69">    record TestCase(String name, long duration) {}</span>
-<span class="fc" id="L70">    record TestSuite(String name, List&lt;TestCase&gt; testCases) {}</span>
+<span class="fc" id="L70">    record TestSuite(String suiteName, String className, List&lt;TestCase&gt; testCases) {}</span>
 
     public TestLogger(ExecutorService es) {
 <span class="fc" id="L73">        super(es);</span>
@@ -98,7 +98,7 @@ public class TestLogger extends Logger {
 <span class="fc" id="L98">        stopWatch = new StopWatch();</span>
 <span class="fc" id="L99">        previousTestName = msg;</span>
 
-        // put together some pretty-looking text graphics to show the name of our test in log
+        // put together some pretty-looking text graphics to show the suiteName of our test in log
 <span class="fc" id="L102">        final var baseLength = 11;</span>
 <span class="fc" id="L103">        final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
 

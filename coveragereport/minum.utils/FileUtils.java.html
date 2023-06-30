@@ -14,6 +14,9 @@ import java.util.stream.Stream;
 
 import static minum.utils.Invariants.mustNotBeNull;
 
+/**
+ * Helper functions for working with files.
+ */
 public class FileUtils {
 
     private FileUtils() {
@@ -21,31 +24,39 @@ public class FileUtils {
         // all these methods are static
     }
 
+    /**
+     * Write a string to a path on disk.
+     */
     public static void writeString(String path, String content) {
         try {
-<span class="fc" id="L26">            Files.writeString(Path.of(path), content);</span>
-<span class="nc" id="L27">        } catch (IOException e) {</span>
-<span class="nc" id="L28">            throw new RuntimeException(e);</span>
-<span class="fc" id="L29">        }</span>
-<span class="fc" id="L30">    }</span>
+<span class="fc" id="L32">            Files.writeString(Path.of(path), content);</span>
+<span class="nc" id="L33">        } catch (IOException e) {</span>
+<span class="nc" id="L34">            throw new RuntimeException(e);</span>
+<span class="fc" id="L35">        }</span>
+<span class="fc" id="L36">    }</span>
 
+    /**
+     * Deletes a directory, deleting everything inside it
+     * recursively afterwards.  A more dangerous method than
+     * many others, take care.
+     */
     public static void deleteDirectoryRecursivelyIfExists(Path myPath, ILogger logger) throws IOException {
-<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (Files.exists(myPath)) {</span>
-<span class="fc" id="L34">            try (Stream&lt;Path&gt; walk = Files.walk(myPath)) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (Files.exists(myPath)) {</span>
+<span class="fc" id="L45">            try (Stream&lt;Path&gt; walk = Files.walk(myPath)) {</span>
 
-<span class="fc" id="L36">                final var files = walk.sorted(Comparator.reverseOrder())</span>
-<span class="fc" id="L37">                        .map(Path::toFile).toList();</span>
+<span class="fc" id="L47">                final var files = walk.sorted(Comparator.reverseOrder())</span>
+<span class="fc" id="L48">                        .map(Path::toFile).toList();</span>
 
-<span class="fc bfc" id="L39" title="All 2 branches covered.">                for(var file: files) {</span>
-<span class="fc" id="L40">                    logger.logDebug(() -&gt; &quot;deleting &quot; + file);</span>
-<span class="fc" id="L41">                    final var result = Files.deleteIfExists(file.toPath());</span>
-<span class="pc bpc" id="L42" title="1 of 2 branches missed.">                    if (! result) {</span>
-<span class="nc" id="L43">                        logger.logDebug(() -&gt; &quot;failed to delete &quot; + file);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">                for(var file: files) {</span>
+<span class="fc" id="L51">                    logger.logDebug(() -&gt; &quot;deleting &quot; + file);</span>
+<span class="fc" id="L52">                    final var result = Files.deleteIfExists(file.toPath());</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">                    if (! result) {</span>
+<span class="nc" id="L54">                        logger.logDebug(() -&gt; &quot;failed to delete &quot; + file);</span>
                     }
-<span class="fc" id="L45">                }</span>
+<span class="fc" id="L56">                }</span>
             }
         }
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L59">    }</span>
 
     /**
      * Read a file as a string from the resources/templates directory.
@@ -53,7 +64,7 @@ public class FileUtils {
      * those subdirectories here, but resources/templates is prepended.
      */
     public static String readTemplate(String filename) {
-<span class="fc" id="L56">        return readFile(filename, &quot;templates/&quot;);</span>
+<span class="fc" id="L67">        return readFile(filename, &quot;templates/&quot;);</span>
     }
 
     /**
@@ -62,7 +73,7 @@ public class FileUtils {
      * those subdirectories here, but resources/ is prepended.
      */
     public static String readFile(String filename) {
-<span class="nc" id="L65">        return readFile(filename, &quot;&quot;);</span>
+<span class="nc" id="L76">        return readFile(filename, &quot;&quot;);</span>
     }
 
     /**
@@ -70,30 +81,30 @@ public class FileUtils {
      * whether that is in a regular directory or in a jar file.
      */
     private static String readFile(String filename, String subdirectory) {
-<span class="fc" id="L73">        String templatesDirectory = &quot;resources/&quot; + subdirectory;</span>
+<span class="fc" id="L84">        String templatesDirectory = &quot;resources/&quot; + subdirectory;</span>
         try {
-<span class="fc" id="L75">            final var url = mustNotBeNull(FileUtils.class.getClassLoader().getResource(templatesDirectory));</span>
-<span class="fc" id="L76">            URI uri = url.toURI();</span>
+<span class="fc" id="L86">            final var url = mustNotBeNull(FileUtils.class.getClassLoader().getResource(templatesDirectory));</span>
+<span class="fc" id="L87">            URI uri = url.toURI();</span>
 
             String result;
-<span class="pc bpc" id="L79" title="1 of 2 branches missed.">            if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">            if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
                 /*
                 This part is necessary because it's the only way we can set up to loop
                 through paths (files) later.  That is to say, when we getResource(path), it works fine,
                 but if we want to get a list of all the files in a directory inside our jar file,
                 we have to do it this way.
                  */
-<span class="nc" id="L86">                try (final var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {</span>
-<span class="nc" id="L87">                    final var myPath = fileSystem.getPath(templatesDirectory);</span>
-<span class="nc" id="L88">                    result = Files.readString(myPath.resolve(filename));</span>
+<span class="nc" id="L97">                try (final var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {</span>
+<span class="nc" id="L98">                    final var myPath = fileSystem.getPath(templatesDirectory);</span>
+<span class="nc" id="L99">                    result = Files.readString(myPath.resolve(filename));</span>
                 }
             } else {
-<span class="fc" id="L91">                final var myPath = Paths.get(uri);</span>
-<span class="fc" id="L92">                result = Files.readString(myPath.resolve(filename));</span>
+<span class="fc" id="L102">                final var myPath = Paths.get(uri);</span>
+<span class="fc" id="L103">                result = Files.readString(myPath.resolve(filename));</span>
             }
-<span class="fc" id="L94">            return result;</span>
-<span class="nc" id="L95">        } catch (Exception ex) {</span>
-<span class="nc" id="L96">            throw new RuntimeException(ex);</span>
+<span class="fc" id="L105">            return result;</span>
+<span class="nc" id="L106">        } catch (Exception ex) {</span>
+<span class="nc" id="L107">            throw new RuntimeException(ex);</span>
         }
     }
 
@@ -106,15 +117,15 @@ public class FileUtils {
      * @throws IOException needs to get handled.
      */
     public static void makeDirectory(ILogger logger, Path directory) throws IOException {
-<span class="fc" id="L109">        logger.logDebug(() -&gt; &quot;Creating a directory &quot; + directory);</span>
-<span class="fc" id="L110">        boolean directoryExists = Files.exists(directory);</span>
-<span class="fc" id="L111">        logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot;. Already exists: &quot; + directory);</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (!directoryExists) {</span>
-<span class="fc" id="L113">            logger.logDebug(() -&gt; &quot;Creating directory, since it does not already exist: &quot; + directory);</span>
-<span class="fc" id="L114">            Files.createDirectories(directory);</span>
-<span class="fc" id="L115">            logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot; created&quot;);</span>
+<span class="fc" id="L120">        logger.logDebug(() -&gt; &quot;Creating a directory &quot; + directory);</span>
+<span class="fc" id="L121">        boolean directoryExists = Files.exists(directory);</span>
+<span class="fc" id="L122">        logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot;. Already exists: &quot; + directory);</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (!directoryExists) {</span>
+<span class="fc" id="L124">            logger.logDebug(() -&gt; &quot;Creating directory, since it does not already exist: &quot; + directory);</span>
+<span class="fc" id="L125">            Files.createDirectories(directory);</span>
+<span class="fc" id="L126">            logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot; created&quot;);</span>
         }
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L128">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

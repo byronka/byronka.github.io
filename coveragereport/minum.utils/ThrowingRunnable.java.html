@@ -2,20 +2,29 @@
 
 import minum.logging.ILogger;
 
+/**
+ * This exists so that we are able to slightly better manage
+ * exceptions in a highly threaded system.  Here's the thing:
+ * exceptions stop bubbling up at the thread invocation. If we
+ * don't take care to deal with that in some way, we can easily
+ * just lose the information.  Something could be badly broken and
+ * we could be totally oblivious to it.  This interface is to
+ * alleviate that situation.
+ */
 @FunctionalInterface
 public interface ThrowingRunnable&lt;E extends Exception&gt;{
 
     void run() throws E;
 
     static Runnable throwingRunnableWrapper(ThrowingRunnable&lt;Exception&gt; throwingRunnable, ILogger logger) {
-<span class="fc" id="L11">        return () -&gt; {</span>
+<span class="fc" id="L20">        return () -&gt; {</span>
             try {
-<span class="fc" id="L13">                throwingRunnable.run();</span>
-<span class="fc" id="L14">            } catch (Exception ex) {</span>
-<span class="fc" id="L15">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
-<span class="fc" id="L16">                throw new RuntimeException(ex);</span>
-<span class="fc" id="L17">            }</span>
-<span class="fc" id="L18">        };</span>
+<span class="fc" id="L22">                throwingRunnable.run();</span>
+<span class="fc" id="L23">            } catch (Exception ex) {</span>
+<span class="fc" id="L24">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="fc" id="L25">                throw new RuntimeException(ex);</span>
+<span class="fc" id="L26">            }</span>
+<span class="fc" id="L27">        };</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
