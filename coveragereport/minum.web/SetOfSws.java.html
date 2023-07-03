@@ -11,13 +11,13 @@ import java.util.List;
 import static minum.utils.Invariants.mustBeFalse;
 
 /**
- * This is a data structure of the live set of {@link SocketWrapper}
+ * This is a data structure of the live set of {@link ISocketWrapper}
  * in our system.  It exists so that we can keep tabs on how many
  * open sockets we have, and can then find them all in one place
  * when we need to kill them at server shutdown.
  */
 <span class="fc" id="L19">public record SetOfSws(</span>
-        ConcurrentSet&lt;SocketWrapper&gt; data,
+        ConcurrentSet&lt;ISocketWrapper&gt; data,
         ILogger logger,
        /*
        This parameter is used to distinguish different servers'
@@ -26,13 +26,13 @@ import static minum.utils.Invariants.mustBeFalse;
         */
         String nameOfSet) {
 
-    public void add(SocketWrapper sw) {
+    public void add(ISocketWrapper sw) {
 <span class="fc" id="L30">        data().add(sw);</span>
 <span class="fc" id="L31">        int size = data().size();</span>
 <span class="fc" id="L32">        logger.logTrace(() -&gt; nameOfSet + &quot; added &quot; + sw + &quot; to SetOfSws. size: &quot; + size);</span>
 <span class="fc" id="L33">    }</span>
 
-    public void remove(SocketWrapper sw) {
+    public void remove(ISocketWrapper sw) {
 <span class="fc" id="L36">        data().remove(sw);</span>
 <span class="fc" id="L37">        int size = data().size();</span>
 <span class="fc" id="L38">        logger.logTrace(() -&gt; nameOfSet +&quot; removed &quot; + sw + &quot; from SetOfSws. size: &quot; + size);</span>
@@ -49,10 +49,10 @@ import static minum.utils.Invariants.mustBeFalse;
      * For that reason, if we come in here and don't find it initially, we'll
      * sleep and then try again, up to three times.
      */
-    public SocketWrapper getSocketWrapperByRemoteAddr(String address, int port) {
+    public ISocketWrapper getSocketWrapperByRemoteAddr(String address, int port) {
 <span class="fc" id="L53">        int maxLoops = 3;</span>
 <span class="pc bpc" id="L54" title="1 of 2 branches missed.">        for (int loopCount = 0; loopCount &lt; maxLoops; loopCount++ ) {</span>
-<span class="fc" id="L55">            List&lt;SocketWrapper&gt; servers = data()</span>
+<span class="fc" id="L55">            List&lt;ISocketWrapper&gt; servers = data()</span>
 <span class="fc" id="L56">                    .asStream()</span>
 <span class="fc" id="L57">                    .filter((x) -&gt; x.getRemoteAddrWithPort().equals(new InetSocketAddress(address, port)))</span>
 <span class="fc" id="L58">                    .toList();</span>

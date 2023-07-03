@@ -2,15 +2,12 @@
 
 import minum.logging.ILogger;
 import minum.logging.Logger;
-import minum.utils.StacktraceUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
-
-import static minum.Constants.SOCKET_TIMEOUT_MILLIS;
 
 /**
  * This wraps Sockets to make them more particular to our use case
@@ -23,65 +20,71 @@ public class SocketWrapper implements ISocketWrapper, AutoCloseable {
     private final ILogger logger;
     private final Server server;
 
-    public SocketWrapper(Socket socket, ILogger logger) throws IOException {
-<span class="fc" id="L27">        this(socket, null, logger);</span>
-<span class="fc" id="L28">    }</span>
+    /**
+     * Constructor
+     * @param socket a socket we intend to wrap with methods applicable to our use cases
+     * @param logger not much more to say on this param
+     * @param timeoutMillis we'll configure the socket to timeout after this many milliseconds.
+     */
+    public SocketWrapper(Socket socket, ILogger logger, int timeoutMillis) throws IOException {
+<span class="fc" id="L30">        this(socket, null, logger, timeoutMillis);</span>
+<span class="fc" id="L31">    }</span>
 
-<span class="fc" id="L30">    public SocketWrapper(Socket socket, Server server, ILogger logger) throws IOException {</span>
-<span class="fc" id="L31">        this.socket = socket;</span>
-<span class="fc" id="L32">        this.socket.setSoTimeout(SOCKET_TIMEOUT_MILLIS);</span>
-<span class="fc" id="L33">        this.inputStream = socket.getInputStream();</span>
-<span class="fc" id="L34">        writer = socket.getOutputStream();</span>
-<span class="fc" id="L35">        this.logger = logger;</span>
-<span class="fc" id="L36">        this.server = server;</span>
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L33">    public SocketWrapper(Socket socket, Server server, ILogger logger, int timeoutMillis) throws IOException {</span>
+<span class="fc" id="L34">        this.socket = socket;</span>
+<span class="fc" id="L35">        this.socket.setSoTimeout(timeoutMillis);</span>
+<span class="fc" id="L36">        this.inputStream = socket.getInputStream();</span>
+<span class="fc" id="L37">        writer = socket.getOutputStream();</span>
+<span class="fc" id="L38">        this.logger = logger;</span>
+<span class="fc" id="L39">        this.server = server;</span>
+<span class="fc" id="L40">    }</span>
 
     @Override
     public void send(String msg) throws IOException {
-<span class="fc" id="L41">        writer.write(msg.getBytes());</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L44">        writer.write(msg.getBytes());</span>
+<span class="fc" id="L45">    }</span>
 
     @Override
     public void send(byte[] bodyContents) throws IOException {
-<span class="fc" id="L46">        writer.write(bodyContents);</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L49">        writer.write(bodyContents);</span>
+<span class="fc" id="L50">    }</span>
 
     @Override
     public void sendHttpLine(String msg) throws IOException {
-<span class="fc" id="L51">        logger.logTrace(() -&gt; String.format(&quot;%s sending: \&quot;%s\&quot;&quot;, this, Logger.showWhiteSpace(msg)));</span>
-<span class="fc" id="L52">        send(msg + WebEngine.HTTP_CRLF);</span>
-<span class="fc" id="L53">    }</span>
+<span class="fc" id="L54">        logger.logTrace(() -&gt; String.format(&quot;%s sending: \&quot;%s\&quot;&quot;, this, Logger.showWhiteSpace(msg)));</span>
+<span class="fc" id="L55">        send(msg + WebEngine.HTTP_CRLF);</span>
+<span class="fc" id="L56">    }</span>
 
     @Override
     public String getLocalAddr() {
-<span class="fc" id="L57">        return socket.getLocalAddress().getHostAddress();</span>
+<span class="fc" id="L60">        return socket.getLocalAddress().getHostAddress();</span>
     }
 
     @Override
     public int getLocalPort() {
-<span class="fc" id="L62">        return socket.getLocalPort();</span>
+<span class="fc" id="L65">        return socket.getLocalPort();</span>
     }
 
     @Override
     public SocketAddress getRemoteAddrWithPort() {
-<span class="fc" id="L67">        return socket.getRemoteSocketAddress();</span>
+<span class="fc" id="L70">        return socket.getRemoteSocketAddress();</span>
     }
 
     @Override
     public String getRemoteAddr() {
-<span class="fc" id="L72">        return socket.getInetAddress().getHostAddress();</span>
+<span class="fc" id="L75">        return socket.getInetAddress().getHostAddress();</span>
     }
 
     @Override
     public void close() throws IOException {
-<span class="fc" id="L77">        logger.logTrace(() -&gt; &quot;close called on &quot; + this + &quot;. Stacktrace:&quot; + StacktraceUtils.stackTraceToString(Thread.currentThread().getStackTrace()));</span>
-<span class="fc" id="L78">        socket.close();</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (server != null) server.removeMyRecord(this);</span>
-<span class="fc" id="L80">    }</span>
+<span class="fc" id="L80">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L81">        socket.close();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (server != null) server.removeMyRecord(this);</span>
+<span class="fc" id="L83">    }</span>
 
     @Override
     public InputStream getInputStream() {
-<span class="fc" id="L84">        return this.inputStream;</span>
+<span class="fc" id="L87">        return this.inputStream;</span>
     }
 
     /**
@@ -91,7 +94,7 @@ public class SocketWrapper implements ISocketWrapper, AutoCloseable {
      */
     @Override
     public String toString() {
-<span class="fc" id="L94">        return &quot;(SocketWrapper for remote address: &quot; + this.getRemoteAddrWithPort().toString() + &quot;)&quot;;</span>
+<span class="fc" id="L97">        return &quot;(SocketWrapper for remote address: &quot; + this.getRemoteAddrWithPort().toString() + &quot;)&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

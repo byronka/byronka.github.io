@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseDiskPersistenceSimpler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.database</a> &gt; <span class="el_source">DatabaseDiskPersistenceSimpler.java</span></div><h1>DatabaseDiskPersistenceSimpler.java</h1><pre class="source lang-java linenums">package minum.database;
 
+import minum.Context;
 import minum.logging.ILogger;
 import minum.utils.ActionQueue;
 import minum.utils.FileUtils;
@@ -10,15 +11,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import static minum.utils.FileUtils.writeString;
 import static minum.utils.Invariants.mustBeTrue;
 
 /**
  * This allows us to run some disk-persistence operations more consistently
- * on any data that extends from {@link SimpleDataType}
+ * on any data that extends from {@link ISimpleDataType}
  * @param &lt;T&gt; the type of data we'll be persisting
  */
 public class DatabaseDiskPersistenceSimpler&lt;T&gt; {
@@ -34,40 +36,25 @@ public class DatabaseDiskPersistenceSimpler&lt;T&gt; {
 
     /**
      * Constructs a disk-persistence class well-suited for your data.
-     * &lt;p&gt;
-     * There is a bit of subtlety to its use, see documentation on the params.
-     * @param dbDirectory the directory where we will store this data, relative to
-     *                    the location from which we run the application.  Recommend that
-     *                    you use some consistency, and consider hierarchy.  For example,
-     *                    you might want to store all your data at db/foo - foo being the
-     *                    name of the type of data we're storing, and db being a place to
-     *                    collect together all your directories.
-     *&lt;p&gt;
-     *                    If you're consistent enough, you will have a top-level directory
-     *                    like &quot;db&quot;, with a bunch of sub-directories corresponding to the
-     *                    types of data.  But really there is a lot of flexibility, you
-     *                    can do it another way if you want.
-     * @param executorService The executorService is our interface to the system which we
-     *                        use for parallel processing.  We hand this sucker off to
-     *                        an internal {@link ActionQueue} which handles all these
-     *                        operations asynchronously, so that data is *eventually*
-     *                        written to disk.
+     * @param dbDirectory the directory for a particular domain (*not* the top-level
+     *                     directory).  For example, if the top-level directory is
+     *                     &quot;db&quot;, and we're building this for a domain &quot;foo&quot;, we
+     *                     might expect to receive &quot;db/foo&quot; here.
      */
-<span class="fc" id="L56">    public DatabaseDiskPersistenceSimpler(Path dbDirectory, ExecutorService executorService, ILogger logger) {</span>
-<span class="fc" id="L57">        this.dbDirectory = dbDirectory;</span>
-<span class="fc" id="L58">        actionQueue = new ActionQueue(&quot;DatabaseWriter &quot; + dbDirectory, executorService).initialize();</span>
-<span class="fc" id="L59">        this.logger = logger;</span>
-
-<span class="fc" id="L61">        actionQueue.enqueue(&quot;create directory&quot; + this.dbDirectory, () -&gt; {</span>
+<span class="fc" id="L44">    public DatabaseDiskPersistenceSimpler(Path dbDirectory, Context context) {</span>
+<span class="fc" id="L45">        actionQueue = new ActionQueue(&quot;DatabaseWriter &quot; + dbDirectory, context).initialize();</span>
+<span class="fc" id="L46">        this.logger = context.getLogger();</span>
+<span class="fc" id="L47">        this.dbDirectory = dbDirectory;</span>
+<span class="fc" id="L48">        actionQueue.enqueue(&quot;create directory&quot; + dbDirectory, () -&gt; {</span>
             try {
-<span class="fc" id="L63">                FileUtils.makeDirectory(logger, this.dbDirectory);</span>
-<span class="nc" id="L64">            } catch (IOException ex) {</span>
-<span class="nc" id="L65">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
-<span class="fc" id="L66">            }</span>
-<span class="fc" id="L67">            return null;</span>
+<span class="fc" id="L50">                FileUtils.makeDirectory(logger, dbDirectory);</span>
+<span class="nc" id="L51">            } catch (IOException ex) {</span>
+<span class="nc" id="L52">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="fc" id="L53">            }</span>
+<span class="fc" id="L54">            return null;</span>
         });
 
-<span class="fc" id="L70">    }</span>
+<span class="fc" id="L57">    }</span>
 
     /**
      * This function will stop the minum.database persistence cleanly.
@@ -77,98 +64,121 @@ public class DatabaseDiskPersistenceSimpler&lt;T&gt; {
      * have offloaded our file writes to [actionQueue], which
      * has an internal thread for serializing all actions
      * on our minum.database
+     * &lt;/p&gt;
      */
     public void stop() {
-<span class="fc" id="L82">        actionQueue.stop();</span>
-<span class="fc" id="L83">    }</span>
+<span class="fc" id="L70">        actionQueue.stop();</span>
+<span class="fc" id="L71">    }</span>
 
     /**
      * takes any serializable data and writes it to disk
      *
      * @param data the data we are writing
      */
-    public void persistToDisk(SimpleDataType&lt;T&gt; data) {
-<span class="fc" id="L91">        final String fullPath = makeFullPathFromData(data);</span>
-<span class="fc" id="L92">        actionQueue.enqueue(&quot;persist data to disk&quot;, () -&gt; {</span>
-<span class="fc" id="L93">            writeString(fullPath, data.serialize());</span>
+    public void persistToDisk(ISimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L79">        final String fullPath = makeFullPathFromData(data);</span>
+<span class="fc" id="L80">        actionQueue.enqueue(&quot;persist data to disk&quot;, () -&gt; {</span>
+<span class="fc" id="L81">            writeString(fullPath, data.serialize());</span>
 
             // needs to return null because this is a Callable, which allows us to
             // bubble exceptions back.
-<span class="fc" id="L97">            return null;</span>
+<span class="fc" id="L85">            return null;</span>
         });
-<span class="fc" id="L99">    }</span>
+<span class="fc" id="L87">    }</span>
 
     /**
      * Deletes a piece of data from the disk
      *
      * @param data the data we are serializing and writing
      */
-    public void deleteOnDisk(SimpleDataType&lt;T&gt; data) {
-<span class="fc" id="L107">        final String fullPath = makeFullPathFromData(data);</span>
-<span class="fc" id="L108">        actionQueue.enqueue(&quot;delete data from disk&quot;, () -&gt; {</span>
+    public void deleteOnDisk(ISimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L95">        final String fullPath = makeFullPathFromData(data);</span>
+<span class="fc" id="L96">        actionQueue.enqueue(&quot;delete data from disk&quot;, () -&gt; {</span>
             try {
-<span class="fc" id="L110">                Files.delete(Path.of(fullPath));</span>
-<span class="fc" id="L111">            } catch (Exception ex) {</span>
-<span class="fc" id="L112">                logger.logAsyncError(() -&gt; &quot;failed to delete file &quot;+fullPath+&quot; during deleteOnDisk&quot;);</span>
-<span class="fc" id="L113">            }</span>
+<span class="fc" id="L98">                Files.delete(Path.of(fullPath));</span>
+<span class="fc" id="L99">            } catch (Exception ex) {</span>
+<span class="fc" id="L100">                logger.logAsyncError(() -&gt; &quot;failed to delete file &quot;+fullPath+&quot; during deleteOnDisk&quot;);</span>
+<span class="fc" id="L101">            }</span>
 
             // needs to return null because this is a Callable, which allows us to
             // bubble exceptions back.
-<span class="fc" id="L117">            return null;</span>
+<span class="fc" id="L105">            return null;</span>
         });
-<span class="fc" id="L119">        }</span>
+<span class="fc" id="L107">        }</span>
 
 
-    public void updateOnDisk(SimpleDataType&lt;T&gt; data) {
-<span class="fc" id="L123">        final String fullPath = makeFullPathFromData(data);</span>
-<span class="fc" id="L124">        final var file = new File(fullPath);</span>
+    public void updateOnDisk(ISimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L111">        final String fullPath = makeFullPathFromData(data);</span>
+<span class="fc" id="L112">        final var file = new File(fullPath);</span>
 
-<span class="fc" id="L126">        actionQueue.enqueue(&quot;update data on disk&quot;, () -&gt; {</span>
+<span class="fc" id="L114">        actionQueue.enqueue(&quot;update data on disk&quot;, () -&gt; {</span>
             // if the file isn't already there, throw an exception
-<span class="fc" id="L128">            mustBeTrue(file.exists(), &quot;we were asked to update &quot;+file+&quot; but it doesn't exist&quot;);</span>
-<span class="fc" id="L129">            writeString(fullPath, data.serialize());</span>
+<span class="fc" id="L116">            mustBeTrue(file.exists(), &quot;we were asked to update &quot;+file+&quot; but it doesn't exist&quot;);</span>
+<span class="fc" id="L117">            writeString(fullPath, data.serialize());</span>
 
             // needs to return null because this is a Callable, which allows us to
             // bubble exceptions back.
-<span class="fc" id="L133">            return null;</span>
+<span class="fc" id="L121">            return null;</span>
         });
-<span class="fc" id="L135">    }</span>
+<span class="fc" id="L123">    }</span>
 
-    private String makeFullPathFromData(SimpleDataType&lt;T&gt; data) {
-<span class="fc" id="L138">        return dbDirectory + &quot;/&quot; + data.getIndex() + databaseFileSuffix;</span>
+    private String makeFullPathFromData(ISimpleDataType&lt;T&gt; data) {
+<span class="fc" id="L126">        return dbDirectory + &quot;/&quot; + data.getIndex() + databaseFileSuffix;</span>
     }
 
     /**
      * Grabs all the data from disk and returns it as a list.  This
      * method is run by various programs when the system first loads.
      */
-    public List&lt;T&gt; readAndDeserialize(SimpleDataType&lt;T&gt; instance) {
-<span class="fc bfc" id="L146" title="All 2 branches covered.">        if (! Files.exists(dbDirectory)) {</span>
-<span class="fc" id="L147">            logger.logDebug(() -&gt; dbDirectory + &quot; directory missing, creating empty list of data&quot;);</span>
-<span class="fc" id="L148">            return new ArrayList&lt;&gt;();</span>
+    public List&lt;T&gt; readAndDeserialize(ISimpleDataType&lt;T&gt; instance) {
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (! Files.exists(dbDirectory)) {</span>
+<span class="fc" id="L135">            logger.logDebug(() -&gt; dbDirectory + &quot; directory missing, creating empty list of data&quot;);</span>
+<span class="fc" id="L136">            return new ArrayList&lt;&gt;();</span>
         }
 
-<span class="fc" id="L151">        final var data = new ArrayList&lt;T&gt;();</span>
+<span class="fc" id="L139">        final var data = new ArrayList&lt;T&gt;();</span>
 
-<span class="fc" id="L153">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
-<span class="pc bpc" id="L154" title="1 of 4 branches missed.">            final var listOfFiles = pathStream.filter(path -&gt; Files.exists(path) &amp;&amp; Files.isRegularFile(path)).toList();</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
+<span class="fc" id="L141">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
+<span class="pc bpc" id="L142" title="1 of 4 branches missed.">            final var listOfFiles = pathStream.filter(path -&gt; Files.exists(path) &amp;&amp; Files.isRegularFile(path)).toList();</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
                 String fileContents;
-<span class="fc" id="L157">                fileContents = Files.readString(p);</span>
-<span class="fc bfc" id="L158" title="All 2 branches covered.">                if (fileContents.isBlank()) {</span>
-<span class="fc" id="L159">                    logger.logDebug( () -&gt; p.getFileName() + &quot; file exists but empty, skipping&quot;);</span>
+<span class="fc" id="L145">                fileContents = Files.readString(p);</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                if (fileContents.isBlank()) {</span>
+<span class="fc" id="L147">                    logger.logDebug( () -&gt; p.getFileName() + &quot; file exists but empty, skipping&quot;);</span>
                 } else {
                     try {
-<span class="fc" id="L162">                        data.add(instance.deserialize(fileContents));</span>
-<span class="fc" id="L163">                    } catch (Exception e) {</span>
-<span class="fc" id="L164">                        throw new RuntimeException(&quot;Failed to deserialize &quot;+p+&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;)&quot;);</span>
-<span class="fc" id="L165">                    }</span>
+<span class="fc" id="L150">                        data.add(instance.deserialize(fileContents));</span>
+<span class="fc" id="L151">                    } catch (Exception e) {</span>
+<span class="fc" id="L152">                        throw new RuntimeException(&quot;Failed to deserialize &quot;+p+&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;)&quot;);</span>
+<span class="fc" id="L153">                    }</span>
                 }
-<span class="fc" id="L167">            }</span>
-<span class="nc" id="L168">        } catch (IOException e) { // if we fail to walk() the dbDirectory.  I don't even know how to test this.</span>
-<span class="nc" id="L169">            throw new RuntimeException(e);</span>
-<span class="fc" id="L170">        }</span>
-<span class="fc" id="L171">        return data;</span>
+<span class="fc" id="L155">            }</span>
+<span class="nc" id="L156">        } catch (IOException e) { // if we fail to walk() the dbDirectory.  I don't even know how to test this.</span>
+<span class="nc" id="L157">            throw new RuntimeException(e);</span>
+<span class="fc" id="L158">        }</span>
+<span class="fc" id="L159">        return data;</span>
+    }
+
+    /**
+     * Calculate what the next index should be for the data.
+     * &lt;p&gt;
+     * The data we use in our application uses indexes (that is, just
+     * a plain old number [of Long type]) to distinguish one from
+     * another.  When we start the system, we need to calculate what
+     * the next index will be (for example, on disk we might already
+     * have data with indexes of 1, 2, and 3 - and therefore the next
+     * index would be 4).
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     * If there is no data in the collection, just return the number 1.
+     * &lt;/p&gt;
+     */
+    public long calculateNextIndex(Collection&lt;? extends SimpleIndexed&gt; data) {
+<span class="fc" id="L177">        return data</span>
+<span class="fc" id="L178">                .stream()</span>
+<span class="fc" id="L179">                .max(Comparator.comparingLong(SimpleIndexed::getIndex))</span>
+<span class="fc" id="L180">                .map(SimpleIndexed::getIndex)</span>
+<span class="fc" id="L181">                .orElse(0L) + 1L;</span>
     }
 
 }
