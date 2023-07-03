@@ -81,7 +81,7 @@ public class Server implements AutoCloseable {
 <span class="fc" id="L81">                            Thread.currentThread().setName(&quot;SocketWrapper thread for &quot; + sw.getRemoteAddr());</span>
                             try {
 <span class="fc" id="L83">                                handler.accept(sw);</span>
-<span class="fc" id="L84">                            } catch (SocketException | SocketTimeoutException ex) {</span>
+<span class="nc" id="L84">                            } catch (SocketException | SocketTimeoutException ex) {</span>
                                  /*
                                  if we close the application on the server side, there's a good
                                  likelihood a SocketException will come bubbling through here.
@@ -89,7 +89,7 @@ public class Server implements AutoCloseable {
                                    it seems that Socket closed is what we get when the client closes the connection in non-SSL, and conversely,
                                    if we are operating in secure (i.e. SSL/TLS) mode, we get &quot;an established connection...&quot;
                                  */
-<span class="fc" id="L92">                                logger.logDebug(() -&gt; ex.getMessage() + &quot; - remote address: &quot; + sw.getRemoteAddrWithPort());</span>
+<span class="nc" id="L92">                                logger.logDebug(() -&gt; ex.getMessage() + &quot; - remote address: &quot; + sw.getRemoteAddrWithPort());</span>
 <span class="fc" id="L93">                            } catch (ForbiddenUseException ex) {</span>
 <span class="fc" id="L94">                                logger.logDebug(ex::getMessage);</span>
 <span class="nc" id="L95">                            } catch (SSLException ex) {</span>
@@ -111,7 +111,7 @@ public class Server implements AutoCloseable {
                     }
 <span class="fc" id="L112">                }</span>
 <span class="fc" id="L113">            } catch (SocketException ex) {</span>
-<span class="pc bpc" id="L114" title="1 of 4 branches missed.">                if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
+<span class="pc bpc" id="L114" title="3 of 4 branches missed.">                if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
 <span class="nc" id="L115">                    logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
                 }
             }
