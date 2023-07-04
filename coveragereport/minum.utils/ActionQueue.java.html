@@ -53,7 +53,7 @@ public class ActionQueue {
             this only gets called when we are trying to shut everything
             down cleanly
              */
-<span class="pc bpc" id="L56" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ActionQueue for %s is stopped.%n&quot;, name);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ActionQueue for %s is stopped.%n&quot;, name);</span>
 <span class="nc" id="L57">            } catch (Exception ex) {</span>
 <span class="nc" id="L58">                System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ERROR: ActionQueue for %s has stopped unexpectedly. error: %s%n&quot;, name, ex);</span>
 <span class="nc" id="L59">                throw ex;</span>
@@ -75,6 +75,23 @@ public class ActionQueue {
 <span class="fc" id="L75">    }</span>
 
     /**
+     * Stops the action queue
+     * @param count how many loops to wait before we crash it closed
+     * @param sleepTime how long to wait in milliseconds between loops
+     */
+    public void stop(int count, int sleepTime) {
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping queue &quot; + this);</span>
+<span class="fc" id="L84">        stop = true;</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        for (int i = 0; i &lt; count; i++) {</span>
+<span class="fc" id="L86">            int size = queue.size();</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (!(size &gt; 0)) return;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue not yet empty, has %d elements. waiting...%n&quot;, size);</span>
+<span class="fc" id="L89">            MyThread.sleep(sleepTime);</span>
+        }
+<span class="nc" id="L91">        System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, this, queue.size(), queue);</span>
+<span class="nc" id="L92">    }</span>
+
+    /**
      * This will prevent any new actions being
      * queued (by setting the stop flag to true and thus
      * causing an exception to be thrown
@@ -82,28 +99,20 @@ public class ActionQueue {
      * block until the queue is empty.
      */
     public void stop() {
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping queue &quot; + this);</span>
-<span class="fc" id="L86">        stop = true;</span>
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 5; i++) {</span>
-<span class="fc" id="L88">            int size = queue.size();</span>
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">            if (!(size &gt; 0)) return;</span>
-<span class="nc bnc" id="L90" title="All 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue not yet empty, has %d elements. waiting...%n&quot;, size);</span>
-<span class="nc" id="L91">            MyThread.sleep(20);</span>
-        }
-<span class="nc" id="L93">        System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, this, queue.size(), queue);</span>
-<span class="nc" id="L94">    }</span>
+<span class="fc" id="L102">        stop(5, 20);</span>
+<span class="fc" id="L103">    }</span>
 
     @Override
     public String toString() {
-<span class="fc" id="L98">        return this.name;</span>
+<span class="fc" id="L107">        return this.name;</span>
     }
 
     public Thread getQueueThread() {
-<span class="fc" id="L102">        return queueThread;</span>
+<span class="fc" id="L111">        return queueThread;</span>
     }
 
     public LinkedBlockingQueue&lt;CallableWithDescription&gt; getQueue() {
-<span class="fc" id="L106">        return queue;</span>
+<span class="fc" id="L115">        return queue;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
