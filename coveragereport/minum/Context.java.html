@@ -58,26 +58,5 @@ public class Context {
 <span class="fc" id="L58">        return actionQueueList;</span>
     }
 
-
-    /**
-     * Systematically stops and kills all the action queues that have been
-     * instantiated in this call tree.
-     */
-    public void killAllQueues() {
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Killing all queue threads&quot;);</span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">        for (ActionQueue aq : getActionQueueList()) {</span>
-<span class="fc" id="L69">            aq.stop();</span>
-<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; killing &quot; + aq.getQueueThread());</span>
-<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if (aq.getQueueThread() != null) {</span>
-<span class="fc" id="L72">                aq.getQueueThread().interrupt();</span>
-            }
-            // at this point, clear out the queue if anything is left in it.
-            // this feels imprecise. TODO: look into this deeply.
-<span class="fc" id="L76">            aq.getQueue().clear();</span>
-
-<span class="fc" id="L78">        }</span>
-<span class="fc" id="L79">        getActionQueueList().clear();</span>
-<span class="fc" id="L80">    }</span>
-
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestFramework.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.testing</a> &gt; <span class="el_source">TestFramework.java</span></div><h1>TestFramework.java</h1><pre class="source lang-java linenums">package minum.testing;
 
+import minum.utils.ThrowingRunnable;
+
 import java.util.List;
 
 /**
@@ -8,7 +10,7 @@ import java.util.List;
  * to do excellent testing.  Just a committment to
  * quality.  Don't let anyone tell you differently.
  */
-<span class="nc" id="L11">public class TestFramework {</span>
+<span class="nc" id="L13">public class TestFramework {</span>
 
     /**
      * assert that a particular chunk of code throws a particular
@@ -22,27 +24,27 @@ import java.util.List;
      *     &lt;/code&gt;
      * &lt;/pre&gt;
      */
-    public static &lt;T extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, Runnable r) {
-<span class="fc" id="L26">        return assertThrows(myEx, null, r);</span>
+    public static &lt;T,TESTING extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, ThrowingRunnable&lt;TESTING&gt; r) {
+<span class="fc" id="L28">        return assertThrows(myEx, null, r);</span>
     }
 
     // quick note about the warning suppression - we already checked that the
     // case will be valid, when we checked if (!myEx.isInstance(ex)).
     @SuppressWarnings(&quot;unchecked&quot;)
-    public static &lt;T extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, String expectedMsg, Runnable r) {
+    public static &lt;T,TESTING extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, String expectedMsg, ThrowingRunnable&lt;TESTING&gt; r) {
         try {
-<span class="fc" id="L34">            r.run();</span>
-<span class="fc" id="L35">            throw new RuntimeException(&quot;Failed to throw exception&quot;);</span>
-<span class="fc" id="L36">        } catch (Exception ex) {</span>
-<span class="fc bfc" id="L37" title="All 2 branches covered.">            if (!myEx.isInstance(ex)) {</span>
-<span class="fc" id="L38">                String msg = String.format(&quot;This did not throw the expected exception type (%s).  Instead, (%s) was thrown&quot;, myEx, ex);</span>
-<span class="fc" id="L39">                throw new RuntimeException(msg);</span>
+<span class="fc" id="L36">            r.run();</span>
+<span class="fc" id="L37">            throw new TestFailureException(&quot;Failed to throw exception&quot;);</span>
+<span class="fc" id="L38">        } catch (Exception ex) {</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">            if (!myEx.isInstance(ex)) {</span>
+<span class="fc" id="L40">                String msg = String.format(&quot;This did not throw the expected exception type (%s).  Instead, (%s) was thrown&quot;, myEx, ex);</span>
+<span class="fc" id="L41">                throw new TestFailureException(msg);</span>
             }
-<span class="fc bfc" id="L41" title="All 4 branches covered.">            if (expectedMsg != null &amp;&amp; !ex.getMessage().equals(expectedMsg)) {</span>
-<span class="fc" id="L42">                String msg = String.format(&quot;Did not get expected message (%s). Instead, got: %s&quot;, expectedMsg, ex.getMessage());</span>
-<span class="fc" id="L43">                throw new RuntimeException(msg);</span>
+<span class="fc bfc" id="L43" title="All 4 branches covered.">            if (expectedMsg != null &amp;&amp; !ex.getMessage().equals(expectedMsg)) {</span>
+<span class="fc" id="L44">                String msg = String.format(&quot;Did not get expected message (%s). Instead, got: %s&quot;, expectedMsg, ex.getMessage());</span>
+<span class="fc" id="L45">                throw new TestFailureException(msg);</span>
             }
-<span class="fc" id="L45">            return (T) ex;</span>
+<span class="fc" id="L47">            return (T) ex;</span>
         }
 
     }
@@ -52,21 +54,21 @@ import java.util.List;
      * need to compare two byte arrays, see {@link #assertEqualByteArray(byte[], byte[])}
      */
     public static &lt;T&gt; void assertEquals(T left, T right) {
-<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (! left.equals(right)) {</span>
-<span class="fc" id="L56">            throw new RuntimeException(&quot;Not equal! %nleft:  %s %nright: %s&quot;.formatted(showWhiteSpace(left.toString()), showWhiteSpace(right.toString())));</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (! left.equals(right)) {</span>
+<span class="fc" id="L58">            throw new TestFailureException(&quot;Not equal! %nleft:  %s %nright: %s&quot;.formatted(showWhiteSpace(left.toString()), showWhiteSpace(right.toString())));</span>
         }
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L60">    }</span>
 
     /**
      * Compares two byte arrays for equality
      */
     public static void assertEqualByteArray(byte[] left, byte[] right) {
-<span class="pc bpc" id="L64" title="2 of 4 branches missed.">        if (left == null || right == null) throw new RuntimeException(&quot;one of the inputs was null: left:  %s right: %s&quot;.formatted(left, right));</span>
-<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (left.length != right.length) throw new RuntimeException(&quot;Not equal! left length: %d right length: %d&quot;.formatted(left.length, right.length));</span>
-<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (int i = 0; i &lt; left.length; i++) {</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">            if (left[i] != right[i]) throw new RuntimeException(&quot;Not equal! at index %d left was: %d right was: %d&quot;.formatted(i, left[i], right[i]));</span>
+<span class="pc bpc" id="L66" title="2 of 4 branches missed.">        if (left == null || right == null) throw new TestFailureException(&quot;one of the inputs was null: left:  %s right: %s&quot;.formatted(left, right));</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (left.length != right.length) throw new TestFailureException(&quot;Not equal! left length: %d right length: %d&quot;.formatted(left.length, right.length));</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        for (int i = 0; i &lt; left.length; i++) {</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">            if (left[i] != right[i]) throw new TestFailureException(&quot;Not equal! at index %d left was: %d right was: %d&quot;.formatted(i, left[i], right[i]));</span>
         }
-<span class="fc" id="L69">    }</span>
+<span class="fc" id="L71">    }</span>
 
     /**
      * asserts two lists are equal, ignoring the order.
@@ -76,24 +78,24 @@ import java.util.List;
      * a ClassCastException will be thrown
      */
     public static void assertEqualsDisregardOrder(List&lt;? extends CharSequence&gt; left, List&lt;? extends CharSequence&gt; right) {
-<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
-<span class="fc" id="L80">            throw new RuntimeException(String.format(&quot;different sizes: left was %d, right was %d%n&quot;, left.size(), right.size()));</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
+<span class="fc" id="L82">            throw new TestFailureException(String.format(&quot;different sizes: left was %d, right was %d%n&quot;, left.size(), right.size()));</span>
         }
-<span class="fc" id="L82">        List&lt;? extends CharSequence&gt; orderedLeft = left.stream().sorted().toList();</span>
-<span class="fc" id="L83">        List&lt;? extends CharSequence&gt; orderedRight = right.stream().sorted().toList();</span>
+<span class="fc" id="L84">        List&lt;? extends CharSequence&gt; orderedLeft = left.stream().sorted().toList();</span>
+<span class="fc" id="L85">        List&lt;? extends CharSequence&gt; orderedRight = right.stream().sorted().toList();</span>
 
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
-<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (!orderedLeft.get(i).equals(orderedRight.get(i))) {</span>
-<span class="fc" id="L87">                throw new RuntimeException(</span>
-<span class="fc" id="L88">                        String.format(</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (!orderedLeft.get(i).equals(orderedRight.get(i))) {</span>
+<span class="fc" id="L89">                throw new TestFailureException(</span>
+<span class="fc" id="L90">                        String.format(</span>
                                 &quot;%n%ndifferent values:%n%nleft:  %s%nright: %s%n%nfull left:%n-----------%n%s%n%nfull right:%n-----------%n%s%n&quot;,
-<span class="fc" id="L90">                                orderedLeft.get(i),</span>
-<span class="fc" id="L91">                                orderedRight.get(i),</span>
-<span class="fc" id="L92">                                String.join(&quot;\n&quot;, showWhiteSpace(left.toString())),</span>
-<span class="fc" id="L93">                                String.join(&quot;\n&quot;, showWhiteSpace(right.toString()))));</span>
+<span class="fc" id="L92">                                orderedLeft.get(i),</span>
+<span class="fc" id="L93">                                orderedRight.get(i),</span>
+<span class="fc" id="L94">                                String.join(&quot;\n&quot;, showWhiteSpace(left.toString())),</span>
+<span class="fc" id="L95">                                String.join(&quot;\n&quot;, showWhiteSpace(right.toString()))));</span>
             }
         }
-<span class="fc" id="L96">    }</span>
+<span class="fc" id="L98">    }</span>
 
     /**
      * asserts that two lists are equal in value and order.
@@ -103,8 +105,8 @@ import java.util.List;
      * Two empty lists are considered equal.
      */
     public static &lt;T&gt; void assertEquals(List&lt;T&gt; left, List&lt;T&gt; right) {
-<span class="fc" id="L106">       assertEquals(left, right, &quot;&quot;);</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L108">       assertEquals(left, right, &quot;&quot;);</span>
+<span class="fc" id="L109">    }</span>
 
     /**
      * asserts that two lists are equal in value and order.
@@ -116,21 +118,21 @@ import java.util.List;
      * @param failureMessage a failureMessage that should be shown if this assertion fails
      */
     public static &lt;T&gt; void assertEquals(List&lt;T&gt; left, List&lt;T&gt; right, String failureMessage) {
-<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
-<span class="fc" id="L120">            throw new RuntimeException(</span>
-<span class="fc" id="L121">                    String.format(&quot;different sizes: left was %d, right was %d. %s&quot;, left.size(), right.size(), failureMessage));</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
+<span class="fc" id="L122">            throw new TestFailureException(</span>
+<span class="fc" id="L123">                    String.format(&quot;different sizes: left was %d, right was %d. %s&quot;, left.size(), right.size(), failureMessage));</span>
         }
-<span class="fc bfc" id="L123" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
-<span class="fc bfc" id="L124" title="All 2 branches covered.">            if (!left.get(i).equals(right.get(i))) {</span>
-<span class="fc" id="L125">                throw new RuntimeException(</span>
-<span class="fc" id="L126">                        String.format(&quot;different values - left: \&quot;%s\&quot; right: \&quot;%s\&quot;. %s&quot;, showWhiteSpace(left.get(i).toString()), showWhiteSpace(right.get(i).toString()), failureMessage));</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (!left.get(i).equals(right.get(i))) {</span>
+<span class="fc" id="L127">                throw new TestFailureException(</span>
+<span class="fc" id="L128">                        String.format(&quot;different values - left: \&quot;%s\&quot; right: \&quot;%s\&quot;. %s&quot;, showWhiteSpace(left.get(i).toString()), showWhiteSpace(right.get(i).toString()), failureMessage));</span>
             }
         }
-<span class="fc" id="L129">    }</span>
+<span class="fc" id="L131">    }</span>
 
     public static void assertTrue(boolean value) {
-<span class="fc" id="L132">      assertTrue(value, &quot;&quot;);</span>
-<span class="fc" id="L133">    }</span>
+<span class="fc" id="L134">      assertTrue(value, &quot;&quot;);</span>
+<span class="fc" id="L135">    }</span>
 
     /**
      * Assert that something is true, and show a message if it fails. This
@@ -158,16 +160,16 @@ import java.util.List;
      * &lt;/p&gt;
      */
     public static void assertTrue(boolean value, String failureMessage) {
-<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (!value) {</span>
-<span class="fc" id="L162">            throw new RuntimeException(&quot;value was unexpectedly false. &quot; + failureMessage);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (!value) {</span>
+<span class="fc" id="L164">            throw new TestFailureException(&quot;value was unexpectedly false. &quot; + failureMessage);</span>
         }
-<span class="fc" id="L164">    }</span>
+<span class="fc" id="L166">    }</span>
 
     public static void assertFalse(boolean value) {
-<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (value) {</span>
-<span class="fc" id="L168">            throw new RuntimeException(&quot;value was unexpectedly true&quot;);</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (value) {</span>
+<span class="fc" id="L170">            throw new TestFailureException(&quot;value was unexpectedly true&quot;);</span>
         }
-<span class="fc" id="L170">    }</span>
+<span class="fc" id="L172">    }</span>
 
     /**
      * Given a string that may have whitespace chars,
@@ -188,15 +190,15 @@ import java.util.List;
      */
     private static String showWhiteSpace(String msg) {
         // if we have tabs, returns, newlines in the text, show them
-<span class="fc" id="L191">        String text = msg</span>
-<span class="fc" id="L192">                .replace(&quot;\t&quot;, &quot;(TAB)&quot;)</span>
-<span class="fc" id="L193">                .replace(&quot;\r&quot;, &quot;(RETURN)&quot;)</span>
-<span class="fc" id="L194">                .replace(&quot;\n&quot;, &quot;(NEWLINE)&quot;);</span>
+<span class="fc" id="L193">        String text = msg</span>
+<span class="fc" id="L194">                .replace(&quot;\t&quot;, &quot;(TAB)&quot;)</span>
+<span class="fc" id="L195">                .replace(&quot;\r&quot;, &quot;(RETURN)&quot;)</span>
+<span class="fc" id="L196">                .replace(&quot;\n&quot;, &quot;(NEWLINE)&quot;);</span>
         // if the text is an empty string, render that
-<span class="pc bpc" id="L196" title="1 of 2 branches missed.">        text = text.isEmpty() ? &quot;(EMPTY)&quot; : text;</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">        text = text.isEmpty() ? &quot;(EMPTY)&quot; : text;</span>
         // if the text is nothing but whitespace, show that
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">        text = text.isBlank() ? &quot;(BLANK)&quot; : text;</span>
-<span class="fc" id="L199">        return text;</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        text = text.isBlank() ? &quot;(BLANK)&quot; : text;</span>
+<span class="fc" id="L201">        return text;</span>
     }
 
 }

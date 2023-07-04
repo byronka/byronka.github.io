@@ -12,7 +12,7 @@ import minum.logging.ILogger;
  * alleviate that situation.
  */
 @FunctionalInterface
-public interface ThrowingRunnable&lt;E extends Exception&gt;{
+public interface ThrowingRunnable&lt;E extends Throwable&gt;{
 
     void run() throws E;
 
@@ -20,9 +20,9 @@ public interface ThrowingRunnable&lt;E extends Exception&gt;{
 <span class="fc" id="L20">        return () -&gt; {</span>
             try {
 <span class="fc" id="L22">                throwingRunnable.run();</span>
-<span class="fc" id="L23">            } catch (Exception ex) {</span>
-<span class="fc" id="L24">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
-<span class="fc" id="L25">                throw new RuntimeException(ex);</span>
+<span class="nc" id="L23">            } catch (Exception ex) {</span>
+<span class="nc" id="L24">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="nc" id="L25">                throw new RuntimeException(ex);</span>
 <span class="fc" id="L26">            }</span>
 <span class="fc" id="L27">        };</span>
     }

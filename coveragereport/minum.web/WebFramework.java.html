@@ -84,9 +84,9 @@ public class WebFramework implements AutoCloseable {
 
                 // if we recognize this client as an attacker, dump them.
 <span class="pc bpc" id="L86" title="1 of 4 branches missed.">                TheBrig theBrig = (fs != null &amp;&amp; fs.getTheBrig() != null) ? fs.getTheBrig() : null;</span>
-<span class="pc bpc" id="L87" title="1 of 4 branches missed.">                if (theBrig != null &amp;&amp; constants.IS_THE_BRIG_ENABLED) {</span>
-<span class="nc" id="L88">                    String remoteClient = sw.getRemoteAddr();</span>
-<span class="nc bnc" id="L89" title="All 2 branches missed.">                    if (theBrig.isInJail(remoteClient + &quot;_vuln_seeking&quot;)) {</span>
+<span class="fc bfc" id="L87" title="All 4 branches covered.">                if (theBrig != null &amp;&amp; constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="fc" id="L88">                    String remoteClient = sw.getRemoteAddr();</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">                    if (theBrig.isInJail(remoteClient + &quot;_vuln_seeking&quot;)) {</span>
                         // if this client is a vulnerability seeker, just dump them unceremoniously
 <span class="nc" id="L91">                        logger.logDebug(() -&gt; &quot;closing the socket on &quot; + remoteClient);</span>
 <span class="nc" id="L92">                        sw.close();</span>
@@ -125,8 +125,8 @@ public class WebFramework implements AutoCloseable {
 <span class="fc" id="L125">                    logger.logDebug(() -&gt; String.format(&quot;%s requested an unregistered path of %s.  Returning 404&quot;, sw, sl.getPathDetails().isolatedPath()));</span>
 <span class="fc" id="L126">                    boolean isVulnSeeking = underInvestigation.isLookingForSuspiciousPaths(sl.getPathDetails().isolatedPath());</span>
 <span class="fc" id="L127">                    logger.logDebug(() -&gt; &quot;Is &quot; + sw.getRemoteAddr() + &quot; looking for a vulnerability? &quot; + isVulnSeeking);</span>
-<span class="pc bpc" id="L128" title="2 of 6 branches missed.">                    if (isVulnSeeking &amp;&amp; theBrig != null &amp;&amp; constants.IS_THE_BRIG_ENABLED) {</span>
-<span class="nc" id="L129">                        theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
+<span class="pc bpc" id="L128" title="1 of 6 branches missed.">                    if (isVulnSeeking &amp;&amp; theBrig != null &amp;&amp; constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="fc" id="L129">                        theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
                     }
 <span class="fc" id="L131">                    resultingResponse = new Response(_404_NOT_FOUND);</span>
 <span class="fc" id="L132">                } else {</span>

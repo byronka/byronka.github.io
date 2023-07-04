@@ -37,7 +37,7 @@ public class TestLogger extends Logger {
 <span class="fc" id="L37">            long sumOfTestCaseDurations = ts.testCases.stream().mapToLong(x -&gt; x.duration).sum();</span>
 <span class="fc" id="L38">            totalTime += sumOfTestCaseDurations;</span>
 <span class="fc" id="L39">            totalCountTests += testCaseStrings.size();</span>
-<span class="fc" id="L40">            String testSuiteString = String.format(&quot;\t&lt;testsuite name=\&quot;%s\&quot; time=\&quot;%.2f\&quot; tests=\&quot;%d\&quot;&gt;&quot;, ts.suiteName, sumOfTestCaseDurations / 1000.0, testCaseStrings.size());</span>
+<span class="fc" id="L40">            String testSuiteString = String.format(&quot;\t&lt;testsuite name=\&quot;%s\&quot; time=\&quot;%.2f\&quot; tests=\&quot;%d\&quot;&gt;&quot;, ts.className(), sumOfTestCaseDurations / 1000.0, testCaseStrings.size());</span>
 <span class="fc" id="L41">            sb.append(String.format(&quot;%n&quot; + testSuiteString + &quot;%n&quot; + String.join(&quot;\n&quot;, testCaseStrings) + &quot;%n&quot; + &quot;\t&lt;/testsuite&gt;&quot; + &quot;%n&quot;));</span>
 <span class="fc" id="L42">        }</span>
 <span class="fc" id="L43">        String innerXmlReport = &quot;&quot;&quot;</span>
@@ -50,13 +50,13 @@ public class TestLogger extends Logger {
 <span class="fc" id="L50">        FileUtils.writeString(&quot;out/reports/tests/tests.xml&quot;, innerXmlReport);</span>
 <span class="fc" id="L51">    }</span>
 
-    public void testSuite(String suiteName, String className) {
-<span class="fc" id="L54">        currentTestSuite = new TestSuite(suiteName, className, new ArrayList&lt;&gt;());</span>
+    public void testSuite(String className) {
+<span class="fc" id="L54">        currentTestSuite = new TestSuite(className, new ArrayList&lt;&gt;());</span>
 <span class="fc" id="L55">        testSuites.add(currentTestSuite);</span>
 <span class="fc" id="L56">    }</span>
 
 <span class="fc" id="L58">    record TestCase(String name, long duration) {}</span>
-<span class="fc" id="L59">    record TestSuite(String suiteName, String className, List&lt;TestCase&gt; testCases) {}</span>
+<span class="fc" id="L59">    record TestSuite(String className, List&lt;TestCase&gt; testCases) {}</span>
 
     public TestLogger(Context context) {
 <span class="fc" id="L62">        super(context);</span>
