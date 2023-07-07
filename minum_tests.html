@@ -1,104 +1,2413 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites time="0.87" tests="62">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>tests.xml</title>
+    <style type="text/css">
+        body {
+    background-color: white;
+    padding-bottom: 20em;
+    margin: 0;
+    min-height: 15cm;
+}
 
-	<testsuite name="WebTests" time="0.25" tests="21">
-		<testcase classname="WebTests" name="client / server" time="0.069" />
-		<testcase classname="WebTests" name="client / server with more conversation" time="0.014" />
-		<testcase classname="WebTests" name="What happens if we throw an exception in a thread" time="0.000" />
-		<testcase classname="WebTests" name="like we're a minum.web server" time="0.024" />
-		<testcase classname="WebTests" name="starting server with a handler" time="0.004" />
-		<testcase classname="WebTests" name="starting server with a handler part 2" time="0.090" />
-		<testcase classname="WebTests" name="TDD of a handler" time="0.000" />
-		<testcase classname="WebTests" name="We should be able to pull valuable information from the start line" time="0.000" />
-		<testcase classname="WebTests" name="alternate case for extractStartLine - POST" time="0.000" />
-		<testcase classname="WebTests" name="alernate case - empty path" time="0.000" />
-		<testcase classname="WebTests" name="negative cases for extractStartLine" time="0.000" />
-		<testcase classname="WebTests" name="positive test for extractStatusLine" time="0.000" />
-		<testcase classname="WebTests" name="negative tests for extractStatusLine" time="0.000" />
-		<testcase classname="WebTests" name="parseUrlEncodedForm should properly parse data" time="0.000" />
-		<testcase classname="WebTests" name="parseUrlEncodedForm edge cases" time="0.017" />
-		<testcase classname="WebTests" name="when we post data to an endpoint, it can extract the data" time="0.000" />
-		<testcase classname="WebTests" name="when the requested endpoint does not exist, we get a 404 response" time="0.015" />
-		<testcase classname="WebTests" name="We should be able to handle transfer-encoding: chunked" time="0.000" />
-		<testcase classname="WebTests" name="Looking into how to split a byte array using a string delimiter" time="0.000" />
-		<testcase classname="WebTests" name="Examining the algorithm for parsing multipart data" time="0.000" />
-		<testcase classname="WebTests" name="we should be able to receive multipart form data" time="0.012" />
-	</testsuite>
+h1, h2, h3, h4, h5, h6, h7 {
+    font-family: sans-serif;
+}
 
-	<testsuite name="SimpleDatabaseTests" time="0.37" tests="7">
-		<testcase classname="SimpleDatabaseTests" name="Headers test - multiple headers" time="0.000" />
-		<testcase classname="SimpleDatabaseTests" name="now let's try playing with serialization" time="0.000" />
-		<testcase classname="SimpleDatabaseTests" name="When we serialize something null" time="0.000" />
-		<testcase classname="SimpleDatabaseTests" name="what about serializing a collection of stuff" time="0.000" />
-		<testcase classname="SimpleDatabaseTests" name="let's fold in some of the capability of DatabaseDiskPersistenceSimpler" time="0.305" />
-		<testcase classname="SimpleDatabaseTests" name="what happens if we try deleting a file that doesn't exist?" time="0.016" />
-		<testcase classname="SimpleDatabaseTests" name="edge cases for deserialization" time="0.051" />
-	</testsuite>
+h1 {
+    background-color: #007acc;
+    color: white;
+    padding: 3mm;
+    margin-top: 0;
+    margin-bottom: 1mm;
+}
 
-	<testsuite name="LruCacheTests" time="0.07" tests="2">
-		<testcase classname="LruCacheTests" name="Just how fast is our minum.database?" time="0.069" />
-		<testcase classname="LruCacheTests" name="ensure that the LRUCache works as expected - oldest removed" time="0.000" />
-	</testsuite>
+.footer {
+    font-style: italic;
+    font-size: small;
+    text-align: right;
+    padding: 1em;
+}
 
-	<testsuite name="StringUtilsTests" time="0.00" tests="4">
-		<testcase classname="StringUtilsTests" name="if we get an item from the LRU cache, it should avoid being least recently used" time="0.000" />
-		<testcase classname="StringUtilsTests" name="See that our code to clean html does its work" time="0.000" />
-		<testcase classname="StringUtilsTests" name="Cleaning html should return an empty string if given null" time="0.000" />
-		<testcase classname="StringUtilsTests" name="Our code to clean strings used in attributes should work" time="0.000" />
-	</testsuite>
+.testsuite {
+    padding-bottom: 2em;
+    margin-left: 1em;
+}
 
-	<testsuite name="TemplatingTests" time="0.00" tests="4">
-		<testcase classname="TemplatingTests" name="safeAttr should return an empty string if given null" time="0.000" />
-		<testcase classname="TemplatingTests" name="testing out a template rendering machine" time="0.000" />
-		<testcase classname="TemplatingTests" name="template rendering - no keys" time="0.000" />
-		<testcase classname="TemplatingTests" name="template rendering - missing keys" time="0.000" />
-	</testsuite>
+.proplist {
+    width: 100%;
+    margin-bottom: 2em;
+    border-collapse: collapse;
+    border: 1px solid grey;
+}
 
-	<testsuite name="Http2Tests" time="0.02" tests="1">
-		<testcase classname="Http2Tests" name="template for a more realistic input" time="0.015" />
-	</testsuite>
+.proplist th {
+    background-color: silver;
+    width: 5em;
+    padding: 2px;
+    padding-right: 1em;
+    text-align: left;
+}
 
-	<testsuite name="FullSystemTests" time="0.02" tests="2">
-		<testcase classname="FullSystemTests" name="encode convert HTTP/1.1 GET to HTTP/2 frames" time="0.016" />
-		<testcase classname="FullSystemTests" name="Typical happy path - a user makes an HTTP request to the insecure endpoint" time="0.000" />
-	</testsuite>
+.proplist td {
+    padding: 2px;
+}
 
-	<testsuite name="StaticFilesCacheTests" time="0.02" tests="1">
-		<testcase classname="StaticFilesCacheTests" name="If the redirect handler receives no start line, return nothing" time="0.016" />
-	</testsuite>
+.index-table {
+    width: 90%;
+    margin-left: 1em;
+}
 
-	<testsuite name="TheBrigTests" time="0.00" tests="1">
-		<testcase classname="TheBrigTests" name="Happy path - load some static files into the cache" time="0.000" />
-	</testsuite>
+.index-table td {
+    vertical-align: top;
+    width: 50%;
+}
 
-	<testsuite name="TheBrigTests" time="0.12" tests="6">
-		<testcase classname="TheBrigTests" name="Put in jail for a time" time="0.100" />
-		<testcase classname="TheBrigTests" name="detail work" time="0.016" />
-		<testcase classname="TheBrigTests" name="unusual cases" time="0.000" />
-		<testcase classname="TheBrigTests" name="this should easily work" time="0.000" />
-		<testcase classname="TheBrigTests" name="initial happy path MVP html parsing" time="0.000" />
-		<testcase classname="TheBrigTests" name="Invalid HTML tag" time="0.000" />
-	</testsuite>
+.failure-index {
 
-	<testsuite name="TestFrameworkTests" time="0.00" tests="7">
-		<testcase classname="TestFrameworkTests" name="Invalid closing tag" time="0.000" />
-		<testcase classname="TestFrameworkTests" name="Testing that assertThrows behaves properly when no internal exception is thrown" time="0.000" />
-		<testcase classname="TestFrameworkTests" name="We should be able to assert on the exception message" time="0.000" />
-		<testcase classname="TestFrameworkTests" name="assertEquals should assert that two items are equal" time="0.000" />
-		<testcase classname="TestFrameworkTests" name="assertEquals should assert that lists in the same order are equal" time="0.000" />
-		<testcase classname="TestFrameworkTests" name="assert that two lists with items in different orders but otherwise equal can be compared" time="0.000" />
-		<testcase classname="TestFrameworkTests" name="assertTrue should do its job" time="0.000" />
-	</testsuite>
+}
 
-	<testsuite name="ServerTests" time="0.02" tests="4">
-		<testcase classname="ServerTests" name="assertFalse should do its job" time="0.015" />
-		<testcase classname="ServerTests" name="Handling ForbiddenUseException" time="0.000" />
-		<testcase classname="ServerTests" name="Handling SSLException - vulnerability attack" time="0.007" />
-		<testcase classname="ServerTests" name="Handling SocketException" time="0.000" />
-	</testsuite>
+.toc {
+    margin-bottom: 2em;
+    font-family: monospace;
+}
 
-	<testsuite name="StackTraceUtilsTests" time="0.00" tests="2">
-		<testcase classname="StackTraceUtilsTests" name="Handling other exception" time="0.000" />
-		<testcase classname="StackTraceUtilsTests" name="convert a stacktrace to a string" time="0.000" />
-	</testsuite>
-</testsuites>
+.stdio, pre {
+    min-height: 1em;
+    background-color: #1e1e1e;
+    color: silver;
+    padding: 0.5em;
+}
+.tdpre {
+    background-color: #1e1e1e;
+}
+
+.test {
+    margin-left: 0.5cm;
+}
+
+.outcome {
+    border-left: 1em;
+    padding: 2px;
+}
+
+.outcome-failed {
+    border-left: 1em solid lightcoral;
+}
+
+.outcome-passed {
+    border-left: 1em solid lightgreen;
+}
+
+.outcome-skipped {
+    border-left: 1em solid lightyellow;
+}
+
+.stats-table {
+}
+
+.stats-table td {
+    min-width: 4em;
+    text-align: right;
+}
+
+.stats-table .failed {
+    background-color: lightcoral;
+}
+
+.stats-table .passed {
+    background-color: lightgreen;
+}
+
+.matrix-table {
+    table-layout: fixed;
+    border-spacing: 0;
+    width: available;
+    margin-left: 1em;
+}
+
+.matrix-table td {
+    vertical-align: center;
+}
+
+.matrix-table td:last-child {
+    width: 0;
+}
+
+.matrix-table tr:hover {
+    background-color: yellow;
+}
+
+.matrix-axis-name {
+    white-space: nowrap;
+    padding-right: 0.5em;
+    border-left: 1px solid black;
+    border-top: 1px solid black;
+    text-align: right;
+}
+
+.matrix-axis-line {
+    border-left: 1px solid black;
+    width: 0.5em;
+}
+
+.matrix-classname {
+    text-align: left;
+    width: 100%;
+    border-top: 2px solid grey;
+    border-bottom: 1px solid silver;
+}
+
+.matrix-casename {
+    text-align: left;
+    font-weight: normal;
+    font-style: italic;
+    padding-left: 1em;
+    border-bottom: 1px solid silver;
+}
+
+.matrix-result {
+    display: block;
+    width: 1em;
+    text-align: center;
+    padding: 1mm;
+    margin: 0;
+}
+
+.matrix-result-combined {
+    white-space: nowrap;
+    padding-right: 0.2em;
+    text-align: right;
+}
+
+.matrix-result-failed {
+    background-color: lightcoral;
+}
+
+.matrix-result-passed {
+    background-color: lightgreen;
+}
+
+.matrix-result-skipped {
+    background-color: lightyellow;
+}
+
+.matrix-even {
+    background-color: lightgray;
+}
+    </style>
+</head>
+<body>
+    
+<h1>
+    Test Report : tests.xml
+</h1>
+<a id="toc"></a>
+<table class="index-table">
+    <tr>
+        <td>
+            <ul class="toc">
+            
+                
+                <li>WebTests
+                <ul>
+                    
+                    <li><a href="#487648c6-ba4e-4686-9d48-960ab8f425b8">client / server</a></li>
+                    
+                    <li><a href="#9bbf83a5-a8c8-40f5-81c7-1fcf5193f020">client / server with more conversation</a></li>
+                    
+                    <li><a href="#d95d34fb-35dc-400e-a37a-96f7e6a1d643">What happens if we throw an exception in a thread</a></li>
+                    
+                    <li><a href="#f9bd6929-588a-4a15-8865-c6e4b564f4dc">like we&#39;re a minum.web server</a></li>
+                    
+                    <li><a href="#1f012b3f-51aa-4f28-a5b1-c096d28f92c1">starting server with a handler</a></li>
+                    
+                    <li><a href="#fba1748a-3a44-49fe-bca8-f92d0a164c83">starting server with a handler part 2</a></li>
+                    
+                    <li><a href="#083c0ebb-a46f-4d1c-be2c-0efedb019796">TDD of a handler</a></li>
+                    
+                    <li><a href="#5ccf11c1-a078-475c-a73e-f05857eb8216">We should be able to pull valuable information from the start line</a></li>
+                    
+                    <li><a href="#f5988a93-6ae6-4252-96a6-c8bafdd4f2d8">alternate case for extractStartLine - POST</a></li>
+                    
+                    <li><a href="#6125c54d-e349-40c3-be43-4b928a3c3a0b">alernate case - empty path</a></li>
+                    
+                    <li><a href="#208b362f-c6ad-4132-9ee3-b0ecf77d5293">negative cases for extractStartLine</a></li>
+                    
+                    <li><a href="#0a87d1d6-2b4e-4626-b199-6982f50b1a80">positive test for extractStatusLine</a></li>
+                    
+                    <li><a href="#850466f6-6abc-4496-afe9-e8cff3b54d7b">negative tests for extractStatusLine</a></li>
+                    
+                    <li><a href="#81494325-f5c6-4ac7-9eef-0fba5c258002">parseUrlEncodedForm should properly parse data</a></li>
+                    
+                    <li><a href="#19aa9a8a-017e-45b1-aaf2-b7e39a1e85cc">parseUrlEncodedForm edge cases</a></li>
+                    
+                    <li><a href="#fff7c818-cd9c-4ff8-9a0c-4bb746e0f6fa">when we post data to an endpoint, it can extract the data</a></li>
+                    
+                    <li><a href="#07b0fd25-b5a1-4f52-a305-81aa2c60b675">when the requested endpoint does not exist, we get a 404 response</a></li>
+                    
+                    <li><a href="#f2c58d11-a29e-4d9d-b842-7de9d17a4562">We should be able to handle transfer-encoding: chunked</a></li>
+                    
+                    <li><a href="#6f1f9af4-4f8b-4ff7-a608-febd8ffbe387">Looking into how to split a byte array using a string delimiter</a></li>
+                    
+                    <li><a href="#0017be9e-a034-481a-bf8f-e85a8566a296">Examining the algorithm for parsing multipart data</a></li>
+                    
+                    <li><a href="#2c443e49-62db-4fe5-b278-2d005e21e9d7">we should be able to receive multipart form data</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>SimpleDatabaseTests
+                <ul>
+                    
+                    <li><a href="#a49b0b66-8d00-40a9-b350-1550176bc4f5">Headers test - multiple headers</a></li>
+                    
+                    <li><a href="#0f6eb8dd-fc56-4559-b0e0-99cf2108a91b">now let&#39;s try playing with serialization</a></li>
+                    
+                    <li><a href="#1956d854-45ed-4731-be5b-a5abdd7651a2">When we serialize something null</a></li>
+                    
+                    <li><a href="#29cadcbc-5eaa-417c-a4e3-f24817d7a2b0">what about serializing a collection of stuff</a></li>
+                    
+                    <li><a href="#3696bd1a-86cd-4810-abb6-9178b516c95b">let&#39;s fold in some of the capability of DatabaseDiskPersistenceSimpler</a></li>
+                    
+                    <li><a href="#a5347e96-1545-421b-98da-af50894d47ae">what happens if we try deleting a file that doesn&#39;t exist?</a></li>
+                    
+                    <li><a href="#0eb69ddf-9a15-4669-9238-34bf9b5cc599">edge cases for deserialization</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>LruCacheTests
+                <ul>
+                    
+                    <li><a href="#4ab69636-c029-4616-896c-3558eac9952c">Just how fast is our minum.database?</a></li>
+                    
+                    <li><a href="#30fb47f9-c486-414e-988a-522c4793f60a">ensure that the LRUCache works as expected - oldest removed</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>StringUtilsTests
+                <ul>
+                    
+                    <li><a href="#73cf0041-93cd-403a-87a8-1810009a1907">if we get an item from the LRU cache, it should avoid being least recently used</a></li>
+                    
+                    <li><a href="#e1b82302-7bcb-48a9-af1e-a2a8d2bd641f">See that our code to clean html does its work</a></li>
+                    
+                    <li><a href="#2f6d7a76-5375-4420-ade7-7d899bfc8e19">Cleaning html should return an empty string if given null</a></li>
+                    
+                    <li><a href="#bbad73d2-8add-40ea-aaf1-4576f9cf3740">Our code to clean strings used in attributes should work</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>TemplatingTests
+                <ul>
+                    
+                    <li><a href="#34f224c4-cc57-4d62-95b1-841a5533e965">safeAttr should return an empty string if given null</a></li>
+                    
+                    <li><a href="#0a92d8d5-6ac7-444b-af8b-143b53c97732">testing out a template rendering machine</a></li>
+                    
+                    <li><a href="#badc5905-6308-426c-800a-a24c7a242ae3">template rendering - no keys</a></li>
+                    
+                    <li><a href="#d2696c1f-0319-4227-816d-d3eb13618f6e">template rendering - missing keys</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>Http2Tests
+                <ul>
+                    
+                    <li><a href="#0ab2b63f-4017-41c2-9369-9d98879cd0e6">template for a more realistic input</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>FullSystemTests
+                <ul>
+                    
+                    <li><a href="#9a334978-78ad-4333-a138-a7988d409129">encode convert HTTP/1.1 GET to HTTP/2 frames</a></li>
+                    
+                    <li><a href="#b52d2078-e93f-4905-984a-da8604a6a692">Typical happy path - a user makes an HTTP request to the insecure endpoint</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>StaticFilesCacheTests
+                <ul>
+                    
+                    <li><a href="#4ef6ccea-b502-4927-b43c-5380369bd2c9">If the redirect handler receives no start line, return nothing</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>TheBrigTests
+                <ul>
+                    
+                    <li><a href="#db57fc0f-dc65-430b-9420-89fd3408c16f">Happy path - load some static files into the cache</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>TheBrigTests
+                <ul>
+                    
+                    <li><a href="#19b7de99-aec3-4f7e-a74e-c32807199284">Put in jail for a time</a></li>
+                    
+                    <li><a href="#df4825b7-c52d-4e0c-b8f8-e1760d6d3ab3">detail work</a></li>
+                    
+                    <li><a href="#0cbe95ba-ceae-467a-b16c-c35ebc2445bc">unusual cases</a></li>
+                    
+                    <li><a href="#396feac0-8d3c-4e88-84c5-1369e3cea93b">this should easily work</a></li>
+                    
+                    <li><a href="#a0fd66a4-52c2-45c2-a0a7-d220bbb63c18">initial happy path MVP html parsing</a></li>
+                    
+                    <li><a href="#e9e7b467-0713-4a07-a6c0-4f42b7e01886">Invalid HTML tag</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>TestFrameworkTests
+                <ul>
+                    
+                    <li><a href="#80261cc5-60ad-4f88-904f-77c667499c9e">Invalid closing tag</a></li>
+                    
+                    <li><a href="#f5fc3c49-3583-4b35-9674-b877eff9c432">Testing that assertThrows behaves properly when no internal exception is thrown</a></li>
+                    
+                    <li><a href="#600ff9c8-40d5-4ce6-b4fe-6f9cfe2e69ef">We should be able to assert on the exception message</a></li>
+                    
+                    <li><a href="#3b64481e-ecea-4a06-900d-eb41c5db61cf">assertEquals should assert that two items are equal</a></li>
+                    
+                    <li><a href="#9aa4e8b0-c318-46f9-8f8f-e5dd1453f708">assertEquals should assert that lists in the same order are equal</a></li>
+                    
+                    <li><a href="#f87b5ee1-8b8e-499e-8727-2c8d1c732694">assert that two lists with items in different orders but otherwise equal can be compared</a></li>
+                    
+                    <li><a href="#70d25247-da3d-4931-9462-9cc8182a476d">assertTrue should do its job</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>ServerTests
+                <ul>
+                    
+                    <li><a href="#2b6c7e34-236f-4b25-b4b6-66bd862f9e8e">assertFalse should do its job</a></li>
+                    
+                    <li><a href="#e0edba57-d64b-43fb-af80-38e0258ae850">Handling ForbiddenUseException</a></li>
+                    
+                    <li><a href="#df00a445-f57d-4d4d-b6b6-9625270d363e">Handling SSLException - vulnerability attack</a></li>
+                    
+                    <li><a href="#ff6ff551-0420-4cef-97a2-a42e484c46b0">Handling SocketException</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+                
+                <li>StackTraceUtilsTests
+                <ul>
+                    
+                    <li><a href="#5b8190ec-1650-43d5-ac8a-698746d33cc8">Handling other exception</a></li>
+                    
+                    <li><a href="#141a4e31-8bd3-47e8-ba5b-277bf93589c1">convert a stacktrace to a string</a></li>
+                    
+                </ul>
+                </li>
+                
+            
+            </ul>
+        </td>
+        <td class="failure-index">
+            <ul class="toc">
+            
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                
+            
+                
+                    
+                    
+                    
+                    
+                    
+                
+            
+            </ul>
+        </td>
+    </tr>
+</table>
+
+
+    <div class="testsuite">
+        <h2>Test Suite: WebTests</h2>
+        <a id="55f7c46d-9d24-4c8e-89aa-c2a1bb5f6b36"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.23 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>21</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>WebTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="487648c6-ba4e-4686-9d48-960ab8f425b8"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>client / server</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.05 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="9bbf83a5-a8c8-40f5-81c7-1fcf5193f020"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>client / server with more conversation</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.021 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="d95d34fb-35dc-400e-a37a-96f7e6a1d643"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>What happens if we throw an exception in a thread</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.002 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="f9bd6929-588a-4a15-8865-c6e4b564f4dc"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>like we&#39;re a minum.web server</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.016 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="1f012b3f-51aa-4f28-a5b1-c096d28f92c1"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>starting server with a handler</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.002 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="fba1748a-3a44-49fe-bca8-f92d0a164c83"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>starting server with a handler part 2</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.104 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="083c0ebb-a46f-4d1c-be2c-0efedb019796"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>TDD of a handler</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.011 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="5ccf11c1-a078-475c-a73e-f05857eb8216"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>We should be able to pull valuable information from the start line</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="f5988a93-6ae6-4252-96a6-c8bafdd4f2d8"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>alternate case for extractStartLine - POST</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="6125c54d-e349-40c3-be43-4b928a3c3a0b"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>alernate case - empty path</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="208b362f-c6ad-4132-9ee3-b0ecf77d5293"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>negative cases for extractStartLine</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="0a87d1d6-2b4e-4626-b199-6982f50b1a80"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>positive test for extractStatusLine</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="850466f6-6abc-4496-afe9-e8cff3b54d7b"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>negative tests for extractStatusLine</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.002 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="81494325-f5c6-4ac7-9eef-0fba5c258002"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>parseUrlEncodedForm should properly parse data</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="19aa9a8a-017e-45b1-aaf2-b7e39a1e85cc"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>parseUrlEncodedForm edge cases</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="fff7c818-cd9c-4ff8-9a0c-4bb746e0f6fa"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>when we post data to an endpoint, it can extract the data</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.006 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="07b0fd25-b5a1-4f52-a305-81aa2c60b675"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>when the requested endpoint does not exist, we get a 404 response</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.006 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="f2c58d11-a29e-4d9d-b842-7de9d17a4562"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>We should be able to handle transfer-encoding: chunked</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="6f1f9af4-4f8b-4ff7-a608-febd8ffbe387"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Looking into how to split a byte array using a string delimiter</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="0017be9e-a034-481a-bf8f-e85a8566a296"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Examining the algorithm for parsing multipart data</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="2c443e49-62db-4fe5-b278-2d005e21e9d7"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>we should be able to receive multipart form data</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.005 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: SimpleDatabaseTests</h2>
+        <a id="5773e0a6-6cc1-4d0d-8a79-ea9372fedc9b"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.41 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>7</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>SimpleDatabaseTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="a49b0b66-8d00-40a9-b350-1550176bc4f5"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Headers test - multiple headers</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.019 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="0f6eb8dd-fc56-4559-b0e0-99cf2108a91b"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>now let&#39;s try playing with serialization</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.007 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="1956d854-45ed-4731-be5b-a5abdd7651a2"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>When we serialize something null</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="29cadcbc-5eaa-417c-a4e3-f24817d7a2b0"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>what about serializing a collection of stuff</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="3696bd1a-86cd-4810-abb6-9178b516c95b"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>let&#39;s fold in some of the capability of DatabaseDiskPersistenceSimpler</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.31 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="a5347e96-1545-421b-98da-af50894d47ae"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>what happens if we try deleting a file that doesn&#39;t exist?</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.013 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="0eb69ddf-9a15-4669-9238-34bf9b5cc599"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>edge cases for deserialization</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.062 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: LruCacheTests</h2>
+        <a id="6f4dc988-0bf9-44c6-b0fc-3f8800ec57cd"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.08 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>2</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>LruCacheTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="4ab69636-c029-4616-896c-3558eac9952c"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Just how fast is our minum.database?</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.081 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="30fb47f9-c486-414e-988a-522c4793f60a"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>ensure that the LRUCache works as expected - oldest removed</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.002 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: StringUtilsTests</h2>
+        <a id="9829beac-7bef-495e-8508-e6310c1513da"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.0 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>4</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>StringUtilsTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="73cf0041-93cd-403a-87a8-1810009a1907"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>if we get an item from the LRU cache, it should avoid being least recently used</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.002 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="e1b82302-7bcb-48a9-af1e-a2a8d2bd641f"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>See that our code to clean html does its work</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="2f6d7a76-5375-4420-ade7-7d899bfc8e19"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Cleaning html should return an empty string if given null</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="bbad73d2-8add-40ea-aaf1-4576f9cf3740"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Our code to clean strings used in attributes should work</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: TemplatingTests</h2>
+        <a id="f2ec85b9-60b8-4c7e-937a-823a2450a388"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.01 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>4</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>TemplatingTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="34f224c4-cc57-4d62-95b1-841a5533e965"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>safeAttr should return an empty string if given null</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="0a92d8d5-6ac7-444b-af8b-143b53c97732"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>testing out a template rendering machine</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="badc5905-6308-426c-800a-a24c7a242ae3"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>template rendering - no keys</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="d2696c1f-0319-4227-816d-d3eb13618f6e"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>template rendering - missing keys</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: Http2Tests</h2>
+        <a id="2f73a115-d43a-4fe3-9211-b52d6e116b88"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.02 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>1</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>Http2Tests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="0ab2b63f-4017-41c2-9369-9d98879cd0e6"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>template for a more realistic input</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.015 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: FullSystemTests</h2>
+        <a id="03de801f-e461-4ac0-90f4-6bbaec810ff2"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.02 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>2</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>FullSystemTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="9a334978-78ad-4333-a138-a7988d409129"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>encode convert HTTP/1.1 GET to HTTP/2 frames</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.013 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="b52d2078-e93f-4905-984a-da8604a6a692"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Typical happy path - a user makes an HTTP request to the insecure endpoint</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: StaticFilesCacheTests</h2>
+        <a id="63c96efa-7b71-4244-9af3-61b46cf29e6c"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.01 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>1</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>StaticFilesCacheTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="4ef6ccea-b502-4927-b43c-5380369bd2c9"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>If the redirect handler receives no start line, return nothing</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.009 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: TheBrigTests</h2>
+        <a id="e81a06dc-7dba-47d8-8ef3-d60fb705040b"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.01 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>1</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>TheBrigTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="db57fc0f-dc65-430b-9420-89fd3408c16f"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Happy path - load some static files into the cache</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.006 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: TheBrigTests</h2>
+        <a id="18c01f69-e69f-401f-a03d-5c017e0dd7b9"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.1 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>6</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>TheBrigTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="19b7de99-aec3-4f7e-a74e-c32807199284"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Put in jail for a time</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.084 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="df4825b7-c52d-4e0c-b8f8-e1760d6d3ab3"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>detail work</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.012 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="0cbe95ba-ceae-467a-b16c-c35ebc2445bc"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>unusual cases</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="396feac0-8d3c-4e88-84c5-1369e3cea93b"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>this should easily work</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="a0fd66a4-52c2-45c2-a0a7-d220bbb63c18"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>initial happy path MVP html parsing</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="e9e7b467-0713-4a07-a6c0-4f42b7e01886"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Invalid HTML tag</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: TestFrameworkTests</h2>
+        <a id="03700333-71b4-40ab-9cc3-9c139e6c511e"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.02 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>7</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>TestFrameworkTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="80261cc5-60ad-4f88-904f-77c667499c9e"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Invalid closing tag</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.011 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="f5fc3c49-3583-4b35-9674-b877eff9c432"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Testing that assertThrows behaves properly when no internal exception is thrown</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="600ff9c8-40d5-4ce6-b4fe-6f9cfe2e69ef"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>We should be able to assert on the exception message</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.0 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="3b64481e-ecea-4a06-900d-eb41c5db61cf"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>assertEquals should assert that two items are equal</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="9aa4e8b0-c318-46f9-8f8f-e5dd1453f708"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>assertEquals should assert that lists in the same order are equal</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="f87b5ee1-8b8e-499e-8727-2c8d1c732694"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>assert that two lists with items in different orders but otherwise equal can be compared</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="70d25247-da3d-4931-9462-9cc8182a476d"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>assertTrue should do its job</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: ServerTests</h2>
+        <a id="5b3d40fc-dd46-4252-b6ec-69c7f667b50a"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.01 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>4</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>ServerTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="2b6c7e34-236f-4b25-b4b6-66bd862f9e8e"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>assertFalse should do its job</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="e0edba57-d64b-43fb-af80-38e0258ae850"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Handling ForbiddenUseException</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="df00a445-f57d-4d4d-b6b6-9625270d363e"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Handling SSLException - vulnerability attack</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.006 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="ff6ff551-0420-4cef-97a2-a42e484c46b0"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Handling SocketException</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.001 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="testsuite">
+        <h2>Test Suite: StackTraceUtilsTests</h2>
+        <a id="404f68ff-23fc-487f-b909-bbde7e28f793"></a>
+        
+        
+        <h3>Results</h3>
+        <table class="proplist">
+            <tr>
+                <th>Duration</th><td>0.01 sec</td>
+            </tr>
+            <tr>
+                <th>Tests</th><td>2</td>
+            </tr>
+            <tr>
+                <th>Failures</th><td>0</td>
+            </tr>
+        </table>
+
+        <div class="testclasses">
+            <h3>Tests</h3>
+            
+            <div class="testclass">
+                <h4>StackTraceUtilsTests</h4>
+                <div class="testcases">
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="5b8190ec-1650-43d5-ac8a-698746d33cc8"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>Handling other exception</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                    <div class="test outcome outcome-passed">
+                        <a id="141a4e31-8bd3-47e8-ba5b-277bf93589c1"></a>
+                        <table class="proplist">
+                            <tr><th>Test case:</th><td><b>convert a stacktrace to a string</b></td></tr>
+                            <tr><th>Outcome:</th><td>Passed</td></tr>
+                            <tr><th>Duration:</th><td>0.003 sec</td></tr>
+                        
+                            <tr><th>Failed</th><td>None</td></tr>
+                        
+                        
+                        </table>
+
+                        
+                        <pre>None</pre>
+                        
+                        
+
+                        
+                        
+                        
+                    </div>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+
+<p class="footer">
+    Generated by junit2html
+</p>
+</body>
+</html>
