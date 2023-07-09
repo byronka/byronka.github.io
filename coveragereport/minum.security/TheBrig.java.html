@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import static minum.database.DatabaseDiskPersistenceSimpler.calculateNextIndex;
 import static minum.utils.Invariants.mustBeTrue;
 
 /**
@@ -63,7 +64,7 @@ public class TheBrig {
          * Builds an empty version of this class, except
          * that it has a current Context object
          */
-<span class="fc" id="L66">        public static final ISimpleDataType&lt;Inmate&gt; EMPTY = new Inmate(0L, &quot;&quot;, 0L);</span>
+<span class="fc" id="L67">        public static final ISimpleDataType&lt;Inmate&gt; EMPTY = new Inmate(0L, &quot;&quot;, 0L);</span>
         private final Long index;
         private final String clientId;
         private final Long duration;
@@ -74,61 +75,61 @@ public class TheBrig {
          *                 for example, &quot;1.2.3.4_vuln_seeking&quot; - 1.2.3.4 was seeking out vulnerabilities.
          * @param duration how long they are stuck in jail, in milliseconds
          */
-<span class="fc" id="L77">        public Inmate(Long index, String clientId, Long duration) {</span>
-<span class="fc" id="L78">            this.index = index;</span>
-<span class="fc" id="L79">            this.clientId = clientId;</span>
-<span class="fc" id="L80">            this.duration = duration;</span>
-<span class="fc" id="L81">        }</span>
+<span class="fc" id="L78">        public Inmate(Long index, String clientId, Long duration) {</span>
+<span class="fc" id="L79">            this.index = index;</span>
+<span class="fc" id="L80">            this.clientId = clientId;</span>
+<span class="fc" id="L81">            this.duration = duration;</span>
+<span class="fc" id="L82">        }</span>
 
         @Override
         public long getIndex() {
-<span class="fc" id="L85">            return index;</span>
+<span class="fc" id="L86">            return index;</span>
         }
 
         @Override
         public String serialize() {
-<span class="fc" id="L90">            return serializeHelper(index, clientId, duration);</span>
+<span class="fc" id="L91">            return serializeHelper(index, clientId, duration);</span>
         }
 
         @Override
         public Inmate deserialize(String serializedText) {
-<span class="nc" id="L95">            final var tokens = deserializeHelper(serializedText);</span>
+<span class="nc" id="L96">            final var tokens = deserializeHelper(serializedText);</span>
 
-<span class="nc" id="L97">            return new Inmate(</span>
-<span class="nc" id="L98">                    Long.parseLong(tokens.get(0)),</span>
-<span class="nc" id="L99">                    tokens.get(1),</span>
-<span class="nc" id="L100">                    Long.parseLong(tokens.get(2)));</span>
+<span class="nc" id="L98">            return new Inmate(</span>
+<span class="nc" id="L99">                    Long.parseLong(tokens.get(0)),</span>
+<span class="nc" id="L100">                    tokens.get(1),</span>
+<span class="nc" id="L101">                    Long.parseLong(tokens.get(2)));</span>
         }
 
         public String getClientId() {
-<span class="nc" id="L104">            return clientId;</span>
+<span class="nc" id="L105">            return clientId;</span>
         }
 
         public Long getDuration() {
-<span class="nc" id="L108">            return duration;</span>
+<span class="nc" id="L109">            return duration;</span>
         }
     }
 
-<span class="fc" id="L112">    public TheBrig(int sleepTime, Context context, boolean isUsingDiskPersistence) {</span>
-<span class="fc" id="L113">        this.es = context.getExecutorService();</span>
-<span class="fc" id="L114">        this.constants = context.getConstants();</span>
-<span class="fc" id="L115">        this.logger = context.getLogger();</span>
-<span class="fc" id="L116">        this.isUsingDiskPersistence = isUsingDiskPersistence;</span>
-<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (isUsingDiskPersistence) {</span>
-<span class="fc" id="L118">            Path dbDir = Path.of(constants.DB_DIRECTORY);</span>
-<span class="fc" id="L119">            this.ddps = new DatabaseDiskPersistenceSimpler&lt;&gt;(dbDir.resolve(&quot;TheBrig&quot;), context);</span>
-<span class="fc" id="L120">            this.inmates = ddps.readAndDeserialize(Inmate.EMPTY);</span>
-<span class="fc" id="L121">            this.clientKeys = this.inmates.stream().collect(Collectors.toMap(Inmate::getClientId, Inmate::getDuration));</span>
-<span class="fc" id="L122">            newInmateIndex = new AtomicLong(ddps.calculateNextIndex(inmates));</span>
-<span class="fc" id="L123">        } else {</span>
-<span class="fc" id="L124">            this.ddps = null;</span>
-<span class="fc" id="L125">            this.inmates = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L126">            this.clientKeys = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L127">            newInmateIndex = new AtomicLong(1);</span>
+<span class="fc" id="L113">    public TheBrig(int sleepTime, Context context, boolean isUsingDiskPersistence) {</span>
+<span class="fc" id="L114">        this.es = context.getExecutorService();</span>
+<span class="fc" id="L115">        this.constants = context.getConstants();</span>
+<span class="fc" id="L116">        this.logger = context.getLogger();</span>
+<span class="fc" id="L117">        this.isUsingDiskPersistence = isUsingDiskPersistence;</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (isUsingDiskPersistence) {</span>
+<span class="fc" id="L119">            Path dbDir = Path.of(constants.DB_DIRECTORY);</span>
+<span class="fc" id="L120">            this.ddps = new DatabaseDiskPersistenceSimpler&lt;&gt;(dbDir.resolve(&quot;TheBrig&quot;), context);</span>
+<span class="fc" id="L121">            this.inmates = ddps.readAndDeserialize(Inmate.EMPTY);</span>
+<span class="fc" id="L122">            this.clientKeys = this.inmates.stream().collect(Collectors.toMap(Inmate::getClientId, Inmate::getDuration));</span>
+<span class="fc" id="L123">            newInmateIndex = new AtomicLong(calculateNextIndex(inmates));</span>
+<span class="fc" id="L124">        } else {</span>
+<span class="fc" id="L125">            this.ddps = null;</span>
+<span class="fc" id="L126">            this.inmates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L127">            this.clientKeys = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L128">            newInmateIndex = new AtomicLong(1);</span>
         }
-<span class="fc" id="L129">        this.sleepTime = sleepTime;</span>
+<span class="fc" id="L130">        this.sleepTime = sleepTime;</span>
 
-<span class="fc" id="L131">    }</span>
+<span class="fc" id="L132">    }</span>
 
 
     /**
@@ -137,46 +138,46 @@ public class TheBrig {
      * under consideration.
      */
     public TheBrig(Context context) {
-<span class="fc" id="L140">        this(10 * 1000, context, true);</span>
-<span class="fc" id="L141">    }</span>
+<span class="fc" id="L141">        this(10 * 1000, context, true);</span>
+<span class="fc" id="L142">    }</span>
 
     // Regarding the BusyWait - indeed, we expect that the while loop
     // below is an infinite loop unless there's an exception thrown, that's what it is.
     @SuppressWarnings({&quot;BusyWait&quot;})
     public TheBrig initialize() {
-<span class="fc" id="L147">        logger.logDebug(() -&gt; &quot;Initializing TheBrig main loop&quot;);</span>
-<span class="fc" id="L148">        Callable&lt;Object&gt; innerLoopThread = () -&gt; {</span>
-<span class="fc" id="L149">            Thread.currentThread().setName(&quot;TheBrig&quot;);</span>
-<span class="fc" id="L150">            myThread = Thread.currentThread();</span>
+<span class="fc" id="L148">        logger.logDebug(() -&gt; &quot;Initializing TheBrig main loop&quot;);</span>
+<span class="fc" id="L149">        Callable&lt;Object&gt; innerLoopThread = () -&gt; {</span>
+<span class="fc" id="L150">            Thread.currentThread().setName(&quot;TheBrig&quot;);</span>
+<span class="fc" id="L151">            myThread = Thread.currentThread();</span>
             while (true) {
                 try {
-<span class="fc" id="L153">                    int size = clientKeys.size();</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">                    if (size &gt; 0) {</span>
-<span class="fc" id="L155">                        logger.logTrace(() -&gt; &quot;TheBrig reviewing current inmates. Count: &quot; + size);</span>
+<span class="fc" id="L154">                    int size = clientKeys.size();</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">                    if (size &gt; 0) {</span>
+<span class="fc" id="L156">                        logger.logTrace(() -&gt; &quot;TheBrig reviewing current inmates. Count: &quot; + size);</span>
                     }
-<span class="fc" id="L157">                    var now = System.currentTimeMillis();</span>
-<span class="fc" id="L158">                    List&lt;String&gt; keysToRemove = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L158">                    var now = System.currentTimeMillis();</span>
+<span class="fc" id="L159">                    List&lt;String&gt; keysToRemove = new ArrayList&lt;&gt;();</span>
                     // figure out which clients have paid their dues
-<span class="fc bfc" id="L160" title="All 2 branches covered.">                    for (var e : clientKeys.entrySet()) {</span>
-<span class="fc bfc" id="L161" title="All 2 branches covered.">                        if (e.getValue() &lt; now) {</span>
-<span class="fc" id="L162">                            logger.logTrace(() -&gt; &quot;UnderInvestigation: &quot; + e.getKey() + &quot; has paid its dues and is getting released&quot;);</span>
-<span class="fc" id="L163">                            keysToRemove.add(e.getKey());</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                    for (var e : clientKeys.entrySet()) {</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">                        if (e.getValue() &lt; now) {</span>
+<span class="fc" id="L163">                            logger.logTrace(() -&gt; &quot;UnderInvestigation: &quot; + e.getKey() + &quot; has paid its dues and is getting released&quot;);</span>
+<span class="fc" id="L164">                            keysToRemove.add(e.getKey());</span>
                         }
-<span class="fc" id="L165">                    }</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">                    for (var k : keysToRemove) {</span>
-<span class="fc" id="L167">                        logger.logTrace(() -&gt; &quot;TheBrig: removing &quot; + k + &quot; from jail&quot;);</span>
-<span class="fc" id="L168">                        List&lt;Inmate&gt; inmates1 = inmates.stream().filter(x -&gt; x.clientId.equals(k)).toList();</span>
-<span class="pc bpc" id="L169" title="1 of 2 branches missed.">                        mustBeTrue(inmates1.size() == 1, &quot;There must be exactly one inmate found or there's a bug&quot;);</span>
-<span class="fc" id="L170">                        Inmate inmateToRemove = inmates1.get(0);</span>
-<span class="fc" id="L171">                        inmates.remove(inmateToRemove);</span>
-<span class="pc bpc" id="L172" title="1 of 2 branches missed.">                        if (inmates.size() == 0) {</span>
-<span class="fc" id="L173">                            newInmateIndex.set(1);</span>
+<span class="fc" id="L166">                    }</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">                    for (var k : keysToRemove) {</span>
+<span class="fc" id="L168">                        logger.logTrace(() -&gt; &quot;TheBrig: removing &quot; + k + &quot; from jail&quot;);</span>
+<span class="fc" id="L169">                        List&lt;Inmate&gt; inmates1 = inmates.stream().filter(x -&gt; x.clientId.equals(k)).toList();</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                        mustBeTrue(inmates1.size() == 1, &quot;There must be exactly one inmate found or there's a bug&quot;);</span>
+<span class="fc" id="L171">                        Inmate inmateToRemove = inmates1.get(0);</span>
+<span class="fc" id="L172">                        inmates.remove(inmateToRemove);</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                        if (inmates.size() == 0) {</span>
+<span class="fc" id="L174">                            newInmateIndex.set(1);</span>
                         }
-<span class="fc" id="L175">                        clientKeys.remove(k);</span>
-<span class="pc bpc" id="L176" title="1 of 2 branches missed.">                        if (isUsingDiskPersistence) ddps.deleteOnDisk(inmateToRemove);</span>
-<span class="fc" id="L177">                    }</span>
-<span class="fc" id="L178">                    Thread.sleep(sleepTime);</span>
-<span class="fc" id="L179">                } catch (InterruptedException ex) {</span>
+<span class="fc" id="L176">                        clientKeys.remove(k);</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">                        if (isUsingDiskPersistence) ddps.deleteOnDisk(inmateToRemove);</span>
+<span class="fc" id="L178">                    }</span>
+<span class="fc" id="L179">                    Thread.sleep(sleepTime);</span>
+<span class="fc" id="L180">                } catch (InterruptedException ex) {</span>
 
                     /*
                     this is what we expect to happen.
@@ -185,16 +186,16 @@ public class TheBrig {
                     down cleanly
                      */
 
-<span class="pc bpc" id="L188" title="1 of 2 branches missed.">                    if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; TheBrig is stopped.%n&quot;);</span>
-<span class="fc" id="L189">                    return null;</span>
-<span class="nc" id="L190">                } catch (Exception ex) {</span>
-<span class="nc" id="L191">                    System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ERROR: TheBrig has stopped unexpectedly. error: %s%n&quot;, ex);</span>
-<span class="nc" id="L192">                    throw ex;</span>
-<span class="fc" id="L193">                }</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                    if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; TheBrig is stopped.%n&quot;);</span>
+<span class="fc" id="L190">                    return null;</span>
+<span class="nc" id="L191">                } catch (Exception ex) {</span>
+<span class="nc" id="L192">                    System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ERROR: TheBrig has stopped unexpectedly. error: %s%n&quot;, ex);</span>
+<span class="nc" id="L193">                    throw ex;</span>
+<span class="fc" id="L194">                }</span>
             }
         };
-<span class="fc" id="L196">        es.submit(innerLoopThread);</span>
-<span class="fc" id="L197">        return this;</span>
+<span class="fc" id="L197">        es.submit(innerLoopThread);</span>
+<span class="fc" id="L198">        return this;</span>
     }
 
 
@@ -202,17 +203,17 @@ public class TheBrig {
      * Kills the infinite loop running inside this class.
      */
     public void stop() {
-<span class="fc" id="L205">        logger.logDebug(() -&gt; &quot;TheBrig has been told to stop&quot;);</span>
-<span class="pc bpc" id="L206" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 10; i++) {</span>
-<span class="pc bpc" id="L207" title="1 of 2 branches missed.">            if (myThread != null) {</span>
-<span class="fc" id="L208">                logger.logDebug(() -&gt; &quot;TheBrig: Sending interrupt to thread&quot;);</span>
-<span class="fc" id="L209">                myThread.interrupt();</span>
-<span class="fc" id="L210">                return;</span>
+<span class="fc" id="L206">        logger.logDebug(() -&gt; &quot;TheBrig has been told to stop&quot;);</span>
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 10; i++) {</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">            if (myThread != null) {</span>
+<span class="fc" id="L209">                logger.logDebug(() -&gt; &quot;TheBrig: Sending interrupt to thread&quot;);</span>
+<span class="fc" id="L210">                myThread.interrupt();</span>
+<span class="fc" id="L211">                return;</span>
             } else {
-<span class="nc" id="L212">                MyThread.sleep(20);</span>
+<span class="nc" id="L213">                MyThread.sleep(20);</span>
             }
         }
-<span class="nc" id="L215">        throw new RuntimeException(&quot;TheBrig: Leaving without successfully stopping thread&quot;);</span>
+<span class="nc" id="L216">        throw new RuntimeException(&quot;TheBrig: Leaving without successfully stopping thread&quot;);</span>
     }
 
 
@@ -222,24 +223,24 @@ public class TheBrig {
      * @param sentenceDuration length of stay, in milliseconds
      */
     public synchronized void sendToJail(String clientIdentifier, long sentenceDuration) {
-<span class="fc" id="L225">        logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; +sentenceDuration + &quot; milliseconds&quot;);</span>
-<span class="fc" id="L226">        clientKeys.put(clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="pc" id="L227">        var existingInmates = inmates.stream().filter(x -&gt; x.clientId.equals(clientIdentifier)).count();</span>
-<span class="pc bpc" id="L228" title="1 of 2 branches missed.">        mustBeTrue(existingInmates &lt; 2, &quot;count of inmates must be either 0 or 1, anything else is a bug&quot; );</span>
-<span class="pc bpc" id="L229" title="1 of 2 branches missed.">        if (existingInmates == 0) {</span>
-<span class="fc" id="L230">            Inmate newInmate = new Inmate(newInmateIndex.getAndIncrement(), clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="fc" id="L231">            inmates.add(newInmate);</span>
-<span class="fc bfc" id="L232" title="All 2 branches covered.">            if (isUsingDiskPersistence) ddps.persistToDisk(newInmate);</span>
+<span class="fc" id="L226">        logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; +sentenceDuration + &quot; milliseconds&quot;);</span>
+<span class="fc" id="L227">        clientKeys.put(clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
+<span class="pc" id="L228">        var existingInmates = inmates.stream().filter(x -&gt; x.clientId.equals(clientIdentifier)).count();</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">        mustBeTrue(existingInmates &lt; 2, &quot;count of inmates must be either 0 or 1, anything else is a bug&quot; );</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">        if (existingInmates == 0) {</span>
+<span class="fc" id="L231">            Inmate newInmate = new Inmate(newInmateIndex.getAndIncrement(), clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
+<span class="fc" id="L232">            inmates.add(newInmate);</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">            if (isUsingDiskPersistence) ddps.persistToDisk(newInmate);</span>
         }
 
-<span class="fc" id="L235">    }</span>
+<span class="fc" id="L236">    }</span>
 
     public boolean isInJail(String clientIdentifier) {
-<span class="fc" id="L238">        return clientKeys.containsKey(clientIdentifier);</span>
+<span class="fc" id="L239">        return clientKeys.containsKey(clientIdentifier);</span>
     }
 
     public List&lt;Map.Entry&lt;String, Long&gt;&gt; getInmates() {
-<span class="nc" id="L242">        return clientKeys.entrySet().stream().toList();</span>
+<span class="nc" id="L243">        return clientKeys.entrySet().stream().toList();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

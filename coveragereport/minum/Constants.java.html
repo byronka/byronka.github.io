@@ -30,7 +30,7 @@ public class Constants {
 <span class="fc" id="L30">        KEYSTORE_PASSWORD = properties.getProperty(&quot;KEYSTORE_PASSWORD&quot;,  &quot;&quot;);</span>
 <span class="fc" id="L31">        REDIRECT_TO_SECURE = getProp(&quot;REDIRECT_TO_SECURE&quot;, false);</span>
 <span class="fc" id="L32">        MAX_READ_SIZE_BYTES = getProp(&quot;MAX_READ_SIZE_BYTES&quot;,  10 * 1024 * 1024);</span>
-<span class="fc" id="L33">        MAX_READ_LINE_SIZE_BYTES = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 200);</span>
+<span class="fc" id="L33">        MAX_READ_LINE_SIZE_BYTES = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 500);</span>
 <span class="fc" id="L34">        MAX_QUERY_STRING_KEYS_COUNT = getProp(&quot;MAX_QUERY_STRING_KEYS_COUNT&quot;, 20);</span>
 <span class="fc" id="L35">        MOST_COOKIES_WELL_LOOK_THROUGH = getProp(&quot;MOST_COOKIES_WELL_LOOK_THROUGH&quot;, 5);</span>
 <span class="fc" id="L36">        MAX_HEADERS_COUNT = getProp(&quot;MAX_HEADERS_COUNT&quot;, 70);</span>
@@ -40,7 +40,8 @@ public class Constants {
 <span class="fc" id="L40">        IS_THE_BRIG_ENABLED = getProp(&quot;IS_THE_BRIG_ENABLED&quot;, false);</span>
 <span class="fc" id="L41">        SUSPICIOUS_ERRORS = getProp(&quot;SUSPICIOUS_ERRORS&quot;, &quot;&quot;);</span>
 <span class="fc" id="L42">        SUSPICIOUS_PATHS = getProp(&quot;SUSPICIOUS_PATHS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L43">    }</span>
+<span class="fc" id="L43">        START_TIME = System.currentTimeMillis();</span>
+<span class="fc" id="L44">    }</span>
 
     /**
      * The port for our regular, non-encrypted server
@@ -151,11 +152,17 @@ public class Constants {
     public final List&lt;String&gt; SUSPICIOUS_PATHS;
 
     /**
+     * This value is the result of running System.currentTimeMillis() when this
+     * class gets instantiated, and that is done at the very beginning.
+     */
+    public final long START_TIME;
+
+    /**
      * A helper method to remove some redundant boilerplate code for grabbing
      * configuration values from app.config
      */
     private int getProp(String propName, int propDefault) {
-<span class="fc" id="L158">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L165">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -163,7 +170,7 @@ public class Constants {
      * configuration values from app.config
      */
     private boolean getProp(String propName, boolean propDefault) {
-<span class="fc" id="L166">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L173">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -171,7 +178,7 @@ public class Constants {
      * configuration values from app.config
      */
     private List&lt;String&gt; getProp(String propName, String propDefault) {
-<span class="fc" id="L174">        return Arrays.asList(properties.getProperty(propName, propDefault).split(&quot;,&quot;));</span>
+<span class="fc" id="L181">        return Arrays.asList(properties.getProperty(propName, propDefault).split(&quot;,&quot;));</span>
     }
 
 
@@ -180,16 +187,16 @@ public class Constants {
      * properties file should be shown when it's read.
      */
     public Properties getConfiguredProperties() {
-<span class="fc" id="L183">        var properties = new Properties();</span>
-<span class="fc" id="L184">        String fileName = &quot;app.config&quot;;</span>
-<span class="fc" id="L185">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
-<span class="fc" id="L186">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
+<span class="fc" id="L190">        var properties = new Properties();</span>
+<span class="fc" id="L191">        String fileName = &quot;app.config&quot;;</span>
+<span class="fc" id="L192">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
+<span class="fc" id="L193">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
                     &quot; found properties file at ./app.config.  Loading properties&quot;);
-<span class="fc" id="L188">            properties.load(fis);</span>
-<span class="nc" id="L189">        } catch (Exception ex) {</span>
-<span class="nc" id="L190">            Config.printConfigError();</span>
-<span class="fc" id="L191">        }</span>
-<span class="fc" id="L192">        return properties;</span>
+<span class="fc" id="L195">            properties.load(fis);</span>
+<span class="nc" id="L196">        } catch (Exception ex) {</span>
+<span class="nc" id="L197">            Config.printConfigError();</span>
+<span class="fc" id="L198">        }</span>
+<span class="fc" id="L199">        return properties;</span>
     }
 }
 

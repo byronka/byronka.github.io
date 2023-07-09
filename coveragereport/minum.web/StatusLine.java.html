@@ -42,37 +42,50 @@ import static minum.utils.Invariants.mustBeTrue;
 <span class="fc" id="L42">        _401_UNAUTHORIZED(401, &quot;UNAUTHORIZED&quot;),</span>
 <span class="fc" id="L43">        _429_TOO_MANY_REQUESTS(429, &quot;TOO MANY REQUESTS&quot;),</span>
 <span class="fc" id="L44">        _404_NOT_FOUND(404, &quot;NOT FOUND&quot;),</span>
-<span class="fc" id="L45">        _500_INTERNAL_SERVER_ERROR(500, &quot;INTERNAL SERVER ERROR&quot;)</span>
+<span class="fc" id="L45">        _500_INTERNAL_SERVER_ERROR(500, &quot;INTERNAL SERVER ERROR&quot;),</span>
+
+        /**
+         * The null object, meant to represent &quot;no status code&quot;
+         */
+<span class="fc" id="L50">        NULL(0, &quot;NULL OBJECT&quot;)</span>
         ;
 
         public final int code;
         public final String shortDescription;
 
-<span class="fc" id="L51">        StatusCode(int code, String shortDescription) {</span>
-<span class="fc" id="L52">            this.code = code;</span>
-<span class="fc" id="L53">            this.shortDescription = shortDescription;</span>
-<span class="fc" id="L54">        }</span>
+<span class="fc" id="L56">        StatusCode(int code, String shortDescription) {</span>
+<span class="fc" id="L57">            this.code = code;</span>
+<span class="fc" id="L58">            this.shortDescription = shortDescription;</span>
+<span class="fc" id="L59">        }</span>
 
         static StatusCode findByCode(int code) {
-<span class="fc" id="L57">            return Arrays.stream(StatusCode.values())</span>
-<span class="fc bfc" id="L58" title="All 2 branches covered.">                    .filter(x -&gt; x.code == code)</span>
-<span class="fc" id="L59">                    .findFirst()</span>
-<span class="fc" id="L60">                    .orElseThrow();</span>
+<span class="fc" id="L62">            return Arrays.stream(StatusCode.values())</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                    .filter(x -&gt; x.code == code)</span>
+<span class="fc" id="L64">                    .findFirst()</span>
+<span class="fc" id="L65">                    .orElseThrow();</span>
         }
     }
 
+    /**
+     * Parses a string value of a status line from an HTTP
+     * server.  If the input value is null or empty, we'll
+     * return a {@link StatusLine} with null-object values
+     */
     public static StatusLine extractStatusLine(String value) {
-<span class="fc" id="L65">        Matcher mr = StatusLine.statusLineRegex.matcher(value);</span>
-<span class="fc" id="L66">        mustBeTrue(mr.matches(), String.format(&quot;%s must match the statusLinePattern: %s&quot;, value, statusLinePattern));</span>
-<span class="fc" id="L67">        String version = mr.group(1);</span>
-<span class="pc bpc" id="L68" title="2 of 3 branches missed.">        WebEngine.HttpVersion httpVersion = switch (version) {</span>
-<span class="fc" id="L69">            case &quot;1.1&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ONE;</span>
-<span class="nc" id="L70">            case &quot;1.0&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ZERO;</span>
-<span class="pc" id="L71">            default -&gt; throw new RuntimeException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
+<span class="pc bpc" id="L75" title="1 of 4 branches missed.">        if (value == null || value.isBlank()) {</span>
+<span class="fc" id="L76">            return new StatusLine(StatusCode.NULL, WebEngine.HttpVersion.NONE, &quot;&quot;);</span>
+        }
+<span class="fc" id="L78">        Matcher mr = StatusLine.statusLineRegex.matcher(value);</span>
+<span class="fc" id="L79">        mustBeTrue(mr.matches(), String.format(&quot;%s must match the statusLinePattern: %s&quot;, value, statusLinePattern));</span>
+<span class="fc" id="L80">        String version = mr.group(1);</span>
+<span class="pc bpc" id="L81" title="2 of 3 branches missed.">        WebEngine.HttpVersion httpVersion = switch (version) {</span>
+<span class="fc" id="L82">            case &quot;1.1&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ONE;</span>
+<span class="nc" id="L83">            case &quot;1.0&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ZERO;</span>
+<span class="pc" id="L84">            default -&gt; throw new RuntimeException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
         };
-<span class="fc" id="L73">        StatusCode status = StatusCode.findByCode(Integer.parseInt(mr.group(2)));</span>
+<span class="fc" id="L86">        StatusCode status = StatusCode.findByCode(Integer.parseInt(mr.group(2)));</span>
 
-<span class="fc" id="L75">        return new StatusLine(status, httpVersion, value);</span>
+<span class="fc" id="L88">        return new StatusLine(status, httpVersion, value);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

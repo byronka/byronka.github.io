@@ -8,6 +8,7 @@ import minum.utils.StringUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import static minum.utils.Invariants.*;
@@ -20,26 +21,26 @@ public class InputStreamUtils {
 
     private final Constants constants;
 
-<span class="fc" id="L23">    public InputStreamUtils(Context context) {</span>
-<span class="fc" id="L24">        this.constants = context.getConstants();</span>
-<span class="fc" id="L25">    }</span>
+<span class="fc" id="L24">    public InputStreamUtils(Context context) {</span>
+<span class="fc" id="L25">        this.constants = context.getConstants();</span>
+<span class="fc" id="L26">    }</span>
 
     /**
      * Read from the socket until it returns an EOF indicator (that is, -1)
      * Note: this *will block* until it gets to that EOF.
      */
     public byte[] readUntilEOF(InputStream inputStream) throws IOException {
-<span class="fc" id="L32">        final var result = new ArrayList&lt;Byte&gt;();</span>
-<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        for (int i = 0; i &lt;= (constants.MAX_READ_SIZE_BYTES + 1); i++) {</span>
-<span class="pc bpc" id="L34" title="1 of 2 branches missed.">            if (i == constants.MAX_READ_SIZE_BYTES) throw new ForbiddenUseException(&quot;client sent more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES);</span>
-<span class="fc" id="L35">            int a = inputStream.read();</span>
-<span class="fc bfc" id="L36" title="All 2 branches covered.">            if (a == -1) {</span>
-<span class="fc" id="L37">                return byteListToArray(result);</span>
+<span class="fc" id="L33">        final var result = new ArrayList&lt;Byte&gt;();</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">        for (int i = 0; i &lt;= (constants.MAX_READ_SIZE_BYTES + 1); i++) {</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">            if (i == constants.MAX_READ_SIZE_BYTES) throw new ForbiddenUseException(&quot;client sent more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES);</span>
+<span class="fc" id="L36">            int a = inputStream.read();</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">            if (a == -1) {</span>
+<span class="fc" id="L38">                return byteListToArray(result);</span>
             }
 
-<span class="fc" id="L40">            result.add((byte) a);</span>
+<span class="fc" id="L41">            result.add((byte) a);</span>
         }
-<span class="nc" id="L42">        return byteListToArray(result);</span>
+<span class="nc" id="L43">        return byteListToArray(result);</span>
     }
 
     /**
@@ -47,27 +48,27 @@ public class InputStreamUtils {
      * See &lt;a href=&quot;https://en.wikipedia.org/wiki/Chunked_transfer_encoding&quot;&gt;chunked transfer encoding&lt;/a&gt;
      */
     public byte[] readChunkedEncoding(InputStream inputStream) throws IOException {
-<span class="fc" id="L50">        final var result = new ByteArrayOutputStream( );</span>
-<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        for (int countRead = 0; countRead &lt;= (constants.MAX_READ_SIZE_BYTES + 1); )  {</span>
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">            if (countRead == constants.MAX_READ_SIZE_BYTES) throw new ForbiddenUseException(&quot;client sent more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES);</span>
-<span class="fc" id="L53">            String countToReadString = readLine(inputStream);</span>
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            if (countToReadString == null) {</span>
-<span class="nc" id="L55">                return new byte[0];</span>
+<span class="fc" id="L51">        final var result = new ByteArrayOutputStream( );</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        for (int countRead = 0; countRead &lt;= (constants.MAX_READ_SIZE_BYTES + 1); )  {</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">            if (countRead == constants.MAX_READ_SIZE_BYTES) throw new ForbiddenUseException(&quot;client sent more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES);</span>
+<span class="fc" id="L54">            String countToReadString = readLine(inputStream);</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">            if (countToReadString == null) {</span>
+<span class="nc" id="L56">                return new byte[0];</span>
             }
-<span class="fc" id="L57">            mustNotBeNull(countToReadString);</span>
-<span class="fc" id="L58">            int countToRead = Integer.parseInt(countToReadString, 16);</span>
+<span class="fc" id="L58">            mustNotBeNull(countToReadString);</span>
+<span class="fc" id="L59">            int countToRead = Integer.parseInt(countToReadString, 16);</span>
 
-<span class="fc" id="L60">            result.write(read(countToRead, inputStream));</span>
-<span class="fc" id="L61">            countRead += countToRead;</span>
+<span class="fc" id="L61">            result.write(read(countToRead, inputStream));</span>
+<span class="fc" id="L62">            countRead += countToRead;</span>
 
-<span class="fc" id="L63">            readLine(inputStream);</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">            if (countToRead == 0) {</span>
-<span class="fc" id="L65">                readLine(inputStream);</span>
-<span class="fc" id="L66">                break;</span>
+<span class="fc" id="L64">            readLine(inputStream);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (countToRead == 0) {</span>
+<span class="fc" id="L66">                readLine(inputStream);</span>
+<span class="fc" id="L67">                break;</span>
             }
 
-<span class="fc" id="L69">        }</span>
-<span class="fc" id="L70">        return result.toByteArray();</span>
+<span class="fc" id="L70">        }</span>
+<span class="fc" id="L71">        return result.toByteArray();</span>
     }
 
     /**
@@ -77,26 +78,26 @@ public class InputStreamUtils {
      * If the stream ends, return null
      */
     public String readLine(InputStream inputStream) throws IOException  {
-<span class="fc" id="L80">        final int NEWLINE_DECIMAL = 10;</span>
-<span class="fc" id="L81">        final int CARRIAGE_RETURN_DECIMAL = 13;</span>
+<span class="fc" id="L81">        final int NEWLINE_DECIMAL = 10;</span>
+<span class="fc" id="L82">        final int CARRIAGE_RETURN_DECIMAL = 13;</span>
 
-<span class="fc" id="L83">        final var result = new ArrayList&lt;Byte&gt;();</span>
-<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        for (int i = 0; i &lt;= (constants.MAX_READ_LINE_SIZE_BYTES + 1); i++) {</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (i == constants.MAX_READ_LINE_SIZE_BYTES) throw new ForbiddenUseException(&quot;in readLine, client sent more bytes than allowed.  Current max: &quot; + constants.MAX_READ_LINE_SIZE_BYTES);</span>
-<span class="fc" id="L86">            int a = inputStream.read();</span>
+<span class="fc" id="L84">        final var result = new ByteArrayOutputStream(constants.MAX_READ_LINE_SIZE_BYTES / 3);</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        for (int i = 0; i &lt;= (constants.MAX_READ_LINE_SIZE_BYTES + 1); i++) {</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (i == constants.MAX_READ_LINE_SIZE_BYTES) throw new ForbiddenUseException(&quot;in readLine, client sent more bytes than allowed.  Current max: &quot; + constants.MAX_READ_LINE_SIZE_BYTES);</span>
+<span class="fc" id="L87">            int a = inputStream.read();</span>
 
-<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (a == -1) return null;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (a == -1) return null;</span>
 
-<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) {</span>
-<span class="fc" id="L91">                continue;</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) {</span>
+<span class="fc" id="L92">                continue;</span>
             }
 
-<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
 
-<span class="fc" id="L96">            result.add((byte) a);</span>
+<span class="fc" id="L97">            result.write(a);</span>
 
         }
-<span class="fc" id="L99">        return StringUtils.byteListToString(result);</span>
+<span class="fc" id="L100">        return result.toString(StandardCharsets.UTF_8);</span>
     }
 
 
@@ -104,29 +105,29 @@ public class InputStreamUtils {
      * Reads &quot;lengthToRead&quot; bytes from the input stream
      */
     public byte[] read(int lengthToRead, InputStream inputStream) throws IOException {
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (lengthToRead &gt; constants.MAX_READ_SIZE_BYTES) {</span>
-<span class="nc" id="L108">            throw new ForbiddenUseException(&quot;client requested to send more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES + &quot; asked to receive: &quot; + lengthToRead);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (lengthToRead &gt; constants.MAX_READ_SIZE_BYTES) {</span>
+<span class="nc" id="L109">            throw new ForbiddenUseException(&quot;client requested to send more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES + &quot; asked to receive: &quot; + lengthToRead);</span>
         }
-<span class="fc" id="L110">        final int typicalBufferSize = 1024 * 8;</span>
-<span class="fc" id="L111">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
+<span class="fc" id="L111">        final int typicalBufferSize = 1024 * 8;</span>
+<span class="fc" id="L112">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
         byte[] data;
-<span class="fc" id="L113">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L114">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
         int read;
-<span class="fc" id="L115">        int totalRead = 0;</span>
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        while ((read = inputStream.read(buf)) &gt;= 0) {</span>
-<span class="fc" id="L117">            totalRead += read;</span>
-<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if (totalRead &lt; lengthToRead) {</span>
+<span class="fc" id="L116">        int totalRead = 0;</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        while ((read = inputStream.read(buf)) &gt;= 0) {</span>
+<span class="fc" id="L118">            totalRead += read;</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            if (totalRead &lt; lengthToRead) {</span>
                 // if we haven't gotten everything we wanted, write this to the output and loop again
-<span class="nc" id="L120">                baos.write(buf, 0, read);</span>
+<span class="nc" id="L121">                baos.write(buf, 0, read);</span>
             } else {
-<span class="fc" id="L122">                baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
-<span class="fc" id="L123">                break;</span>
+<span class="fc" id="L123">                baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
+<span class="fc" id="L124">                break;</span>
             }
         }
-<span class="fc" id="L126">        data = baos.toByteArray();</span>
+<span class="fc" id="L127">        data = baos.toByteArray();</span>
 
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        mustBeTrue(data.length == lengthToRead, String.format(&quot;lengthToRead of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead));</span>
-<span class="fc" id="L129">        return data;</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        mustBeTrue(data.length == lengthToRead, String.format(&quot;lengthToRead of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead));</span>
+<span class="fc" id="L130">        return data;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
