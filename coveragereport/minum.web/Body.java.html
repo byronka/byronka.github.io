@@ -3,7 +3,9 @@
 import minum.Context;
 import minum.utils.StringUtils;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * This class represents the body of an HTML message.
@@ -27,31 +29,50 @@ import java.util.Map;
  * &lt;p&gt;
  *     The message body (or content) in this example is the text &lt;pre&gt;Hello world!&lt;/pre&gt;.
  * &lt;/p&gt;
- * @param bodyMap
- * @param raw
  */
-<span class="fc" id="L33">public record Body(Map&lt;String, byte[]&gt; bodyMap, byte[] raw, Context context) {</span>
+public class Body {
+
+<span class="fc" id="L35">    public static byte[] EMPTY_BYTES = new byte[0];</span>
+    private final Map&lt;String, byte[]&gt; bodyMap;
+    private final byte[] raw;
+    private final Context context;
 
     public static Body EMPTY(Context context) {
-<span class="fc" id="L36">        return new Body(Map.of(), new byte[0], context);</span>
+<span class="fc" id="L41">        return new Body(Map.of(), EMPTY_BYTES, context);</span>
     }
 
+    /**
+     * Make a hot bod
+     * @param bodyMap a map of key-value pairs, presumably extracted from form data.  Empty
+     *                if our body isn't one of the form data protocols we understand.
+     * @param raw the raw bytes of this body
+     */
+<span class="fc" id="L50">    public Body(Map&lt;String, byte[]&gt; bodyMap, byte[] raw, Context context) {</span>
+<span class="fc" id="L51">        this.bodyMap = bodyMap;</span>
+<span class="fc" id="L52">        this.raw = raw;</span>
+<span class="fc" id="L53">        this.context = context;</span>
+<span class="fc" id="L54">    }</span>
+
+    /**
+     * Return the body as a string.
+     */
     public String asString(String key) {
-<span class="fc" id="L40">        byte[] byteArray = bodyMap.get(key);</span>
-<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (byteArray == null) {</span>
-<span class="fc" id="L42">            return &quot;&quot;;</span>
+<span class="fc" id="L60">        byte[] byteArray = bodyMap.get(key);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (byteArray == null) {</span>
+<span class="fc" id="L62">            return &quot;&quot;;</span>
         } else {
-<span class="fc" id="L44">            return StringUtils.byteArrayToString(byteArray).trim();</span>
+<span class="fc" id="L64">            return StringUtils.byteArrayToString(byteArray).trim();</span>
         }
 
     }
 
     public String asString() {
-<span class="fc" id="L50">        return StringUtils.byteArrayToString(raw).trim();</span>
+<span class="fc" id="L70">        return StringUtils.byteArrayToString(raw).trim();</span>
     }
 
     public byte[] asBytes(String key) {
-<span class="fc" id="L54">        return bodyMap.get(key);</span>
+<span class="fc" id="L74">        return bodyMap.get(key);</span>
     }
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

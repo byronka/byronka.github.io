@@ -57,7 +57,7 @@ public class StartLine{
     static final String startLinePattern = &quot;^(GET|POST) /(.*) HTTP/(1.1|1.0)$&quot;;
 <span class="fc" id="L58">    static final Pattern startLineRegex = Pattern.compile(startLinePattern);</span>
 
-    public static StartLine make(Context context) {
+    public static StartLine EMPTY(Context context) {
 <span class="fc" id="L61">        return new StartLine(Verb.NONE, PathDetails.empty, WebEngine.HttpVersion.NONE, &quot;&quot;, context);</span>
     }
 
@@ -92,7 +92,7 @@ public class StartLine{
         // run the regex
 <span class="fc" id="L93">        var doesMatch = m.matches();</span>
 <span class="fc bfc" id="L94" title="All 2 branches covered.">        if (!doesMatch) {</span>
-<span class="fc" id="L95">            return StartLine.make(context);</span>
+<span class="fc" id="L95">            return StartLine.EMPTY(context);</span>
         }
 <span class="fc" id="L97">        mustBeTrue(doesMatch, String.format(&quot;%s must match the startLinePattern: %s&quot;, value, startLinePattern));</span>
 <span class="fc" id="L98">        Verb verb = extractVerb(m.group(1));</span>
