@@ -36,7 +36,7 @@ import static minum.web.WebEngine.HTTP_CRLF;
  * slot in WebEngine and handles HTTP protocol.  Also handles
  * routing and static files.
  */
-public class WebFramework implements AutoCloseable {
+public class WebFramework {
 
     private final Constants constants;
     private final UnderInvestigation underInvestigation;
@@ -331,46 +331,5 @@ public class WebFramework implements AutoCloseable {
     public &lt;T extends ISimpleDataType&lt;?&gt;&gt; DatabaseDiskPersistenceSimpler&lt;T&gt; getDdps(String name) {
 <span class="fc" id="L332">        return new DatabaseDiskPersistenceSimpler&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context);</span>
     }
-
-    public FullSystem getFullSystem() {
-<span class="nc" id="L336">        return this.fs;</span>
-    }
-
-    /**
-     * This code is necessary! When a user runs the framework
-     * code in their main() method, they will need to use code
-     * like this:
-     * &lt;pre&gt;
-     * {@code
-     *     public static void main(String[] args) {
-     *         try (WebFramework wf = FullSystem.initialize()) {
-     *           new TheRegister(wf).registerDomains();
-     *         }
-     *     }
-     * }
-     * &lt;/pre&gt;
-     * &lt;p&gt;
-     *     This formatting is called &quot;try-with-resources&quot;.
-     * &lt;/p&gt;
-     * &lt;p&gt;
-     *     The reason this is necessary is because this is a
-     *     threaded application from the ground up.  Almost from
-     *     the first moment we are kicking off threads.  The thing
-     *     about threads is, after you submit, it's on you to track to make
-     *     sure they are finished.  This code does that.
-     * &lt;/p&gt;
-     */
-    @Override
-    public void close() {
-<span class="fc" id="L365">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
-<span class="pc bpc" id="L366" title="1 of 2 branches missed.">        if (fs != null) {</span>
-            try {
-<span class="nc" id="L368">                fs.getServer().centralLoopFuture.get();</span>
-<span class="nc" id="L369">                fs.getSslServer().centralLoopFuture.get();</span>
-<span class="nc" id="L370">            } catch (Exception ex) {</span>
-<span class="nc" id="L371">                throw new RuntimeException(ex);</span>
-<span class="nc" id="L372">            }</span>
-        }
-<span class="fc" id="L374">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
