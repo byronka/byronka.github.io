@@ -92,27 +92,27 @@ import static minum.utils.Invariants.mustBeTrue;
 
 <span class="fc bfc" id="L93" title="All 2 branches covered.">        if (currentChar == '&lt;') {</span>
             /* less-than signs are policed strictly */
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            if (state.isInsideAttributeValueQuoted) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (state.isInsideAttributeValueQuoted) {</span>
                 /*
                 Here, we're looking at a less-than that
                 is inside a quoted attribute value
                 */
-<span class="nc" id="L100">                state.stringBuilder.append(currentChar);</span>
+<span class="fc" id="L100">                state.stringBuilder.append(currentChar);</span>
             } else {
 <span class="fc" id="L102">                enteringTag(state);</span>
             }
 <span class="fc bfc" id="L104" title="All 2 branches covered.">        } else if (currentChar == '&gt;') {</span>
             /* It's allowed to use greater-than signs in a lot of places */
-<span class="pc bpc" id="L106" title="1 of 2 branches missed.">            if (state.isInsideTag) {</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                if (state.isInsideAttributeValueQuoted) {</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (state.isInsideTag) {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">                if (state.isInsideAttributeValueQuoted) {</span>
                     /*
                     Here, we're looking at a greater-than
                     that is inside a quoted attribute value
                     */
-<span class="nc" id="L112">                    state.stringBuilder.append(currentChar);</span>
+<span class="fc" id="L112">                    state.stringBuilder.append(currentChar);</span>
                 } else {
 <span class="pc bpc" id="L114" title="2 of 6 branches missed.">                    if (state.hasEncounteredTagName &amp;&amp; state.tagName.isEmpty() &amp;&amp; state.stringBuilder.length() &gt; 0) {</span>
-                        // We've built the tagname
+                        // We've just finished building the tagname
 <span class="fc" id="L116">                        state.tagName = state.stringBuilder.toString();</span>
 <span class="pc bpc" id="L117" title="1 of 6 branches missed.">                    } else if ( state.stringBuilder.length() &gt; 0 &amp;&amp; state.currentAttributeKey.isBlank() &amp;&amp; state.isReadingAttributeKey) {</span>
 <span class="fc" id="L118">                        state.attributes.put(state.stringBuilder.toString(), &quot;&quot;);</span>
@@ -120,10 +120,10 @@ import static minum.utils.Invariants.mustBeTrue;
 <span class="fc" id="L120">                        state.isReadingAttributeKey = false;</span>
 <span class="fc bfc" id="L121" title="All 2 branches covered.">                    } else if (!state.currentAttributeKey.isBlank()) {</span>
                         // if we were in the midst of reading attribute stuff when we hit the closing bracket...
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                        if (state.stringBuilder.length() &gt; 0) {</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">                        if (state.stringBuilder.length() &gt; 0) {</span>
 <span class="fc" id="L124">                            state.attributes.put(state.currentAttributeKey, state.stringBuilder.toString());</span>
                         } else {
-<span class="nc" id="L126">                            state.attributes.put(state.currentAttributeKey, &quot;&quot;);</span>
+<span class="fc" id="L126">                            state.attributes.put(state.currentAttributeKey, &quot;&quot;);</span>
                         }
 <span class="fc" id="L128">                        state.isInsideAttributeValueQuoted = false;</span>
 <span class="fc" id="L129">                        state.stringBuilder = new StringBuilder();</span>
@@ -138,7 +138,7 @@ import static minum.utils.Invariants.mustBeTrue;
                 free-floating greater-than symbol in
                 the html text.
                 */
-<span class="nc" id="L141">                state.stringBuilder.append(currentChar);</span>
+<span class="fc" id="L141">                state.stringBuilder.append(currentChar);</span>
             }
         } else {
 <span class="fc" id="L144">            addingToken(state, currentChar);</span>
@@ -153,7 +153,7 @@ import static minum.utils.Invariants.mustBeTrue;
 
 <span class="fc" id="L154">            String textContent = state.stringBuilder.toString();</span>
 
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">            if (state.parseStack.size() &gt; 0) {</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (state.parseStack.size() &gt; 0) {</span>
 <span class="fc" id="L157">                state.parseStack.peek().innerContent().add(new HtmlParseNode(ParseNodeType.CHARACTERS, TagInfo.EMPTY, new ArrayList&lt;&gt;(), textContent));</span>
             }
         }
@@ -194,12 +194,12 @@ import static minum.utils.Invariants.mustBeTrue;
 
 <span class="fc bfc" id="L195" title="All 2 branches covered.">        if (hasNotBegunReadingTagName) {</span>
 
-<span class="pc bpc" id="L197" title="1 of 2 branches missed.">            if (currentChar == ' ') {</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">            if (currentChar == ' ') {</span>
                 /*
                 At this point, we're inside the tag, and we've encountered whitespace.
                 Seeking the tag name (although we may be inside a closing tag).
                  */
-<span class="nc" id="L202">                state.stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L202">                state.stringBuilder = new StringBuilder();</span>
 <span class="fc bfc" id="L203" title="All 2 branches covered.">            } else if (currentChar == '/') {</span>
                 /*
                 hitting a forward-slash symbol means we're looking
@@ -261,22 +261,22 @@ import static minum.utils.Invariants.mustBeTrue;
                     because when we finish reading the key, we'll add it to currentAttributeKey
                     and be in the mode of reading the value.
                      */
-<span class="pc bpc" id="L264" title="1 of 4 branches missed.">                    if (currentChar == ' ' || currentChar == '=') {</span>
-                        // if we hit whitespace or an equals sign, we're done reading the key
-<span class="fc" id="L266">                        state.currentAttributeKey = state.stringBuilder.toString();</span>
-<span class="fc" id="L267">                        state.isReadingAttributeKey = false;</span>
-<span class="fc" id="L268">                        state.stringBuilder = new StringBuilder();</span>
-<span class="fc bfc" id="L269" title="All 2 branches covered.">                    } else if (currentChar == '/') {</span>
-                        // a forward-slash cannot be in the attribute key
-<span class="fc" id="L271">                        state.isReadingAttributeKey = false;</span>
-<span class="fc" id="L272">                        state.isHalfClosedTag = true;</span>
-<span class="pc bpc" id="L273" title="1 of 2 branches missed.">                    } else if (state.isHalfClosedTag) {</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                    if (state.isHalfClosedTag) {</span>
                         /*
                         if we got here, it means the previous char was
                         a forward slash, so the current character *should*
                         be a closing angle, but it's not! So.. panic.
                          */
-<span class="nc" id="L279">                        throw new ParsingException(&quot;char after forward slash must be angle bracket.  Char: &quot; + currentChar);</span>
+<span class="fc" id="L270">                        throw new ParsingException(&quot;char after forward slash must be angle bracket.  Char: &quot; + currentChar);</span>
+<span class="pc bpc" id="L271" title="1 of 4 branches missed.">                    } else if (currentChar == ' ' || currentChar == '=') {</span>
+                        // if we hit whitespace or an equals sign, we're done reading the key
+<span class="fc" id="L273">                        state.currentAttributeKey = state.stringBuilder.toString();</span>
+<span class="fc" id="L274">                        state.isReadingAttributeKey = false;</span>
+<span class="fc" id="L275">                        state.stringBuilder = new StringBuilder();</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">                    } else if (currentChar == '/') {</span>
+                        // a forward-slash cannot be in the attribute key
+<span class="fc" id="L278">                        state.isReadingAttributeKey = false;</span>
+<span class="fc" id="L279">                        state.isHalfClosedTag = true;</span>
                     } else {
                         // otherwise keep on reading
 <span class="fc" id="L282">                        state.stringBuilder.append(currentChar);</span>
@@ -371,8 +371,8 @@ import static minum.utils.Invariants.mustBeTrue;
 <span class="fc" id="L371">                nodes.add(htmlParseNode);</span>
             }
 <span class="fc" id="L373">            TagName expectedTagName = htmlParseNode.tagInfo().tagName();</span>
-<span class="pc bpc" id="L374" title="1 of 2 branches missed.">            if (expectedTagName != tagName) {</span>
-<span class="nc" id="L375">                throw new ParsingException(&quot;Did not find expected element. &quot; + &quot;Expected: &quot; + expectedTagName + &quot; at character &quot; + (state.charsRead - (1 + tagNameString.length())));</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">            if (expectedTagName != tagName) {</span>
+<span class="fc" id="L375">                throw new ParsingException(&quot;Did not find expected element. &quot; + &quot;Expected: &quot; + expectedTagName + &quot; at character &quot; + (state.charsRead - (1 + tagNameString.length())));</span>
             }
         }
 <span class="fc" id="L378">    }</span>
