@@ -43,7 +43,7 @@ public abstract class SimpleDataTypeImpl&lt;T&gt; implements ISimpleDataType&lt;
      * @param serializedText the string we are splitting into tokens
      */
     protected List&lt;String&gt; deserializeHelper(String serializedText) {
-<span class="nc" id="L46">        return tokenizer(serializedText, '|').stream().map(StringUtils::decode).toList();</span>
+<span class="fc" id="L46">        return tokenizer(serializedText, '|').stream().map(StringUtils::decode).toList();</span>
     }
 
     /**
@@ -53,21 +53,21 @@ public abstract class SimpleDataTypeImpl&lt;T&gt; implements ISimpleDataType&lt;
      * @return a list of strings.  If the delimiter is not found, we will just return the whole string
      */
     private List&lt;String&gt; tokenizer(String serializedText, char delimiter) {
-<span class="nc" id="L56">        final var resultList = new ArrayList&lt;String&gt;();</span>
-<span class="nc" id="L57">        var currentPlace = 0;</span>
-<span class="nc" id="L58">        int maxTokens = 200;</span>
-<span class="nc bnc" id="L59" title="All 2 branches missed.">        for(int i = 0; i &lt;= maxTokens; i++) {</span>
-<span class="nc" id="L60">            final var nextPipeSymbolIndex = serializedText.indexOf(delimiter, currentPlace);</span>
-<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (nextPipeSymbolIndex == -1) {</span>
+<span class="fc" id="L56">        final var resultList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L57">        var currentPlace = 0;</span>
+<span class="fc" id="L58">        int maxTokens = 200;</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        for(int i = 0; i &lt;= maxTokens; i++) {</span>
+<span class="fc" id="L60">            final var nextPipeSymbolIndex = serializedText.indexOf(delimiter, currentPlace);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (nextPipeSymbolIndex == -1) {</span>
                 // if we don't see any pipe symbols ahead, grab the rest of the text from our current place
-<span class="nc" id="L63">                resultList.add(serializedText.substring(currentPlace));</span>
-<span class="nc" id="L64">                break;</span>
+<span class="fc" id="L63">                resultList.add(serializedText.substring(currentPlace));</span>
+<span class="fc" id="L64">                break;</span>
             }
-<span class="nc" id="L66">            resultList.add(serializedText.substring(currentPlace, nextPipeSymbolIndex));</span>
-<span class="nc" id="L67">            currentPlace = nextPipeSymbolIndex + 1;</span>
+<span class="fc" id="L66">            resultList.add(serializedText.substring(currentPlace, nextPipeSymbolIndex));</span>
+<span class="fc" id="L67">            currentPlace = nextPipeSymbolIndex + 1;</span>
         }
 
-<span class="nc" id="L70">        return resultList;</span>
+<span class="fc" id="L70">        return resultList;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

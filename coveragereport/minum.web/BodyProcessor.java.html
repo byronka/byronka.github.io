@@ -183,7 +183,7 @@ public class BodyProcessor {
 <span class="fc bfc" id="L183" title="All 2 branches covered.">        for (var df : partitions) {</span>
 <span class="fc" id="L184">            final var is = new ByteArrayInputStream(df);</span>
 
-<span class="fc" id="L186">            Headers headers = null;</span>
+            Headers headers;
             try {
 <span class="fc" id="L188">                headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
 <span class="nc" id="L189">            } catch (IOException e) {</span>
@@ -201,7 +201,7 @@ public class BodyProcessor {
 <span class="fc" id="L201">                String name = matcher.group(&quot;namevalue&quot;);</span>
                 // at this point our inputstream pointer is at the beginning of the
                 // body data.  From here until the end it's pure data.
-<span class="fc" id="L204">                byte[] data = new byte[0];</span>
+                byte[] data;
                 try {
 <span class="fc" id="L206">                    data = inputStreamUtils.readUntilEOF(is);</span>
 <span class="nc" id="L207">                } catch (IOException e) {</span>
@@ -212,7 +212,7 @@ public class BodyProcessor {
 <span class="fc" id="L212">                result.put(name, data);</span>
 <span class="fc" id="L213">            }</span>
             else {
-<span class="fc" id="L215">                String returnedData = &quot;&quot;;</span>
+                String returnedData;
 <span class="fc bfc" id="L216" title="All 2 branches covered.">                if (body.length &gt; MAX_SIZE_DATA_RETURNED_IN_EXCEPTION) {</span>
 <span class="fc" id="L217">                    returnedData = StringUtils.byteArrayToString(Arrays.copyOf(body, MAX_SIZE_DATA_RETURNED_IN_EXCEPTION)) + &quot; ... (remainder of data trimmed)&quot;;</span>
                 } else {
