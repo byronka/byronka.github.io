@@ -30,7 +30,7 @@ import static minum.utils.Invariants.mustBeTrue;
  */
 public class TheBrig {
     private final ExecutorService es;
-    private final Db&lt;Inmate&gt; ddps;
+    private final Db&lt;Inmate&gt; db;
     private final ILogger logger;
     private final Constants constants;
 <span class="fc" id="L36">    private final ReentrantLock lock = new ReentrantLock();</span>
@@ -114,8 +114,8 @@ public class TheBrig {
 <span class="fc" id="L114">        this.constants = context.getConstants();</span>
 <span class="fc" id="L115">        this.logger = context.getLogger();</span>
 <span class="fc" id="L116">        Path dbDir = Path.of(constants.DB_DIRECTORY);</span>
-<span class="fc" id="L117">        this.ddps = new Db&lt;&gt;(dbDir.resolve(&quot;the_brig&quot;), context, Inmate.EMPTY);</span>
-<span class="fc" id="L118">        this.clientKeys = this.ddps.values().stream().collect(Collectors.toMap(Inmate::getClientId, Inmate::getDuration));</span>
+<span class="fc" id="L117">        this.db = new Db&lt;&gt;(dbDir.resolve(&quot;the_brig&quot;), context, Inmate.EMPTY);</span>
+<span class="fc" id="L118">        this.clientKeys = this.db.values().stream().collect(Collectors.toMap(Inmate::getClientId, Inmate::getDuration));</span>
 <span class="fc" id="L119">        this.sleepTime = sleepTime;</span>
 <span class="fc" id="L120">    }</span>
 
@@ -154,11 +154,11 @@ public class TheBrig {
 <span class="fc" id="L154">                    }</span>
 <span class="fc bfc" id="L155" title="All 2 branches covered.">                    for (var k : keysToRemove) {</span>
 <span class="fc" id="L156">                        logger.logTrace(() -&gt; &quot;TheBrig: removing &quot; + k + &quot; from jail&quot;);</span>
-<span class="fc" id="L157">                        List&lt;Inmate&gt; inmates1 = ddps.values().stream().filter(x -&gt; x.clientId.equals(k)).toList();</span>
+<span class="fc" id="L157">                        List&lt;Inmate&gt; inmates1 = db.values().stream().filter(x -&gt; x.clientId.equals(k)).toList();</span>
 <span class="pc bpc" id="L158" title="1 of 2 branches missed.">                        mustBeTrue(inmates1.size() == 1, &quot;There must be exactly one inmate found or there's a bug&quot;);</span>
 <span class="fc" id="L159">                        Inmate inmateToRemove = inmates1.get(0);</span>
 <span class="fc" id="L160">                        clientKeys.remove(k);</span>
-<span class="fc" id="L161">                        ddps.delete(inmateToRemove);</span>
+<span class="fc" id="L161">                        db.delete(inmateToRemove);</span>
 <span class="fc" id="L162">                    }</span>
 <span class="fc" id="L163">                    Thread.sleep(sleepTime);</span>
 <span class="fc" id="L164">                } catch (InterruptedException ex) {</span>
@@ -211,11 +211,11 @@ public class TheBrig {
         try {
 <span class="fc" id="L212">            logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds&quot;);</span>
 <span class="fc" id="L213">            clientKeys.put(clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="pc" id="L214">            var existingInmates = ddps.values().stream().filter(x -&gt; x.clientId.equals(clientIdentifier)).count();</span>
+<span class="pc" id="L214">            var existingInmates = db.values().stream().filter(x -&gt; x.clientId.equals(clientIdentifier)).count();</span>
 <span class="pc bpc" id="L215" title="1 of 2 branches missed.">            mustBeTrue(existingInmates &lt; 2, &quot;count of inmates must be either 0 or 1, anything else is a bug&quot;);</span>
 <span class="pc bpc" id="L216" title="1 of 2 branches missed.">            if (existingInmates == 0) {</span>
 <span class="fc" id="L217">                Inmate newInmate = new Inmate(0L, clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="fc" id="L218">                ddps.write(newInmate);</span>
+<span class="fc" id="L218">                db.write(newInmate);</span>
             }
         } finally {
 <span class="fc" id="L221">            lock.unlock();</span>
