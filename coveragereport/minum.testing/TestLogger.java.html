@@ -24,7 +24,7 @@ public class TestLogger extends Logger {
     private String previousTestName;
     private TestSuite currentTestSuite;
     private Queue&lt;String&gt; recentLogLines;
-<span class="fc" id="L27">    private final int MAX_CACHE_SIZE = 10;</span>
+<span class="fc" id="L27">    private final int MAX_CACHE_SIZE = 20;</span>
 
     /**
      * Writes a Junit-style xml file to out/reports/tests/tests.xml
@@ -48,7 +48,7 @@ public class TestLogger extends Logger {
                 &lt;/testsuites&gt;
                 &quot;&quot;&quot;;
 <span class="fc" id="L50">        Files.createDirectories(Path.of(&quot;out/reports/tests&quot;));</span>
-<span class="fc" id="L51">        FileUtils.writeString(&quot;out/reports/tests/tests.xml&quot;, innerXmlReport);</span>
+<span class="fc" id="L51">        FileUtils.writeString(Path.of(&quot;out/reports/tests/tests.xml&quot;), innerXmlReport);</span>
 <span class="fc" id="L52">    }</span>
 
     public void testSuite(String className) {
@@ -120,19 +120,24 @@ public class TestLogger extends Logger {
     /**
      * Provides an ability to search over the recent past log messages,
      * case-insensitively.
+     * @param lines number of lines of log messages to look back through
      */
-    public String findFirstMessageThatContains(String value) {
-<span class="fc" id="L125">        var lineList = recentLogLines.stream().toList();</span>
-<span class="fc" id="L126">        var values = lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
-<span class="fc" id="L127">        int size = values.size();</span>
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (size == 0) {</span>
-<span class="nc" id="L129">            throw new RuntimeException(value + &quot; was not found in &quot; + lineList);</span>
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        } else if (size == 1) {</span>
-<span class="fc" id="L131">            return values.get(0);</span>
-<span class="nc bnc" id="L132" title="All 2 branches missed.">        } else if (size &gt;= 2) {</span>
-<span class="nc" id="L133">            throw new RuntimeException(&quot;multiple values found: &quot; + values);</span>
+    public String findFirstMessageThatContains(String value, int lines) {
+<span class="fc" id="L126">        var lineList = recentLogLines.stream().skip(MAX_CACHE_SIZE-lines).toList();</span>
+<span class="fc" id="L127">        var values = lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
+<span class="fc" id="L128">        int size = values.size();</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if (size == 0) {</span>
+<span class="nc" id="L130">            throw new RuntimeException(value + &quot; was not found in &quot; + lineList);</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        } else if (size == 1) {</span>
+<span class="fc" id="L132">            return values.get(0);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        } else if (size &gt;= 2) {</span>
+<span class="nc" id="L134">            throw new RuntimeException(&quot;multiple values found: &quot; + values);</span>
         }
-<span class="nc" id="L135">        throw new RuntimeException(&quot;Shouldn't be possible to get here.&quot;);</span>
+<span class="nc" id="L136">        throw new RuntimeException(&quot;Shouldn't be possible to get here.&quot;);</span>
+    }
+
+    public String findFirstMessageThatContains(String value) {
+<span class="fc" id="L140">        return findFirstMessageThatContains(value, 3);</span>
     }
 
     /**
@@ -142,24 +147,24 @@ public class TestLogger extends Logger {
      */
     public void test(String msg) {
         // enter information for previous test
-<span class="pc bpc" id="L145" title="1 of 4 branches missed.">        if (stopWatch != null &amp;&amp; previousTestName != null) {</span>
+<span class="pc bpc" id="L150" title="1 of 4 branches missed.">        if (stopWatch != null &amp;&amp; previousTestName != null) {</span>
              // The time taken for the previous test to complete.
-<span class="fc" id="L147">            long previousTestMillis = stopWatch.stopTimer();</span>
-<span class="fc" id="L148">            currentTestSuite.testCases().add(new TestCase(previousTestName, previousTestMillis));</span>
+<span class="fc" id="L152">            long previousTestMillis = stopWatch.stopTimer();</span>
+<span class="fc" id="L153">            currentTestSuite.testCases().add(new TestCase(previousTestName, previousTestMillis));</span>
         }
 
         // reset for next test.
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">        stopWatch = stopWatch == null ? new StopwatchUtils() : stopWatch.startTimer();</span>
-<span class="fc" id="L153">        previousTestName = msg;</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        stopWatch = stopWatch == null ? new StopwatchUtils() : stopWatch.startTimer();</span>
+<span class="fc" id="L158">        previousTestName = msg;</span>
 
         // put together some pretty-looking text graphics to show the suiteName of our test in log
-<span class="fc" id="L156">        final var baseLength = 11;</span>
-<span class="fc" id="L157">        final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
+<span class="fc" id="L161">        final var baseLength = 11;</span>
+<span class="fc" id="L162">        final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
 
-<span class="fc" id="L159">        loggerPrinter.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
-<span class="fc" id="L160">            printf(&quot;%n+&quot;  + dashes + &quot;+%n| TEST %d: %s |%n+&quot;+ dashes + &quot;+%n%n&quot;, testCount++, msg);</span>
-<span class="fc" id="L161">        });</span>
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L164">        loggerPrinter.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L165">            printf(&quot;%n+&quot;  + dashes + &quot;+%n| TEST %d: %s |%n+&quot;+ dashes + &quot;+%n%n&quot;, testCount++, msg);</span>
+<span class="fc" id="L166">        });</span>
+<span class="fc" id="L167">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

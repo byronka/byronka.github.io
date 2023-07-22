@@ -95,7 +95,7 @@ public class Server implements AutoCloseable {
                     }
 <span class="fc" id="L96">                }</span>
 <span class="fc" id="L97">            } catch (SocketException ex) {</span>
-<span class="pc bpc" id="L98" title="1 of 4 branches missed.">                if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
+<span class="pc bpc" id="L98" title="3 of 4 branches missed.">                if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
 <span class="nc" id="L99">                    logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
                 }
             }
@@ -138,8 +138,8 @@ public class Server implements AutoCloseable {
 <span class="fc" id="L138">                boolean isLookingForVulnerabilities = underInvestigation.isClientLookingForVulnerabilities(ex.getMessage());</span>
 <span class="fc" id="L139">                logger.logDebug(() -&gt; &quot;is &quot; + sw.getRemoteAddr() + &quot; looking for vulnerabilities? &quot; + isLookingForVulnerabilities);</span>
 <span class="pc bpc" id="L140" title="1 of 2 branches missed.">                if (isLookingForVulnerabilities) {</span>
-<span class="pc bpc" id="L141" title="2 of 4 branches missed.">                    if (theBrig != null &amp;&amp; constants.IS_THE_BRIG_ENABLED)</span>
-<span class="fc" id="L142">                        theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
+<span class="pc bpc" id="L141" title="3 of 4 branches missed.">                    if (theBrig != null &amp;&amp; constants.IS_THE_BRIG_ENABLED)</span>
+<span class="nc" id="L142">                        theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
                 }
 <span class="fc" id="L144">            }</span>
 <span class="fc" id="L145">        };</span>

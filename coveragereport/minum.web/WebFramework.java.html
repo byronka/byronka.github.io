@@ -3,8 +3,8 @@
 import minum.Constants;
 import minum.Context;
 import minum.FullSystem;
-import minum.database.DatabaseDiskPersistenceSimpler;
-import minum.database.ISimpleDataType;
+import minum.database.Db;
+import minum.database.DbData;
 import minum.logging.ILogger;
 import minum.security.TheBrig;
 import minum.security.UnderInvestigation;
@@ -259,49 +259,57 @@ public class WebFramework {
      * do not find anything, return null)
      */
     private Function&lt;Request, Response&gt; findEndpointForThisStartline(StartLine sl) {
-<span class="fc" id="L262">        final var functionFound = registeredDynamicPaths.get(new VerbPath(sl.getVerb(), sl.getPathDetails().isolatedPath().toLowerCase(Locale.ROOT)));</span>
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (functionFound == null) {</span>
-<span class="fc" id="L264">            logger.logTrace(() -&gt; &quot;Did not find a function to handle a verb of &quot; + sl.getVerb() + &quot; and a path of &quot; + sl.getPathDetails().isolatedPath());</span>
+<span class="fc" id="L262">        String requestedPath = sl.getPathDetails().isolatedPath().toLowerCase(Locale.ROOT);</span>
+<span class="fc" id="L263">        final var functionFound = registeredDynamicPaths.get(new VerbPath(sl.getVerb(), requestedPath));</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (functionFound == null) {</span>
+<span class="fc" id="L265">            logger.logTrace(() -&gt; &quot;Did not find a function to handle a verb of &quot; + sl.getVerb() + &quot; and a path of &quot; + requestedPath);</span>
             // if nothing was found in the registered dynamic endpoints, look
             // through the static endpoints
-<span class="fc" id="L267">            final var staticResponseFound = staticFilesCache.getStaticResponse(sl.getPathDetails().isolatedPath().toLowerCase(Locale.ROOT));</span>
+<span class="fc" id="L268">            final Response staticResponseFound = staticFilesCache.getStaticResponse(requestedPath);</span>
 
-<span class="fc bfc" id="L269" title="All 2 branches covered.">            if (staticResponseFound != null) {</span>
-<span class="fc" id="L270">                logger.logTrace(() -&gt; &quot;found a static value to handle &quot;+sl+&quot;, returning it&quot;);</span>
-<span class="fc" id="L271">                return request -&gt; staticResponseFound;</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">            if (staticResponseFound != null) {</span>
+<span class="fc" id="L271">                logger.logTrace(() -&gt; &quot;found a static value to handle &quot;+requestedPath+&quot;, returning it&quot;);</span>
+<span class="fc" id="L272">                return request -&gt; staticResponseFound;</span>
             } else {
-<span class="fc" id="L273">                logger.logTrace(() -&gt; &quot;Found neither a function nor a static value, returning null&quot;);</span>
-<span class="fc" id="L274">                return null;</span>
+<span class="fc" id="L274">                logger.logTrace(() -&gt; &quot;Found neither a function nor a static value in the cache, checking files on disk&quot;);</span>
+                // last ditch effort - look on disk.  This response will either
+                // be the file to return, or null if we didn't find anything.
+<span class="fc" id="L277">                Response response = staticFilesCache.loadStaticFile(requestedPath);</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">                if (response != null) {</span>
+<span class="fc" id="L279">                    return request -&gt; response;</span>
+                } else {
+<span class="fc" id="L281">                    return null;</span>
+                }
             }
         }
-<span class="fc" id="L277">        return functionFound;</span>
+<span class="fc" id="L285">        return functionFound;</span>
     }
 
     /**
      * This constructor is used for the real production system
      */
     public WebFramework(Context context) {
-<span class="fc" id="L284">        this(context, null);</span>
-<span class="fc" id="L285">    }</span>
+<span class="fc" id="L292">        this(context, null);</span>
+<span class="fc" id="L293">    }</span>
 
     /**
      * This provides the ZonedDateTime as a parameter so we
      * can set the current date (for testing purposes)
      * @param overrideForDateTime for those test cases where we need to control the time
      */
-<span class="fc" id="L292">    public WebFramework(Context context, ZonedDateTime overrideForDateTime) {</span>
-<span class="fc" id="L293">        this.fs = context.getFullSystem();</span>
-<span class="fc" id="L294">        this.logger = context.getLogger();</span>
-<span class="fc" id="L295">        this.constants = context.getConstants();</span>
-<span class="fc" id="L296">        this.overrideForDateTime = overrideForDateTime;</span>
-<span class="fc" id="L297">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L298">        this.staticFilesCache = new StaticFilesCache(logger);</span>
-<span class="fc" id="L299">        this.context = context;</span>
-<span class="fc" id="L300">        this.underInvestigation = new UnderInvestigation(constants);</span>
-<span class="fc" id="L301">        this.inputStreamUtils = new InputStreamUtils(context);</span>
-<span class="fc" id="L302">        this.stopWatchUtils = new StopwatchUtils();</span>
-<span class="fc" id="L303">        this.bodyProcessor = new BodyProcessor(context);</span>
-<span class="fc" id="L304">    }</span>
+<span class="fc" id="L300">    public WebFramework(Context context, ZonedDateTime overrideForDateTime) {</span>
+<span class="fc" id="L301">        this.fs = context.getFullSystem();</span>
+<span class="fc" id="L302">        this.logger = context.getLogger();</span>
+<span class="fc" id="L303">        this.constants = context.getConstants();</span>
+<span class="fc" id="L304">        this.overrideForDateTime = overrideForDateTime;</span>
+<span class="fc" id="L305">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L306">        this.staticFilesCache = new StaticFilesCache(logger);</span>
+<span class="fc" id="L307">        this.context = context;</span>
+<span class="fc" id="L308">        this.underInvestigation = new UnderInvestigation(constants);</span>
+<span class="fc" id="L309">        this.inputStreamUtils = new InputStreamUtils(context);</span>
+<span class="fc" id="L310">        this.stopWatchUtils = new StopwatchUtils();</span>
+<span class="fc" id="L311">        this.bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L312">    }</span>
 
     /**
      * Add a new handler in the web application for a combination
@@ -313,13 +321,13 @@ public class WebFramework {
      * here.
      */
     public void registerPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<span class="fc" id="L316">        registeredDynamicPaths.put(new VerbPath(verb, pathName), webHandler);</span>
-<span class="fc" id="L317">    }</span>
+<span class="fc" id="L324">        registeredDynamicPaths.put(new VerbPath(verb, pathName), webHandler);</span>
+<span class="fc" id="L325">    }</span>
 
 
     public void registerStaticFiles(StaticFilesCache sfc) {
-<span class="fc" id="L321">        this.staticFilesCache = sfc;</span>
-<span class="fc" id="L322">    }</span>
+<span class="fc" id="L329">        this.staticFilesCache = sfc;</span>
+<span class="fc" id="L330">    }</span>
 
     /**
      * Since this is a generic method, a bit of care is required when
@@ -328,8 +336,8 @@ public class WebFramework {
      * {@code DatabaseDiskPersistenceSimpler&lt;Photograph&gt; photoDdps = wf.getDdps(&quot;photos&quot;);}
      * &lt;/pre&gt;
      */
-    public &lt;T extends ISimpleDataType&lt;?&gt;&gt; DatabaseDiskPersistenceSimpler&lt;T&gt; getDdps(String name) {
-<span class="fc" id="L332">        return new DatabaseDiskPersistenceSimpler&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context);</span>
+    public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDdps(String name, T instance) {
+<span class="fc" id="L340">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context, instance);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
