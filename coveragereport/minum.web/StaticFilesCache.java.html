@@ -52,7 +52,7 @@ public class StaticFilesCache {
     /**
      * Given a file path inside the &quot;static&quot; directory,
      * if we find it we read it from disk, add it to the cache,
-     * and return it.  If we don't fine it, we return null.
+     * and return it.  If we don't find it, we return null.
      * &lt;p&gt;
      *     If an IOException is thrown, return null, since the
      *     callers above us know to return 404 or whatever
@@ -69,9 +69,9 @@ public class StaticFilesCache {
 <span class="fc bfc" id="L69" title="All 2 branches covered.">            if (Set.of(&quot;.css&quot;,&quot;.js&quot;,&quot;.webp&quot;,&quot;.html&quot;,&quot;.htm&quot;).stream().anyMatch(x -&gt; file.contains(x) )) {</span>
 <span class="fc" id="L70">                URL resource = StaticFilesCache.class.getClassLoader().getResource(fullFileLocation);</span>
 
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">                if (resource == null) {</span>
-<span class="nc" id="L73">                    logger.logDebug(() -&gt; &quot;Did not find &quot; + file + &quot; in our resources, returning null Response&quot;);</span>
-<span class="nc" id="L74">                    return null;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                if (resource == null) {</span>
+<span class="fc" id="L73">                    logger.logDebug(() -&gt; &quot;Did not find &quot; + file + &quot; in our resources, returning null Response&quot;);</span>
+<span class="fc" id="L74">                    return null;</span>
                 }
 
 <span class="fc" id="L77">                URI uri = URI.create(&quot;&quot;);</span>
