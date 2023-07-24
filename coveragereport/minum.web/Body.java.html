@@ -54,25 +54,45 @@ public class Body {
 <span class="fc" id="L54">    }</span>
 
     /**
-     * Return the body as a string.
+     * Return the body as a string, presuming
+     * that the Request body data is organized
+     * as key-value pairs.
      */
     public String asString(String key) {
-<span class="fc" id="L60">        byte[] byteArray = bodyMap.get(key);</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (byteArray == null) {</span>
-<span class="fc" id="L62">            return &quot;&quot;;</span>
+<span class="fc" id="L62">        byte[] byteArray = bodyMap.get(key);</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (byteArray == null) {</span>
+<span class="fc" id="L64">            return &quot;&quot;;</span>
         } else {
-<span class="fc" id="L64">            return StringUtils.byteArrayToString(byteArray).trim();</span>
+<span class="fc" id="L66">            return StringUtils.byteArrayToString(byteArray).trim();</span>
         }
 
     }
 
+    /**
+     * Return the entire raw contents of the body of this
+     * request, as a string. No processing involved other
+     * than converting the bytes to a string.
+     */
     public String asString() {
-<span class="fc" id="L70">        return StringUtils.byteArrayToString(raw).trim();</span>
+<span class="fc" id="L77">        return StringUtils.byteArrayToString(raw).trim();</span>
     }
 
+    /**
+     * Return the bytes of this request body by its
+     * key.  HTTP requests often
+     * organize the data as key-value pairs,
+     * and thus if you were expecting that organization,
+     * this will get the value by its key.
+     */
     public byte[] asBytes(String key) {
-<span class="fc" id="L74">        return bodyMap.get(key);</span>
+<span class="fc" id="L88">        return bodyMap.get(key);</span>
     }
 
+    /**
+     * Returns the raw bytes of this HTTP message's body
+     */
+    public byte[] asBytes() {
+<span class="fc" id="L95">        return this.raw;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

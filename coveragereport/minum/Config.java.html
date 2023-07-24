@@ -4,10 +4,14 @@
  * If the user has no configuration file, this class
  * contains code that will run to assist them.
  */
-<span class="nc" id="L7">public class Config {</span>
+public class Config {
+
+    private Config() {
+        // making this private to be clearer it isn't supposed to be instantiated.
+    }
 
     private static String getDefaultConfig() {
-<span class="nc" id="L10">        return &quot;&quot;&quot;</span>
+<span class="fc" id="L14">        return &quot;&quot;&quot;</span>
                 ###
                 ### The following was generated as a stop-gap measure because the
                 ### mandatory config file was missing.  Please see the documentation
@@ -66,7 +70,7 @@
 
                 #LOG_LEVELS=DEBUG,TRACE,ASYNC_ERROR,AUDIT
 
-<span class="nc" id="L69">                &quot;&quot;&quot;.stripLeading();</span>
+<span class="fc" id="L73">                &quot;&quot;&quot;.stripLeading();</span>
     }
 
     /**
@@ -76,34 +80,32 @@
      * explicit where the &quot;knobs and dials&quot; of the application are
      * located.
      */
-    public static void printConfigError() {
-<span class="nc" id="L80">        System.out.print(&quot;\n\n\n&quot;);</span>
-<span class="nc" id="L81">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
-<span class="nc" id="L82">        System.out.println(&quot;----------------- System misconfiguration ----------------------&quot;);</span>
-<span class="nc" id="L83">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
-<span class="nc" id="L84">        System.out.println();</span>
-<span class="nc" id="L85">        System.out.println(&quot;No properties file found at ./app.config&quot;);</span>
-<span class="nc" id="L86">        System.out.println();</span>
-<span class="nc" id="L87">        System.out.println(&quot;A file named app.config with the following contents must exist in&quot;);</span>
-<span class="nc" id="L88">        System.out.println(&quot;the directory you were at when running this program. Copy the&quot;);</span>
-<span class="nc" id="L89">        System.out.println(&quot;following text and save it as a file called app.config at that&quot;);</span>
-<span class="nc" id="L90">        System.out.println(&quot;location.&quot;);</span>
-<span class="nc" id="L91">        System.out.println();</span>
-<span class="nc" id="L92">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
-<span class="nc" id="L93">        System.out.println(&quot;----------------------------------------------------------------&quot;);</span>
-
-
-<span class="nc" id="L96">        System.out.print(&quot;\n\n&quot;);</span>
-<span class="nc" id="L97">        System.out.println(&quot;    ****   Copy after this line -v    ****&quot;);</span>
-<span class="nc" id="L98">        System.out.println(&quot;                       &quot;);</span>
-
-<span class="nc" id="L100">        String defaultConfig = Config.getDefaultConfig();</span>
-<span class="nc" id="L101">        System.out.print(defaultConfig);</span>
-
-<span class="nc" id="L103">        System.out.println(&quot;                        &quot;);</span>
-<span class="nc" id="L104">        System.out.println(&quot;    ****   Copy before this line -^    ****&quot;);</span>
-
-<span class="nc" id="L106">        System.exit(1);</span>
-<span class="nc" id="L107">    }</span>
+    public static String getConfigErrorMessage() {
+<span class="fc" id="L84">        return &quot;&quot;&quot;</span>
+                
+                
+                
+                ----------------------------------------------------------------
+                ----------------- System misconfiguration ----------------------
+                ----------------------------------------------------------------
+                
+                No properties file found at ./app.config
+                
+                A file named app.config with the following contents must exist in
+                the directory you were at when running this program. Copy the
+                following text and save it as a file called app.config at that
+                location.
+                
+                ----------------------------------------------------------------
+                ----------------------------------------------------------------
+                
+                    ****   Copy after this line -v    ****
+                
+                &quot;&quot;&quot; +
+<span class="fc" id="L105">                Config.getDefaultConfig() + &quot;&quot;&quot;</span>
+                
+                    ****   Copy before this line -^    ****
+                &quot;&quot;&quot;;
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

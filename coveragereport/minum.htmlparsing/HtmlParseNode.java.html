@@ -2,6 +2,9 @@
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import static minum.utils.Invariants.mustBeTrue;
 
 /**
  * These nodes represent the types of things we may encounter when parsing an HTML string, which
@@ -10,29 +13,68 @@ import java.util.List;
  * our code.
  * See &lt;a href=&quot;https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements&quot;&gt;W3.org Elements&lt;/a&gt;
  */
-<span class="fc" id="L13">public record HtmlParseNode(ParseNodeType type,</span>
+<span class="fc" id="L16">public record HtmlParseNode(ParseNodeType type,</span>
                             TagInfo tagInfo,
                             List&lt;HtmlParseNode&gt; innerContent,
                             String textContent) {
+
+<span class="fc" id="L21">    public static final HtmlParseNode EMPTY = new HtmlParseNode(ParseNodeType.ELEMENT, TagInfo.EMPTY, List.of(), &quot;EMPTY HTMLPARSENODE&quot;);</span>
 
     /**
      * This method traverses the tree from this node downwards,
      * adding the text content as it goes.
      */
     public List&lt;String&gt; print() {
-<span class="fc" id="L23">        var myList = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L24">        recursiveTreeWalk(myList);</span>
-<span class="fc" id="L25">        return myList;</span>
+<span class="fc" id="L28">        var myList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L29">        recursiveTreeWalk(myList);</span>
+<span class="fc" id="L30">        return myList;</span>
     }
 
     private void recursiveTreeWalk(ArrayList&lt;String&gt; myList) {
-<span class="fc bfc" id="L29" title="All 2 branches covered.">        for (var hpn : innerContent) {</span>
-<span class="fc" id="L30">            hpn.recursiveTreeWalk(myList);</span>
-<span class="fc" id="L31">        }</span>
-<span class="pc bpc" id="L32" title="1 of 4 branches missed.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
-<span class="fc" id="L33">            myList.add(textContent);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        for (var hpn : innerContent) {</span>
+<span class="fc" id="L35">            hpn.recursiveTreeWalk(myList);</span>
+<span class="fc" id="L36">        }</span>
+<span class="pc bpc" id="L37" title="1 of 4 branches missed.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
+<span class="fc" id="L38">            myList.add(textContent);</span>
         }
+<span class="fc" id="L40">    }</span>
 
-<span class="fc" id="L36">    }</span>
+    /**
+     * This searches for a single node in the HTML.  If it
+     * finds more than one match, it will throw an exception.
+     * If none are found, HtmlParseNode.EMPTY is returned.
+     */
+    public HtmlParseNode searchOne(TagName tagName, Map&lt;String, String&gt; attributes) {
+<span class="fc" id="L48">        var myList = new ArrayList&lt;HtmlParseNode&gt;();</span>
+<span class="fc" id="L49">        recursiveTreeWalkSearch(myList, tagName, attributes);</span>
+<span class="pc bpc" id="L50" title="1 of 4 branches missed.">        mustBeTrue(myList.size() == 0 || myList.size() == 1, &quot;More than 1 node found.  Here they are:&quot; + myList);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (myList.size() == 0) {</span>
+<span class="fc" id="L52">            return HtmlParseNode.EMPTY;</span>
+        } else {
+<span class="fc" id="L54">            return myList.get(0);</span>
+        }
+    }
+
+    private void recursiveTreeWalkSearch(ArrayList&lt;HtmlParseNode&gt; myList, TagName tagName, Map&lt;String, String&gt; attributes) {
+<span class="fc bfc" id="L59" title="All 4 branches covered.">        if (this.tagInfo().tagName().equals(tagName) &amp;&amp; this.tagInfo().attributes().entrySet().containsAll(attributes.entrySet())) {</span>
+<span class="fc" id="L60">            myList.add(this);</span>
+        }
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        for (var htmlParseNode : innerContent) {</span>
+<span class="fc" id="L63">            htmlParseNode.recursiveTreeWalkSearch(myList, tagName, attributes);</span>
+<span class="fc" id="L64">        }</span>
+<span class="fc" id="L65">    }</span>
+
+    /**
+     * If the element you're looking at has just one inner
+     * content item, and it's a CHARACTERS element, return it.
+     */
+    public String innerText() {
+<span class="pc bpc" id="L72" title="2 of 4 branches missed.">       if (innerContent.size() == 1 &amp;&amp; innerContent.get(0).type == ParseNodeType.CHARACTERS) {</span>
+<span class="fc" id="L73">           return innerContent.get(0).textContent;</span>
+       } else {
+<span class="nc" id="L75">           return &quot;&quot;;</span>
+       }
+    }
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

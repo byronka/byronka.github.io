@@ -20,11 +20,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class StringUtils {
 
-    private final Constants constants;
-
-<span class="fc" id="L25">    public StringUtils(Context context) {</span>
-<span class="fc" id="L26">        this.constants = context.getConstants();</span>
-<span class="fc" id="L27">    }</span>
+    private StringUtils() {
+        // making this private to be clearer it isn't supposed to be instantiated.
+    }
 
 
     /**
@@ -45,12 +43,12 @@ public class StringUtils {
      * Then you need to escape slightly differently. In that case see [safeAttr]
      */
     public static String safeHtml(String input) {
-<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (input == null) {</span>
-<span class="fc" id="L49">            return &quot;&quot;;</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (input == null) {</span>
+<span class="fc" id="L47">            return &quot;&quot;;</span>
         }
-<span class="fc" id="L51">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
-<span class="fc" id="L52">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
-<span class="fc" id="L53">            .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;);</span>
+<span class="fc" id="L49">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
+<span class="fc" id="L50">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="fc" id="L51">            .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;);</span>
     }
 
     /**
@@ -68,22 +66,22 @@ public class StringUtils {
      * }&lt;/pre&gt;
      */
     public static String safeAttr(String input) {
-<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (input == null) {</span>
-<span class="fc" id="L72">            return &quot;&quot;;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (input == null) {</span>
+<span class="fc" id="L70">            return &quot;&quot;;</span>
         }
-<span class="fc" id="L74">        return input</span>
-<span class="fc" id="L75">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
-<span class="fc" id="L76">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
+<span class="fc" id="L72">        return input</span>
+<span class="fc" id="L73">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
+<span class="fc" id="L74">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
     }
 
     /**
      * Encodes UTF-8 text using URL-encoding
      */
     public static String encode(String str) {
-<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (str == null) {</span>
-<span class="fc" id="L84">            return &quot;%NULL%&quot;;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (str == null) {</span>
+<span class="fc" id="L82">            return &quot;%NULL%&quot;;</span>
         }
-<span class="fc" id="L86">        return URLEncoder.encode(str, UTF_8);</span>
+<span class="fc" id="L84">        return URLEncoder.encode(str, UTF_8);</span>
     }
 
     /**
@@ -92,68 +90,44 @@ public class StringUtils {
      * which is our way to signify null.
      */
     public static String decode(String str) {
-<span class="fc" id="L95">        mustNotBeNull(str);</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
-<span class="fc" id="L97">            return null;</span>
+<span class="fc" id="L93">        mustNotBeNull(str);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
+<span class="fc" id="L95">            return null;</span>
         }
-<span class="fc" id="L99">        return URLDecoder.decode(str, UTF_8);</span>
+<span class="fc" id="L97">        return URLDecoder.decode(str, UTF_8);</span>
     }
 
     public static String generateSecureRandomString(int length) {
-<span class="fc" id="L103">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
-<span class="fc" id="L104">        final var sr = new SecureRandom();</span>
+<span class="fc" id="L101">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
+<span class="fc" id="L102">        final var sr = new SecureRandom();</span>
 
-<span class="fc" id="L106">        return IntStream.range(1, length+1)</span>
-<span class="fc" id="L107">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
-<span class="fc" id="L108">                .map(Object::toString)</span>
-<span class="fc" id="L109">                .collect(Collectors.joining());</span>
+<span class="fc" id="L104">        return IntStream.range(1, length+1)</span>
+<span class="fc" id="L105">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
+<span class="fc" id="L106">                .map(Object::toString)</span>
+<span class="fc" id="L107">                .collect(Collectors.joining());</span>
     }
 
     /**
      * Converts a list of bytes to a string. Returns null if the input is null.
      */
     public static String byteListToString(List&lt;Byte&gt; byteList) {
-<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (byteList == null) return null;</span>
-<span class="nc" id="L117">        final int size = byteList.size();</span>
-<span class="nc" id="L118">        final var buf = new byte[size];</span>
-<span class="nc bnc" id="L119" title="All 2 branches missed.">        for (int i = 0; i &lt; size; i++) {</span>
-<span class="nc" id="L120">            buf[i] = byteList.get(i);</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (byteList == null) return null;</span>
+<span class="fc" id="L115">        final int size = byteList.size();</span>
+<span class="fc" id="L116">        final var buf = new byte[size];</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        for (int i = 0; i &lt; size; i++) {</span>
+<span class="fc" id="L118">            buf[i] = byteList.get(i);</span>
         }
-<span class="nc" id="L122">        return new String(buf, UTF_8);</span>
+<span class="fc" id="L120">        return new String(buf, UTF_8);</span>
     }
 
     /**
      * Converts an array of bytes to a string. Returns null if the input is null.
      */
     public static String byteArrayToString(byte[] byteArray) {
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if (byteArray == null) return null;</span>
-<span class="fc" id="L130">        return new String(byteArray, UTF_8);</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (byteArray == null) return null;</span>
+<span class="fc" id="L128">        return new String(byteArray, UTF_8);</span>
     }
 
-    /**
-     * Splits up a string into tokens.
-     * @param serializedText the string we are splitting up
-     * @param delimiter the character acting as a boundary between sections
-     * @return a list of strings.  If the delimiter is not found, we will just return the whole string
-     */
-    public List&lt;String&gt; tokenizer(String serializedText, char delimiter) {
-<span class="fc" id="L140">        final var resultList = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L141">        var currentPlace = 0;</span>
-        // when would we have a need to tokenize anything into more than MAX_TOKENIZER_PARTITIONS partitions?
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        for(int i = 0; i &lt;= constants.MAX_TOKENIZER_PARTITIONS; i++) {</span>
-<span class="pc bpc" id="L144" title="1 of 2 branches missed.">            if (i == constants.MAX_TOKENIZER_PARTITIONS) throw new ForbiddenUseException(&quot;Request made for too many partitions in the tokenizer.  Current max: &quot; + constants.MAX_TOKENIZER_PARTITIONS);</span>
-<span class="fc" id="L145">            final var nextPipeSymbolIndex = serializedText.indexOf(delimiter, currentPlace);</span>
-<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (nextPipeSymbolIndex == -1) {</span>
-                // if we don't see any pipe symbols ahead, grab the rest of the text from our current place
-<span class="fc" id="L148">                resultList.add(serializedText.substring(currentPlace));</span>
-<span class="fc" id="L149">                break;</span>
-            }
-<span class="fc" id="L151">            resultList.add(serializedText.substring(currentPlace, nextPipeSymbolIndex));</span>
-<span class="fc" id="L152">            currentPlace = nextPipeSymbolIndex + 1;</span>
-        }
-
-<span class="fc" id="L155">        return resultList;</span>
-    }
 
 }
 
