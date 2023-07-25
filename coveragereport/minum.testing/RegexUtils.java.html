@@ -27,6 +27,19 @@ public class RegexUtils {
     }
 
     /**
+     * Returns whether the regular expression matched the data
+     * Note: This is a poor-performance method, mainly used
+     * as a quick helper where performance concerns don't exist,since
+     * each call to this method will compile the regular
+     * expression.
+     */
+    public static boolean isFound(String regex, String data) {
+<span class="fc" id="L37">        Pattern pattern = Pattern.compile(regex);</span>
+<span class="fc" id="L38">        Matcher matcher = pattern.matcher(data);</span>
+<span class="fc" id="L39">        return matcher.find();</span>
+    }
+
+    /**
      * Makes it a bit easier to find a value in a string using a
      * Regex. Note, this is not nearly as performant, since
      * each call to this method will compile the regular
@@ -56,12 +69,14 @@ public class RegexUtils {
      *     right after the opening parenthesis a question mark and
      *     then a string literal surrounded by angle brackets
      * &lt;/p&gt;
+     * &lt;p&gt;&lt;b&gt;Important!!!&lt;/b&gt;: the name of the match group must be alphanumeric - do
+     * &lt;b&gt;not&lt;/b&gt; use any special characters or punctuation&lt;/p&gt;
      * @return returns the first match found, or an empty string
      */
     public static String find(String regex, String matchGroupName, String data) {
-<span class="fc" id="L62">        Pattern pattern = Pattern.compile(regex);</span>
-<span class="fc" id="L63">        Matcher matcher = pattern.matcher(data);</span>
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        return matcher.find() ? matcher.group(matchGroupName) : &quot;&quot;;</span>
+<span class="fc" id="L77">        Pattern pattern = Pattern.compile(regex);</span>
+<span class="fc" id="L78">        Matcher matcher = pattern.matcher(data);</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        return matcher.find() ? matcher.group(matchGroupName) : &quot;&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
