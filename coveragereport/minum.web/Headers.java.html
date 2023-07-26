@@ -135,9 +135,9 @@ public class Headers{
      */
     public int contentLength() {
 <span class="fc" id="L137">        List&lt;String&gt; cl = headerStrings.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).startsWith(&quot;content-length&quot;)).toList();</span>
-<span class="pc bpc" id="L138" title="2 of 4 branches missed.">        mustBeTrue(cl.isEmpty() || cl.size() == 1, &quot;The number of content-length headers must be exactly zero or one&quot;);</span>
+<span class="pc bpc" id="L138" title="1 of 4 branches missed.">        mustBeTrue(cl.isEmpty() || cl.size() == 1, &quot;The number of content-length headers must be exactly zero or one&quot;);</span>
 <span class="fc" id="L139">        int contentLength = -1;</span>
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (!cl.isEmpty()) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (!cl.isEmpty()) {</span>
 <span class="fc" id="L141">            Matcher clMatcher = contentLengthRegex.matcher(cl.get(0));</span>
 <span class="fc" id="L142">            mustBeTrue(clMatcher.matches(), &quot;The content length header value must match the contentLengthRegex&quot;);</span>
 <span class="fc" id="L143">            contentLength = Integer.parseInt(clMatcher.group(1));</span>

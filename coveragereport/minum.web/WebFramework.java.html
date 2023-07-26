@@ -201,10 +201,10 @@ public class WebFramework {
 <span class="fc" id="L201">                    sw.send(resultingResponse.body());</span>
 <span class="fc" id="L202">                    logger.logTrace(() -&gt; String.format(&quot;full processing (including communication time) of %s %s took %d millis&quot;, sw, sl, fullStopwatch.stopTimer()));</span>
 
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                    if (! isKeepAlive) break;</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">                    if (! isKeepAlive) break;</span>
 <span class="fc" id="L205">                }</span>
 <span class="pc bpc" id="L206" title="5 of 8 branches missed.">            }</span>
-<span class="nc" id="L207">        };</span>
+<span class="fc" id="L207">        };</span>
     }
 
     /**
@@ -212,8 +212,17 @@ public class WebFramework {
      * a body is available to read
      */
     public boolean isThereIsABody(Headers hi) {
-<span class="fc bfc" id="L215" title="All 2 branches covered.">        return !hi.contentType().isBlank() &amp;&amp;</span>
-<span class="pc bpc" id="L216" title="3 of 4 branches missed.">                (hi.contentLength() &gt; 0 || hi.valueByKey(&quot;transfer-encoding&quot;).stream().anyMatch(x -&gt; x.equalsIgnoreCase(&quot;chunked&quot;)));</span>
+        // if the client sent us a content-type header at all...
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        if (!hi.contentType().isBlank()) {</span>
+            // if the content-length is greater than 0, we've got a body
+<span class="fc bfc" id="L218" title="All 2 branches covered.">            if (hi.contentLength() &gt; 0) return true;</span>
+
+            // if the transfer-encoding header is set to chunked, we have a body
+<span class="fc" id="L221">            List&lt;String&gt; transferEncodingHeaders = hi.valueByKey(&quot;transfer-encoding&quot;);</span>
+<span class="fc bfc" id="L222" title="All 4 branches covered.">            if (transferEncodingHeaders != null &amp;&amp; transferEncodingHeaders.stream().anyMatch(x -&gt; x.equalsIgnoreCase(&quot;chunked&quot;))) return true;</span>
+        }
+        // otherwise, no body we recognize
+<span class="fc" id="L225">        return false;</span>
     }
 
     /**
@@ -221,28 +230,28 @@ public class WebFramework {
      * to a string and sent on the socket.
      */
     private String convertResponseToString(Response r, boolean isKeepAlive) {
-<span class="fc" id="L224">        String date = Objects.requireNonNullElseGet(overrideForDateTime, () -&gt; ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;))).format(DateTimeFormatter.RFC_1123_DATE_TIME);</span>
+<span class="fc" id="L233">        String date = Objects.requireNonNullElseGet(overrideForDateTime, () -&gt; ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;))).format(DateTimeFormatter.RFC_1123_DATE_TIME);</span>
 
-<span class="fc" id="L226">        StringBuilder stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L235">        StringBuilder stringBuilder = new StringBuilder();</span>
 
         // add the status line
-<span class="fc" id="L229">        stringBuilder.append( &quot;HTTP/1.1 &quot; + r.statusCode().code + &quot; &quot; + r.statusCode().shortDescription + HTTP_CRLF );</span>
+<span class="fc" id="L238">        stringBuilder.append( &quot;HTTP/1.1 &quot; + r.statusCode().code + &quot; &quot; + r.statusCode().shortDescription + HTTP_CRLF );</span>
 
         // add the headers
-<span class="fc" id="L232">        stringBuilder</span>
-<span class="fc" id="L233">                .append( &quot;Date: &quot; + date + HTTP_CRLF )</span>
-<span class="fc" id="L234">                .append( &quot;Server: minum&quot; + HTTP_CRLF )</span>
-<span class="fc" id="L235">                .append(  r.extraHeaders().stream().map(x -&gt; x + HTTP_CRLF).collect(Collectors.joining()))</span>
-<span class="fc" id="L236">                .append(&quot;Content-Length: &quot; + r.body().length + HTTP_CRLF );</span>
+<span class="fc" id="L241">        stringBuilder</span>
+<span class="fc" id="L242">                .append( &quot;Date: &quot; + date + HTTP_CRLF )</span>
+<span class="fc" id="L243">                .append( &quot;Server: minum&quot; + HTTP_CRLF )</span>
+<span class="fc" id="L244">                .append(  r.extraHeaders().stream().map(x -&gt; x + HTTP_CRLF).collect(Collectors.joining()))</span>
+<span class="fc" id="L245">                .append(&quot;Content-Length: &quot; + r.body().length + HTTP_CRLF );</span>
 
         // if we're a keep-alive connection, reply with a keep-alive header
 
-<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (isKeepAlive) {</span>
-<span class="fc" id="L241">            stringBuilder</span>
-<span class="fc" id="L242">                    .append(&quot;Keep-Alive: timeout=&quot; + constants.SOCKET_TIMEOUT_MILLIS / 1000 + HTTP_CRLF);</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">        if (isKeepAlive) {</span>
+<span class="fc" id="L250">            stringBuilder</span>
+<span class="fc" id="L251">                    .append(&quot;Keep-Alive: timeout=&quot; + constants.SOCKET_TIMEOUT_MILLIS / 1000 + HTTP_CRLF);</span>
         }
 
-<span class="fc" id="L245">        return stringBuilder.toString();</span>
+<span class="fc" id="L254">        return stringBuilder.toString();</span>
     }
 
     /**
@@ -253,7 +262,7 @@ public class WebFramework {
      * function to run for a particular HTTP request.  See {@link #makePrimaryHttpHandler(Function)}
      */
     public ThrowingConsumer&lt;ISocketWrapper, IOException&gt; makePrimaryHttpHandler() {
-<span class="fc" id="L256">        return makePrimaryHttpHandler(this::findEndpointForThisStartline);</span>
+<span class="fc" id="L265">        return makePrimaryHttpHandler(this::findEndpointForThisStartline);</span>
     }
 
     /**
@@ -263,29 +272,29 @@ public class WebFramework {
      */
     Function&lt;Request, Response&gt; findEndpointForThisStartline(StartLine sl) {
         Function&lt;Request, Response&gt; handler;
-<span class="fc" id="L266">        logger.logTrace(() -&gt; &quot;Seeking a handler for &quot; + sl);</span>
+<span class="fc" id="L275">        logger.logTrace(() -&gt; &quot;Seeking a handler for &quot; + sl);</span>
 
         // first we check if there's a simple direct match
-<span class="fc" id="L269">        String requestedPath = sl.getPathDetails().isolatedPath().toLowerCase(Locale.ROOT);</span>
-<span class="fc" id="L270">        handler = registeredDynamicPaths.get(new VerbPath(sl.getVerb(), requestedPath));</span>
+<span class="fc" id="L278">        String requestedPath = sl.getPathDetails().isolatedPath().toLowerCase(Locale.ROOT);</span>
+<span class="fc" id="L279">        handler = registeredDynamicPaths.get(new VerbPath(sl.getVerb(), requestedPath));</span>
 
-<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (handler == null) {</span>
-<span class="fc" id="L273">            logger.logTrace(() -&gt; &quot;No direct handler found.  looking for a partial match for &quot; + requestedPath);</span>
-<span class="fc" id="L274">            handler = findHandlerByPartialMatch(sl);</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (handler == null) {</span>
+<span class="fc" id="L282">            logger.logTrace(() -&gt; &quot;No direct handler found.  looking for a partial match for &quot; + requestedPath);</span>
+<span class="fc" id="L283">            handler = findHandlerByPartialMatch(sl);</span>
         }
 
-<span class="fc bfc" id="L277" title="All 2 branches covered.">        if (handler == null) {</span>
-<span class="fc" id="L278">            logger.logTrace(() -&gt; &quot;no registered handler for &quot; + requestedPath + &quot;, looking in cache&quot;);</span>
-<span class="fc" id="L279">            handler = findHandlerInStaticCache(sl);</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        if (handler == null) {</span>
+<span class="fc" id="L287">            logger.logTrace(() -&gt; &quot;no registered handler for &quot; + requestedPath + &quot;, looking in cache&quot;);</span>
+<span class="fc" id="L288">            handler = findHandlerInStaticCache(sl);</span>
         }
 
-<span class="fc bfc" id="L282" title="All 2 branches covered.">        if (handler == null) {</span>
-<span class="fc" id="L283">            logger.logTrace(() -&gt; &quot;Nothing in cache, checking files on disk for &quot; + requestedPath );</span>
-<span class="fc" id="L284">            handler = findHandlerByFilesOnDisk(sl);</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        if (handler == null) {</span>
+<span class="fc" id="L292">            logger.logTrace(() -&gt; &quot;Nothing in cache, checking files on disk for &quot; + requestedPath );</span>
+<span class="fc" id="L293">            handler = findHandlerByFilesOnDisk(sl);</span>
         }
 
         // we'll return this, and it could be a null.
-<span class="fc" id="L288">        return handler;</span>
+<span class="fc" id="L297">        return handler;</span>
     }
 
     /**
@@ -293,15 +302,15 @@ public class WebFramework {
      * be the file to return, or null if we didn't find anything.
      */
     private Function&lt;Request, Response&gt; findHandlerByFilesOnDisk(StartLine sl) {
-<span class="pc bpc" id="L296" title="1 of 2 branches missed.">        if (sl.getVerb() != StartLine.Verb.GET) {</span>
-<span class="nc" id="L297">            return null;</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">        if (sl.getVerb() != StartLine.Verb.GET) {</span>
+<span class="nc" id="L306">            return null;</span>
         }
-<span class="fc" id="L299">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
-<span class="fc" id="L300">        Response response = staticFilesCache.loadStaticFile(requestedPath);</span>
-<span class="fc bfc" id="L301" title="All 2 branches covered.">        if (response != null) {</span>
-<span class="fc" id="L302">            return request -&gt; response;</span>
+<span class="fc" id="L308">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
+<span class="fc" id="L309">        Response response = staticFilesCache.loadStaticFile(requestedPath);</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">        if (response != null) {</span>
+<span class="fc" id="L311">            return request -&gt; response;</span>
         } else {
-<span class="fc" id="L304">            return null;</span>
+<span class="fc" id="L313">            return null;</span>
         }
     }
 
@@ -310,32 +319,32 @@ public class WebFramework {
      * Note these can only be responses to {@link StartLine.Verb#GET} requests.
      */
     private Function&lt;Request, Response&gt; findHandlerInStaticCache(StartLine sl) {
-<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        if (sl.getVerb() != StartLine.Verb.GET) {</span>
-<span class="nc" id="L314">            return null;</span>
+<span class="pc bpc" id="L322" title="1 of 2 branches missed.">        if (sl.getVerb() != StartLine.Verb.GET) {</span>
+<span class="nc" id="L323">            return null;</span>
         }
-<span class="fc" id="L316">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
-<span class="fc" id="L317">        final Response staticResponseFound = staticFilesCache.getStaticResponse(requestedPath);</span>
-<span class="fc bfc" id="L318" title="All 2 branches covered.">        if (staticResponseFound != null) {</span>
-<span class="fc" id="L319">            logger.logTrace(() -&gt; &quot;found a static value to handle &quot;+ requestedPath +&quot;, returning it&quot;);</span>
-<span class="fc" id="L320">            return request -&gt; staticResponseFound;</span>
+<span class="fc" id="L325">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
+<span class="fc" id="L326">        final Response staticResponseFound = staticFilesCache.getStaticResponse(requestedPath);</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">        if (staticResponseFound != null) {</span>
+<span class="fc" id="L328">            logger.logTrace(() -&gt; &quot;found a static value to handle &quot;+ requestedPath +&quot;, returning it&quot;);</span>
+<span class="fc" id="L329">            return request -&gt; staticResponseFound;</span>
         } else {
-<span class="fc" id="L322">            return null;</span>
+<span class="fc" id="L331">            return null;</span>
         }
     }
 
     /**
      * let's see if we can match the registered paths against a **portion** of the startline
      */
-    private Function&lt;Request, Response&gt; findHandlerByPartialMatch(StartLine sl) {
-<span class="fc" id="L330">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
-<span class="fc" id="L331">        var verbPathFunctionEntry = registeredPartialPaths.entrySet().stream()</span>
-<span class="pc bpc" id="L332" title="1 of 2 branches missed.">                .filter(x -&gt; requestedPath.startsWith(x.getKey().path()) &amp;&amp;</span>
-<span class="pc bpc" id="L333" title="1 of 2 branches missed.">                        x.getKey().verb().equals(sl.getVerb()))</span>
-<span class="fc" id="L334">                .findFirst().orElse(null);</span>
-<span class="fc bfc" id="L335" title="All 2 branches covered.">        if (verbPathFunctionEntry != null) {</span>
-<span class="fc" id="L336">            return verbPathFunctionEntry.getValue();</span>
+    Function&lt;Request, Response&gt; findHandlerByPartialMatch(StartLine sl) {
+<span class="fc" id="L339">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
+<span class="fc" id="L340">        var verbPathFunctionEntry = registeredPartialPaths.entrySet().stream()</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">                .filter(x -&gt; requestedPath.startsWith(x.getKey().path()) &amp;&amp;</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">                        x.getKey().verb().equals(sl.getVerb()))</span>
+<span class="fc" id="L343">                .findFirst().orElse(null);</span>
+<span class="fc bfc" id="L344" title="All 2 branches covered.">        if (verbPathFunctionEntry != null) {</span>
+<span class="fc" id="L345">            return verbPathFunctionEntry.getValue();</span>
         } else {
-<span class="fc" id="L338">            return null;</span>
+<span class="fc" id="L347">            return null;</span>
         }
     }
 
@@ -343,28 +352,28 @@ public class WebFramework {
      * This constructor is used for the real production system
      */
     public WebFramework(Context context) {
-<span class="fc" id="L346">        this(context, null);</span>
-<span class="fc" id="L347">    }</span>
+<span class="fc" id="L355">        this(context, null);</span>
+<span class="fc" id="L356">    }</span>
 
     /**
      * This provides the ZonedDateTime as a parameter so we
      * can set the current date (for testing purposes)
      * @param overrideForDateTime for those test cases where we need to control the time
      */
-<span class="fc" id="L354">    public WebFramework(Context context, ZonedDateTime overrideForDateTime) {</span>
-<span class="fc" id="L355">        this.fs = context.getFullSystem();</span>
-<span class="fc" id="L356">        this.logger = context.getLogger();</span>
-<span class="fc" id="L357">        this.constants = context.getConstants();</span>
-<span class="fc" id="L358">        this.overrideForDateTime = overrideForDateTime;</span>
-<span class="fc" id="L359">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L360">        this.registeredPartialPaths = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L361">        this.staticFilesCache = new StaticFilesCache(logger);</span>
-<span class="fc" id="L362">        this.context = context;</span>
-<span class="fc" id="L363">        this.underInvestigation = new UnderInvestigation(constants);</span>
-<span class="fc" id="L364">        this.inputStreamUtils = new InputStreamUtils(context);</span>
-<span class="fc" id="L365">        this.stopWatchUtils = new StopwatchUtils();</span>
-<span class="fc" id="L366">        this.bodyProcessor = new BodyProcessor(context);</span>
-<span class="fc" id="L367">    }</span>
+<span class="fc" id="L363">    public WebFramework(Context context, ZonedDateTime overrideForDateTime) {</span>
+<span class="fc" id="L364">        this.fs = context.getFullSystem();</span>
+<span class="fc" id="L365">        this.logger = context.getLogger();</span>
+<span class="fc" id="L366">        this.constants = context.getConstants();</span>
+<span class="fc" id="L367">        this.overrideForDateTime = overrideForDateTime;</span>
+<span class="fc" id="L368">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L369">        this.registeredPartialPaths = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L370">        this.staticFilesCache = new StaticFilesCache(logger);</span>
+<span class="fc" id="L371">        this.context = context;</span>
+<span class="fc" id="L372">        this.underInvestigation = new UnderInvestigation(constants);</span>
+<span class="fc" id="L373">        this.inputStreamUtils = new InputStreamUtils(context);</span>
+<span class="fc" id="L374">        this.stopWatchUtils = new StopwatchUtils();</span>
+<span class="fc" id="L375">        this.bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L376">    }</span>
 
     /**
      * Add a new handler in the web application for a combination
@@ -376,8 +385,8 @@ public class WebFramework {
      * here.
      */
     public void registerPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<span class="fc" id="L379">        registeredDynamicPaths.put(new VerbPath(verb, pathName), webHandler);</span>
-<span class="fc" id="L380">    }</span>
+<span class="fc" id="L388">        registeredDynamicPaths.put(new VerbPath(verb, pathName), webHandler);</span>
+<span class="fc" id="L389">    }</span>
 
     /**
      * Similar to {@link #registerPath(StartLine.Verb, String, Function)} except that the paths
@@ -398,16 +407,16 @@ public class WebFramework {
      * &lt;/p&gt;
      */
     public void registerPartialPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<span class="fc" id="L401">        registeredPartialPaths.put(new VerbPath(verb, pathName), webHandler);</span>
-<span class="fc" id="L402">    }</span>
+<span class="fc" id="L410">        registeredPartialPaths.put(new VerbPath(verb, pathName), webHandler);</span>
+<span class="fc" id="L411">    }</span>
 
     /**
      * register a {@link StaticFilesCache} to use for getting
      * and caching static values
      */
     public void registerStaticFiles(StaticFilesCache sfc) {
-<span class="fc" id="L409">        this.staticFilesCache = sfc;</span>
-<span class="fc" id="L410">    }</span>
+<span class="fc" id="L418">        this.staticFilesCache = sfc;</span>
+<span class="fc" id="L419">    }</span>
 
     /**
      * Since this is a generic method, a bit of care is required when
@@ -417,7 +426,7 @@ public class WebFramework {
      * &lt;/pre&gt;
      */
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
-<span class="fc" id="L420">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context, instance);</span>
+<span class="fc" id="L429">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context, instance);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

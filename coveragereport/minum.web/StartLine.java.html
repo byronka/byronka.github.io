@@ -67,8 +67,8 @@ public class StartLine{
      * have a key of name and a value of alice.
      */
     public Map&lt;String, String&gt; queryString() {
-<span class="pc bpc" id="L70" title="3 of 6 branches missed.">        if (pathDetails == null || pathDetails.queryString == null || pathDetails.queryString.isEmpty()) {</span>
-<span class="nc" id="L71">            return new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L70" title="All 6 branches covered.">        if (pathDetails == null || pathDetails.queryString == null || pathDetails.queryString.isEmpty()) {</span>
+<span class="fc" id="L71">            return new HashMap&lt;&gt;();</span>
         } else {
 <span class="fc" id="L73">            return new HashMap&lt;&gt;(pathDetails.queryString);</span>
         }
@@ -144,16 +144,16 @@ public class StartLine{
      * a query string (e.g. foo=bar&amp;name=alice), split that
      * into a map of the key to value (e.g. foo to bar, and name to alice)
      */
-    private Map&lt;String, String&gt; extractMapFromQueryString(String rawQueryString) {
+    Map&lt;String, String&gt; extractMapFromQueryString(String rawQueryString) {
 <span class="fc" id="L148">        Map&lt;String, String&gt; queryStrings = new HashMap&lt;&gt;();</span>
 <span class="fc" id="L149">        StringTokenizer tokenizer = new StringTokenizer(rawQueryString, &quot;&amp;&quot;);</span>
         // we'll only take less than MAX_QUERY_STRING_KEYS_COUNT
-<span class="pc bpc" id="L151" title="1 of 4 branches missed.">        for (int i = 0; tokenizer.hasMoreTokens() &amp;&amp; i &lt;= constants.MAX_QUERY_STRING_KEYS_COUNT; i++) {</span>
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (i == constants.MAX_QUERY_STRING_KEYS_COUNT) throw new ForbiddenUseException(&quot;User tried providing too many query string keys.  Current max: &quot; + constants.MAX_QUERY_STRING_KEYS_COUNT);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        for (int i = 0; tokenizer.hasMoreTokens(); i++) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if (i == constants.MAX_QUERY_STRING_KEYS_COUNT) throw new ForbiddenUseException(&quot;User tried providing too many query string keys.  Current max: &quot; + constants.MAX_QUERY_STRING_KEYS_COUNT);</span>
             // this should give us a key and value joined with an equal sign, e.g. foo=bar
 <span class="fc" id="L154">            String currentKeyValue = tokenizer.nextToken();</span>
 <span class="fc" id="L155">            int equalSignLocation = currentKeyValue.indexOf(&quot;=&quot;);</span>
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">            if (equalSignLocation &lt;= 0) return Map.of();</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (equalSignLocation &lt;= 0) return Map.of();</span>
 <span class="pc bpc" id="L157" title="1 of 2 branches missed.">            mustBeTrue(equalSignLocation &gt; 0, &quot;There must be an equals sign&quot;);</span>
 <span class="fc" id="L158">            String key = currentKeyValue.substring(0, equalSignLocation);</span>
 <span class="fc" id="L159">            String value = StringUtils.decode(currentKeyValue.substring(equalSignLocation + 1));</span>
@@ -199,7 +199,7 @@ public class StartLine{
 
     @Override
     public int hashCode() {
-<span class="nc" id="L202">        return Objects.hash(verb, pathDetails, version, rawValue);</span>
+<span class="fc" id="L202">        return Objects.hash(verb, pathDetails, version, rawValue);</span>
     }
 
     @Override
