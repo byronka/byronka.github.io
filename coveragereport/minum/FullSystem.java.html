@@ -34,6 +34,7 @@ public class FullSystem implements AutoCloseable {
     private TheBrig theBrig;
     final ExecutorService es;
     final InputStreamUtils inputStreamUtils;
+    private WebEngine webEngine;
 
     private final Context context;
 
@@ -51,25 +52,25 @@ public class FullSystem implements AutoCloseable {
      *     Its own executor service, its own constants. What have you.
      * &lt;/p&gt;
      */
-<span class="fc" id="L54">    public FullSystem(ExecutorService es, Constants constants, ILogger logger) {</span>
-<span class="fc" id="L55">        this.es = es;</span>
-<span class="fc" id="L56">        this.constants = constants;</span>
-<span class="fc" id="L57">        this.context = new Context(es, constants, this);</span>
-<span class="fc" id="L58">        this.context.setLogger(logger);</span>
-<span class="fc" id="L59">        this.logger = logger;</span>
-<span class="fc" id="L60">        this.inputStreamUtils = new InputStreamUtils(context);</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L55">    public FullSystem(ExecutorService es, Constants constants, ILogger logger) {</span>
+<span class="fc" id="L56">        this.es = es;</span>
+<span class="fc" id="L57">        this.constants = constants;</span>
+<span class="fc" id="L58">        this.context = new Context(es, constants, this);</span>
+<span class="fc" id="L59">        this.context.setLogger(logger);</span>
+<span class="fc" id="L60">        this.logger = logger;</span>
+<span class="fc" id="L61">        this.inputStreamUtils = new InputStreamUtils(context);</span>
+<span class="fc" id="L62">    }</span>
 
 
     /**
      * This is the expected entry-point for most users.
      */
     public static FullSystem initialize(ILogger logger, Constants constants) {
-<span class="fc" id="L68">        final var es = ExtendedExecutor.makeExecutorService(constants);</span>
+<span class="fc" id="L69">        final var es = ExtendedExecutor.makeExecutorService(constants);</span>
         try {
-<span class="fc" id="L70">            return new FullSystem(es, constants, logger).start();</span>
-<span class="nc" id="L71">        } catch (IOException e) {</span>
-<span class="nc" id="L72">            throw new RuntimeException(e);</span>
+<span class="fc" id="L71">            return new FullSystem(es, constants, logger).start();</span>
+<span class="nc" id="L72">        } catch (IOException e) {</span>
+<span class="nc" id="L73">            throw new RuntimeException(e);</span>
         }
     }
 
@@ -77,29 +78,29 @@ public class FullSystem implements AutoCloseable {
      * Kicks off the various bits and pieces.
      */
     public FullSystem start() throws IOException  {
-<span class="fc" id="L80">        createSystemRunningMarker();</span>
-<span class="fc" id="L81">        String serverComment = &quot;at http://&quot; + constants.HOST_NAME + &quot;:&quot; + constants.SERVER_PORT + &quot; and https://&quot; + constants.HOST_NAME + &quot;:&quot; + constants.SECURE_SERVER_PORT;</span>
-<span class="fc" id="L82">        System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; &quot; + &quot; *** Minum is starting &quot;+serverComment+&quot; ***&quot;);</span>
-<span class="fc" id="L83">        theBrig = new TheBrig(context).initialize();</span>
-<span class="fc" id="L84">        WebEngine webEngine = new WebEngine(context);</span>
-<span class="fc" id="L85">        StaticFilesCache sfc = new StaticFilesCache(logger);</span>
-<span class="fc" id="L86">        webFramework = new WebFramework(context);</span>
-<span class="fc" id="L87">        addShutdownHook();</span>
-<span class="fc" id="L88">        webFramework.registerStaticFiles(sfc);</span>
-<span class="fc" id="L89">        final var webHandler = webFramework.makePrimaryHttpHandler();</span>
+<span class="fc" id="L81">        createSystemRunningMarker();</span>
+<span class="fc" id="L82">        String serverComment = &quot;at http://&quot; + constants.HOST_NAME + &quot;:&quot; + constants.SERVER_PORT + &quot; and https://&quot; + constants.HOST_NAME + &quot;:&quot; + constants.SECURE_SERVER_PORT;</span>
+<span class="fc" id="L83">        System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; &quot; + &quot; *** Minum is starting &quot;+serverComment+&quot; ***&quot;);</span>
+<span class="fc" id="L84">        theBrig = new TheBrig(context).initialize();</span>
+<span class="fc" id="L85">        webEngine = new WebEngine(context);</span>
+<span class="fc" id="L86">        StaticFilesCache sfc = new StaticFilesCache(logger);</span>
+<span class="fc" id="L87">        webFramework = new WebFramework(context);</span>
+<span class="fc" id="L88">        addShutdownHook();</span>
+<span class="fc" id="L89">        webFramework.registerStaticFiles(sfc);</span>
+<span class="fc" id="L90">        final var webHandler = webFramework.makePrimaryHttpHandler();</span>
         // should we redirect all insecure traffic to https?
-<span class="fc" id="L91">        boolean shouldRedirect = constants.REDIRECT_TO_SECURE;</span>
-<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        var handler = shouldRedirect ? makeRedirectHandler() : webHandler;</span>
-<span class="fc" id="L93">        server = webEngine.startServer(es, handler);</span>
-<span class="fc" id="L94">        sslServer = webEngine.startSslServer(es, webHandler);</span>
+<span class="fc" id="L92">        boolean shouldRedirect = constants.REDIRECT_TO_SECURE;</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        var handler = shouldRedirect ? makeRedirectHandler() : webHandler;</span>
+<span class="fc" id="L94">        server = webEngine.startServer(es, handler);</span>
+<span class="fc" id="L95">        sslServer = webEngine.startSslServer(es, webHandler);</span>
 
-<span class="fc" id="L96">        var now = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;));</span>
-<span class="fc" id="L97">        var formattedNow = now.format(DateTimeFormatter.ISO_INSTANT);</span>
-<span class="fc" id="L98">        var nowMillis = now.toInstant().toEpochMilli();</span>
-<span class="fc" id="L99">        var startupTime = nowMillis - constants.START_TIME;</span>
-<span class="fc" id="L100">        System.out.println(formattedNow + &quot; *** Minum has finished primary startup after &quot; + startupTime + &quot; milliseconds ***&quot;);</span>
+<span class="fc" id="L97">        var now = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;));</span>
+<span class="fc" id="L98">        var formattedNow = now.format(DateTimeFormatter.ISO_INSTANT);</span>
+<span class="fc" id="L99">        var nowMillis = now.toInstant().toEpochMilli();</span>
+<span class="fc" id="L100">        var startupTime = nowMillis - constants.START_TIME;</span>
+<span class="fc" id="L101">        System.out.println(formattedNow + &quot; *** Minum has finished primary startup after &quot; + startupTime + &quot; milliseconds ***&quot;);</span>
 
-<span class="fc" id="L102">        return this;</span>
+<span class="fc" id="L103">        return this;</span>
     }
 
     /**
@@ -110,35 +111,35 @@ public class FullSystem implements AutoCloseable {
      * body, we'll just read the start line and then stop reading from them.
      */
     ThrowingConsumer&lt;ISocketWrapper, IOException&gt; makeRedirectHandler() {
-<span class="fc" id="L113">        return (sw) -&gt; {</span>
-<span class="fc" id="L114">            try (sw) {</span>
-<span class="fc" id="L115">                try (InputStream is = sw.getInputStream()) {</span>
+<span class="fc" id="L114">        return (sw) -&gt; {</span>
+<span class="fc" id="L115">            try (sw) {</span>
+<span class="fc" id="L116">                try (InputStream is = sw.getInputStream()) {</span>
 
-<span class="fc" id="L117">                    String rawStartLine = inputStreamUtils.readLine(is);</span>
+<span class="fc" id="L118">                    String rawStartLine = inputStreamUtils.readLine(is);</span>
                  /*
                   if the rawStartLine is null, that means the client stopped talking.
                   See ISocketWrapper.readLine()
                   */
-<span class="fc bfc" id="L122" title="All 2 branches covered.">                    if (rawStartLine == null) {</span>
-<span class="fc" id="L123">                        return;</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">                    if (rawStartLine == null) {</span>
+<span class="fc" id="L124">                        return;</span>
                     }
 
-<span class="fc" id="L126">                    var sl = StartLine.EMPTY(context).extractStartLine(rawStartLine);</span>
+<span class="fc" id="L127">                    var sl = StartLine.EMPTY(context).extractStartLine(rawStartLine);</span>
 
                     // just ignore all the rest of the incoming lines.  TCP is duplex -
                     // we'll just start talking back the moment we understand the first line.
-<span class="fc" id="L130">                    String date = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;)).format(DateTimeFormatter.RFC_1123_DATE_TIME);</span>
-<span class="fc" id="L131">                    String hostname = constants.HOST_NAME;</span>
-<span class="fc" id="L132">                    sw.send(</span>
+<span class="fc" id="L131">                    String date = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;)).format(DateTimeFormatter.RFC_1123_DATE_TIME);</span>
+<span class="fc" id="L132">                    String hostname = constants.HOST_NAME;</span>
+<span class="fc" id="L133">                    sw.send(</span>
                             &quot;HTTP/1.1 303 SEE OTHER&quot; + HTTP_CRLF +
                                     &quot;Date: &quot; + date + HTTP_CRLF +
                                     &quot;Server: minum&quot; + HTTP_CRLF +
-<span class="fc" id="L136">                                    &quot;Location: https://&quot; + hostname + &quot;/&quot; + sl.getPathDetails().isolatedPath() + HTTP_CRLF +</span>
+<span class="fc" id="L137">                                    &quot;Location: https://&quot; + hostname + &quot;/&quot; + sl.getPathDetails().isolatedPath() + HTTP_CRLF +</span>
                                     HTTP_CRLF
                     );
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">                }</span>
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">            }</span>
-<span class="fc" id="L141">        };</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">                }</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            }</span>
+<span class="fc" id="L142">        };</span>
     }
 
     /**
@@ -148,65 +149,69 @@ public class FullSystem implements AutoCloseable {
      * will log
      */
     private void addShutdownHook() {
-<span class="fc" id="L151">        shutdownHook = new Thread(ThrowingRunnable.throwingRunnableWrapper(this::close, logger));</span>
-<span class="fc" id="L152">        Runtime.getRuntime().addShutdownHook(shutdownHook);</span>
-<span class="fc" id="L153">    }</span>
+<span class="fc" id="L152">        shutdownHook = new Thread(ThrowingRunnable.throwingRunnableWrapper(this::close, logger));</span>
+<span class="fc" id="L153">        Runtime.getRuntime().addShutdownHook(shutdownHook);</span>
+<span class="fc" id="L154">    }</span>
 
     public void removeShutdownHook() {
-<span class="fc" id="L156">        Runtime.getRuntime().removeShutdownHook(shutdownHook);</span>
-<span class="fc" id="L157">    }</span>
+<span class="fc" id="L157">        Runtime.getRuntime().removeShutdownHook(shutdownHook);</span>
+<span class="fc" id="L158">    }</span>
 
     /**
      * this saves a file to the home directory, SYSTEM_RUNNING,
      * that will indicate the system is active
      */
     private void createSystemRunningMarker() throws IOException {
-<span class="fc" id="L164">        Files.writeString(Path.of(&quot;SYSTEM_RUNNING&quot;), &quot;This file serves as a marker to indicate the system is running.\n&quot;);</span>
-<span class="fc" id="L165">        new File(&quot;SYSTEM_RUNNING&quot;).deleteOnExit();</span>
-<span class="fc" id="L166">    }</span>
+<span class="fc" id="L165">        Files.writeString(Path.of(&quot;SYSTEM_RUNNING&quot;), &quot;This file serves as a marker to indicate the system is running.\n&quot;);</span>
+<span class="fc" id="L166">        new File(&quot;SYSTEM_RUNNING&quot;).deleteOnExit();</span>
+<span class="fc" id="L167">    }</span>
 
     public ExecutorService getExecutorService() {
-<span class="nc" id="L169">        return es;</span>
+<span class="nc" id="L170">        return es;</span>
     }
 
     public Server getServer() {
-<span class="fc" id="L173">        return server;</span>
+<span class="fc" id="L174">        return server;</span>
     }
 
     public Server getSslServer() {
-<span class="nc" id="L177">        return sslServer;</span>
+<span class="nc" id="L178">        return sslServer;</span>
     }
 
     public WebFramework getWebFramework() {
-<span class="fc" id="L181">        return webFramework;</span>
+<span class="fc" id="L182">        return webFramework;</span>
     }
 
     public TheBrig getTheBrig() {
-<span class="fc" id="L185">        return theBrig;</span>
+<span class="fc" id="L186">        return theBrig;</span>
     }
 
     public Context getContext() {
-<span class="fc" id="L189">        return context;</span>
+<span class="fc" id="L190">        return context;</span>
+    }
+
+    public WebEngine getWebEngine() {
+<span class="fc" id="L194">        return webEngine;</span>
     }
 
     public void close() {
-<span class="fc" id="L193">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L198">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
         try {
-<span class="pc bpc" id="L195" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Received shutdown command&quot;);</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Received shutdown command&quot;);</span>
 
-<span class="pc bpc" id="L197" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the server: &quot; + this.server);</span>
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (server != null) server.close();</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the server: &quot; + this.server);</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">            if (server != null) server.close();</span>
 
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the SSL server: &quot; + this.sslServer);</span>
-<span class="pc bpc" id="L201" title="1 of 2 branches missed.">            if (sslServer != null) sslServer.close();</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the SSL server: &quot; + this.sslServer);</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">            if (sslServer != null) sslServer.close();</span>
 
-<span class="pc bpc" id="L203" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Killing all the action queues: &quot; + this.context.getActionQueueList());</span>
-<span class="fc" id="L204">            new ActionQueueKiller(context).killAllQueues();</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Killing all the action queues: &quot; + this.context.getActionQueueList());</span>
+<span class="fc" id="L209">            new ActionQueueKiller(context).killAllQueues();</span>
 
-<span class="pc bpc" id="L206" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; %s says: Goodbye world!%n&quot;, this);</span>
-<span class="nc" id="L207">        } catch (Exception ex) {</span>
-<span class="nc" id="L208">            throw new RuntimeException(ex);</span>
-<span class="fc" id="L209">        }</span>
-<span class="fc" id="L210">    }</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; %s says: Goodbye world!%n&quot;, this);</span>
+<span class="nc" id="L212">        } catch (Exception ex) {</span>
+<span class="nc" id="L213">            throw new RuntimeException(ex);</span>
+<span class="fc" id="L214">        }</span>
+<span class="fc" id="L215">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
