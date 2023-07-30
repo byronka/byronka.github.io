@@ -237,19 +237,21 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; {
 <span class="fc" id="L237">            return;</span>
         }
 
-<span class="fc" id="L240">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
-<span class="fc" id="L241">            final var listOfFiles = pathStream.filter(path -&gt; {</span>
-<span class="pc bpc" id="L242" title="1 of 2 branches missed.">                return Files.exists(path) &amp;&amp;</span>
-<span class="fc bfc" id="L243" title="All 2 branches covered.">                        Files.isRegularFile(path) &amp;&amp;</span>
-<span class="fc bfc" id="L244" title="All 2 branches covered.">                        !path.getFileName().toString().startsWith(&quot;index&quot;);</span>
-<span class="fc" id="L245">            }).toList();</span>
-<span class="fc bfc" id="L246" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
-<span class="fc" id="L247">                readAndDeserialize(p);</span>
-<span class="fc" id="L248">            }</span>
-<span class="nc" id="L249">        } catch (IOException e) { // if we fail to walk() the dbDirectory.  I don't even know how to test this.</span>
-<span class="nc" id="L250">            throw new RuntimeException(e);</span>
-<span class="fc" id="L251">        }</span>
-<span class="fc" id="L252">    }</span>
+        // walk through all the files in this directory, collecting
+        // all regular files (non-subdirectories) except for index.ddps
+<span class="fc" id="L242">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
+<span class="fc" id="L243">            final var listOfFiles = pathStream.filter(path -&gt; {</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">                return Files.exists(path) &amp;&amp;</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">                        Files.isRegularFile(path) &amp;&amp;</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">                        !path.getFileName().toString().startsWith(&quot;index&quot;);</span>
+<span class="fc" id="L247">            }).toList();</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
+<span class="fc" id="L249">                readAndDeserialize(p);</span>
+<span class="fc" id="L250">            }</span>
+<span class="nc" id="L251">        } catch (IOException e) { // if we fail to walk() the dbDirectory.  I don't even know how to test this.</span>
+<span class="nc" id="L252">            throw new RuntimeException(e);</span>
+<span class="fc" id="L253">        }</span>
+<span class="fc" id="L254">    }</span>
 
     /**
      * Carry out the process of reading data files into our in-memory structure
@@ -257,19 +259,28 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; {
      */
     void readAndDeserialize(Path p) throws IOException {
         String fileContents;
-<span class="fc" id="L260">        fileContents = Files.readString(p);</span>
-<span class="fc bfc" id="L261" title="All 2 branches covered.">        if (fileContents.isBlank()) {</span>
-<span class="fc" id="L262">            logger.logDebug( () -&gt; p.getFileName() + &quot; file exists but empty, skipping&quot;);</span>
+<span class="fc" id="L262">        fileContents = Files.readString(p);</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (fileContents.isBlank()) {</span>
+<span class="fc" id="L264">            logger.logDebug( () -&gt; p.getFileName() + &quot; file exists but empty, skipping&quot;);</span>
         } else {
             try {
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L266">                T deserializedData = (T) emptyInstance.deserialize(fileContents);</span>
-<span class="fc" id="L267">                data.put(deserializedData.getIndex(), deserializedData);</span>
-<span class="fc" id="L268">            } catch (Exception e) {</span>
-<span class="fc" id="L269">                throw new RuntimeException(&quot;Failed to deserialize &quot;+ p +&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;)&quot;);</span>
-<span class="fc" id="L270">            }</span>
+<span class="fc" id="L268">                T deserializedData = (T) emptyInstance.deserialize(fileContents);</span>
+
+                // confirm that the name of the file (e.g. 1.ddps) and its internal identifier (e.g. 1) are aligned.
+<span class="fc" id="L271">                String filename = p.getFileName().toString();</span>
+<span class="fc" id="L272">                int startOfSuffixIndex = filename.indexOf('.');</span>
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">                mustBeTrue(startOfSuffixIndex &gt; 0, &quot;the files must look like 1.ddps&quot;);</span>
+<span class="fc" id="L274">                int fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">                mustBeTrue(deserializedData.getIndex() == fileNameIdentifier, &quot;The filename must correspond to the data's index. e.g. 1.ddps must have an id of 1&quot;);</span>
+
+                // put the data into the in-memory data structure
+<span class="fc" id="L278">                data.put(deserializedData.getIndex(), deserializedData);</span>
+<span class="fc" id="L279">            } catch (Exception e) {</span>
+<span class="fc" id="L280">                throw new RuntimeException(&quot;Failed to deserialize &quot;+ p +&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;)&quot;);</span>
+<span class="fc" id="L281">            }</span>
         }
-<span class="fc" id="L272">    }</span>
+<span class="fc" id="L283">    }</span>
 
     /**
      * The primary way to analyze this data.
@@ -278,9 +289,9 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; {
      */
     public Collection&lt;T&gt; values() {
         // load data if needed
-<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
 
-<span class="fc" id="L283">        return data.values();</span>
+<span class="fc" id="L294">        return data.values();</span>
     }
 
     /**
@@ -291,16 +302,16 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; {
      * and the second will encounter a branch which skips loading.
      */
     private void loadData() {
-<span class="fc" id="L294">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+<span class="fc" id="L305">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
         try {
-<span class="pc bpc" id="L296" title="1 of 2 branches missed.">            if (!hasLoadedData) {</span>
-<span class="fc" id="L297">                loadDataFromDisk();</span>
-<span class="fc" id="L298">                hasLoadedData = true;</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">            if (!hasLoadedData) {</span>
+<span class="fc" id="L308">                loadDataFromDisk();</span>
+<span class="fc" id="L309">                hasLoadedData = true;</span>
             }
         } finally {
-<span class="fc" id="L301">            loadDataLock.unlock();</span>
+<span class="fc" id="L312">            loadDataLock.unlock();</span>
         }
-<span class="fc" id="L303">    }</span>
+<span class="fc" id="L314">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
