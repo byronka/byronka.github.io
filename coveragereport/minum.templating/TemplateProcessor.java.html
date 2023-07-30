@@ -9,41 +9,32 @@ import java.util.Map;
  * In order to perform speedy template rendering, it is necessary
  * to get the template converted into this class.  The way to do
  * that is as follows.
- * &lt;ol&gt;
- *     &lt;li&gt;
- *     First, you will be started with some suitable template. The values
- *     to be substituted are surrounded by double brackets.  Here's an example:
- *     &lt;br&gt;
- *     &lt;pre&gt;
- *         Hello, my name is {{name}}
- *     &lt;/pre&gt;
- *     &lt;/li&gt;
- *     &lt;li&gt;
- *         Then, feed that string into {@link #buildProcessor}, like
- *         this:
- *         &lt;pre&gt;
- *             &lt;code&gt;
- *                 {@code String input = &quot;Hello, my name is {{name}}&quot;
- *                 var helloProcessor = TemplateProcessor.buildProcessor(input);
- *                 }
- *             &lt;/code&gt;
- *         &lt;/pre&gt;
- *     &lt;/li&gt;
- *     &lt;li&gt;
- *         Now that you have built a template processor, hold onto it! The generation of
- *         the template processor is the costly activity.  After that, you can use it
- *         efficiently, by feeding it a {@link Map} of key names to desired values. For
- *         our example, maybe we want &lt;em&gt;name&lt;/em&gt; to be replaced with &lt;em&gt;Susanne&lt;/em&gt;.
- *         In that case, we would do this:
- *         &lt;pre&gt;
- *             &lt;code&gt;
- *                 {@code var myMap = Map.of(&quot;name&quot;, &quot;Susanne&quot;);
- *                 String fullyRenderedString = helloProcessor.renderTemplate(myMap);
- *                 }
- *             &lt;/code&gt;
- *         &lt;/pre&gt;
- *     &lt;/li&gt;
- * &lt;/ol&gt;
+ * &lt;br&gt;
+ * First, you will be started with some suitable template. The values
+ * to be substituted are surrounded by double brackets.  Here's an example:
+ * &lt;br&gt;
+ * &lt;pre&gt;
+ * Hello, my name is {{name}}
+ * &lt;/pre&gt;
+ * Then, feed that string into {@link #buildProcessor}, like
+ * this:
+ * &lt;pre&gt;
+ * &lt;code&gt;
+ * {@code String input = &quot;Hello, my name is {{name}}&quot;
+ * var helloProcessor = TemplateProcessor.buildProcessor(input);}
+ * &lt;/code&gt;
+ * &lt;/pre&gt;
+ * Now that you have built a template processor, hold onto it! The generation of
+ * the template processor is the costly activity.  After that, you can use it
+ * efficiently, by feeding it a {@link Map} of key names to desired values. For
+ * our example, maybe we want &lt;em&gt;name&lt;/em&gt; to be replaced with &lt;em&gt;Susanne&lt;/em&gt;.
+ * In that case, we would do this:
+ * &lt;pre&gt;
+ * &lt;code&gt;
+ * {@code var myMap = Map.of(&quot;name&quot;, &quot;Susanne&quot;);
+ * String fullyRenderedString = helloProcessor.renderTemplate(myMap);}
+ * &lt;/code&gt;
+ * &lt;/pre&gt;
  */
 public class TemplateProcessor {
 
@@ -52,19 +43,19 @@ public class TemplateProcessor {
     /**
      * Instantiate a new object with a list of {@link TemplateSection}.
      */
-<span class="fc" id="L55">    private TemplateProcessor(List&lt;TemplateSection&gt; templateSections) {</span>
-<span class="fc" id="L56">        this.templateSections = templateSections;</span>
-<span class="fc" id="L57">    }</span>
+<span class="fc" id="L46">    private TemplateProcessor(List&lt;TemplateSection&gt; templateSections) {</span>
+<span class="fc" id="L47">        this.templateSections = templateSections;</span>
+<span class="fc" id="L48">    }</span>
 
     /**
      * Given a map of key names -&gt; value, render a template.
      */
     public String renderTemplate(Map&lt;String, String&gt; myMap) {
-<span class="fc" id="L63">        StringBuilder sb = new StringBuilder();</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (TemplateSection templateSection : templateSections) {</span>
-<span class="fc" id="L65">            sb.append(templateSection.render(myMap));</span>
-<span class="fc" id="L66">        }</span>
-<span class="fc" id="L67">        return sb.toString();</span>
+<span class="fc" id="L54">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        for (TemplateSection templateSection : templateSections) {</span>
+<span class="fc" id="L56">            sb.append(templateSection.render(myMap));</span>
+<span class="fc" id="L57">        }</span>
+<span class="fc" id="L58">        return sb.toString();</span>
     }
 
     /**
@@ -73,31 +64,31 @@ public class TemplateProcessor {
      * are surrounded by double-curly-braces, i.e. {{foo}}
      */
     public static TemplateProcessor buildProcessor(String template) {
-<span class="fc" id="L76">        var tSections = new ArrayList&lt;TemplateSection&gt;();</span>
-<span class="fc" id="L77">        StringBuilder builder = new StringBuilder();</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (int i = 0; i &lt; template.length(); i++) {</span>
+<span class="fc" id="L67">        var tSections = new ArrayList&lt;TemplateSection&gt;();</span>
+<span class="fc" id="L68">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        for (int i = 0; i &lt; template.length(); i++) {</span>
 
-<span class="fc" id="L80">            char charAtCursor = template.charAt(i);</span>
+<span class="fc" id="L71">            char charAtCursor = template.charAt(i);</span>
 
-<span class="pc bpc" id="L82" title="1 of 6 branches missed.">            if (charAtCursor == '{' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '{') {</span>
+<span class="pc bpc" id="L73" title="1 of 6 branches missed.">            if (charAtCursor == '{' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '{') {</span>
+<span class="fc" id="L74">                i += 1;</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                if (builder.length() &gt; 0) {</span>
+<span class="fc" id="L76">                    tSections.add(new TemplateSection(null, builder.toString()));</span>
+<span class="fc" id="L77">                    builder = new StringBuilder();</span>
+                }
+                continue;
+            }
+
+<span class="pc bpc" id="L82" title="1 of 6 branches missed.">            if (charAtCursor == '}' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '}') {</span>
 <span class="fc" id="L83">                i += 1;</span>
 <span class="pc bpc" id="L84" title="1 of 2 branches missed.">                if (builder.length() &gt; 0) {</span>
-<span class="fc" id="L85">                    tSections.add(new TemplateSection(null, builder.toString()));</span>
+<span class="fc" id="L85">                    tSections.add(new TemplateSection(builder.toString(), null));</span>
 <span class="fc" id="L86">                    builder = new StringBuilder();</span>
                 }
                 continue;
             }
 
-<span class="pc bpc" id="L91" title="1 of 6 branches missed.">            if (charAtCursor == '}' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '}') {</span>
-<span class="fc" id="L92">                i += 1;</span>
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                if (builder.length() &gt; 0) {</span>
-<span class="fc" id="L94">                    tSections.add(new TemplateSection(builder.toString(), null));</span>
-<span class="fc" id="L95">                    builder = new StringBuilder();</span>
-                }
-                continue;
-            }
-
-<span class="fc" id="L100">            builder.append(charAtCursor);</span>
+<span class="fc" id="L91">            builder.append(charAtCursor);</span>
 
             /*
              if we're at the end of the template, it's our last chance to
@@ -105,12 +96,12 @@ public class TemplateProcessor {
              at the end, and it's not a closing brace, it's a malformed
              template.
              */
-<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (i == template.length() - 1) {</span>
-<span class="fc" id="L109">                tSections.add(new TemplateSection(null, builder.toString()));</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (i == template.length() - 1) {</span>
+<span class="fc" id="L100">                tSections.add(new TemplateSection(null, builder.toString()));</span>
             }
         }
 
-<span class="fc" id="L113">        return new TemplateProcessor(tSections);</span>
+<span class="fc" id="L104">        return new TemplateProcessor(tSections);</span>
     }
 }
 
