@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -35,18 +34,35 @@ public class StaticFilesCache {
      * css files, scripts
      */
     public static final String STATIC_FILES_DIRECTORY = &quot;static/&quot;;
-<span class="fc" id="L38">    public static final Pattern badFilePathPatterns = Pattern.compile(&quot;//|\\.\\.|:&quot;);</span>
+<span class="fc" id="L37">    public static final Pattern badFilePathPatterns = Pattern.compile(&quot;//|\\.\\.|:&quot;);</span>
 
     private final Map&lt;String, Response&gt; staticResponses;
     private final ILogger logger;
+    private final Map&lt;String, String&gt; fileSuffixToMime;
 
 <span class="fc" id="L43">    public StaticFilesCache(ILogger logger) {</span>
 <span class="fc" id="L44">        staticResponses = new HashMap&lt;&gt;();</span>
 <span class="fc" id="L45">        this.logger = logger;</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L46">        fileSuffixToMime = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L47">        addDefaultValuesForMimeMap();</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * These are the default starting values for mappings
+     * between file suffixes and appropriate mime types
+     */
+    private void addDefaultValuesForMimeMap() {
+<span class="fc" id="L55">        fileSuffixToMime.put(&quot;css&quot;, &quot;text/css&quot;);</span>
+<span class="fc" id="L56">        fileSuffixToMime.put(&quot;js&quot;, &quot;application/javascript&quot;);</span>
+<span class="fc" id="L57">        fileSuffixToMime.put(&quot;webp&quot;, &quot;image/webp&quot;);</span>
+<span class="fc" id="L58">        fileSuffixToMime.put(&quot;jpg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L59">        fileSuffixToMime.put(&quot;jpeg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L60">        fileSuffixToMime.put(&quot;htm&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
+<span class="fc" id="L61">        fileSuffixToMime.put(&quot;html&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
+<span class="fc" id="L62">    }</span>
 
     public Response getStaticResponse(String key) {
-<span class="fc" id="L49">        return staticResponses.get(key);</span>
+<span class="fc" id="L65">        return staticResponses.get(key);</span>
     }
 
     /**
@@ -61,52 +77,51 @@ public class StaticFilesCache {
      */
     Response loadStaticFile(String file) {
         // if someone tries unusual patterns or path traversal, return null
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(file).find()) return null;</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(file).find()) return null;</span>
 
         try {
-<span class="fc" id="L67">            String fullFileLocation = STATIC_FILES_DIRECTORY + file;</span>
-<span class="fc" id="L68">            byte[] fileContents = null;</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">            if (Set.of(&quot;.css&quot;,&quot;.js&quot;,&quot;.webp&quot;,&quot;.html&quot;,&quot;.htm&quot;).stream().anyMatch(x -&gt; file.contains(x) )) {</span>
-<span class="fc" id="L70">                URL resource = StaticFilesCache.class.getClassLoader().getResource(fullFileLocation);</span>
+<span class="fc" id="L83">            String fullFileLocation = STATIC_FILES_DIRECTORY + file;</span>
+            byte[] fileContents;
+<span class="fc" id="L85">            URL resource = StaticFilesCache.class.getClassLoader().getResource(fullFileLocation);</span>
 
-<span class="fc bfc" id="L72" title="All 2 branches covered.">                if (resource == null) {</span>
-<span class="fc" id="L73">                    logger.logDebug(() -&gt; &quot;Did not find &quot; + file + &quot; in our resources, returning null Response&quot;);</span>
-<span class="fc" id="L74">                    return null;</span>
-                }
-
-<span class="fc" id="L77">                URI uri = URI.create(&quot;&quot;);</span>
-                try {
-<span class="fc" id="L79">                    uri = resource.toURI();</span>
-<span class="nc" id="L80">                } catch (URISyntaxException ex) {</span>
-<span class="nc" id="L81">                    logger.logDebug(() -&gt; &quot;Exception thrown when converting URI to URL for &quot;+resource+&quot;: &quot;+ex);</span>
-<span class="fc" id="L82">                }</span>
-
-<span class="pc bpc" id="L84" title="1 of 2 branches missed.">                if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
-                /*
-                This part is necessary because it's the only way we can set up to loop
-                through paths (files) later.  That is to say, when we getResource(path), it works fine,
-                but if we want to get a list of all the files in a directory inside our jar file,
-                we have to do it this way.
-                 */
-<span class="nc" id="L91">                    try (final var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {</span>
-<span class="nc" id="L92">                        final var myPath = fileSystem.getPath(fullFileLocation);</span>
-<span class="nc" id="L93">                        fileContents = Files.readAllBytes(myPath);</span>
-                    }
-                } else {
-<span class="fc" id="L96">                    final var myPath = Paths.get(uri);</span>
-<span class="fc" id="L97">                    fileContents = Files.readAllBytes(myPath);</span>
-                }
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (resource == null) {</span>
+<span class="fc" id="L88">                logger.logDebug(() -&gt; &quot;Did not find &quot; + file + &quot; in our resources, returning null Response&quot;);</span>
+<span class="fc" id="L89">                return null;</span>
             }
-<span class="fc bfc" id="L100" title="All 2 branches covered.">            if (fileContents == null) return null;</span>
 
-<span class="fc" id="L102">            Response result = createStaticFileResponse(file, fileContents);</span>
+<span class="fc" id="L92">            URI uri = URI.create(&quot;&quot;);</span>
+            try {
+<span class="fc" id="L94">                uri = resource.toURI();</span>
+<span class="nc" id="L95">            } catch (URISyntaxException ex) {</span>
+<span class="nc" id="L96">                logger.logDebug(() -&gt; &quot;Exception thrown when converting URI to URL for &quot;+resource+&quot;: &quot;+ex);</span>
+<span class="fc" id="L97">            }</span>
 
-<span class="fc" id="L104">            logger.logTrace(() -&gt; &quot;Storing in cache - filename: &quot; + file);</span>
-<span class="fc" id="L105">            staticResponses.put(file, result);</span>
-<span class="fc" id="L106">            return result;</span>
-<span class="nc" id="L107">        } catch (IOException ex) {</span>
-<span class="nc" id="L108">            logger.logAsyncError(() -&gt; &quot;at getStaticResponse.  Returning null.  Error: &quot; + ex.getMessage());</span>
-<span class="nc" id="L109">            return null;</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
+            /*
+            This part is necessary because it's the only way we can set up to loop
+            through paths (files) later.  That is to say, when we getResource(path), it works fine,
+            but if we want to get a list of all the files in a directory inside our jar file,
+            we have to do it this way.
+             */
+<span class="nc" id="L106">                try (final var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {</span>
+<span class="nc" id="L107">                    final var myPath = fileSystem.getPath(fullFileLocation);</span>
+<span class="nc" id="L108">                    fileContents = Files.readAllBytes(myPath);</span>
+                }
+            } else {
+<span class="fc" id="L111">                final var myPath = Paths.get(uri);</span>
+<span class="fc" id="L112">                fileContents = Files.readAllBytes(myPath);</span>
+            }
+<span class="pc bpc" id="L114" title="2 of 4 branches missed.">            if (fileContents == null || fileContents.length == 0) return null;</span>
+
+            // if we do get bytes, figure out the best response headers for it.
+<span class="fc" id="L117">            Response result = createStaticFileResponse(file, fileContents);</span>
+
+<span class="fc" id="L119">            logger.logTrace(() -&gt; &quot;Storing in cache - filename: &quot; + file);</span>
+<span class="fc" id="L120">            staticResponses.put(file, result);</span>
+<span class="fc" id="L121">            return result;</span>
+<span class="fc" id="L122">        } catch (IOException ex) {</span>
+<span class="fc" id="L123">            logger.logAsyncError(() -&gt; &quot;at getStaticResponse.  Returning null.  Error: &quot; + ex.getMessage());</span>
+<span class="fc" id="L124">            return null;</span>
         }
     }
 
@@ -115,29 +130,47 @@ public class StaticFilesCache {
      * an appropritate {@link Response} object to be stored in the cache.
      */
     Response createStaticFileResponse(String path, byte[] fileContents) {
-        Response result;
-<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (path.toString().endsWith(&quot;.css&quot;)) {</span>
-<span class="fc" id="L120">            result = createOkResponseForStaticFiles(fileContents,&quot;Content-Type: text/css&quot;);</span>
-<span class="fc bfc" id="L121" title="All 2 branches covered.">        } else if (path.toString().endsWith(&quot;.js&quot;)) {</span>
-<span class="fc" id="L122">            result = createOkResponseForStaticFiles(fileContents, &quot;Content-Type: application/javascript&quot;);</span>
-<span class="fc bfc" id="L123" title="All 2 branches covered.">        } else if (path.toString().endsWith(&quot;.webp&quot;)) {</span>
-<span class="fc" id="L124">            result = createOkResponseForStaticFiles(fileContents, &quot;Content-Type: image/webp&quot;);</span>
-<span class="pc bpc" id="L125" title="1 of 4 branches missed.">        } else if (path.toString().endsWith(&quot;.html&quot;) || path.toString().endsWith(&quot;.htm&quot;)) {</span>
-<span class="fc" id="L126">            result = createOkResponseForStaticFiles(fileContents, &quot;Content-Type: text/html; charset=UTF-8&quot;);</span>
-        } else {
-<span class="fc" id="L128">            throw new RuntimeException(&quot;StaticFilesCache cannot handle this file: &quot; + path.toString());</span>
+<span class="fc" id="L133">        String mimeType = null;</span>
+
+        // if the provided path has a dot in it, use that
+        // to obtain a suffix for determining file type
+<span class="fc" id="L137">        String fileName = path.toString();</span>
+<span class="fc" id="L138">        int suffixBeginIndex = fileName.lastIndexOf('.');</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
+<span class="fc" id="L140">            String suffix = fileName.substring(suffixBeginIndex+1);</span>
+<span class="fc" id="L141">            mimeType = fileSuffixToMime.get(suffix);</span>
         }
-<span class="fc" id="L130">        return result;</span>
+
+        // if we don't find any registered mime types for this
+        // suffix, or if it doesn't have a suffix, set the mime type
+        // to application/octet-stream
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (mimeType == null) {</span>
+<span class="fc" id="L148">            mimeType = &quot;application/octet-stream&quot;;</span>
+        }
+
+<span class="fc" id="L151">        return createOkResponseForStaticFiles(fileContents, mimeType);</span>
     }
 
     /**
      * All static responses will get a cache time of 60 seconds
      */
-    private Response createOkResponseForStaticFiles(byte[] fileContents, String contentTypeHeader) {
-<span class="fc" id="L137">        return new Response(</span>
+    private Response createOkResponseForStaticFiles(byte[] fileContents, String mimeType) {
+<span class="fc" id="L158">        var headers = Map.of(&quot;Cache-Control&quot;, &quot;max-age=60&quot;,</span>
+                &quot;Content-Type&quot;, mimeType);
+
+<span class="fc" id="L161">        return new Response(</span>
                 StatusLine.StatusCode._200_OK,
-<span class="fc" id="L139">                List.of(contentTypeHeader, &quot;Cache-Control: max-age=60&quot;),</span>
+                headers,
                 fileContents);
+    }
+
+    /**
+     * This getter allows users to add extra mappings
+     * between file suffixes and mime types, in case
+     * a user needs one that was not provided.
+     */
+    public Map&lt;String,String&gt; getSuffixToMime() {
+<span class="fc" id="L173">        return fileSuffixToMime;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

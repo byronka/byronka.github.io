@@ -255,7 +255,7 @@ public class WebFramework {
 <span class="fc" id="L255">        stringBuilder</span>
 <span class="fc" id="L256">                .append( &quot;Date: &quot; + date + HTTP_CRLF )</span>
 <span class="fc" id="L257">                .append( &quot;Server: minum&quot; + HTTP_CRLF )</span>
-<span class="fc" id="L258">                .append(  r.extraHeaders().stream().map(x -&gt; x + HTTP_CRLF).collect(Collectors.joining()))</span>
+<span class="fc" id="L258">                .append(  r.extraHeaders().entrySet().stream().map(x -&gt; x.getKey() + &quot;: &quot; + x.getValue() + HTTP_CRLF).collect(Collectors.joining()))</span>
 <span class="fc" id="L259">                .append(&quot;Content-Length: &quot; + r.body().length + HTTP_CRLF );</span>
 
         // if we're a keep-alive connection, reply with a keep-alive header
@@ -443,5 +443,24 @@ public class WebFramework {
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
 <span class="fc" id="L444">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context, instance);</span>
     }
+
+    /**
+     * This allows users to add extra mappings
+     * between file suffixes and mime types, in case
+     * a user needs one that was not provided.
+     * &lt;p&gt;
+     *     This is made available through the
+     *     web framework.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     Example:
+     * &lt;/p&gt;
+     * &lt;pre&gt;
+     * {@code webFramework.addMimeForSuffix().put(&quot;foo&quot;,&quot;text/foo&quot;)}
+     * &lt;/pre&gt;
+     */
+    public void addMimeForSuffix(String suffix, String mimeType) {
+<span class="fc" id="L463">        staticFilesCache.getSuffixToMime().put(suffix, mimeType);</span>
+<span class="fc" id="L464">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
