@@ -41,7 +41,8 @@ public class Constants {
 <span class="fc" id="L41">        SUSPICIOUS_ERRORS = getProp(&quot;SUSPICIOUS_ERRORS&quot;, &quot;&quot;);</span>
 <span class="fc" id="L42">        SUSPICIOUS_PATHS = getProp(&quot;SUSPICIOUS_PATHS&quot;, &quot;&quot;);</span>
 <span class="fc" id="L43">        START_TIME = System.currentTimeMillis();</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L44">        EXTRA_MIME_MAPPINGS = getProp(&quot;EXTRA_MIME_MAPPINGS&quot;, &quot;&quot;);</span>
+<span class="fc" id="L45">    }</span>
 
     /**
      * The port for our regular, non-encrypted server
@@ -158,11 +159,23 @@ public class Constants {
     public final long START_TIME;
 
     /**
+     * These are key-value pairs for mappings between a file
+     * suffix and a mime type.
+     * &lt;p&gt;
+     *     These are read by our system in the StaticFilesCache
+     *     as key-1,value-1,key-2,value-2,... and so on.
+     * &lt;/p&gt;
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+     *
+     */
+    public final List&lt;String&gt; EXTRA_MIME_MAPPINGS;
+
+    /**
      * A helper method to remove some redundant boilerplate code for grabbing
      * configuration values from app.config
      */
     private int getProp(String propName, int propDefault) {
-<span class="fc" id="L165">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L178">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -170,7 +183,7 @@ public class Constants {
      * configuration values from app.config
      */
     private boolean getProp(String propName, boolean propDefault) {
-<span class="fc" id="L173">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L186">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -178,7 +191,7 @@ public class Constants {
      * configuration values from app.config
      */
     private List&lt;String&gt; getProp(String propName, String propDefault) {
-<span class="fc" id="L181">        return Arrays.asList(properties.getProperty(propName, propDefault).split(&quot;,&quot;));</span>
+<span class="fc" id="L194">        return Arrays.asList(properties.getProperty(propName, propDefault).split(&quot;,&quot;));</span>
     }
 
 
@@ -187,17 +200,17 @@ public class Constants {
      * properties file should be shown when it's read.
      */
     public Properties getConfiguredProperties() {
-<span class="fc" id="L190">        var properties = new Properties();</span>
-<span class="fc" id="L191">        String fileName = &quot;app.config&quot;;</span>
-<span class="fc" id="L192">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
-<span class="fc" id="L193">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
+<span class="fc" id="L203">        var properties = new Properties();</span>
+<span class="fc" id="L204">        String fileName = &quot;app.config&quot;;</span>
+<span class="fc" id="L205">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
+<span class="fc" id="L206">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
                     &quot; found properties file at ./app.config.  Loading properties&quot;);
-<span class="fc" id="L195">            properties.load(fis);</span>
-<span class="nc" id="L196">        } catch (Exception ex) {</span>
-<span class="nc" id="L197">            System.out.println(Config.getConfigErrorMessage());</span>
-<span class="nc" id="L198">            System.exit(1);</span>
-<span class="fc" id="L199">        }</span>
-<span class="fc" id="L200">        return properties;</span>
+<span class="fc" id="L208">            properties.load(fis);</span>
+<span class="nc" id="L209">        } catch (Exception ex) {</span>
+<span class="nc" id="L210">            System.out.println(Config.getConfigErrorMessage());</span>
+<span class="nc" id="L211">            System.exit(1);</span>
+<span class="fc" id="L212">        }</span>
+<span class="fc" id="L213">        return properties;</span>
     }
 }
 

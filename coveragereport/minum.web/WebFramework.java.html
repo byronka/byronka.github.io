@@ -320,11 +320,12 @@ public class WebFramework {
 <span class="nc" id="L320">            return null;</span>
         }
 <span class="fc" id="L322">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
-<span class="fc" id="L323">        Response response = staticFilesCache.loadStaticFile(requestedPath);</span>
-<span class="fc bfc" id="L324" title="All 2 branches covered.">        if (response != null) {</span>
-<span class="fc" id="L325">            return request -&gt; response;</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        if (staticFilesCache == null) return null;</span>
+<span class="fc" id="L324">        Response response = staticFilesCache.loadStaticFile(requestedPath);</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if (response != null) {</span>
+<span class="fc" id="L326">            return request -&gt; response;</span>
         } else {
-<span class="fc" id="L327">            return null;</span>
+<span class="fc" id="L328">            return null;</span>
         }
     }
 
@@ -333,16 +334,17 @@ public class WebFramework {
      * Note these can only be responses to {@link StartLine.Verb#GET} requests.
      */
     private Function&lt;Request, Response&gt; findHandlerInStaticCache(StartLine sl) {
-<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if (sl.getVerb() != StartLine.Verb.GET) {</span>
-<span class="nc" id="L337">            return null;</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">        if (sl.getVerb() != StartLine.Verb.GET) {</span>
+<span class="nc" id="L338">            return null;</span>
         }
-<span class="fc" id="L339">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
-<span class="fc" id="L340">        final Response staticResponseFound = staticFilesCache.getStaticResponse(requestedPath);</span>
-<span class="fc bfc" id="L341" title="All 2 branches covered.">        if (staticResponseFound != null) {</span>
-<span class="fc" id="L342">            logger.logTrace(() -&gt; &quot;found a static value to handle &quot;+ requestedPath +&quot;, returning it&quot;);</span>
-<span class="fc" id="L343">            return request -&gt; staticResponseFound;</span>
+<span class="fc" id="L340">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">        if (staticFilesCache == null) return null;</span>
+<span class="fc" id="L342">        final Response staticResponseFound = staticFilesCache.getStaticResponse(requestedPath);</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">        if (staticResponseFound != null) {</span>
+<span class="fc" id="L344">            logger.logTrace(() -&gt; &quot;found a static value to handle &quot;+ requestedPath +&quot;, returning it&quot;);</span>
+<span class="fc" id="L345">            return request -&gt; staticResponseFound;</span>
         } else {
-<span class="fc" id="L345">            return null;</span>
+<span class="fc" id="L347">            return null;</span>
         }
     }
 
@@ -350,15 +352,15 @@ public class WebFramework {
      * let's see if we can match the registered paths against a **portion** of the startline
      */
     Function&lt;Request, Response&gt; findHandlerByPartialMatch(StartLine sl) {
-<span class="fc" id="L353">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
-<span class="fc" id="L354">        var verbPathFunctionEntry = registeredPartialPaths.entrySet().stream()</span>
-<span class="fc bfc" id="L355" title="All 2 branches covered.">                .filter(x -&gt; requestedPath.startsWith(x.getKey().path()) &amp;&amp;</span>
-<span class="fc bfc" id="L356" title="All 2 branches covered.">                        x.getKey().verb().equals(sl.getVerb()))</span>
-<span class="fc" id="L357">                .findFirst().orElse(null);</span>
-<span class="fc bfc" id="L358" title="All 2 branches covered.">        if (verbPathFunctionEntry != null) {</span>
-<span class="fc" id="L359">            return verbPathFunctionEntry.getValue();</span>
+<span class="fc" id="L355">        String requestedPath = sl.getPathDetails().isolatedPath();</span>
+<span class="fc" id="L356">        var verbPathFunctionEntry = registeredPartialPaths.entrySet().stream()</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">                .filter(x -&gt; requestedPath.startsWith(x.getKey().path()) &amp;&amp;</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">                        x.getKey().verb().equals(sl.getVerb()))</span>
+<span class="fc" id="L359">                .findFirst().orElse(null);</span>
+<span class="fc bfc" id="L360" title="All 2 branches covered.">        if (verbPathFunctionEntry != null) {</span>
+<span class="fc" id="L361">            return verbPathFunctionEntry.getValue();</span>
         } else {
-<span class="fc" id="L361">            return null;</span>
+<span class="fc" id="L363">            return null;</span>
         }
     }
 
@@ -366,29 +368,28 @@ public class WebFramework {
      * This constructor is used for the real production system
      */
     public WebFramework(Context context) {
-<span class="fc" id="L369">        this(context, null);</span>
-<span class="fc" id="L370">    }</span>
+<span class="fc" id="L371">        this(context, null);</span>
+<span class="fc" id="L372">    }</span>
 
     /**
      * This provides the ZonedDateTime as a parameter so we
      * can set the current date (for testing purposes)
      * @param overrideForDateTime for those test cases where we need to control the time
      */
-<span class="fc" id="L377">    public WebFramework(Context context, ZonedDateTime overrideForDateTime) {</span>
-<span class="fc" id="L378">        this.fs = context.getFullSystem();</span>
-<span class="fc" id="L379">        this.logger = context.getLogger();</span>
-<span class="fc" id="L380">        this.constants = context.getConstants();</span>
-<span class="fc" id="L381">        this.overrideForDateTime = overrideForDateTime;</span>
-<span class="fc" id="L382">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L383">        this.registeredPartialPaths = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L384">        this.staticFilesCache = new StaticFilesCache(logger);</span>
-<span class="fc" id="L385">        this.context = context;</span>
-<span class="fc" id="L386">        this.underInvestigation = new UnderInvestigation(constants);</span>
-<span class="fc" id="L387">        this.inputStreamUtils = new InputStreamUtils(context);</span>
-<span class="fc" id="L388">        this.stopWatchUtils = new StopwatchUtils();</span>
-<span class="fc" id="L389">        this.bodyProcessor = new BodyProcessor(context);</span>
-<span class="fc" id="L390">        this.random = new Random();</span>
-<span class="fc" id="L391">    }</span>
+<span class="fc" id="L379">    public WebFramework(Context context, ZonedDateTime overrideForDateTime) {</span>
+<span class="fc" id="L380">        this.fs = context.getFullSystem();</span>
+<span class="fc" id="L381">        this.logger = context.getLogger();</span>
+<span class="fc" id="L382">        this.constants = context.getConstants();</span>
+<span class="fc" id="L383">        this.overrideForDateTime = overrideForDateTime;</span>
+<span class="fc" id="L384">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L385">        this.registeredPartialPaths = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L386">        this.context = context;</span>
+<span class="fc" id="L387">        this.underInvestigation = new UnderInvestigation(constants);</span>
+<span class="fc" id="L388">        this.inputStreamUtils = new InputStreamUtils(context);</span>
+<span class="fc" id="L389">        this.stopWatchUtils = new StopwatchUtils();</span>
+<span class="fc" id="L390">        this.bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L391">        this.random = new Random();</span>
+<span class="fc" id="L392">    }</span>
 
     /**
      * Add a new handler in the web application for a combination
@@ -400,8 +401,8 @@ public class WebFramework {
      * here.
      */
     public void registerPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<span class="fc" id="L403">        registeredDynamicPaths.put(new VerbPath(verb, pathName), webHandler);</span>
-<span class="fc" id="L404">    }</span>
+<span class="fc" id="L404">        registeredDynamicPaths.put(new VerbPath(verb, pathName), webHandler);</span>
+<span class="fc" id="L405">    }</span>
 
     /**
      * Similar to {@link #registerPath(StartLine.Verb, String, Function)} except that the paths
@@ -422,16 +423,16 @@ public class WebFramework {
      * &lt;/p&gt;
      */
     public void registerPartialPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<span class="fc" id="L425">        registeredPartialPaths.put(new VerbPath(verb, pathName), webHandler);</span>
-<span class="fc" id="L426">    }</span>
+<span class="fc" id="L426">        registeredPartialPaths.put(new VerbPath(verb, pathName), webHandler);</span>
+<span class="fc" id="L427">    }</span>
 
     /**
      * register a {@link StaticFilesCache} to use for getting
      * and caching static values
      */
-    public void registerStaticFiles(StaticFilesCache sfc) {
-<span class="fc" id="L433">        this.staticFilesCache = sfc;</span>
-<span class="fc" id="L434">    }</span>
+    public void setStaticFilesCache(StaticFilesCache sfc) {
+<span class="fc" id="L434">        this.staticFilesCache = sfc;</span>
+<span class="fc" id="L435">    }</span>
 
     /**
      * Since this is a generic method, a bit of care is required when
@@ -441,7 +442,7 @@ public class WebFramework {
      * &lt;/pre&gt;
      */
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
-<span class="fc" id="L444">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context, instance);</span>
+<span class="fc" id="L445">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), context, instance);</span>
     }
 
     /**
@@ -460,7 +461,7 @@ public class WebFramework {
      * &lt;/pre&gt;
      */
     public void addMimeForSuffix(String suffix, String mimeType) {
-<span class="fc" id="L463">        staticFilesCache.getSuffixToMime().put(suffix, mimeType);</span>
-<span class="fc" id="L464">    }</span>
+<span class="fc" id="L464">        staticFilesCache.getSuffixToMime().put(suffix, mimeType);</span>
+<span class="fc" id="L465">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

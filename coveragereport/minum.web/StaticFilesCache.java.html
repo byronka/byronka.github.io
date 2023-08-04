@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StaticFilesCache.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">StaticFilesCache.java</span></div><h1>StaticFilesCache.java</h1><pre class="source lang-java linenums">package minum.web;
 
+import minum.Context;
 import minum.logging.ILogger;
 
 import java.io.IOException;
@@ -11,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import static minum.utils.Invariants.mustBeTrue;
 
 /**
  * This is a store of data for any static data we
@@ -34,35 +37,35 @@ public class StaticFilesCache {
      * css files, scripts
      */
     public static final String STATIC_FILES_DIRECTORY = &quot;static/&quot;;
-<span class="fc" id="L37">    public static final Pattern badFilePathPatterns = Pattern.compile(&quot;//|\\.\\.|:&quot;);</span>
+<span class="fc" id="L40">    public static final Pattern badFilePathPatterns = Pattern.compile(&quot;//|\\.\\.|:&quot;);</span>
 
     private final Map&lt;String, Response&gt; staticResponses;
     private final ILogger logger;
     private final Map&lt;String, String&gt; fileSuffixToMime;
 
-<span class="fc" id="L43">    public StaticFilesCache(ILogger logger) {</span>
-<span class="fc" id="L44">        staticResponses = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L45">        this.logger = logger;</span>
-<span class="fc" id="L46">        fileSuffixToMime = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L47">        addDefaultValuesForMimeMap();</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L46">    public StaticFilesCache(Context context) {</span>
+<span class="fc" id="L47">        staticResponses = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L48">        this.logger = context.getLogger();</span>
+<span class="fc" id="L49">        fileSuffixToMime = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L50">        addDefaultValuesForMimeMap();</span>
+<span class="fc" id="L51">    }</span>
 
     /**
      * These are the default starting values for mappings
      * between file suffixes and appropriate mime types
      */
     private void addDefaultValuesForMimeMap() {
-<span class="fc" id="L55">        fileSuffixToMime.put(&quot;css&quot;, &quot;text/css&quot;);</span>
-<span class="fc" id="L56">        fileSuffixToMime.put(&quot;js&quot;, &quot;application/javascript&quot;);</span>
-<span class="fc" id="L57">        fileSuffixToMime.put(&quot;webp&quot;, &quot;image/webp&quot;);</span>
-<span class="fc" id="L58">        fileSuffixToMime.put(&quot;jpg&quot;, &quot;image/jpeg&quot;);</span>
-<span class="fc" id="L59">        fileSuffixToMime.put(&quot;jpeg&quot;, &quot;image/jpeg&quot;);</span>
-<span class="fc" id="L60">        fileSuffixToMime.put(&quot;htm&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
-<span class="fc" id="L61">        fileSuffixToMime.put(&quot;html&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L58">        fileSuffixToMime.put(&quot;css&quot;, &quot;text/css&quot;);</span>
+<span class="fc" id="L59">        fileSuffixToMime.put(&quot;js&quot;, &quot;application/javascript&quot;);</span>
+<span class="fc" id="L60">        fileSuffixToMime.put(&quot;webp&quot;, &quot;image/webp&quot;);</span>
+<span class="fc" id="L61">        fileSuffixToMime.put(&quot;jpg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L62">        fileSuffixToMime.put(&quot;jpeg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L63">        fileSuffixToMime.put(&quot;htm&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
+<span class="fc" id="L64">        fileSuffixToMime.put(&quot;html&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
+<span class="fc" id="L65">    }</span>
 
     public Response getStaticResponse(String key) {
-<span class="fc" id="L65">        return staticResponses.get(key);</span>
+<span class="fc" id="L68">        return staticResponses.get(key);</span>
     }
 
     /**
@@ -77,51 +80,51 @@ public class StaticFilesCache {
      */
     Response loadStaticFile(String file) {
         // if someone tries unusual patterns or path traversal, return null
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(file).find()) return null;</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(file).find()) return null;</span>
 
         try {
-<span class="fc" id="L83">            String fullFileLocation = STATIC_FILES_DIRECTORY + file;</span>
+<span class="fc" id="L86">            String fullFileLocation = STATIC_FILES_DIRECTORY + file;</span>
             byte[] fileContents;
-<span class="fc" id="L85">            URL resource = StaticFilesCache.class.getClassLoader().getResource(fullFileLocation);</span>
+<span class="fc" id="L88">            URL resource = StaticFilesCache.class.getClassLoader().getResource(fullFileLocation);</span>
 
-<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (resource == null) {</span>
-<span class="fc" id="L88">                logger.logDebug(() -&gt; &quot;Did not find &quot; + file + &quot; in our resources, returning null Response&quot;);</span>
-<span class="fc" id="L89">                return null;</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (resource == null) {</span>
+<span class="fc" id="L91">                logger.logDebug(() -&gt; &quot;Did not find &quot; + file + &quot; in our resources, returning null Response&quot;);</span>
+<span class="fc" id="L92">                return null;</span>
             }
 
-<span class="fc" id="L92">            URI uri = URI.create(&quot;&quot;);</span>
+<span class="fc" id="L95">            URI uri = URI.create(&quot;&quot;);</span>
             try {
-<span class="fc" id="L94">                uri = resource.toURI();</span>
-<span class="nc" id="L95">            } catch (URISyntaxException ex) {</span>
-<span class="nc" id="L96">                logger.logDebug(() -&gt; &quot;Exception thrown when converting URI to URL for &quot;+resource+&quot;: &quot;+ex);</span>
-<span class="fc" id="L97">            }</span>
+<span class="fc" id="L97">                uri = resource.toURI();</span>
+<span class="nc" id="L98">            } catch (URISyntaxException ex) {</span>
+<span class="nc" id="L99">                logger.logDebug(() -&gt; &quot;Exception thrown when converting URI to URL for &quot;+resource+&quot;: &quot;+ex);</span>
+<span class="fc" id="L100">            }</span>
 
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">            if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
             /*
             This part is necessary because it's the only way we can set up to loop
             through paths (files) later.  That is to say, when we getResource(path), it works fine,
             but if we want to get a list of all the files in a directory inside our jar file,
             we have to do it this way.
              */
-<span class="nc" id="L106">                try (final var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {</span>
-<span class="nc" id="L107">                    final var myPath = fileSystem.getPath(fullFileLocation);</span>
-<span class="nc" id="L108">                    fileContents = Files.readAllBytes(myPath);</span>
+<span class="nc" id="L109">                try (final var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {</span>
+<span class="nc" id="L110">                    final var myPath = fileSystem.getPath(fullFileLocation);</span>
+<span class="nc" id="L111">                    fileContents = Files.readAllBytes(myPath);</span>
                 }
             } else {
-<span class="fc" id="L111">                final var myPath = Paths.get(uri);</span>
-<span class="fc" id="L112">                fileContents = Files.readAllBytes(myPath);</span>
+<span class="fc" id="L114">                final var myPath = Paths.get(uri);</span>
+<span class="fc" id="L115">                fileContents = Files.readAllBytes(myPath);</span>
             }
-<span class="pc bpc" id="L114" title="2 of 4 branches missed.">            if (fileContents == null || fileContents.length == 0) return null;</span>
+<span class="pc bpc" id="L117" title="2 of 4 branches missed.">            if (fileContents == null || fileContents.length == 0) return null;</span>
 
             // if we do get bytes, figure out the best response headers for it.
-<span class="fc" id="L117">            Response result = createStaticFileResponse(file, fileContents);</span>
+<span class="fc" id="L120">            Response result = createStaticFileResponse(file, fileContents);</span>
 
-<span class="fc" id="L119">            logger.logTrace(() -&gt; &quot;Storing in cache - filename: &quot; + file);</span>
-<span class="fc" id="L120">            staticResponses.put(file, result);</span>
-<span class="fc" id="L121">            return result;</span>
-<span class="fc" id="L122">        } catch (IOException ex) {</span>
-<span class="fc" id="L123">            logger.logAsyncError(() -&gt; &quot;at getStaticResponse.  Returning null.  Error: &quot; + ex.getMessage());</span>
-<span class="fc" id="L124">            return null;</span>
+<span class="fc" id="L122">            logger.logTrace(() -&gt; &quot;Storing in cache - filename: &quot; + file);</span>
+<span class="fc" id="L123">            staticResponses.put(file, result);</span>
+<span class="fc" id="L124">            return result;</span>
+<span class="fc" id="L125">        } catch (IOException ex) {</span>
+<span class="fc" id="L126">            logger.logAsyncError(() -&gt; &quot;at getStaticResponse.  Returning null.  Error: &quot; + ex.getMessage());</span>
+<span class="fc" id="L127">            return null;</span>
         }
     }
 
@@ -130,35 +133,35 @@ public class StaticFilesCache {
      * an appropritate {@link Response} object to be stored in the cache.
      */
     Response createStaticFileResponse(String path, byte[] fileContents) {
-<span class="fc" id="L133">        String mimeType = null;</span>
+<span class="fc" id="L136">        String mimeType = null;</span>
 
         // if the provided path has a dot in it, use that
         // to obtain a suffix for determining file type
-<span class="fc" id="L137">        String fileName = path.toString();</span>
-<span class="fc" id="L138">        int suffixBeginIndex = fileName.lastIndexOf('.');</span>
-<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
-<span class="fc" id="L140">            String suffix = fileName.substring(suffixBeginIndex+1);</span>
-<span class="fc" id="L141">            mimeType = fileSuffixToMime.get(suffix);</span>
+<span class="fc" id="L140">        String fileName = path.toString();</span>
+<span class="fc" id="L141">        int suffixBeginIndex = fileName.lastIndexOf('.');</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
+<span class="fc" id="L143">            String suffix = fileName.substring(suffixBeginIndex+1);</span>
+<span class="fc" id="L144">            mimeType = fileSuffixToMime.get(suffix);</span>
         }
 
         // if we don't find any registered mime types for this
         // suffix, or if it doesn't have a suffix, set the mime type
         // to application/octet-stream
-<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (mimeType == null) {</span>
-<span class="fc" id="L148">            mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (mimeType == null) {</span>
+<span class="fc" id="L151">            mimeType = &quot;application/octet-stream&quot;;</span>
         }
 
-<span class="fc" id="L151">        return createOkResponseForStaticFiles(fileContents, mimeType);</span>
+<span class="fc" id="L154">        return createOkResponseForStaticFiles(fileContents, mimeType);</span>
     }
 
     /**
      * All static responses will get a cache time of 60 seconds
      */
     private Response createOkResponseForStaticFiles(byte[] fileContents, String mimeType) {
-<span class="fc" id="L158">        var headers = Map.of(&quot;Cache-Control&quot;, &quot;max-age=60&quot;,</span>
+<span class="fc" id="L161">        var headers = Map.of(&quot;Cache-Control&quot;, &quot;max-age=60&quot;,</span>
                 &quot;Content-Type&quot;, mimeType);
 
-<span class="fc" id="L161">        return new Response(</span>
+<span class="fc" id="L164">        return new Response(</span>
                 StatusLine.StatusCode._200_OK,
                 headers,
                 fileContents);
@@ -169,8 +172,16 @@ public class StaticFilesCache {
      * between file suffixes and mime types, in case
      * a user needs one that was not provided.
      */
-    public Map&lt;String,String&gt; getSuffixToMime() {
-<span class="fc" id="L173">        return fileSuffixToMime;</span>
+    Map&lt;String,String&gt; getSuffixToMime() {
+<span class="fc" id="L176">        return fileSuffixToMime;</span>
     }
+
+    void readExtraMappings(List&lt;String&gt; input) {
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        mustBeTrue(input.size() % 2 == 0, &quot;input must be even (key + value = 2 items). Your input: &quot; + input);</span>
+
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        for (int i = 0; i &lt; input.size(); i += 2) {</span>
+<span class="fc" id="L183">            fileSuffixToMime.put(input.get(i), input.get(i+1));</span>
+        }
+<span class="fc" id="L185">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
