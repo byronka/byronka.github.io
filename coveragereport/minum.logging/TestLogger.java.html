@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestLogger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.logging</a> &gt; <span class="el_source">TestLogger.java</span></div><h1>TestLogger.java</h1><pre class="source lang-java linenums">package minum.logging;
+
+import minum.testing.StopwatchUtils;
+import minum.utils.FileUtils;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * This implementation of {@link Logger} has a few
+ * extra functions that only apply to tests, like {@link #test(String)}
+ */
+public class TestLogger extends Logger {
+
+    private StopwatchUtils stopWatch;
+    private final List&lt;TestSuite&gt; testSuites;
+    private String previousTestName;
+    private TestSuite currentTestSuite;
+    private Queue&lt;String&gt; recentLogLines;
+<span class="fc" id="L24">    private final int MAX_CACHE_SIZE = 20;</span>
+    private final ReentrantLock logDebugLock;
+    private final ReentrantLock logAuditLock;
+    private final ReentrantLock logTraceLock;
+    private final ReentrantLock logAsyncErrorLock;
+<span class="fc" id="L29">    private int testCount = 1;</span>
+
+    /**
+     * Writes a Junit-style xml file to out/reports/tests/YOUR_FILENAME_HERE.xml
+     * @param filename the name of the test report.  Since this is
+     *                 an XML file, it will receive a suffix of .xml
+     */
+    public void writeTestReport(String filename) throws IOException {
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (currentTestSuite != null) {</span>
+<span class="fc" id="L38">            includeTimingForPreviousTest();</span>
+        }
+<span class="fc" id="L40">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L41">        long totalTime = 0;</span>
+<span class="fc" id="L42">        long totalCountTests = 0;</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        for (TestSuite ts : testSuites) {</span>
+<span class="fc" id="L44">            List&lt;String&gt; testCaseStrings = ts.testCases().stream().map(x -&gt; String.format(&quot;\t\t&lt;testcase classname=\&quot;%s\&quot; name=\&quot;%s\&quot; time=\&quot;%.3f\&quot; /&gt;&quot;, ts.className(), x.name, x.duration() / 1000.0)).toList();</span>
+<span class="fc" id="L45">            long sumOfTestCaseDurations = ts.testCases.stream().mapToLong(x -&gt; x.duration).sum();</span>
+<span class="fc" id="L46">            totalTime += sumOfTestCaseDurations;</span>
+<span class="fc" id="L47">            totalCountTests += testCaseStrings.size();</span>
+<span class="fc" id="L48">            String testSuiteString = String.format(&quot;\t&lt;testsuite name=\&quot;%s\&quot; time=\&quot;%.2f\&quot; tests=\&quot;%d\&quot;&gt;&quot;, ts.className(), sumOfTestCaseDurations / 1000.0, testCaseStrings.size());</span>
+<span class="fc" id="L49">            sb.append(String.format(&quot;%n&quot; + testSuiteString + &quot;%n&quot; + String.join(&quot;\n&quot;, testCaseStrings) + &quot;%n&quot; + &quot;\t&lt;/testsuite&gt;&quot; + &quot;%n&quot;));</span>
+<span class="fc" id="L50">        }</span>
+<span class="fc" id="L51">        String innerXmlReport = &quot;&quot;&quot;</span>
+                &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+                &lt;testsuites time=&quot;%.2f&quot; tests=&quot;%d&quot;&gt;
+<span class="fc" id="L54">                &quot;&quot;&quot;.formatted(totalTime / 1000.0, totalCountTests) + sb + &quot;&quot;&quot;</span>
+                &lt;/testsuites&gt;
+                &quot;&quot;&quot;;
+<span class="fc" id="L57">        Files.createDirectories(Path.of(&quot;out/reports/tests&quot;));</span>
+<span class="fc" id="L58">        FileUtils.writeString(Path.of(&quot;out/reports/tests/&quot;+filename+&quot;.xml&quot;), innerXmlReport);</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * An organizational tool - indicates in the test report that the following
+     * tests are within this testing suite
+     * @param className copy the name of the testing class for this parameter
+     */
+    public void testSuite(String className) {
+        // if there is an existing test suite, we need to add the timing for the
+        // last test here in that previous suite.
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (currentTestSuite != null) {</span>
+<span class="fc" id="L70">            includeTimingForPreviousTest();</span>
+        }
+<span class="fc" id="L72">        currentTestSuite = new TestSuite(className, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L73">        testSuites.add(currentTestSuite);</span>
+<span class="fc" id="L74">    }</span>
+
+    /**
+     * Represents a particular test case
+     */
+<span class="fc" id="L79">    record TestCase(String name, long duration) {}</span>
+
+    /**
+     * Represents a suite of tests, typically the set
+     * of tests in a particular class
+     */
+<span class="fc" id="L85">    record TestSuite(String className, List&lt;TestCase&gt; testCases) {}</span>
+
+    /**
+     * See {@link TestLogger}
+     */
+    public TestLogger(LoggingContext context, String name) {
+<span class="fc" id="L91">        super(context, name);</span>
+<span class="fc" id="L92">        this.testSuites = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L93">        this.stopWatch = new StopwatchUtils();</span>
+<span class="fc" id="L94">        this.recentLogLines = new ArrayBlockingQueue&lt;&gt;(MAX_CACHE_SIZE);</span>
+<span class="fc" id="L95">        this.logDebugLock = new ReentrantLock();</span>
+<span class="fc" id="L96">        this.logTraceLock = new ReentrantLock();</span>
+<span class="fc" id="L97">        this.logAuditLock = new ReentrantLock();</span>
+<span class="fc" id="L98">        this.logAsyncErrorLock = new ReentrantLock();</span>
+<span class="fc" id="L99">    }</span>
+
+    /**
+     * A helper to get the string message value out of a
+     * {@link ThrowingSupplier}
+     */
+    private String extractMessage(ThrowingSupplier&lt;String, Exception&gt; msg) {
+        String receivedMessage;
+        try {
+<span class="fc" id="L108">            receivedMessage = msg.get();</span>
+<span class="fc" id="L109">        } catch (Exception ex) {</span>
+<span class="fc" id="L110">            receivedMessage = &quot;EXCEPTION DURING GET: &quot; + ex;</span>
+<span class="fc" id="L111">        }</span>
+<span class="fc" id="L112">        return receivedMessage;</span>
+    }
+
+    /**
+     * Keeps a record of the recently-added log messages, which is
+     * useful for some tests.
+     */
+    private void addToCache(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        while (recentLogLines.size() &gt;= (MAX_CACHE_SIZE)) {</span>
+            // pull log messages off the head of the queue
+<span class="fc" id="L122">            recentLogLines.remove();</span>
+        }
+        // put log messages into the tail of the queue
+<span class="fc" id="L125">        String message = extractMessage(msg);</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        String safeMessage = message == null ? &quot;&quot; : message;</span>
+<span class="fc" id="L127">        recentLogLines.offer(safeMessage);</span>
+<span class="fc" id="L128">    }</span>
+
+    @Override
+    public void logDebug(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L132">        logDebugLock.lock();</span>
+        try {
+<span class="fc" id="L134">            addToCache(msg);</span>
+<span class="fc" id="L135">            super.logDebug(msg);</span>
+        } finally {
+<span class="fc" id="L137">            logDebugLock.unlock();</span>
+        }
+<span class="fc" id="L139">    }</span>
+
+    @Override
+    public void logTrace(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L143">        logTraceLock.lock();</span>
+        try {
+<span class="fc" id="L145">            addToCache(msg);</span>
+<span class="fc" id="L146">            super.logTrace(msg);</span>
+        } finally {
+<span class="fc" id="L148">            logTraceLock.unlock();</span>
+        }
+<span class="fc" id="L150">    }</span>
+
+    @Override
+    public void logAudit(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L154">        logAuditLock.lock();</span>
+        try {
+<span class="fc" id="L156">            addToCache(msg);</span>
+<span class="fc" id="L157">            super.logAudit(msg);</span>
+        } finally {
+<span class="fc" id="L159">            logAuditLock.unlock();</span>
+        }
+<span class="fc" id="L161">    }</span>
+
+    @Override
+    public void logAsyncError(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L165">        logAsyncErrorLock.lock();</span>
+        try {
+<span class="fc" id="L167">            addToCache(msg);</span>
+<span class="fc" id="L168">            super.logAsyncError(msg);</span>
+        } finally {
+<span class="fc" id="L170">            logAsyncErrorLock.unlock();</span>
+        }
+<span class="fc" id="L172">    }</span>
+
+    /**
+     * Provides an ability to search over the recent past log messages,
+     * case-insensitively.
+     * @param lines number of lines of log messages to look back through,
+     *              up to {@link #MAX_CACHE_SIZE}
+     */
+    public String findFirstMessageThatContains(String value, int lines) {
+<span class="fc" id="L181">        var lineList = recentLogLines.stream().skip(MAX_CACHE_SIZE-lines).toList();</span>
+<span class="fc" id="L182">        var values = lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
+<span class="fc" id="L183">        int size = values.size();</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">        if (size == 0) {</span>
+<span class="nc" id="L185">            throw new RuntimeException(value + &quot; was not found in &quot; + lineList);</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        } else if (size == 1) {</span>
+<span class="fc" id="L187">            return values.get(0);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        } else if (size &gt;= 2) {</span>
+<span class="nc" id="L189">            throw new RuntimeException(&quot;multiple values found: &quot; + values);</span>
+        }
+<span class="nc" id="L191">        throw new RuntimeException(&quot;Shouldn't be possible to get here.&quot;);</span>
+    }
+
+    /**
+     * Looks back through the last 3 log messages for one that
+     * contains the provided value.  Returns the whole line if
+     * found and an exception if not found.
+     * &lt;p&gt;
+     *     See {@link #findFirstMessageThatContains(String, int)} if you
+     *     want to search through more than 3.  However, it is only
+     *     possible to search up to {@link #MAX_CACHE_SIZE}
+     * &lt;/p&gt;
+     */
+    public String findFirstMessageThatContains(String value) {
+<span class="fc" id="L205">        return findFirstMessageThatContains(value, 3);</span>
+    }
+
+    /**
+     * A helper function to log a test title prefixed with &quot;TEST:&quot;
+     * &lt;br&gt;
+     * Also collects data about the previously-run test
+     */
+    public void test(String msg) {
+<span class="fc" id="L214">        currentTestSuite.testCases().add(new TestCase(msg, 0));</span>
+
+<span class="fc" id="L216">        includeTimingForPreviousTest();</span>
+<span class="fc" id="L217">        previousTestName = msg;</span>
+        // put together some pretty-looking text graphics to show the suiteName of our test in log
+<span class="fc" id="L219">        final var baseLength = 11;</span>
+<span class="fc" id="L220">        final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
+
+<span class="fc" id="L222">        loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L223">            Object[] args = new Object[]{testCount++, msg};</span>
+<span class="fc" id="L224">            System.out.printf(&quot;%n+&quot;  + dashes + &quot;+%n| TEST %d: %s |%n+&quot;+ dashes + &quot;+%n%n&quot;, args);</span>
+<span class="fc" id="L225">        });</span>
+<span class="fc" id="L226">    }</span>
+
+    /**
+     * Code for calculating how long the previous test took, replaces
+     * the data from that previous test with new data that includes the timing.
+     */
+    private void includeTimingForPreviousTest() {
+        // enter information for previous test
+<span class="pc bpc" id="L234" title="1 of 4 branches missed.">        if (stopWatch != null &amp;&amp; previousTestName != null) {</span>
+             // The time taken for the previous test to complete.
+<span class="fc" id="L236">            long previousTestMillis = stopWatch.stopTimer();</span>
+<span class="fc" id="L237">            TestCase testCase = currentTestSuite.testCases().stream()</span>
+<span class="fc" id="L238">                    .filter(x -&gt; x.name().equals(previousTestName))</span>
+<span class="fc" id="L239">                    .findFirst()</span>
+<span class="fc" id="L240">                    .orElse(null);</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">            if (testCase != null) {</span>
+<span class="fc" id="L242">                var testCaseWithTiming = new TestCase(testCase.name(), previousTestMillis);</span>
+<span class="fc" id="L243">                currentTestSuite.testCases().remove(testCase);</span>
+<span class="fc" id="L244">                currentTestSuite.testCases.add(testCaseWithTiming);</span>
+            }
+        }
+
+        // reset for next test.
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">        stopWatch = stopWatch == null ? new StopwatchUtils() : stopWatch.startTimer();</span>
+<span class="fc" id="L250">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Context.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum</a> &gt; <span class="el_source">Context.java</span></div><h1>Context.java</h1><pre class="source lang-java linenums">package minum;
 
+import minum.database.Db;
+import minum.database.DbData;
 import minum.logging.ILogger;
-import minum.logging.LoggingLevel;
 import minum.utils.ActionQueue;
-import minum.utils.TimeUtils;
+import minum.web.FullSystem;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -41,36 +43,57 @@ public class Context {
      * @param fullSystem the code which kicks off many of the core functions of
      *                   the application and maintains oversight on those objects.
      */
-<span class="fc" id="L44">    public Context(ExecutorService executorService, Constants constants, FullSystem fullSystem) {</span>
-<span class="fc" id="L45">        this.executorService = executorService;</span>
-<span class="fc" id="L46">        this.constants = constants;</span>
-<span class="fc" id="L47">        this.fullSystem = fullSystem;</span>
-<span class="fc" id="L48">        this.actionQueueList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L46">    public Context(ExecutorService executorService, Constants constants, FullSystem fullSystem) {</span>
+<span class="fc" id="L47">        this.executorService = executorService;</span>
+<span class="fc" id="L48">        this.constants = constants;</span>
+<span class="fc" id="L49">        this.fullSystem = fullSystem;</span>
+<span class="fc" id="L50">        this.actionQueueList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L51">    }</span>
 
     public void setLogger(ILogger logger) {
-<span class="fc" id="L52">        this.logger = logger;</span>
-<span class="fc" id="L53">    }</span>
+<span class="fc" id="L54">        this.logger = logger;</span>
+<span class="fc" id="L55">    }</span>
 
     public ILogger getLogger() {
-<span class="fc" id="L56">        return logger;</span>
+<span class="fc" id="L58">        return logger;</span>
     }
 
     public ExecutorService getExecutorService() {
-<span class="fc" id="L60">        return executorService;</span>
+<span class="fc" id="L62">        return executorService;</span>
     }
 
     public Constants getConstants() {
-<span class="fc" id="L64">        return constants;</span>
+<span class="fc" id="L66">        return constants;</span>
     }
 
     public FullSystem getFullSystem() {
-<span class="fc" id="L68">        return fullSystem;</span>
+<span class="fc" id="L70">        return fullSystem;</span>
     }
 
     public List&lt;ActionQueue&gt; getActionQueueList() {
-<span class="fc" id="L72">        return actionQueueList;</span>
+<span class="fc" id="L74">        return actionQueueList;</span>
     }
 
+    /**
+     * This is a helper method to instantiate a {@link Db} class,
+     * avoiding the need for a user to provide the root database
+     * directory and the context.
+     *
+     * Since this is a generic method, a bit of care is required when
+     * calling.  Try to use a pattern like this:
+     * &lt;pre&gt;
+     * {@code Db&lt;Photograph&gt; photoDb = wf.getDb(&quot;photos&quot;);}
+     * &lt;/pre&gt;
+     * @param name the name of this data.  Note that this will be used
+     *             as the directory for the data, so use characters your
+     *             operating system would allow.
+     * @param instance an instance of the {@link DbData} data, preferably
+     *                 following a null-object pattern.  For example,
+     *                 Photograph.EMPTY.  This is used in the Db code
+     *                 to deserialize the data when reading.
+     */
+    public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
+<span class="fc" id="L96">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), this, instance);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

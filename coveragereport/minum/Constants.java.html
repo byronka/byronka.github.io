@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Constants.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum</a> &gt; <span class="el_source">Constants.java</span></div><h1>Constants.java</h1><pre class="source lang-java linenums">package minum;
 
-import minum.logging.Logger;
 import minum.logging.LoggingLevel;
 import minum.utils.TimeUtils;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -24,7 +24,7 @@ public class Constants {
 <span class="fc" id="L24">        SECURE_SERVER_PORT = getProp(&quot;SSL_SERVER_PORT&quot;,  8443);</span>
 <span class="fc" id="L25">        HOST_NAME = properties.getProperty(&quot;HOST_NAME&quot;,  &quot;localhost&quot;);</span>
 <span class="fc" id="L26">        DB_DIRECTORY = properties.getProperty(&quot;DB_DIRECTORY&quot;,  &quot;db&quot;);</span>
-<span class="fc" id="L27">        LOG_LEVELS = Logger.convertLoggingStringsToEnums(getProp(&quot;LOG_LEVELS&quot;, &quot;DEBUG,TRACE,ASYNC_ERROR,AUDIT&quot;));</span>
+<span class="fc" id="L27">        LOG_LEVELS = convertLoggingStringsToEnums(getProp(&quot;LOG_LEVELS&quot;, &quot;DEBUG,TRACE,ASYNC_ERROR,AUDIT&quot;));</span>
 <span class="fc" id="L28">        USE_VIRTUAL = getProp(&quot;USE_VIRTUAL&quot;, false);</span>
 <span class="fc" id="L29">        KEYSTORE_PATH = properties.getProperty(&quot;KEYSTORE_PATH&quot;,  &quot;&quot;);</span>
 <span class="fc" id="L30">        KEYSTORE_PASSWORD = properties.getProperty(&quot;KEYSTORE_PASSWORD&quot;,  &quot;&quot;);</span>
@@ -42,7 +42,8 @@ public class Constants {
 <span class="fc" id="L42">        SUSPICIOUS_PATHS = getProp(&quot;SUSPICIOUS_PATHS&quot;, &quot;&quot;);</span>
 <span class="fc" id="L43">        START_TIME = System.currentTimeMillis();</span>
 <span class="fc" id="L44">        EXTRA_MIME_MAPPINGS = getProp(&quot;EXTRA_MIME_MAPPINGS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L45">        STATIC_FILE_CACHE_TIME = getProp(&quot;STATIC_FILE_CACHE_TIME&quot;, 60 * 5);</span>
+<span class="fc" id="L46">    }</span>
 
     /**
      * The port for our regular, non-encrypted server
@@ -171,11 +172,20 @@ public class Constants {
     public final List&lt;String&gt; EXTRA_MIME_MAPPINGS;
 
     /**
+     * Length of time, in seconds, for static files to be cached,
+     * per the provisions of the Cache-Control header, e.g.
+     * &lt;pre&gt;
+     *     {@code Cache-Control: max-age=300}
+     * &lt;/pre&gt;
+     */
+    public final long STATIC_FILE_CACHE_TIME;
+
+    /**
      * A helper method to remove some redundant boilerplate code for grabbing
      * configuration values from app.config
      */
     private int getProp(String propName, int propDefault) {
-<span class="fc" id="L178">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L188">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -183,7 +193,7 @@ public class Constants {
      * configuration values from app.config
      */
     private boolean getProp(String propName, boolean propDefault) {
-<span class="fc" id="L186">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L196">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -191,7 +201,7 @@ public class Constants {
      * configuration values from app.config
      */
     private List&lt;String&gt; getProp(String propName, String propDefault) {
-<span class="fc" id="L194">        return Arrays.asList(properties.getProperty(propName, propDefault).split(&quot;,&quot;));</span>
+<span class="fc" id="L204">        return Arrays.asList(properties.getProperty(propName, propDefault).split(&quot;,&quot;));</span>
     }
 
 
@@ -199,18 +209,35 @@ public class Constants {
      * This overload allows you to specify that the contents of the
      * properties file should be shown when it's read.
      */
-    public Properties getConfiguredProperties() {
-<span class="fc" id="L203">        var properties = new Properties();</span>
-<span class="fc" id="L204">        String fileName = &quot;app.config&quot;;</span>
-<span class="fc" id="L205">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
-<span class="fc" id="L206">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
+    private Properties getConfiguredProperties() {
+<span class="fc" id="L213">        var properties = new Properties();</span>
+<span class="fc" id="L214">        String fileName = &quot;app.config&quot;;</span>
+<span class="fc" id="L215">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
+<span class="fc" id="L216">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
                     &quot; found properties file at ./app.config.  Loading properties&quot;);
-<span class="fc" id="L208">            properties.load(fis);</span>
-<span class="nc" id="L209">        } catch (Exception ex) {</span>
-<span class="nc" id="L210">            System.out.println(Config.getConfigErrorMessage());</span>
-<span class="nc" id="L211">            System.exit(1);</span>
-<span class="fc" id="L212">        }</span>
-<span class="fc" id="L213">        return properties;</span>
+<span class="fc" id="L218">            properties.load(fis);</span>
+<span class="nc" id="L219">        } catch (Exception ex) {</span>
+<span class="nc" id="L220">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
+<span class="nc" id="L221">            System.exit(1);</span>
+<span class="fc" id="L222">        }</span>
+<span class="fc" id="L223">        return properties;</span>
+    }
+
+
+    /**
+     * Given a list of strings representing logging levels,
+     * convert it to a list of enums.  Log levels are enumerated
+     * in {@link LoggingLevel}.
+     */
+    private List&lt;LoggingLevel&gt; convertLoggingStringsToEnums(List&lt;String&gt; logLevels) {
+<span class="fc" id="L233">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
+<span class="fc" id="L234">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
+<span class="fc" id="L237">                enabledLoggingLevels.add(t);</span>
+            }
+        }
+<span class="fc" id="L240">        return enabledLoggingLevels;</span>
     }
 }
 

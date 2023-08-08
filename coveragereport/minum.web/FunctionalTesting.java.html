@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FunctionalTesting.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">minum.web</a> &gt; <span class="el_source">FunctionalTesting.java</span></div><h1>FunctionalTesting.java</h1><pre class="source lang-java linenums">package minum.web;
+
+import minum.Context;
+import minum.htmlparsing.HtmlParseNode;
+import minum.htmlparsing.HtmlParser;
+import minum.htmlparsing.TagName;
+import minum.logging.ILogger;
+import minum.utils.MyThread;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+/**
+ * Tools to enable system-wide integration testing
+ */
+public class FunctionalTesting {
+
+    private final Context context;
+    private final WebEngine webEngine;
+    private final Server primaryServer;
+    private final InputStreamUtils inputStreamUtils;
+    private final WebFramework webFramework;
+    private final ILogger logger;
+
+<span class="fc" id="L30">    public FunctionalTesting(Context context) {</span>
+<span class="fc" id="L31">        this.context = context;</span>
+<span class="fc" id="L32">        this.webEngine = context.getFullSystem().getWebEngine();</span>
+<span class="fc" id="L33">        this.primaryServer = context.getFullSystem().getServer();</span>
+<span class="fc" id="L34">        this.inputStreamUtils = new InputStreamUtils(context);</span>
+<span class="fc" id="L35">        this.webFramework = context.getFullSystem().getWebFramework();</span>
+<span class="fc" id="L36">        this.logger = context.getLogger();</span>
+<span class="fc" id="L37">    }</span>
+
+    /**
+     * A {@link Response} designed to work with {@link FunctionalTesting}
+     */
+<span class="fc" id="L42">    public record TestResponse(StatusLine statusLine, Headers headers, Body body) {</span>
+
+        /**
+         * Presuming the response body is HTML, search for a single
+         * HTML element with the given tag name and attributes.
+         *
+         * @return {@link HtmlParseNode#EMPTY} if none found, a particular node if found,
+         * and an exception thrown if more than one found.
+         */
+        public HtmlParseNode searchOne(TagName tagName, Map&lt;String, String&gt; attributes) {
+<span class="fc" id="L52">            var htmlParser = new HtmlParser();</span>
+<span class="fc" id="L53">            var nodes = htmlParser.parse(body.asString());</span>
+<span class="fc" id="L54">            return htmlParser.searchOne(nodes, tagName, attributes);</span>
+        }
+    }
+
+    /**
+     * Send a GET request (as a client to the server)
+     * @param path the path to an endpoint, that is, the value for path
+     *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
+     *             for pathname
+     */
+    public TestResponse get(String path) throws IOException {
+<span class="fc" id="L65">        return get(path, List.of());</span>
+    }
+
+    /**
+     * Send a GET request (as a client to the server)
+     * @param path the path to an endpoint, that is, the value for path
+     *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
+     *             for pathname
+     * @param extraHeaders a list containing extra headers you need the client to send, for
+     *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
+     */
+    public TestResponse get(String path, List&lt;String&gt; extraHeaders) throws IOException {
+<span class="fc" id="L77">        Body body = Body.EMPTY(context);</span>
+<span class="fc" id="L78">        Headers headers = null;</span>
+<span class="fc" id="L79">        StatusLine statusLine = null;</span>
+<span class="fc" id="L80">        try (var client = webEngine.startClient(primaryServer)) {</span>
+<span class="fc" id="L81">            InputStream is = client.getInputStream();</span>
+
+            // send a GET request
+<span class="fc" id="L84">            client.sendHttpLine(&quot;GET /&quot;+path+&quot; HTTP/1.1&quot;);</span>
+<span class="fc" id="L85">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
+<span class="fc" id="L87">                client.sendHttpLine(header);</span>
+<span class="fc" id="L88">            }</span>
+<span class="fc" id="L89">            client.sendHttpLine(&quot;&quot;);</span>
+
+<span class="fc" id="L91">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
+
+<span class="fc" id="L93">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
+
+<span class="fc" id="L95">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
+
+
+            // Determine whether there is a body (a block of data) in this request
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (webFramework.isThereIsABody(headers)) {</span>
+<span class="fc" id="L100">                Headers finalHeaders = headers;</span>
+<span class="fc" id="L101">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
+<span class="fc" id="L102">                body = bodyProcessor.extractData(is, headers);</span>
+            }
+
+<span class="nc" id="L105">        } catch (SocketException ex) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;)) {</span>
+                /*
+                When the server is done communicating with us, it will close
+                the socket on its side, which will cause a SocketException on our side.
+                If the message matches what we have here, it's just that happening, no
+                need to pass it up further, it's expected and ok.
+                 */
+            } else {
+<span class="nc" id="L114">                throw ex;</span>
+            }
+<span class="fc" id="L116">        }</span>
+<span class="fc" id="L117">        MyThread.sleep(100);</span>
+<span class="fc" id="L118">        return new TestResponse(statusLine, headers, body);</span>
+    }
+
+    /**
+     * Send a POST request (as a client to the server)
+     * @param path the path to an endpoint, that is, the value for path
+     *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
+     *             for pathname
+     * @param payload a body payload in string form
+     */
+    public TestResponse post(String path, String payload) throws IOException {
+<span class="fc" id="L129">        return post(path, payload, List.of());</span>
+    }
+
+    /**
+     * Send a POST request (as a client to the server)
+     * @param path the path to an endpoint, that is, the value for path
+     *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
+     *             for pathname
+     * @param payload a body payload in string form
+     * @param extraHeaders a list containing extra headers you need the client to send, for
+     *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
+     */
+    public TestResponse post(String path, String payload, List&lt;String&gt; extraHeaders) throws IOException {
+<span class="fc" id="L142">        return post(path, payload.getBytes(StandardCharsets.UTF_8), extraHeaders);</span>
+    }
+
+    /**
+     * Send a POST request (as a client to the server)
+     * @param path the path to an endpoint, that is, the value for path
+     *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
+     *             for pathname
+     * @param payload a body payload in byte array form
+     * @param extraHeaders a list containing extra headers you need the client to send, for
+     *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
+     */
+    public TestResponse post(String path, byte[] payload, List&lt;String&gt; extraHeaders) throws IOException {
+<span class="fc" id="L155">        Body body = Body.EMPTY(context);</span>
+<span class="fc" id="L156">        Headers headers = null;</span>
+<span class="fc" id="L157">        StatusLine statusLine = null;</span>
+<span class="fc" id="L158">        try (var client = webEngine.startClient(primaryServer)) {</span>
+<span class="fc" id="L159">            InputStream is = client.getInputStream();</span>
+
+            // send a POST request
+<span class="fc" id="L162">            client.sendHttpLine(&quot;POST /&quot;+path+&quot; HTTP/1.1&quot;);</span>
+<span class="fc" id="L163">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
+<span class="fc" id="L164">            client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
+<span class="fc" id="L165">            client.sendHttpLine(&quot;Content-Type: application/x-www-form-urlencoded&quot;);</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
+<span class="fc" id="L167">                client.sendHttpLine(header);</span>
+<span class="fc" id="L168">            }</span>
+<span class="fc" id="L169">            client.sendHttpLine(&quot;&quot;);</span>
+<span class="fc" id="L170">            client.send(payload);</span>
+
+<span class="fc" id="L172">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
+
+<span class="fc" id="L174">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
+
+<span class="fc" id="L176">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
+
+
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">            if (webFramework.isThereIsABody(headers)) {</span>
+<span class="nc" id="L180">                Headers finalHeaders = headers;</span>
+<span class="nc" id="L181">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
+<span class="nc" id="L182">                body = bodyProcessor.extractData(is, headers);</span>
+            }
+
+<span class="nc" id="L185">        } catch (SocketException ex) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;)) {</span>
+                /*
+                When the server is done communicating with us, it will close
+                the socket on its side, which will cause a SocketException on our side.
+                If the message matches what we have here, it's just that happening, no
+                need to pass it up further, it's expected and ok.
+                 */
+            } else {
+<span class="nc" id="L194">                throw ex;</span>
+            }
+<span class="fc" id="L196">        }</span>
+<span class="fc" id="L197">        MyThread.sleep(100);</span>
+<span class="fc" id="L198">        return new TestResponse(statusLine, headers, body);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

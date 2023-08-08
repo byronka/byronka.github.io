@@ -8,7 +8,11 @@ import java.security.spec.KeySpec;
 /**
  * Handy helpers for dealing with cryptographic functions
  */
-<span class="nc" id="L11">public class CryptoUtils {</span>
+public class CryptoUtils {
+
+    private CryptoUtils() {
+        // cannot construct
+    }
 
     /**
      * Converts an array of bytes to their corresponding hex string
@@ -16,13 +20,13 @@ import java.security.spec.KeySpec;
      * @return a hex string of that array
      */
     public static String bytesToHex(byte[] bytes) {
-<span class="fc" id="L19">        StringBuilder hexString = new StringBuilder();</span>
-<span class="fc bfc" id="L20" title="All 2 branches covered.">        for (byte b : bytes) {</span>
-<span class="fc" id="L21">            String hex = Integer.toHexString(0xff &amp; b);</span>
-<span class="fc bfc" id="L22" title="All 2 branches covered.">            if (hex.length() == 1) hexString.append('0');</span>
-<span class="fc" id="L23">            hexString.append(hex);</span>
+<span class="fc" id="L23">        StringBuilder hexString = new StringBuilder();</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        for (byte b : bytes) {</span>
+<span class="fc" id="L25">            String hex = Integer.toHexString(0xff &amp; b);</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">            if (hex.length() == 1) hexString.append('0');</span>
+<span class="fc" id="L27">            hexString.append(hex);</span>
         }
-<span class="fc" id="L25">        return hexString.toString();</span>
+<span class="fc" id="L29">        return hexString.toString();</span>
     }
 
     /**
@@ -33,15 +37,15 @@ import java.security.spec.KeySpec;
      * See docs/http_protocol/password_storage_cheat_sheet
      */
     public static String createPasswordHash(String password, String salt) {
-<span class="fc" id="L36">        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), 65536, 128);</span>
+<span class="fc" id="L40">        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), 65536, 128);</span>
         final SecretKeyFactory factory;
 
         try {
-<span class="fc" id="L40">            factory = SecretKeyFactory.getInstance(&quot;PBKDF2WithHmacSHA1&quot;);</span>
-<span class="fc" id="L41">            final byte[] hashed = factory.generateSecret(spec).getEncoded();</span>
-<span class="fc" id="L42">            return bytesToHex(hashed);</span>
-<span class="nc" id="L43">        } catch (Exception e) {</span>
-<span class="nc" id="L44">            throw new RuntimeException(e);</span>
+<span class="fc" id="L44">            factory = SecretKeyFactory.getInstance(&quot;PBKDF2WithHmacSHA1&quot;);</span>
+<span class="fc" id="L45">            final byte[] hashed = factory.generateSecret(spec).getEncoded();</span>
+<span class="fc" id="L46">            return bytesToHex(hashed);</span>
+<span class="nc" id="L47">        } catch (Exception e) {</span>
+<span class="nc" id="L48">            throw new RuntimeException(e);</span>
         }
     }
 

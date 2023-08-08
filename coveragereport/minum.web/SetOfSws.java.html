@@ -15,28 +15,26 @@ import static minum.utils.Invariants.mustBeFalse;
  * in our system.  It exists so that we can keep tabs on how many
  * open sockets we have, and can then find them all in one place
  * when we need to kill them at server shutdown.
+ * @param nameOfSet This parameter is used to distinguish different servers'
+ *        list of sockets (e.g.
+ *        the server for 80 vs 443)
  */
-<span class="fc" id="L19">public record SetOfSws(</span>
+<span class="fc" id="L22">record SetOfSws(</span>
         ConcurrentSet&lt;ISocketWrapper&gt; data,
         ILogger logger,
-       /*
-       This parameter is used to distinguish different servers'
-       list of sockets (e.g.
-       the server for 80 vs 443)
-        */
         String nameOfSet) {
 
-    public void add(ISocketWrapper sw) {
-<span class="fc" id="L30">        data().add(sw);</span>
-<span class="fc" id="L31">        int size = data().size();</span>
-<span class="fc" id="L32">        logger.logTrace(() -&gt; nameOfSet + &quot; added &quot; + sw + &quot; to SetOfSws. size: &quot; + size);</span>
-<span class="fc" id="L33">    }</span>
+    void add(ISocketWrapper sw) {
+<span class="fc" id="L28">        data().add(sw);</span>
+<span class="fc" id="L29">        int size = data().size();</span>
+<span class="fc" id="L30">        logger.logTrace(() -&gt; nameOfSet + &quot; added &quot; + sw + &quot; to SetOfSws. size: &quot; + size);</span>
+<span class="fc" id="L31">    }</span>
 
-    public void remove(ISocketWrapper sw) {
-<span class="fc" id="L36">        data().remove(sw);</span>
-<span class="fc" id="L37">        int size = data().size();</span>
-<span class="fc" id="L38">        logger.logTrace(() -&gt; nameOfSet +&quot; removed &quot; + sw + &quot; from SetOfSws. size: &quot; + size);</span>
-<span class="fc" id="L39">    }</span>
+    void remove(ISocketWrapper sw) {
+<span class="fc" id="L34">        data().remove(sw);</span>
+<span class="fc" id="L35">        int size = data().size();</span>
+<span class="fc" id="L36">        logger.logTrace(() -&gt; nameOfSet +&quot; removed &quot; + sw + &quot; from SetOfSws. size: &quot; + size);</span>
+<span class="fc" id="L37">    }</span>
 
     /**
      * This is a program used during testing so we can find the server
@@ -49,16 +47,16 @@ import static minum.utils.Invariants.mustBeFalse;
      * For that reason, if we come in here and don't find it initially, we'll
      * sleep and then try again, up to three times.
      */
-    public ISocketWrapper getSocketWrapperByRemoteAddr(String address, int port) {
-<span class="fc" id="L53">        int maxLoops = 3;</span>
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        for (int loopCount = 0; loopCount &lt; maxLoops; loopCount++ ) {</span>
-<span class="fc" id="L55">            List&lt;ISocketWrapper&gt; servers = data()</span>
-<span class="fc" id="L56">                    .asStream()</span>
-<span class="fc" id="L57">                    .filter((x) -&gt; x.getRemoteAddrWithPort().equals(new InetSocketAddress(address, port)))</span>
-<span class="fc" id="L58">                    .toList();</span>
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">            mustBeFalse(servers.size() &gt; 1, &quot;Too many sockets found with that address&quot;);</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (servers.size() == 1) {</span>
-<span class="fc" id="L61">                return servers.get(0);</span>
+    ISocketWrapper getSocketWrapperByRemoteAddr(String address, int port) {
+<span class="fc" id="L51">        int maxLoops = 3;</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        for (int loopCount = 0; loopCount &lt; maxLoops; loopCount++ ) {</span>
+<span class="fc" id="L53">            List&lt;ISocketWrapper&gt; servers = data()</span>
+<span class="fc" id="L54">                    .asStream()</span>
+<span class="fc" id="L55">                    .filter((x) -&gt; x.getRemoteAddrWithPort().equals(new InetSocketAddress(address, port)))</span>
+<span class="fc" id="L56">                    .toList();</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">            mustBeFalse(servers.size() &gt; 1, &quot;Too many sockets found with that address&quot;);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            if (servers.size() == 1) {</span>
+<span class="fc" id="L59">                return servers.get(0);</span>
             }
 
             // if we got here, we didn't find a server in the list - probably because the TCP
@@ -67,17 +65,17 @@ import static minum.utils.Invariants.mustBeFalse;
             //
             // on the other hand, this code should probably only be called in testing, so maybe fewer
             // out-of-bounds problems?
-<span class="fc" id="L70">            int finalLoopCount = loopCount;</span>
-<span class="fc" id="L71">            logger.logDebug(() -&gt; String.format(&quot;no server found, sleeping on it... (attempt %d)&quot;, finalLoopCount + 1));</span>
-<span class="fc" id="L72">            MyThread.sleep(10);</span>
+<span class="fc" id="L68">            int finalLoopCount = loopCount;</span>
+<span class="fc" id="L69">            logger.logDebug(() -&gt; String.format(&quot;no server found, sleeping on it... (attempt %d)&quot;, finalLoopCount + 1));</span>
+<span class="fc" id="L70">            MyThread.sleep(10);</span>
         }
-<span class="nc" id="L74">        throw new RuntimeException(&quot;No socket found with that address&quot;);</span>
+<span class="nc" id="L72">        throw new RuntimeException(&quot;No socket found with that address&quot;);</span>
     }
 
-    public void stopAllServers() throws IOException {
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        for(var s : data()) {</span>
-<span class="fc" id="L79">            s.close();</span>
-<span class="fc" id="L80">        }</span>
-<span class="fc" id="L81">    }</span>
+    void stopAllServers() throws IOException {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        for(var s : data()) {</span>
+<span class="fc" id="L77">            s.close();</span>
+<span class="fc" id="L78">        }</span>
+<span class="fc" id="L79">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

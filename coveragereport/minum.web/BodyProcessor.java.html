@@ -24,7 +24,7 @@ import static minum.utils.Invariants.mustBeTrue;
  * This code is responsible for extracting the {@link Body} from
  * an HTTP request.
  */
-public class BodyProcessor {
+class BodyProcessor {
 
     private final ILogger logger;
     private final InputStreamUtils inputStreamUtils;
@@ -37,9 +37,9 @@ public class BodyProcessor {
      * we would rather not include all that data in the logs.
      * So we will cap out at this value.
      */
-    public final static int MAX_SIZE_DATA_RETURNED_IN_EXCEPTION = 1024;
+    final static int MAX_SIZE_DATA_RETURNED_IN_EXCEPTION = 1024;
 
-<span class="fc" id="L42">    public BodyProcessor(Context context) {</span>
+<span class="fc" id="L42">    BodyProcessor(Context context) {</span>
 <span class="fc" id="L43">        this.context = context;</span>
 <span class="fc" id="L44">        this.logger = context.getLogger();</span>
 <span class="fc" id="L45">        this.inputStreamUtils = new InputStreamUtils(context);</span>
@@ -57,7 +57,7 @@ public class BodyProcessor {
      * can stop reading at precisely the right point.  There's simply no
      * other way to reasonably do this.
      */
-    public Body extractData(InputStream is, Headers h) throws IOException {
+    Body extractData(InputStream is, Headers h) throws IOException {
 <span class="fc" id="L61">        final var contentType = h.contentType();</span>
 
 <span class="pc bpc" id="L63" title="1 of 2 branches missed.">        byte[] bodyBytes = h.contentLength() &gt; 0 ?</span>
@@ -108,7 +108,7 @@ public class BodyProcessor {
      * &lt;p&gt;
      * for example, {@code valuea=3&amp;valueb=this+is+something}
      */
-    public Body parseUrlEncodedForm(String input) {
+    Body parseUrlEncodedForm(String input) {
 <span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (input.isEmpty()) return Body.EMPTY(context);</span>
 <span class="fc" id="L113">        final var postedPairs = new HashMap&lt;String, byte[]&gt;();</span>
 
@@ -172,7 +172,7 @@ public class BodyProcessor {
     /**
      * Extract multipart/form data from a body.  See docs/http_protocol/returning_values_from_multipart_rfc_7578.txt
      */
-    public Body parseMultiform(byte[] body, String boundaryValue) {
+    Body parseMultiform(byte[] body, String boundaryValue) {
         // how to split this up? It's a mix of strings and bytes.
 <span class="fc" id="L177">        List&lt;byte[]&gt; partitions = split(body, &quot;--&quot; + boundaryValue);</span>
 <span class="fc" id="L178">        final String nameEquals = &quot;name=&quot;;</span>
@@ -191,8 +191,8 @@ public class BodyProcessor {
 <span class="nc" id="L191">                throw new RuntimeException(e);</span>
 <span class="fc" id="L192">            }</span>
 
-<span class="fc" id="L194">            String contentDisposition = headers.getHeaderStrings().stream()</span>
-<span class="fc bfc" id="L195" title="All 4 branches covered.">                    .filter(x -&gt; x.toLowerCase().contains(&quot;form-data&quot;) &amp;&amp; x.contains(nameEquals)).collect(Collectors.joining());</span>
+<span class="fc" id="L194">            List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">            String contentDisposition = String.join(&quot;;&quot;, cds == null ? List.of(&quot;&quot;) : cds);</span>
 
 <span class="fc" id="L197">            Matcher matcher = multiformNameRegex.matcher(contentDisposition);</span>
 
@@ -228,7 +228,7 @@ public class BodyProcessor {
      * Given a multipart-formatted data, return a list of byte arrays
      * between the boundary values
      */
-    public List&lt;byte[]&gt; split(byte[] body, String boundaryValue) {
+    List&lt;byte[]&gt; split(byte[] body, String boundaryValue) {
 <span class="fc" id="L232">        List&lt;byte[]&gt; result = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L233">        List&lt;Integer&gt; indexesOfEndsOfBoundaries = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L234">        byte[] boundaryValueBytes = boundaryValue.getBytes(StandardCharsets.UTF_8);</span>

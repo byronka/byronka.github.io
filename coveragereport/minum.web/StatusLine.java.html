@@ -9,7 +9,7 @@ import static minum.utils.Invariants.mustBeTrue;
 /**
  * This class represents the text that is sent back in a {@link Response}
  */
-<span class="fc" id="L12">public record StatusLine(StatusCode status, WebEngine.HttpVersion version, String rawValue) {</span>
+<span class="fc" id="L12">public record StatusLine(StatusCode status, HttpVersion version, String rawValue) {</span>
 
     /**
      * This is the regex used to analyze a status line sent by the server and
@@ -101,14 +101,14 @@ import static minum.utils.Invariants.mustBeTrue;
      */
     public static StatusLine extractStatusLine(String value) {
 <span class="pc bpc" id="L103" title="1 of 4 branches missed.">        if (value == null || value.isBlank()) {</span>
-<span class="fc" id="L104">            return new StatusLine(StatusCode.NULL, WebEngine.HttpVersion.NONE, &quot;&quot;);</span>
+<span class="fc" id="L104">            return new StatusLine(StatusCode.NULL, HttpVersion.NONE, &quot;&quot;);</span>
         }
 <span class="fc" id="L106">        Matcher mr = StatusLine.statusLineRegex.matcher(value);</span>
 <span class="fc" id="L107">        mustBeTrue(mr.matches(), String.format(&quot;%s must match the statusLinePattern: %s&quot;, value, statusLinePattern));</span>
 <span class="fc" id="L108">        String version = mr.group(1);</span>
-<span class="pc bpc" id="L109" title="2 of 3 branches missed.">        WebEngine.HttpVersion httpVersion = switch (version) {</span>
-<span class="fc" id="L110">            case &quot;1.1&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ONE;</span>
-<span class="nc" id="L111">            case &quot;1.0&quot; -&gt; WebEngine.HttpVersion.ONE_DOT_ZERO;</span>
+<span class="pc bpc" id="L109" title="2 of 3 branches missed.">        HttpVersion httpVersion = switch (version) {</span>
+<span class="fc" id="L110">            case &quot;1.1&quot; -&gt; HttpVersion.ONE_DOT_ONE;</span>
+<span class="nc" id="L111">            case &quot;1.0&quot; -&gt; HttpVersion.ONE_DOT_ZERO;</span>
 <span class="pc" id="L112">            default -&gt; throw new RuntimeException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
         };
 <span class="fc" id="L114">        StatusCode status = StatusCode.findByCode(Integer.parseInt(mr.group(2)));</span>

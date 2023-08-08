@@ -20,7 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  *     this was the only way to free ourselves during initialization / shutdown.
  * &lt;/p&gt;
  */
-public class LoggingActionQueue {
+class LoggingActionQueue {
     private final String name;
     private final ExecutorService executorService;
     private final LinkedBlockingQueue&lt;RunnableWithDescription&lt;?&gt;&gt; queue;
@@ -28,7 +28,7 @@ public class LoggingActionQueue {
     private Thread queueThread;
     private final Constants constants;
 
-<span class="fc" id="L31">    public LoggingActionQueue(String name, ExecutorService executorService, Constants constants) {</span>
+<span class="fc" id="L31">    LoggingActionQueue(String name, ExecutorService executorService, Constants constants) {</span>
 <span class="fc" id="L32">        this.name = name;</span>
 <span class="fc" id="L33">        this.executorService = executorService;</span>
 <span class="fc" id="L34">        this.queue = new LinkedBlockingQueue&lt;&gt;();</span>
@@ -38,7 +38,7 @@ public class LoggingActionQueue {
     // Regarding the InfiniteLoopStatement - indeed, we expect that the while loop
     // below is an infinite loop unless there's an exception thrown, that's what it is.
     @SuppressWarnings(&quot;InfiniteLoopStatement&quot;)
-    public LoggingActionQueue initialize() {
+    LoggingActionQueue initialize() {
 <span class="fc" id="L42">        Runnable queueThread = () -&gt; {</span>
 <span class="fc" id="L43">            Thread.currentThread().setName(name);</span>
 <span class="fc" id="L44">            this.queueThread = Thread.currentThread();</span>
@@ -72,7 +72,7 @@ public class LoggingActionQueue {
      * Adds something to the queue to be processed.
      * @param action an action to take with no return value.  (this uses callable so we can collect exceptions)
      */
-    public void enqueue(String description, ThrowingRunnable&lt;?&gt; action) {
+    void enqueue(String description, ThrowingRunnable&lt;?&gt; action) {
 <span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (! stop) {</span>
 <span class="fc" id="L77">            queue.add(new RunnableWithDescription&lt;&gt;(action, description));</span>
         }
@@ -83,7 +83,7 @@ public class LoggingActionQueue {
      * @param count how many loops to wait before we crash it closed
      * @param sleepTime how long to wait in milliseconds between loops
      */
-    public void stop(int count, int sleepTime) {
+    void stop(int count, int sleepTime) {
 <span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping queue &quot; + this);</span>
 <span class="fc" id="L88">        stop = true;</span>
 <span class="pc bpc" id="L89" title="1 of 2 branches missed.">        for (int i = 0; i &lt; count; i++) {</span>
