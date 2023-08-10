@@ -44,35 +44,30 @@ import static minum.utils.Invariants.mustBeTrue;
      * finds more than one match, it will throw an exception.
      * If none are found, HtmlParseNode.EMPTY is returned.
      */
-    public HtmlParseNode searchOne(TagName tagName, Map&lt;String, String&gt; attributes) {
+    public List&lt;HtmlParseNode&gt; search(TagName tagName, Map&lt;String, String&gt; attributes) {
 <span class="fc" id="L48">        var myList = new ArrayList&lt;HtmlParseNode&gt;();</span>
 <span class="fc" id="L49">        recursiveTreeWalkSearch(myList, tagName, attributes);</span>
-<span class="pc bpc" id="L50" title="1 of 4 branches missed.">        mustBeTrue(myList.size() == 0 || myList.size() == 1, &quot;More than 1 node found.  Here they are:&quot; + myList);</span>
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (myList.size() == 0) {</span>
-<span class="fc" id="L52">            return HtmlParseNode.EMPTY;</span>
-        } else {
-<span class="fc" id="L54">            return myList.get(0);</span>
-        }
+<span class="fc" id="L50">        return myList;</span>
     }
 
     private void recursiveTreeWalkSearch(ArrayList&lt;HtmlParseNode&gt; myList, TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc bfc" id="L59" title="All 4 branches covered.">        if (this.tagInfo().tagName().equals(tagName) &amp;&amp; this.tagInfo().attributes().entrySet().containsAll(attributes.entrySet())) {</span>
-<span class="fc" id="L60">            myList.add(this);</span>
+<span class="fc bfc" id="L54" title="All 4 branches covered.">        if (this.tagInfo().tagName().equals(tagName) &amp;&amp; this.tagInfo().attributes().entrySet().containsAll(attributes.entrySet())) {</span>
+<span class="fc" id="L55">            myList.add(this);</span>
         }
-<span class="fc bfc" id="L62" title="All 2 branches covered.">        for (var htmlParseNode : innerContent) {</span>
-<span class="fc" id="L63">            htmlParseNode.recursiveTreeWalkSearch(myList, tagName, attributes);</span>
-<span class="fc" id="L64">        }</span>
-<span class="fc" id="L65">    }</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (var htmlParseNode : innerContent) {</span>
+<span class="fc" id="L58">            htmlParseNode.recursiveTreeWalkSearch(myList, tagName, attributes);</span>
+<span class="fc" id="L59">        }</span>
+<span class="fc" id="L60">    }</span>
 
     /**
      * If the element you're looking at has just one inner
      * content item, and it's a CHARACTERS element, return it.
      */
     public String innerText() {
-<span class="pc bpc" id="L72" title="2 of 4 branches missed.">       if (innerContent.size() == 1 &amp;&amp; innerContent.get(0).type == ParseNodeType.CHARACTERS) {</span>
-<span class="fc" id="L73">           return innerContent.get(0).textContent;</span>
+<span class="pc bpc" id="L67" title="2 of 4 branches missed.">       if (innerContent.size() == 1 &amp;&amp; innerContent.get(0).type == ParseNodeType.CHARACTERS) {</span>
+<span class="fc" id="L68">           return innerContent.get(0).textContent;</span>
        } else {
-<span class="nc" id="L75">           return &quot;&quot;;</span>
+<span class="nc" id="L70">           return &quot;&quot;;</span>
        }
     }
 

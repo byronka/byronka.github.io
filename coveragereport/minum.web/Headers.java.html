@@ -119,7 +119,7 @@ public class Headers{
     public String contentType() {
         // find the header that starts with content-type
 <span class="fc" id="L121">        List&lt;String&gt; cts = headerStrings.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).startsWith(&quot;content-type&quot;)).toList();</span>
-<span class="pc bpc" id="L122" title="1 of 4 branches missed.">        mustBeTrue(cts.isEmpty() || cts.size() == 1, &quot;The number of content-type headers must be exactly zero or one&quot;);</span>
+<span class="pc bpc" id="L122" title="1 of 4 branches missed.">        mustBeTrue(cts.isEmpty() || cts.size() == 1, &quot;The number of content-type headers must be exactly zero or one.  Recieved: &quot; + cts);</span>
 <span class="fc bfc" id="L123" title="All 2 branches covered.">        if (!cts.isEmpty()) {</span>
 <span class="fc" id="L124">            return cts.get(0);</span>
         }
@@ -135,7 +135,7 @@ public class Headers{
      */
     public int contentLength() {
 <span class="fc" id="L137">        List&lt;String&gt; cl = headerStrings.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).startsWith(&quot;content-length&quot;)).toList();</span>
-<span class="pc bpc" id="L138" title="1 of 4 branches missed.">        mustBeTrue(cl.isEmpty() || cl.size() == 1, &quot;The number of content-length headers must be exactly zero or one&quot;);</span>
+<span class="pc bpc" id="L138" title="1 of 4 branches missed.">        mustBeTrue(cl.isEmpty() || cl.size() == 1, &quot;The number of content-length headers must be exactly zero or one.  Received: &quot; + cl);</span>
 <span class="fc" id="L139">        int contentLength = -1;</span>
 <span class="fc bfc" id="L140" title="All 2 branches covered.">        if (!cl.isEmpty()) {</span>
 <span class="fc" id="L141">            Matcher clMatcher = contentLengthRegex.matcher(cl.get(0));</span>
@@ -188,7 +188,7 @@ public class Headers{
     }
 
     /**
-     * Allows a user to obtain any header value by its key.
+     * Allows a user to obtain any header value by its key, case-insensitively
      * @return a {@link List} of string values, or null
      * if no header was found.
      */
