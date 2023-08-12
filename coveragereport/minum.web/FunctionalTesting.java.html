@@ -130,6 +130,38 @@ public class FunctionalTesting {
 
     /**
      * Send a request as a client to the server
+     *
+     * &lt;p&gt;
+     *     This helper method is the same as {@link #send(StartLine.Verb, String, byte[], List)} except
+     *     that it will automatically set the body as empty
+     * &lt;/p&gt;
+     * @param path the path to an endpoint, that is, the value for path
+     *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
+     *             for pathname
+     * @param extraHeaders a list containing extra headers you need the client to send, for
+     *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
+     */
+    public TestResponse send(StartLine.Verb verb, String path, List&lt;String&gt; extraHeaders) throws IOException {
+<span class="nc" id="L145">        return send(verb, path, new byte[0], extraHeaders);</span>
+    }
+
+    /**
+     * Send a request as a client to the server
+     * &lt;p&gt;
+     *     This helper method is the same as {@link #send(StartLine.Verb, String, byte[], List)} except
+     *     it will set the body as empty and does not require any extra headers to be set. In this
+     *     case, the headers sent are very minimal.  See the source.
+     * &lt;/p&gt;
+     * @param path the path to an endpoint, that is, the value for path
+     *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
+     *             for pathname
+     */
+    public TestResponse send(StartLine.Verb verb, String path) throws IOException {
+<span class="nc" id="L160">        return send(verb, path, new byte[0], List.of());</span>
+    }
+
+    /**
+     * Send a request as a client to the server
      * @param path the path to an endpoint, that is, the value for path
      *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
      *             for pathname
@@ -138,38 +170,38 @@ public class FunctionalTesting {
      *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
      */
     public TestResponse send(StartLine.Verb verb, String path, byte[] payload, List&lt;String&gt; extraHeaders) throws IOException {
-<span class="fc" id="L141">        Body body = Body.EMPTY(context);</span>
-<span class="fc" id="L142">        Headers headers = null;</span>
-<span class="fc" id="L143">        StatusLine statusLine = null;</span>
-<span class="fc" id="L144">        try (var client = webEngine.startClient(primaryServer)) {</span>
-<span class="fc" id="L145">            InputStream is = client.getInputStream();</span>
+<span class="fc" id="L173">        Body body = Body.EMPTY(context);</span>
+<span class="fc" id="L174">        Headers headers = null;</span>
+<span class="fc" id="L175">        StatusLine statusLine = null;</span>
+<span class="fc" id="L176">        try (var client = webEngine.startClient(primaryServer)) {</span>
+<span class="fc" id="L177">            InputStream is = client.getInputStream();</span>
 
             // send a POST request
-<span class="fc" id="L148">            client.sendHttpLine(verb + &quot; /&quot;+path+&quot; HTTP/1.1&quot;);</span>
-<span class="fc" id="L149">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
-<span class="fc" id="L150">            client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
-<span class="fc bfc" id="L151" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
-<span class="fc" id="L152">                client.sendHttpLine(header);</span>
-<span class="fc" id="L153">            }</span>
-<span class="fc" id="L154">            client.sendHttpLine(&quot;&quot;);</span>
-<span class="fc" id="L155">            client.send(payload);</span>
+<span class="fc" id="L180">            client.sendHttpLine(verb + &quot; /&quot;+path+&quot; HTTP/1.1&quot;);</span>
+<span class="fc" id="L181">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
+<span class="fc" id="L182">            client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
+<span class="fc" id="L184">                client.sendHttpLine(header);</span>
+<span class="fc" id="L185">            }</span>
+<span class="fc" id="L186">            client.sendHttpLine(&quot;&quot;);</span>
+<span class="fc" id="L187">            client.send(payload);</span>
 
-<span class="fc" id="L157">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
+<span class="fc" id="L189">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
 
-<span class="fc" id="L159">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
+<span class="fc" id="L191">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
 
-<span class="fc" id="L161">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L193">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
 
 
-<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (webFramework.isThereIsABody(headers)) {</span>
-<span class="fc" id="L165">                Headers finalHeaders = headers;</span>
-<span class="fc" id="L166">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
-<span class="fc" id="L167">                body = bodyProcessor.extractData(is, headers);</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            if (webFramework.isThereIsABody(headers)) {</span>
+<span class="fc" id="L197">                Headers finalHeaders = headers;</span>
+<span class="fc" id="L198">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
+<span class="fc" id="L199">                body = bodyProcessor.extractData(is, headers);</span>
             }
 
-<span class="nc" id="L170">        } catch (SocketException ex) {</span>
-<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;) ||</span>
-<span class="nc bnc" id="L172" title="All 2 branches missed.">                    ex.getMessage().equals(&quot;Connection reset&quot;)) {</span>
+<span class="nc" id="L202">        } catch (SocketException ex) {</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;) ||</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                    ex.getMessage().equals(&quot;Connection reset&quot;)) {</span>
                 /*
                 When the server is done communicating with us, it will close
                 the socket on its side, which will cause a SocketException on our side.
@@ -177,11 +209,11 @@ public class FunctionalTesting {
                 need to pass it up further, it's expected and ok.
                  */
             } else {
-<span class="nc" id="L180">                throw ex;</span>
+<span class="nc" id="L212">                throw ex;</span>
             }
-<span class="fc" id="L182">        }</span>
+<span class="fc" id="L214">        }</span>
 
-<span class="fc" id="L184">        return new TestResponse(statusLine, headers, body);</span>
+<span class="fc" id="L216">        return new TestResponse(statusLine, headers, body);</span>
     }
 
 }
