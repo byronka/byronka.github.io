@@ -6,12 +6,12 @@ import minum.htmlparsing.HtmlParser;
 import minum.htmlparsing.TagName;
 import minum.logging.ILogger;
 import minum.utils.MyThread;
-import minum.utils.SearchUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -84,7 +84,8 @@ public class FunctionalTesting {
      *             for pathname
      */
     public TestResponse get(String path) throws IOException {
-<span class="fc" id="L87">        return get(path, List.of());</span>
+<span class="fc" id="L87">        ArrayList&lt;String&gt; headers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L88">        return send(StartLine.Verb.GET, path, new byte[0], headers);</span>
     }
 
     /**
@@ -96,48 +97,7 @@ public class FunctionalTesting {
      *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
      */
     public TestResponse get(String path, List&lt;String&gt; extraHeaders) throws IOException {
-<span class="fc" id="L99">        Body body = Body.EMPTY(context);</span>
-<span class="fc" id="L100">        Headers headers = null;</span>
-<span class="fc" id="L101">        StatusLine statusLine = null;</span>
-<span class="fc" id="L102">        try (var client = webEngine.startClient(primaryServer)) {</span>
-<span class="fc" id="L103">            InputStream is = client.getInputStream();</span>
-
-            // send a GET request
-<span class="fc" id="L106">            client.sendHttpLine(&quot;GET /&quot;+path+&quot; HTTP/1.1&quot;);</span>
-<span class="fc" id="L107">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
-<span class="fc" id="L109">                client.sendHttpLine(header);</span>
-<span class="fc" id="L110">            }</span>
-<span class="fc" id="L111">            client.sendHttpLine(&quot;&quot;);</span>
-
-<span class="fc" id="L113">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
-
-<span class="fc" id="L115">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
-
-<span class="fc" id="L117">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
-
-
-            // Determine whether there is a body (a block of data) in this request
-<span class="fc bfc" id="L121" title="All 2 branches covered.">            if (webFramework.isThereIsABody(headers)) {</span>
-<span class="fc" id="L122">                Headers finalHeaders = headers;</span>
-<span class="fc" id="L123">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
-<span class="fc" id="L124">                body = bodyProcessor.extractData(is, headers);</span>
-            }
-
-<span class="nc" id="L127">        } catch (SocketException ex) {</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;)) {</span>
-                /*
-                When the server is done communicating with us, it will close
-                the socket on its side, which will cause a SocketException on our side.
-                If the message matches what we have here, it's just that happening, no
-                need to pass it up further, it's expected and ok.
-                 */
-            } else {
-<span class="nc" id="L136">                throw ex;</span>
-            }
-<span class="fc" id="L138">        }</span>
-<span class="fc" id="L139">        MyThread.sleep(100);</span>
-<span class="fc" id="L140">        return new TestResponse(statusLine, headers, body);</span>
+<span class="fc" id="L100">        return send(StartLine.Verb.GET, path, new byte[0], extraHeaders);</span>
     }
 
     /**
@@ -148,7 +108,8 @@ public class FunctionalTesting {
      * @param payload a body payload in string form
      */
     public TestResponse post(String path, String payload) throws IOException {
-<span class="fc" id="L151">        return post(path, payload, List.of());</span>
+<span class="fc" id="L111">        ArrayList&lt;String&gt; headers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L112">        return post(path, payload, headers);</span>
     }
 
     /**
@@ -161,11 +122,14 @@ public class FunctionalTesting {
      *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
      */
     public TestResponse post(String path, String payload, List&lt;String&gt; extraHeaders) throws IOException {
-<span class="fc" id="L164">        return post(path, payload.getBytes(StandardCharsets.UTF_8), extraHeaders);</span>
+<span class="fc" id="L125">        var headers = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L126">        headers.add(&quot;Content-Type: application/x-www-form-urlencoded&quot;);</span>
+<span class="fc" id="L127">        headers.addAll(extraHeaders);</span>
+<span class="fc" id="L128">        return send(StartLine.Verb.POST, path, payload.getBytes(StandardCharsets.UTF_8), headers);</span>
     }
 
     /**
-     * Send a POST request (as a client to the server) using url encoding
+     * Send a request as a client to the server
      * @param path the path to an endpoint, that is, the value for path
      *            that is entered in {@link WebFramework#registerPath(StartLine.Verb, String, Function)}
      *             for pathname
@@ -173,39 +137,39 @@ public class FunctionalTesting {
      * @param extraHeaders a list containing extra headers you need the client to send, for
      *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
      */
-    public TestResponse post(String path, byte[] payload, List&lt;String&gt; extraHeaders) throws IOException {
-<span class="fc" id="L177">        Body body = Body.EMPTY(context);</span>
-<span class="fc" id="L178">        Headers headers = null;</span>
-<span class="fc" id="L179">        StatusLine statusLine = null;</span>
-<span class="fc" id="L180">        try (var client = webEngine.startClient(primaryServer)) {</span>
-<span class="fc" id="L181">            InputStream is = client.getInputStream();</span>
+    public TestResponse send(StartLine.Verb verb, String path, byte[] payload, List&lt;String&gt; extraHeaders) throws IOException {
+<span class="fc" id="L141">        Body body = Body.EMPTY(context);</span>
+<span class="fc" id="L142">        Headers headers = null;</span>
+<span class="fc" id="L143">        StatusLine statusLine = null;</span>
+<span class="fc" id="L144">        try (var client = webEngine.startClient(primaryServer)) {</span>
+<span class="fc" id="L145">            InputStream is = client.getInputStream();</span>
 
             // send a POST request
-<span class="fc" id="L184">            client.sendHttpLine(&quot;POST /&quot;+path+&quot; HTTP/1.1&quot;);</span>
-<span class="fc" id="L185">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
-<span class="fc" id="L186">            client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
-<span class="fc" id="L187">            client.sendHttpLine(&quot;Content-Type: application/x-www-form-urlencoded&quot;);</span>
-<span class="fc bfc" id="L188" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
-<span class="fc" id="L189">                client.sendHttpLine(header);</span>
-<span class="fc" id="L190">            }</span>
-<span class="fc" id="L191">            client.sendHttpLine(&quot;&quot;);</span>
-<span class="fc" id="L192">            client.send(payload);</span>
+<span class="fc" id="L148">            client.sendHttpLine(verb + &quot; /&quot;+path+&quot; HTTP/1.1&quot;);</span>
+<span class="fc" id="L149">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
+<span class="fc" id="L150">            client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
+<span class="fc" id="L152">                client.sendHttpLine(header);</span>
+<span class="fc" id="L153">            }</span>
+<span class="fc" id="L154">            client.sendHttpLine(&quot;&quot;);</span>
+<span class="fc" id="L155">            client.send(payload);</span>
 
-<span class="fc" id="L194">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
+<span class="fc" id="L157">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
 
-<span class="fc" id="L196">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
+<span class="fc" id="L159">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
 
-<span class="fc" id="L198">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L161">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
 
 
-<span class="pc bpc" id="L201" title="1 of 2 branches missed.">            if (webFramework.isThereIsABody(headers)) {</span>
-<span class="nc" id="L202">                Headers finalHeaders = headers;</span>
-<span class="nc" id="L203">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
-<span class="nc" id="L204">                body = bodyProcessor.extractData(is, headers);</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (webFramework.isThereIsABody(headers)) {</span>
+<span class="fc" id="L165">                Headers finalHeaders = headers;</span>
+<span class="fc" id="L166">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
+<span class="fc" id="L167">                body = bodyProcessor.extractData(is, headers);</span>
             }
 
-<span class="nc" id="L207">        } catch (SocketException ex) {</span>
-<span class="nc bnc" id="L208" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;)) {</span>
+<span class="nc" id="L170">        } catch (SocketException ex) {</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;) ||</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                    ex.getMessage().equals(&quot;Connection reset&quot;)) {</span>
                 /*
                 When the server is done communicating with us, it will close
                 the socket on its side, which will cause a SocketException on our side.
@@ -213,11 +177,11 @@ public class FunctionalTesting {
                 need to pass it up further, it's expected and ok.
                  */
             } else {
-<span class="nc" id="L216">                throw ex;</span>
+<span class="nc" id="L180">                throw ex;</span>
             }
-<span class="fc" id="L218">        }</span>
-<span class="fc" id="L219">        MyThread.sleep(100);</span>
-<span class="fc" id="L220">        return new TestResponse(statusLine, headers, body);</span>
+<span class="fc" id="L182">        }</span>
+
+<span class="fc" id="L184">        return new TestResponse(statusLine, headers, body);</span>
     }
 
 }

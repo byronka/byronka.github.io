@@ -149,7 +149,7 @@ public class TheBrig {
 <span class="fc" id="L149">                    List&lt;String&gt; keysToRemove = new ArrayList&lt;&gt;();</span>
                     // figure out which clients have paid their dues
 <span class="fc bfc" id="L151" title="All 2 branches covered.">                    for (var e : clientKeys.entrySet()) {</span>
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">                        if (e.getValue() &lt; now) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                        if (e.getValue() &lt; now) {</span>
 <span class="fc" id="L153">                            logger.logTrace(() -&gt; &quot;UnderInvestigation: &quot; + e.getKey() + &quot; has paid its dues and is getting released&quot;);</span>
 <span class="fc" id="L154">                            keysToRemove.add(e.getKey());</span>
                         }
@@ -209,28 +209,34 @@ public class TheBrig {
      * @param sentenceDuration length of stay, in milliseconds
      */
     public void sendToJail(String clientIdentifier, long sentenceDuration) {
-<span class="fc" id="L212">        lock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">        if (!constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="nc" id="L213">            return;</span>
+        }
+<span class="fc" id="L215">        lock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
         try {
-<span class="fc" id="L214">            logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds&quot;);</span>
-<span class="fc" id="L215">            clientKeys.put(clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="pc" id="L216">            var existingInmates = db.values().stream().filter(x -&gt; x.clientId.equals(clientIdentifier)).count();</span>
-<span class="pc bpc" id="L217" title="1 of 2 branches missed.">            mustBeTrue(existingInmates &lt; 2, &quot;count of inmates must be either 0 or 1, anything else is a bug&quot;);</span>
-<span class="pc bpc" id="L218" title="1 of 2 branches missed.">            if (existingInmates == 0) {</span>
-<span class="fc" id="L219">                Inmate newInmate = new Inmate(0L, clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="fc" id="L220">                db.write(newInmate);</span>
+<span class="fc" id="L217">            logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds&quot;);</span>
+<span class="fc" id="L218">            clientKeys.put(clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
+<span class="pc" id="L219">            var existingInmates = db.values().stream().filter(x -&gt; x.clientId.equals(clientIdentifier)).count();</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">            mustBeTrue(existingInmates &lt; 2, &quot;count of inmates must be either 0 or 1, anything else is a bug&quot;);</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">            if (existingInmates == 0) {</span>
+<span class="fc" id="L222">                Inmate newInmate = new Inmate(0L, clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
+<span class="fc" id="L223">                db.write(newInmate);</span>
             }
         } finally {
-<span class="fc" id="L223">            lock.unlock();</span>
+<span class="fc" id="L226">            lock.unlock();</span>
         }
 
-<span class="fc" id="L226">    }</span>
+<span class="fc" id="L229">    }</span>
 
     public boolean isInJail(String clientIdentifier) {
-<span class="fc" id="L229">        return clientKeys.containsKey(clientIdentifier);</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">        if (!constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="nc" id="L233">            return false;</span>
+        }
+<span class="fc" id="L235">        return clientKeys.containsKey(clientIdentifier);</span>
     }
 
     public List&lt;Map.Entry&lt;String, Long&gt;&gt; getInmates() {
-<span class="nc" id="L233">        return clientKeys.entrySet().stream().toList();</span>
+<span class="nc" id="L239">        return clientKeys.entrySet().stream().toList();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
