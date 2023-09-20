@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Logger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.logging</a> &gt; <span class="el_source">Logger.java</span></div><h1>Logger.java</h1><pre class="source lang-java linenums">package com.renomad.minum.logging;
+
+import com.renomad.minum.Constants;
+
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
+import static com.renomad.minum.utils.TimeUtils.getTimestampIsoInstant;
+
+/**
+ * Implementation of {@link ILogger}
+ */
+public class Logger implements ILogger {
+    /**
+     * The {@link LoggingActionQueue} that handles all
+     * our messages thread-safely by taking
+     * them off the top of a queue.
+     */
+    protected final LoggingActionQueue loggingActionQueue;
+    private final ExecutorService executorService;
+    private Map&lt;LoggingLevel, Boolean&gt; activeLogLevels;
+
+<span class="fc" id="L25">    public Logger(Constants constants, ExecutorService executorService, String name) {</span>
+<span class="fc" id="L26">        this.executorService = executorService;</span>
+<span class="fc" id="L27">        loggingActionQueue = new LoggingActionQueue(&quot;loggerPrinter&quot; + name, executorService, constants).initialize();</span>
+<span class="fc" id="L28">        toggleDefaultLogging(constants.LOG_LEVELS);</span>
+<span class="fc" id="L29">    }</span>
+
+    /**
+     * for the various kinds of minum.logging which can be enabled/disabled,
+     * turn on the expected types of minum.logging.
+     */
+    private void toggleDefaultLogging(List&lt;LoggingLevel&gt; enabledLoggingLevels) {
+<span class="fc" id="L36">        activeLogLevels = new EnumMap&lt;&gt;(LoggingLevel.class);</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
+<span class="fc" id="L38">            activeLogLevels.put(t, enabledLoggingLevels.contains(t));</span>
+        }
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    public void logDebug(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L44">        logHelper(msg, LoggingLevel.DEBUG);</span>
+<span class="fc" id="L45">    }</span>
+
+    @Override
+    public void logTrace(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L49">        logHelper(msg, LoggingLevel.TRACE);</span>
+<span class="fc" id="L50">    }</span>
+
+    @Override
+    public void logAudit(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L54">        logHelper(msg, LoggingLevel.AUDIT);</span>
+<span class="fc" id="L55">    }</span>
+
+    @Override
+    public void stop() {
+<span class="fc" id="L59">        this.loggingActionQueue.stop();</span>
+<span class="fc" id="L60">        this.executorService.shutdownNow();</span>
+<span class="fc" id="L61">    }</span>
+
+    @Override
+    public void logAsyncError(ThrowingSupplier&lt;String, Exception&gt; msg) {
+<span class="fc" id="L65">        logHelper(msg, LoggingLevel.ASYNC_ERROR);</span>
+<span class="fc" id="L66">    }</span>
+
+    /**
+     * A helper method to reduce duplication
+     */
+    private void logHelper(ThrowingSupplier&lt;String, Exception&gt; msg, LoggingLevel loggingLevel) {
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (activeLogLevels.get(loggingLevel)) {</span>
+        String receivedMessage;
+            try {
+<span class="fc" id="L75">                receivedMessage = msg.get();</span>
+<span class="fc" id="L76">            } catch (Exception ex) {</span>
+<span class="fc" id="L77">                receivedMessage = &quot;EXCEPTION DURING GET: &quot; + ex;</span>
+<span class="fc" id="L78">            }</span>
+<span class="fc" id="L79">            String finalReceivedMessage = receivedMessage;</span>
+<span class="fc" id="L80">            loggingActionQueue.enqueue(&quot;Logger#logHelper(&quot;+receivedMessage+&quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L81">                Object[] args = new Object[]{getTimestampIsoInstant(), loggingLevel.name(), showWhiteSpace(finalReceivedMessage)};</span>
+<span class="fc" id="L82">                System.out.printf(&quot;%s\t%s\t%s%n&quot;, args);</span>
+<span class="fc" id="L83">            });</span>
+        }
+<span class="fc" id="L85">    }</span>
+
+    /**
+     * Given a string that may have whitespace chars, render it in a way we can see
+     */
+    private static String showWhiteSpace(String msg) {
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (msg == null) return &quot;(NULL)&quot;;</span>
+        // if we have tabs, returns, newlines in the text, show them
+<span class="fc" id="L93">        String text = msg</span>
+<span class="fc" id="L94">                .replace(&quot;\t&quot;, &quot;\\t&quot;)</span>
+<span class="fc" id="L95">                .replace(&quot;\r&quot;, &quot;\\r&quot;)</span>
+<span class="fc" id="L96">                .replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
+        // if the text is an empty string, render that
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        text = text.isEmpty() ? &quot;(EMPTY)&quot; : text;</span>
+        // if the text is nothing but whitespace, show that
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        text = text.isBlank() ? &quot;(BLANK)&quot; : text;</span>
+<span class="fc" id="L101">        return text;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

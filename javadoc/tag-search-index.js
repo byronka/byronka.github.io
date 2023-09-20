@@ -1,1 +1,1 @@
-tagSearchIndex = [{"l":"Serialized Form","h":"","u":"serialized-form.html"}];updateSearchResults();
+tagSearchIndex = [{"l":"example:","h":"class com.renomad.minum.testing.StopwatchUtils","d":"Section","u":"com/renomad/minum/testing/StopwatchUtils.html#example--heading"},{"l":"Response syntax","h":"record class com.renomad.minum.web.Response","d":"Section","u":"com/renomad/minum/web/Response.html#response-syntax-heading"},{"l":"Serialized Form","h":"","u":"serialized-form.html"}];updateSearchResults();

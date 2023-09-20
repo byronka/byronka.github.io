@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Server.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">Server.java</span></div><h1>Server.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import com.renomad.minum.Constants;
+import com.renomad.minum.Context;
+import com.renomad.minum.exceptions.ForbiddenUseException;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.security.ITheBrig;
+import com.renomad.minum.security.UnderInvestigation;
+import com.renomad.minum.utils.ConcurrentSet;
+import com.renomad.minum.utils.StacktraceUtils;
+import com.renomad.minum.utils.ThrowingRunnable;
+
+import javax.net.ssl.SSLException;
+import java.io.IOException;
+import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
+/**
+ * The purpose here is to make it marginally easier to
+ * work with a ServerSocket.
+ * &lt;p&gt;
+ * First, instantiate this class using a running serverSocket
+ * Then, by running the start method, we gain access to
+ * the server's socket.  This way we can easily test / control
+ * the server side but also tie it in with an ExecutorService
+ * for controlling lots of server threads.
+ */
+final class Server implements AutoCloseable {
+    private final ServerSocket serverSocket;
+    private final SetOfSws setOfSWs;
+    private final ILogger logger;
+    private final String serverName;
+    private final ITheBrig theBrig;
+    private final Constants constants;
+    private final UnderInvestigation underInvestigation;
+
+    /**
+     * This is the future returned when we submitted the
+     * thread for the central server loop to the ExecutorService
+     */
+    private Future&lt;?&gt; centralLoopFuture;
+
+<span class="fc" id="L44">    Server(ServerSocket ss, Context context, String serverName, ITheBrig theBrig) {</span>
+<span class="fc" id="L45">        this.serverSocket = ss;</span>
+<span class="fc" id="L46">        this.logger = context.getLogger();</span>
+<span class="fc" id="L47">        this.constants = context.getConstants();</span>
+<span class="fc" id="L48">        this.serverName = serverName;</span>
+<span class="fc" id="L49">        this.theBrig = theBrig;</span>
+<span class="fc" id="L50">        setOfSWs = new SetOfSws(new ConcurrentSet&lt;&gt;(), logger, serverName);</span>
+<span class="fc" id="L51">        this.underInvestigation = new UnderInvestigation(constants);</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * This is the infinite loop running inside the basic socket server code.  Every time we
+     * {@link ServerSocket#accept()} a new incoming socket connection, we attach our &quot;end
+     * of the phone line&quot; to the code that is &quot;handler&quot;, which mainly handles it from there.
+     * @param handler the commonest handler will be found at {@link WebFramework#makePrimaryHttpHandler}
+     */
+    void start(ExecutorService es, ThrowingConsumer&lt;ISocketWrapper, IOException&gt; handler) {
+<span class="fc" id="L61">        ThrowingRunnable&lt;Exception&gt; serverCode = buildMainServerLoop(es, handler);</span>
+<span class="fc" id="L62">        Runnable t = ThrowingRunnable.throwingRunnableWrapper(serverCode, logger);</span>
+<span class="fc" id="L63">        this.centralLoopFuture = es.submit(t);</span>
+<span class="fc" id="L64">    }</span>
+
+    /**
+     * This code is the innermost loop of the server, waiting for incoming
+     * connections and then delegating their handling off to a handler.
+     * @param es The ExecutorService helping us with the threads
+     * @param handler the handler that will take charge immediately after
+     *                a client makes a connection.
+     */
+    private ThrowingRunnable&lt;Exception&gt; buildMainServerLoop(ExecutorService es, ThrowingConsumer&lt;ISocketWrapper, IOException&gt; handler) {
+<span class="fc" id="L74">        ThrowingRunnable&lt;Exception&gt; serverCode = () -&gt; {</span>
+<span class="fc" id="L75">            Thread.currentThread().setName(&quot;Main Server&quot;);</span>
+            try {
+                // yes, this infinite loop can only exit by an exception.  But this is
+                // the beating heart of a server, and to the best of my current knowledge,
+                // when a server socket is force-closed it's going to throw an exception, and
+                // that's just part of its life cycle
+                //noinspection InfiniteLoopStatement
+                while (true) {
+<span class="fc" id="L83">                    logger.logTrace(() -&gt; serverName + &quot; waiting to accept connection&quot;);</span>
+<span class="fc" id="L84">                    Socket freshSocket = serverSocket.accept();</span>
+<span class="fc" id="L85">                    ISocketWrapper sw = new SocketWrapper(freshSocket, this, logger, constants.SOCKET_TIMEOUT_MILLIS);</span>
+<span class="fc" id="L86">                    logger.logTrace(() -&gt; String.format(&quot;client connected from %s&quot;, sw.getRemoteAddrWithPort()));</span>
+<span class="fc" id="L87">                    setOfSWs.add(sw);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                    if (handler != null) {</span>
+<span class="fc" id="L89">                        ThrowingRunnable&lt;Exception&gt; innerServerCode = buildExceptionHandlingInnerCore(handler, sw);</span>
+<span class="fc" id="L90">                        es.submit(ThrowingRunnable.throwingRunnableWrapper(innerServerCode, logger));</span>
+                    }
+<span class="fc" id="L92">                }</span>
+<span class="fc" id="L93">            } catch (SocketException ex) {</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">                if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
+<span class="nc" id="L95">                    logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+                }
+            }
+<span class="fc" id="L98">        };</span>
+<span class="fc" id="L99">        return serverCode;</span>
+    }
+
+    /**
+     * By volume of code, this method is primarily focused on handling the kinds
+     * of exceptional situations that can arise from handling the HTTP communication
+     * with a client.
+     * &lt;p&gt;
+     *     Note that this method *builds* a function but does not run it.
+     * &lt;/p&gt;
+     *
+     */
+    ThrowingRunnable&lt;Exception&gt; buildExceptionHandlingInnerCore(ThrowingConsumer&lt;ISocketWrapper, IOException&gt; handler, ISocketWrapper sw) {
+<span class="fc" id="L112">        ThrowingRunnable&lt;Exception&gt; innerServerCode = () -&gt; {</span>
+<span class="fc" id="L113">            Thread.currentThread().setName(&quot;SocketWrapper thread for &quot; + sw.getRemoteAddr());</span>
+            try {
+<span class="fc" id="L115">                handler.accept(sw);</span>
+<span class="fc" id="L116">            } catch (SocketException | SocketTimeoutException ex) {</span>
+                 /*
+                 if we close the application on the server side, there's a good
+                 likelihood a SocketException will come bubbling through here.
+                 NOTE:
+                   it seems that Socket closed is what we get when the client closes the connection in non-SSL, and conversely,
+                   if we are operating in secure (i.e. SSL/TLS) mode, we get &quot;an established connection...&quot;
+                 */
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                if (ex.getMessage().equals(&quot;Read timed out&quot;)) {</span>
+<span class="nc" id="L125">                    logger.logTrace(() -&gt; &quot;Read timed out - remote address: &quot; + sw.getRemoteAddrWithPort());</span>
+                } else {
+<span class="fc" id="L127">                    logger.logDebug(() -&gt; ex.getMessage() + &quot; - remote address: &quot; + sw.getRemoteAddrWithPort());</span>
+                }
+
+<span class="fc" id="L130">            } catch (ForbiddenUseException ex) {</span>
+<span class="fc" id="L131">                logger.logDebug(ex::getMessage);</span>
+<span class="fc" id="L132">            } catch (SSLException ex) {</span>
+<span class="fc" id="L133">                logger.logDebug(() -&gt; ex.getMessage() + &quot; (at Server.start)&quot;);</span>
+<span class="fc" id="L134">                String suspiciousClues = underInvestigation.isClientLookingForVulnerabilities(ex.getMessage());</span>
+
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">                if (suspiciousClues.length() &gt; 0) {</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                    if (theBrig != null) {</span>
+<span class="fc" id="L138">                        logger.logDebug(() -&gt; sw.getRemoteAddr() + &quot; is looking for vulnerabilities, for this: &quot; + suspiciousClues);</span>
+<span class="fc" id="L139">                        theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
+                    }
+                }
+<span class="fc" id="L142">            }</span>
+<span class="fc" id="L143">        };</span>
+<span class="fc" id="L144">        return innerServerCode;</span>
+    }
+
+    public void close() throws IOException {
+        // close all the running sockets
+<span class="fc" id="L149">        setOfSWs.stopAllServers();</span>
+<span class="fc" id="L150">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+        // close the primary server socket
+<span class="fc" id="L152">        serverSocket.close();</span>
+<span class="fc" id="L153">    }</span>
+
+    /**
+     * Get the string version of the address of this
+     * server.  See {@link InetAddress#getHostAddress()}
+     */
+    String getHost() {
+<span class="fc" id="L160">        return serverSocket.getInetAddress().getHostAddress();</span>
+    }
+
+    /**
+     * See {@link ServerSocket#getLocalPort()}
+     */
+    int getPort() {
+<span class="fc" id="L167">        return serverSocket.getLocalPort();</span>
+    }
+
+    /**
+     * This is a helper method to find the server SocketWrapper
+     * connected to a client SocketWrapper.
+     */
+    ISocketWrapper getServer(ISocketWrapper sw) {
+<span class="fc" id="L175">        return setOfSWs.getSocketWrapperByRemoteAddr(sw.getLocalAddr(), sw.getLocalPort());</span>
+    }
+
+    /**
+     * When we first create a SocketWrapper in Server, we provide it
+     * a reference back to this object, so that it can call
+     * this command.  This class maintains a list of open
+     * sockets in setOfSWs, and allows generated SocketWrappers
+     * to deregister themselves from this list by using this method.
+     */
+    void removeMyRecord(ISocketWrapper socketWrapper) {
+<span class="fc" id="L186">        setOfSWs.remove(socketWrapper);</span>
+<span class="fc" id="L187">    }</span>
+
+    /**
+     * Returns the name of this server, which is set
+     * when the server is instantiated.
+     */
+    @Override
+    public String toString() {
+<span class="fc" id="L195">        return this.serverName;</span>
+    }
+
+    /**
+     * Obtain the {@link Future} of the central loop of this
+     * server object, which is obtained during {@link #start(ExecutorService, ThrowingConsumer)}
+     */
+    Future&lt;?&gt; getCentralLoopFuture() {
+<span class="nc" id="L203">        return centralLoopFuture;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

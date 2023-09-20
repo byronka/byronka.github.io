@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StartLine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">StartLine.java</span></div><h1>StartLine.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import com.renomad.minum.Constants;
+import com.renomad.minum.Context;
+import com.renomad.minum.exceptions.ForbiddenUseException;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.utils.StringUtils;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.renomad.minum.utils.Invariants.mustBeTrue;
+import static com.renomad.minum.utils.Invariants.mustNotBeNull;
+
+/**
+ * This class holds data and methods for dealing with the
+ * &quot;start line&quot; in an HTTP request.  For example,
+ * GET /foo HTTP/1.1
+ */
+public final class StartLine{
+
+    private final Verb verb;
+    private final PathDetails pathDetails;
+    private final HttpVersion version;
+    private final String rawValue;
+    private final Context context;
+    private final Constants constants;
+    private final ILogger logger;
+
+    /**
+     * @param verb GET, POST, etc.
+     * @param pathDetails See {@link PathDetails}
+     * @param version the version of HTTP (1.0 or 1.1) we're receiving
+     * @param rawValue the entire raw string of the start line
+     */
+    public StartLine(
+            Verb verb,
+            PathDetails pathDetails,
+            HttpVersion version,
+            String rawValue,
+            Context context
+<span class="fc" id="L43">    ) {</span>
+<span class="fc" id="L44">        this.verb = verb;</span>
+<span class="fc" id="L45">        this.pathDetails = pathDetails;</span>
+<span class="fc" id="L46">        this.version = version;</span>
+<span class="fc" id="L47">        this.rawValue = rawValue;</span>
+<span class="fc" id="L48">        this.context = context;</span>
+<span class="fc" id="L49">        this.constants = context.getConstants();</span>
+<span class="fc" id="L50">        this.logger = context.getLogger();</span>
+<span class="fc" id="L51">    }</span>
+
+    /**
+     * This is our regex for looking at a client's request
+     * and determining what to send them.  For example,
+     * if they send GET /sample.html HTTP/1.1, we send them sample.html
+     * &lt;p&gt;
+     * On the other hand if it's not a well-formed request, or
+     * if we don't have that file, we reply with an error page
+     */
+    static final String startLinePattern = &quot;^([A-Z]{3,8}) /(.*) HTTP/(1.1|1.0)$&quot;;
+
+<span class="fc" id="L63">    static final Pattern startLineRegex = Pattern.compile(startLinePattern);</span>
+
+    public static StartLine EMPTY(Context context) {
+<span class="fc" id="L66">        return new StartLine(Verb.NONE, PathDetails.empty, HttpVersion.NONE, &quot;&quot;, context);</span>
+    }
+
+    /**
+     * Returns a map of the key-value pairs in the URL,
+     * for example in {@code http://foo.com?name=alice} you
+     * have a key of name and a value of alice.
+     */
+    public Map&lt;String, String&gt; queryString() {
+<span class="fc bfc" id="L75" title="All 6 branches covered.">        if (pathDetails == null || pathDetails.queryString == null || pathDetails.queryString.isEmpty()) {</span>
+<span class="fc" id="L76">            return new HashMap&lt;&gt;();</span>
+        } else {
+<span class="fc" id="L78">            return new HashMap&lt;&gt;(pathDetails.queryString);</span>
+        }
+
+    }
+
+    /**
+     * These are the HTTP Verbs we handle.
+     * @see #startLinePattern
+     */
+<span class="fc" id="L87">    public enum Verb {</span>
+<span class="fc" id="L88">        GET,</span>
+<span class="fc" id="L89">        POST,</span>
+<span class="fc" id="L90">        PUT,</span>
+<span class="fc" id="L91">        DELETE,</span>
+<span class="fc" id="L92">        TRACE,</span>
+<span class="fc" id="L93">        PATCH,</span>
+<span class="fc" id="L94">        OPTIONS,</span>
+<span class="fc" id="L95">        HEAD,</span>
+
+        /**
+         * Represents the null value of Verb
+         */
+<span class="fc" id="L100">        NONE</span>
+    }
+
+    /**
+     * Given the string value of a startline (like GET /hello HTTP/1.1)
+     * validate and extract the values for our use.
+     */
+    public StartLine extractStartLine(String value) {
+<span class="fc" id="L108">        mustNotBeNull(value);</span>
+<span class="fc" id="L109">        Matcher m = StartLine.startLineRegex.matcher(value);</span>
+        // run the regex
+<span class="fc" id="L111">        var doesMatch = m.matches();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (!doesMatch) {</span>
+<span class="fc" id="L113">            return StartLine.EMPTY(context);</span>
+        }
+<span class="fc" id="L115">        mustBeTrue(doesMatch, String.format(&quot;%s must match the startLinePattern: %s&quot;, value, startLinePattern));</span>
+<span class="fc" id="L116">        Verb verb = extractVerb(m.group(1));</span>
+<span class="fc" id="L117">        PathDetails pd = extractPathDetails(m.group(2));</span>
+<span class="fc" id="L118">        HttpVersion httpVersion = getHttpVersion(m.group(3));</span>
+
+<span class="fc" id="L120">        return new StartLine(verb, pd, httpVersion, value, context);</span>
+    }
+
+    private Verb extractVerb(String verbString) {
+        try {
+<span class="fc" id="L125">            return Verb.valueOf(verbString.toUpperCase(Locale.ROOT));</span>
+<span class="nc" id="L126">        } catch (Exception ex) {</span>
+<span class="nc" id="L127">            logger.logDebug(() -&gt; &quot;Unable to convert verb to enum: &quot; + verbString);</span>
+<span class="nc" id="L128">            return Verb.NONE;</span>
+        }
+    }
+
+    private PathDetails extractPathDetails(String path) {
+        PathDetails pd;
+<span class="fc" id="L134">        int locationOfQueryBegin = path.indexOf(&quot;?&quot;);</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (locationOfQueryBegin &gt; 0) {</span>
+            // in this case, we found a question mark, suggesting that a query string exists
+<span class="fc" id="L137">            String rawQueryString = path.substring(locationOfQueryBegin + 1);</span>
+<span class="fc" id="L138">            String isolatedPath = path.substring(0, locationOfQueryBegin);</span>
+<span class="fc" id="L139">            Map&lt;String, String&gt; queryString = extractMapFromQueryString(rawQueryString);</span>
+<span class="fc" id="L140">            pd = new PathDetails(isolatedPath, rawQueryString, queryString);</span>
+<span class="fc" id="L141">        } else {</span>
+            // in this case, no question mark was found, thus no query string
+<span class="fc" id="L143">            pd = new PathDetails(path, null, null);</span>
+        }
+<span class="fc" id="L145">        return pd;</span>
+    }
+
+    /**
+     * Some essential characteristics of the path portion of the start line
+     * @param isolatedPath the isolated path is found after removing the query string
+     * @param rawQueryString the raw query is the string after a question mark (if it exists - it's optional)
+     *                       if there is no query string, then we leave rawQuery as a null value
+     * @param queryString the query is a map of the keys -&gt; values found in the query string
+     */
+<span class="fc" id="L155">    public record PathDetails (</span>
+        String isolatedPath,
+        String rawQueryString,
+        Map&lt;String, String&gt; queryString
+    ){
+<span class="fc" id="L160">        public static final PathDetails empty = new PathDetails(&quot;&quot;, &quot;&quot;, Map.of());</span>
+    }
+
+    /**
+     * Given a string containing the combined key-values in
+     * a query string (e.g. foo=bar&amp;name=alice), split that
+     * into a map of the key to value (e.g. foo to bar, and name to alice)
+     */
+    Map&lt;String, String&gt; extractMapFromQueryString(String rawQueryString) {
+<span class="fc" id="L169">        Map&lt;String, String&gt; queryStrings = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L170">        StringTokenizer tokenizer = new StringTokenizer(rawQueryString, &quot;&amp;&quot;);</span>
+        // we'll only take less than MAX_QUERY_STRING_KEYS_COUNT
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        for (int i = 0; tokenizer.hasMoreTokens(); i++) {</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">            if (i == constants.MAX_QUERY_STRING_KEYS_COUNT) throw new ForbiddenUseException(&quot;User tried providing too many query string keys.  Current max: &quot; + constants.MAX_QUERY_STRING_KEYS_COUNT);</span>
+            // this should give us a key and value joined with an equal sign, e.g. foo=bar
+<span class="fc" id="L175">            String currentKeyValue = tokenizer.nextToken();</span>
+<span class="fc" id="L176">            int equalSignLocation = currentKeyValue.indexOf(&quot;=&quot;);</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">            if (equalSignLocation &lt;= 0) return Map.of();</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">            mustBeTrue(equalSignLocation &gt; 0, &quot;There must be an equals sign&quot;);</span>
+<span class="fc" id="L179">            String key = currentKeyValue.substring(0, equalSignLocation);</span>
+<span class="fc" id="L180">            String value = StringUtils.decode(currentKeyValue.substring(equalSignLocation + 1));</span>
+<span class="fc" id="L181">            queryStrings.put(key, value);</span>
+        }
+<span class="fc" id="L183">        return queryStrings;</span>
+    }
+
+    /**
+     * Extract the HTTP version from the start line
+     */
+    private HttpVersion getHttpVersion(String version) {
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        if (version.equals(&quot;1.1&quot;)) {</span>
+<span class="fc" id="L191">            return HttpVersion.ONE_DOT_ONE;</span>
+        } else {
+<span class="fc" id="L193">            return HttpVersion.ONE_DOT_ZERO;</span>
+        }
+    }
+
+    public Verb getVerb() {
+<span class="fc" id="L198">        return verb;</span>
+    }
+
+    public PathDetails getPathDetails() {
+<span class="fc" id="L202">        return pathDetails;</span>
+    }
+
+    public HttpVersion getVersion() {
+<span class="fc" id="L206">        return this.version;</span>
+    }
+
+    public String getRawValue() {
+<span class="fc" id="L210">        return rawValue;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L216" title="2 of 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L217">        StartLine startLine = (StartLine) o;</span>
+<span class="pc bpc" id="L218" title="4 of 8 branches missed.">        return verb == startLine.verb &amp;&amp; Objects.equals(pathDetails, startLine.pathDetails) &amp;&amp; version == startLine.version &amp;&amp; Objects.equals(rawValue, startLine.rawValue);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L223">        return Objects.hash(verb, pathDetails, version, rawValue);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L228">        return &quot;StartLine{&quot; +</span>
+                &quot;verb=&quot; + verb +
+                &quot;, pathDetails=&quot; + pathDetails +
+                &quot;, version=&quot; + version +
+                &quot;, rawValue='&quot; + rawValue + '\'' +
+                '}';
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestFramework.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.testing</a> &gt; <span class="el_source">TestFramework.java</span></div><h1>TestFramework.java</h1><pre class="source lang-java linenums">package com.renomad.minum.testing;
+
+import com.renomad.minum.Constants;
+import com.renomad.minum.Context;
+import com.renomad.minum.logging.TestLogger;
+import com.renomad.minum.utils.ExtendedExecutor;
+import com.renomad.minum.utils.FileUtils;
+import com.renomad.minum.utils.ThrowingRunnable;
+import com.renomad.minum.web.FullSystem;
+import com.renomad.minum.web.InputStreamUtils;
+
+import java.util.List;
+
+/**
+ * These are utility functions for basic automated
+ * testing.  It turns out you don't really need fancy tools
+ * to do excellent testing.  Just a committment to
+ * quality.  Don't let anyone tell you differently.
+ */
+public final class TestFramework {
+
+    private TestFramework() {
+        // making this private to be clearer it isn't supposed to be instantiated.
+    }
+
+    /**
+     * assert that a particular chunk of code throws a particular
+     * exception.
+     * &lt;p&gt;
+     *     Example usage:
+     * &lt;/p&gt;
+     * &lt;pre&gt;
+     *     &lt;code&gt;
+     *         {@code assertThrows(TemplateRenderException.class, &quot;Missing a value for key {missing_key}&quot;, () -&gt; tp.renderTemplate(myMap));}
+     *     &lt;/code&gt;
+     * &lt;/pre&gt;
+     */
+    public static &lt;T,TESTING extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, ThrowingRunnable&lt;TESTING&gt; r) {
+<span class="fc" id="L39">        return assertThrows(myEx, null, r);</span>
+    }
+
+    // quick note about the warning suppression - we already checked that the
+    // case will be valid, when we checked if (!myEx.isInstance(ex)).
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static &lt;T,TESTING extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, String expectedMsg, ThrowingRunnable&lt;TESTING&gt; r) {
+        try {
+<span class="fc" id="L47">            r.run();</span>
+<span class="fc" id="L48">            throw new TestFailureException(&quot;Failed to throw exception&quot;);</span>
+<span class="fc" id="L49">        } catch (Exception ex) {</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (!myEx.isInstance(ex)) {</span>
+<span class="fc" id="L51">                String msg = String.format(&quot;This did not throw the expected exception type (%s).  Instead, (%s) was thrown&quot;, myEx, ex);</span>
+<span class="fc" id="L52">                throw new TestFailureException(msg);</span>
+            }
+<span class="fc bfc" id="L54" title="All 4 branches covered.">            if (expectedMsg != null &amp;&amp; !ex.getMessage().equals(expectedMsg)) {</span>
+<span class="fc" id="L55">                String msg = String.format(&quot;Did not get expected message (%s). Instead, got: %s&quot;, expectedMsg, ex.getMessage());</span>
+<span class="fc" id="L56">                throw new TestFailureException(msg);</span>
+            }
+<span class="fc" id="L58">            return (T) ex;</span>
+        }
+
+    }
+
+    /**
+     * A helper for testing - assert two generics are equal.  If you
+     * need to compare two byte arrays, see {@link #assertEqualByteArray(byte[], byte[])}
+     */
+    public static &lt;T&gt; void assertEquals(T left, T right) {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (! left.equals(right)) {</span>
+<span class="fc" id="L69">            throw new TestFailureException(&quot;Not equal! %nleft:  %s %nright: %s&quot;.formatted(showWhiteSpace(left.toString()), showWhiteSpace(right.toString())));</span>
+        }
+<span class="fc" id="L71">    }</span>
+
+    /**
+     * Compares two byte arrays for equality
+     */
+    public static void assertEqualByteArray(byte[] left, byte[] right) {
+<span class="pc bpc" id="L77" title="2 of 4 branches missed.">        if (left == null || right == null) throw new TestFailureException(&quot;one of the inputs was null: left:  %s right: %s&quot;.formatted(left, right));</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if (left.length != right.length) throw new TestFailureException(&quot;Not equal! left length: %d right length: %d&quot;.formatted(left.length, right.length));</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (int i = 0; i &lt; left.length; i++) {</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">            if (left[i] != right[i]) throw new TestFailureException(&quot;Not equal! at index %d left was: %d right was: %d&quot;.formatted(i, left[i], right[i]));</span>
+        }
+<span class="fc" id="L82">    }</span>
+
+    /**
+     * asserts two lists are equal, ignoring the order.
+     * For example, (a, b) is equal to (b, a)
+     * &lt;p&gt;
+     * Note that the lists must be of comparable objects, or else
+     * a ClassCastException will be thrown
+     */
+    public static void assertEqualsDisregardOrder(List&lt;? extends CharSequence&gt; left, List&lt;? extends CharSequence&gt; right) {
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
+<span class="fc" id="L93">            throw new TestFailureException(String.format(&quot;different sizes: left was %d, right was %d%n&quot;, left.size(), right.size()));</span>
+        }
+<span class="fc" id="L95">        List&lt;? extends CharSequence&gt; orderedLeft = left.stream().sorted().toList();</span>
+<span class="fc" id="L96">        List&lt;? extends CharSequence&gt; orderedRight = right.stream().sorted().toList();</span>
+
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (!orderedLeft.get(i).equals(orderedRight.get(i))) {</span>
+<span class="fc" id="L100">                throw new TestFailureException(</span>
+<span class="fc" id="L101">                        String.format(</span>
+                                &quot;%n%ndifferent values:%n%nleft:  %s%nright: %s%n%nfull left:%n-----------%n%s%n%nfull right:%n-----------%n%s%n&quot;,
+<span class="fc" id="L103">                                orderedLeft.get(i),</span>
+<span class="fc" id="L104">                                orderedRight.get(i),</span>
+<span class="fc" id="L105">                                String.join(&quot;\n&quot;, showWhiteSpace(left.toString())),</span>
+<span class="fc" id="L106">                                String.join(&quot;\n&quot;, showWhiteSpace(right.toString()))));</span>
+            }
+        }
+<span class="fc" id="L109">    }</span>
+
+    /**
+     * asserts that two lists are equal in value and order.
+     * &lt;br&gt;&lt;br&gt;
+     * For example, (a, b) is equal to (a, b)
+     * Does not expect null as an input value.
+     * Two empty lists are considered equal.
+     */
+    public static &lt;T&gt; void assertEquals(List&lt;T&gt; left, List&lt;T&gt; right) {
+<span class="fc" id="L119">       assertEquals(left, right, &quot;&quot;);</span>
+<span class="fc" id="L120">    }</span>
+
+    /**
+     * asserts that two lists are equal in value and order.
+     * &lt;br&gt;&lt;br&gt;
+     * For example, (a, b) is equal to (a, b)
+     * Does not expect null as an input value.
+     * Two empty lists are considered equal.
+     * &lt;br&gt;&lt;br&gt;
+     * @param failureMessage a failureMessage that should be shown if this assertion fails
+     */
+    public static &lt;T&gt; void assertEquals(List&lt;T&gt; left, List&lt;T&gt; right, String failureMessage) {
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
+<span class="fc" id="L133">            throw new TestFailureException(</span>
+<span class="fc" id="L134">                    String.format(&quot;different sizes: left was %d, right was %d. %s&quot;, left.size(), right.size(), failureMessage));</span>
+        }
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">            if (!left.get(i).equals(right.get(i))) {</span>
+<span class="fc" id="L138">                throw new TestFailureException(</span>
+<span class="fc" id="L139">                        String.format(&quot;different values - left: \&quot;%s\&quot; right: \&quot;%s\&quot;. %s&quot;, showWhiteSpace(left.get(i).toString()), showWhiteSpace(right.get(i).toString()), failureMessage));</span>
+            }
+        }
+<span class="fc" id="L142">    }</span>
+
+    public static void assertTrue(boolean value) {
+<span class="fc" id="L145">      assertTrue(value, &quot;&quot;);</span>
+<span class="fc" id="L146">    }</span>
+
+    /**
+     * Assert that something is true, and show a message if it fails. This
+     * is also handy for including a kind of documentation in your test
+     * code.  So, please carefully note this example of its use, because
+     * there's a certain subtlety at play:
+     * &lt;p&gt;
+     *     &lt;pre&gt;
+     *      {@code assertTrue(foo == true, &quot;foo must be true&quot;);}
+     *     &lt;/pre&gt;
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     * Notice something here: The message is a statement about what *should*
+     * be true.  Sometimes, I see people who do it wrong here - they
+     * add a message like *foo was wrong*, but that's a disconcerting
+     * thing to see in a test.  Do it like the example above, instead.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     One other detail to mention: If this test fails, it doesn't really
+     *     give you much help about what the value should have been, it merely
+     *     insists it be true.  In some cases, like where you are
+     *     asserting that a string contains a substring, it is handy to include
+     *     what you were looking for and what the string was as part of the
+     *     failure message.
+     * &lt;/p&gt;
+     */
+    public static void assertTrue(boolean value, String failureMessage) {
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (!value) {</span>
+<span class="fc" id="L175">            throw new TestFailureException(&quot;value was unexpectedly false. &quot; + failureMessage);</span>
+        }
+<span class="fc" id="L177">    }</span>
+
+    public static void assertFalse(boolean value) {
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        if (value) {</span>
+<span class="fc" id="L181">            throw new TestFailureException(&quot;value was unexpectedly true&quot;);</span>
+        }
+<span class="fc" id="L183">    }</span>
+
+    /**
+     * Given a string that may have whitespace chars,
+     * render it in a way we can see.
+     * &lt;p&gt;
+     *     More specifically, it will replace tabs with (TAB),
+     *     newlines with (NEWLINE), carriage returns with (RETURN).
+     *     Also, if the entire text is empty (it's got a 0 length), you'll
+     *     get back (EMPTY), and if blank (it's full of whitespace),
+     *     you'll get back (BLANK).
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     Note that this method is not very performant.  It carries out
+     *     its work through multiple string replacements, so it's
+     *     basically O(3*n) (that is, it scans through
+     *     the whole string three times).
+     * &lt;/p&gt;
+     */
+    private static String showWhiteSpace(String msg) {
+        // if we have tabs, returns, newlines in the text, show them
+<span class="fc" id="L204">        String text = msg</span>
+<span class="fc" id="L205">                .replace(&quot;\t&quot;, &quot;\\t&quot;)</span>
+<span class="fc" id="L206">                .replace(&quot;\r&quot;, &quot;\\r&quot;)</span>
+<span class="fc" id="L207">                .replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
+        // if the text is an empty string, render that
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">        text = text.isEmpty() ? &quot;(EMPTY)&quot; : text;</span>
+        // if the text is nothing but whitespace, show that
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">        text = text.isBlank() ? &quot;(BLANK)&quot; : text;</span>
+<span class="fc" id="L212">        return text;</span>
+    }
+
+
+    /**
+     * This builds a context very similarly to {@link FullSystem#buildContext()},
+     * except that it uses {@link TestLogger} instead of {@link com.renomad.minum.logging.Logger}
+     * @param loggerName this will assign a human-readable name to the logger's
+     *                   {@link com.renomad.minum.logging.LoggingActionQueue} so we can distinguish it
+     *                   when reviewing the threads
+     */
+    public static Context buildTestingContext(String loggerName) {
+<span class="fc" id="L224">        var constants = new Constants();</span>
+<span class="fc" id="L225">        var executorService = ExtendedExecutor.makeExecutorService(constants);</span>
+<span class="fc" id="L226">        var logger = new TestLogger(constants, executorService, loggerName);</span>
+<span class="fc" id="L227">        var fileUtils = new FileUtils(logger, constants);</span>
+<span class="fc" id="L228">        var inputStreamUtils = new InputStreamUtils(logger, constants);</span>
+
+<span class="fc" id="L230">        var context = new Context();</span>
+
+<span class="fc" id="L232">        context.setConstants(constants);</span>
+<span class="fc" id="L233">        context.setExecutorService(executorService);</span>
+<span class="fc" id="L234">        context.setLogger(logger);</span>
+<span class="fc" id="L235">        context.setFileUtils(fileUtils);</span>
+<span class="fc" id="L236">        context.setInputStreamUtils(inputStreamUtils);</span>
+
+<span class="fc" id="L238">        return context;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>StatusLine xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../apidocs/com/renomad/minum/web/StatusLine.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.web;
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> java.util.Arrays;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> java.util.regex.Matcher;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> java.util.regex.Pattern;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.utils.Invariants.mustBeTrue;
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_javadoccomment"> * This class represents the text that is sent back in a {@link Response}</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">public</strong> record StatusLine(<a name="StatusCode" href="../../../../com/renomad/minum/web/StatusLine.html#StatusCode">StatusCode</a> status, <a name="HttpVersion" href="../../../../com/renomad/minum/web/HttpVersion.html#HttpVersion">HttpVersion</a> version, String rawValue) {
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>      <strong class="jxr_keyword">static</strong> StatusLine EMPTY = <strong class="jxr_keyword">new</strong> StatusLine(StatusCode.NULL, HttpVersion.NONE, <span class="jxr_string">""</span>);
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <em class="jxr_javadoccomment">     * This is the regex used to analyze a status line sent by the server and</em>
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <em class="jxr_javadoccomment">     * read by the client.  Servers will send messages like: "HTTP/1.1 200 OK" or "HTTP/1.1 500 Internal Server Error"</em>
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String statusLinePattern = <span class="jxr_string">"^HTTP/(1.1|1.0) (&#92;&#92;d{3}) (.*)$"</span>;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Pattern statusLineRegex = Pattern.compile(statusLinePattern);
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <em class="jxr_javadoccomment">     * See see &lt;a href="<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status" target="alexandria_uri">https://developer.mozilla.org/en-US/docs/Web/HTTP/Status</a>"&gt;Status Codes&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>      <strong class="jxr_keyword">public</strong> enum <a name="StatusCode" href="../../../../com/renomad/minum/web/StatusLine.html#StatusCode">StatusCode</a>{
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>          <em class="jxr_comment">/* Successful responses (200 – 299) */</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>          _200_OK(200, <span class="jxr_string">"OK"</span>),
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>          _201_CREATED(201, <span class="jxr_string">"CREATED"</span>),
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>          _202_ACCEPTED(202, <span class="jxr_string">"ACCEPTED"</span>),
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>          _204_NO_CONTENT(204, <span class="jxr_string">"NO CONTENT"</span>),
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>          <em class="jxr_comment">/* Redirection messages (300 – 399) */</em>
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>          _301_MOVED_PERMANENTLY(301, <span class="jxr_string">"MOVED PERMANENTLY"</span>),
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>          _302_FOUND(302, <span class="jxr_string">"FOUND"</span>),
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>          <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <em class="jxr_javadoccomment">         * Used a lot after receiving a post response.  The pattern is to</em>
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <em class="jxr_javadoccomment">         * receive the post, then redirect to a new page. See &lt;a href="<a href="https://en.wikipedia.org/wiki/Post/Redirect/Get" target="alexandria_uri">https://en.wikipedia.org/wiki/Post/Redirect/Get</a>"&gt;...&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>          _303_SEE_OTHER(303, <span class="jxr_string">"SEE OTHER"</span>),
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>          _304_NOT_MODIFIED(304, <span class="jxr_string">"NOT MODIFIED"</span>),
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>          _307_TEMPORARY_REDIRECT(307, <span class="jxr_string">"TEMPORARY REDIRECT"</span>),
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>          _308_PERMANENT_REDIRECT(308, <span class="jxr_string">"PERMANENT REDIRECT"</span>),
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>          <em class="jxr_comment">/* Client error responses (400 – 499) */</em>
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>          _400_BAD_REQUEST(400, <span class="jxr_string">"BAD REQUEST"</span>),
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>          _401_UNAUTHORIZED(401, <span class="jxr_string">"UNAUTHORIZED"</span>),
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>          _403_FORBIDDEN(403, <span class="jxr_string">"FORBIDDEN"</span>),
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>          _404_NOT_FOUND(404, <span class="jxr_string">"NOT FOUND"</span>),
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          _405_METHOD_NOT_ALLOWED(405, <span class="jxr_string">"METHOD NOT ALLOWED"</span>),
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>          _406_NOT_ACCEPTABLE(406, <span class="jxr_string">"NOT ACCEPTABLE"</span>),
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>          _408_REQUEST_TIMEOUT(408, <span class="jxr_string">"REQUEST TIMEOUT"</span>),
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>          _409_CONFLICT(409, <span class="jxr_string">"CONFLICT"</span>),
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>          _410_GONE(410, <span class="jxr_string">"GONE"</span>),
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>          _411_LENGTH_REQUIRED(411, <span class="jxr_string">"LENGTH REQUIRED"</span>),
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>          _413_PAYLOAD_TOO_LARGE(413, <span class="jxr_string">"PAYLOAD TOO LARGE"</span>),
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>          _414_URI_TOO_LONG(414, <span class="jxr_string">"URI TOO LONG"</span>),
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>          _415_UNSUPPORTED_MEDIA_TYPE(415, <span class="jxr_string">"UNSUPPORTED MEDIA TYPE"</span>),
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>          _426_UPGRADE_REQUIRED(426, <span class="jxr_string">"UPGRADE REQUIRED"</span>),
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>          _429_TOO_MANY_REQUESTS(429, <span class="jxr_string">"TOO MANY REQUESTS"</span>),
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>          _431_REQUEST_HEADER_FIELDS_TOO_LARGE(431, <span class="jxr_string">"REQUEST HEADER FIELDS TOO LARGE"</span>),
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>          <em class="jxr_comment">/* Server error responses (500 – 599) */</em>
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>          _500_INTERNAL_SERVER_ERROR(500, <span class="jxr_string">"INTERNAL SERVER ERROR"</span>),
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>          _501_NOT_IMPLEMENTED(501, <span class="jxr_string">"NOT IMPLEMENTED"</span>),
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>          _502_BAD_GATEWAY(502, <span class="jxr_string">"BAD GATEWAY"</span>),
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>          _503_SERVICE_UNAVAILABLE(503, <span class="jxr_string">"SERVICE UNAVAILABLE"</span>),
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>          _504_GATEWAY_TIMEOUT(504, <span class="jxr_string">"GATEWAY TIMEOUT"</span>),
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>          _505_HTTP_VERSION_NOT_SUPPORTED(505, <span class="jxr_string">"HTTP VERSION NOT SUPPORTED"</span>),
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>          <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  <em class="jxr_javadoccomment">         * The null object, meant to represent "no status code"</em>
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>  <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>          NULL(0, <span class="jxr_string">"NULL OBJECT"</span>)
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>          ;
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>          <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> code;
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>          <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> String shortDescription;
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>          <a name="StatusCode" href="../../../../com/renomad/minum/web/StatusLine.html#StatusCode">StatusCode</a>(<strong class="jxr_keyword">int</strong> code, String shortDescription) {
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>              <strong class="jxr_keyword">this</strong>.code = code;
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>              <strong class="jxr_keyword">this</strong>.shortDescription = shortDescription;
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>          }
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>          <strong class="jxr_keyword">static</strong> <a name="StatusCode" href="../../../../com/renomad/minum/web/StatusLine.html#StatusCode">StatusCode</a> findByCode(<strong class="jxr_keyword">int</strong> code) {
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>              <strong class="jxr_keyword">return</strong> Arrays.stream(StatusCode.values())
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>                      .filter(x -&gt; x.code == code)
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>                      .findFirst()
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>                      .orElseThrow();
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>          }
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>      }
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>  
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> <em class="jxr_javadoccomment">     * Parses a string value of a status line from an HTTP</em>
+<a class="jxr_linenumber" name="L101" href="#L101">101</a> <em class="jxr_javadoccomment">     * server.  If the input value is null or empty, we'll</em>
+<a class="jxr_linenumber" name="L102" href="#L102">102</a> <em class="jxr_javadoccomment">     * return a {@link StatusLine} with null-object values</em>
+<a class="jxr_linenumber" name="L103" href="#L103">103</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> StatusLine extractStatusLine(String value) {
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>         <strong class="jxr_keyword">if</strong> (value == <strong class="jxr_keyword">null</strong> || value.isBlank()) {
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>             <strong class="jxr_keyword">return</strong> StatusLine.EMPTY;
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>         }
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>         Matcher mr = StatusLine.statusLineRegex.matcher(value);
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>         mustBeTrue(mr.matches(), String.format(<span class="jxr_string">"%s must match the statusLinePattern: %s"</span>, value, statusLinePattern));
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>         String version = mr.group(1);
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>         <a name="HttpVersion" href="../../../../com/renomad/minum/web/HttpVersion.html#HttpVersion">HttpVersion</a> httpVersion = <strong class="jxr_keyword">switch</strong> (version) {
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>             <strong class="jxr_keyword">case</strong> <span class="jxr_string">"1.1"</span> -&gt; HttpVersion.ONE_DOT_ONE;
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>             <strong class="jxr_keyword">case</strong> <span class="jxr_string">"1.0"</span> -&gt; HttpVersion.ONE_DOT_ZERO;
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>             <strong class="jxr_keyword">default</strong> -&gt; <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(String.format(<span class="jxr_string">"HTTP version was not an acceptable value. Given: %s"</span>, version));
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>         };
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>         <a name="StatusCode" href="../../../../com/renomad/minum/web/StatusLine.html#StatusCode">StatusCode</a> status = StatusCode.findByCode(Integer.parseInt(mr.group(2)));
+<a class="jxr_linenumber" name="L117" href="#L117">117</a> 
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> StatusLine(status, httpVersion, value);
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>     }
+<a class="jxr_linenumber" name="L120" href="#L120">120</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2023. All rights reserved.</div>
+</body>
+</html>

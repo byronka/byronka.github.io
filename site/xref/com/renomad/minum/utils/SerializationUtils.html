@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>SerializationUtils xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../apidocs/com/renomad/minum/utils/SerializationUtils.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.utils;
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> java.util.ArrayList;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a name="SerializationUtils" href="../../../../com/renomad/minum/utils/SerializationUtils.html#SerializationUtils">SerializationUtils</a> {
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>       <strong class="jxr_keyword">private</strong> <a name="SerializationUtils" href="../../../../com/renomad/minum/utils/SerializationUtils.html#SerializationUtils">SerializationUtils</a>() {
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>           <em class="jxr_comment">// not meant to be constructed.</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>      }
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_javadoccomment">     * This is a helper that will encode the values you give it</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_javadoccomment">     * in preparation for storage in a dataase file.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <em class="jxr_javadoccomment">     *     &lt;em&gt;Please note&lt;/em&gt;: There is minimal help here.  You</em>
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <em class="jxr_javadoccomment">     *     need to keep track of which values will be encoded here.</em>
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <em class="jxr_javadoccomment">     *     If you are missing any, this method won't complain.</em>
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> String serializeHelper(Object... values) {
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>          StringBuilder sb = <strong class="jxr_keyword">new</strong> StringBuilder();
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; values.length-1; i++) {
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>              String value = values[i] == <strong class="jxr_keyword">null</strong> ? <strong class="jxr_keyword">null</strong> : values[i].toString();
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>              sb.append(StringUtils.encode(value)).append(<span class="jxr_string">"|"</span>);
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>          }
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>          <em class="jxr_comment">// append the last value with no pipe symbol afterwards</em>
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>          String lastValue = values[values.length - 1] == <strong class="jxr_keyword">null</strong> ? <strong class="jxr_keyword">null</strong> : values[values.length - 1].toString();
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>          sb.append(StringUtils.encode(lastValue));
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>          <strong class="jxr_keyword">return</strong> sb.toString();
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>      }
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <em class="jxr_javadoccomment">     * Splits up a string based on a pipe character.  See {@link #tokenizer(String, char)}</em>
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_javadoccomment">     * @param serializedText the string we are splitting into tokens</em>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> List&lt;String&gt; deserializeHelper(String serializedText) {
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>          <strong class="jxr_keyword">return</strong> tokenizer(serializedText, '|').stream().map(StringUtils::decode).toList();
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>      }
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <em class="jxr_javadoccomment">     * Splits up a string into tokens.</em>
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <em class="jxr_javadoccomment">     * @param serializedText the string we are splitting up</em>
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <em class="jxr_javadoccomment">     * @param delimiter the character acting as a boundary between sections</em>
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <em class="jxr_javadoccomment">     * @return a list of strings.  If the delimiter is not found, we will just return the whole string</em>
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> List&lt;String&gt; tokenizer(String serializedText, <strong class="jxr_keyword">char</strong> delimiter) {
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> resultList = <strong class="jxr_keyword">new</strong> ArrayList&lt;String&gt;();
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>          <strong class="jxr_keyword">var</strong> currentPlace = 0;
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>          <strong class="jxr_keyword">int</strong> maxTokens = 200;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>          <strong class="jxr_keyword">for</strong>(<strong class="jxr_keyword">int</strong> i = 0; i &lt;= maxTokens; i++) {
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>              <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> nextPipeSymbolIndex = serializedText.indexOf(delimiter, currentPlace);
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>              <strong class="jxr_keyword">if</strong> (nextPipeSymbolIndex == -1) {
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>                  <em class="jxr_comment">// if we don't see any pipe symbols ahead, grab the rest of the text from our current place</em>
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>                  resultList.add(serializedText.substring(currentPlace));
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>                  <strong class="jxr_keyword">break</strong>;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>              }
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>              resultList.add(serializedText.substring(currentPlace, nextPipeSymbolIndex));
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>              currentPlace = nextPipeSymbolIndex + 1;
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>          }
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>          <strong class="jxr_keyword">return</strong> resultList;
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>      }
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2023. All rights reserved.</div>
+</body>
+</html>

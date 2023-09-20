@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Context.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum</a> &gt; <span class="el_source">Context.java</span></div><h1>Context.java</h1><pre class="source lang-java linenums">package com.renomad.minum;
+
+import com.renomad.minum.database.Db;
+import com.renomad.minum.database.DbData;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.utils.ActionQueue;
+import com.renomad.minum.utils.FileUtils;
+import com.renomad.minum.web.FullSystem;
+import com.renomad.minum.web.InputStreamUtils;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
+
+/**
+ * Holds important system-wide data and methods.
+ * &lt;p&gt;
+ *     Creating an instance of this and passing it
+ *     around lets us reduce some boilerplate code,
+ *     but more importantly, it lets us lower the scope.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ *     Previously, some of this was made available as
+ *     static values and methods, which added a bit of
+ *     complication when reviewing stack traces, and also
+ *     prevented including logging in some areas.
+ * &lt;/p&gt;
+ */
+public final class Context {
+
+    private InputStreamUtils inputStreamUtils;
+    private FileUtils fileUtils;
+    private ILogger logger;
+    private ExecutorService executorService;
+    private Constants constants;
+    private FullSystem fullSystem;
+    private final List&lt;ActionQueue&gt; actionQueueList;
+
+    /**
+     * In order to avoid statics or singletons allow certain objects to be widely
+     * available, we'll store them in this class.
+     */
+<span class="fc" id="L45">    public Context() {</span>
+<span class="fc" id="L46">        this.actionQueueList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L47">    }</span>
+
+    public void setInputStreamUtils(InputStreamUtils inputStreamUtils) {
+<span class="fc" id="L50">        this.inputStreamUtils = inputStreamUtils;</span>
+<span class="fc" id="L51">    }</span>
+
+    public InputStreamUtils getInputStreamUtils() {
+<span class="fc" id="L54">        return inputStreamUtils;</span>
+    }
+
+    public FileUtils getFileUtils() {
+<span class="fc" id="L58">        return fileUtils;</span>
+    }
+
+    public void setFileUtils(FileUtils fileUtils) {
+<span class="fc" id="L62">        this.fileUtils = fileUtils;</span>
+<span class="fc" id="L63">    }</span>
+
+    public void setLogger(ILogger logger) {
+<span class="fc" id="L66">        this.logger = logger;</span>
+<span class="fc" id="L67">    }</span>
+
+    public ILogger getLogger() {
+<span class="fc" id="L70">        return logger;</span>
+    }
+
+    public void setExecutorService(ExecutorService executorService) {
+<span class="fc" id="L74">        this.executorService = executorService;</span>
+<span class="fc" id="L75">    }</span>
+
+    public ExecutorService getExecutorService() {
+<span class="fc" id="L78">        return executorService;</span>
+    }
+
+    public void setConstants(Constants constants) {
+<span class="fc" id="L82">        this.constants = constants;</span>
+<span class="fc" id="L83">    }</span>
+    public Constants getConstants() {
+<span class="fc" id="L85">        return constants;</span>
+    }
+
+    public void setFullSystem(FullSystem fullSystem) {
+<span class="fc" id="L89">        this.fullSystem = fullSystem;</span>
+<span class="fc" id="L90">    }</span>
+
+    public FullSystem getFullSystem() {
+<span class="fc" id="L93">        return fullSystem;</span>
+    }
+
+    public List&lt;ActionQueue&gt; getActionQueueList() {
+<span class="fc" id="L97">        return actionQueueList;</span>
+    }
+
+    /**
+     * This is a helper method to instantiate a {@link Db} class,
+     * avoiding the need for a user to provide the root database
+     * directory and the context.
+     *
+     * Since this is a generic method, a bit of care is required when
+     * calling.  Try to use a pattern like this:
+     * &lt;pre&gt;
+     * {@code Db&lt;Photograph&gt; photoDb = wf.getDb(&quot;photos&quot;);}
+     * &lt;/pre&gt;
+     * @param name the name of this data.  Note that this will be used
+     *             as the directory for the data, so use characters your
+     *             operating system would allow.
+     * @param instance an instance of the {@link DbData} data, preferably
+     *                 following a null-object pattern.  For example,
+     *                 Photograph.EMPTY.  This is used in the Db code
+     *                 to deserialize the data when reading.
+     */
+    public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
+<span class="fc" id="L119">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), this, instance);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatusLine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">StatusLine.java</span></div><h1>StatusLine.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.renomad.minum.utils.Invariants.mustBeTrue;
+
+/**
+ * This class represents the text that is sent back in a {@link Response}
+ */
+<span class="fc" id="L12">public record StatusLine(StatusCode status, HttpVersion version, String rawValue) {</span>
+
+<span class="fc" id="L14">    static StatusLine EMPTY = new StatusLine(StatusCode.NULL, HttpVersion.NONE, &quot;&quot;);</span>
+
+    /**
+     * This is the regex used to analyze a status line sent by the server and
+     * read by the client.  Servers will send messages like: &quot;HTTP/1.1 200 OK&quot; or &quot;HTTP/1.1 500 Internal Server Error&quot;
+     */
+    static final String statusLinePattern = &quot;^HTTP/(1.1|1.0) (\\d{3}) (.*)$&quot;;
+<span class="fc" id="L21">    static final Pattern statusLineRegex = Pattern.compile(statusLinePattern);</span>
+
+    /**
+     * See see &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/HTTP/Status&quot;&gt;Status Codes&lt;/a&gt;
+     */
+<span class="fc" id="L26">    public enum StatusCode{</span>
+
+        /* Successful responses (200 – 299) */
+
+<span class="fc" id="L30">        _200_OK(200, &quot;OK&quot;),</span>
+<span class="fc" id="L31">        _201_CREATED(201, &quot;CREATED&quot;),</span>
+<span class="fc" id="L32">        _202_ACCEPTED(202, &quot;ACCEPTED&quot;),</span>
+<span class="fc" id="L33">        _204_NO_CONTENT(204, &quot;NO CONTENT&quot;),</span>
+
+        /* Redirection messages (300 – 399) */
+
+<span class="fc" id="L37">        _301_MOVED_PERMANENTLY(301, &quot;MOVED PERMANENTLY&quot;),</span>
+<span class="fc" id="L38">        _302_FOUND(302, &quot;FOUND&quot;),</span>
+
+        /**
+         * Used a lot after receiving a post response.  The pattern is to
+         * receive the post, then redirect to a new page. See &lt;a href=&quot;https://en.wikipedia.org/wiki/Post/Redirect/Get&quot;&gt;...&lt;/a&gt;
+         */
+<span class="fc" id="L44">        _303_SEE_OTHER(303, &quot;SEE OTHER&quot;),</span>
+<span class="fc" id="L45">        _304_NOT_MODIFIED(304, &quot;NOT MODIFIED&quot;),</span>
+<span class="fc" id="L46">        _307_TEMPORARY_REDIRECT(307, &quot;TEMPORARY REDIRECT&quot;),</span>
+<span class="fc" id="L47">        _308_PERMANENT_REDIRECT(308, &quot;PERMANENT REDIRECT&quot;),</span>
+
+        /* Client error responses (400 – 499) */
+
+<span class="fc" id="L51">        _400_BAD_REQUEST(400, &quot;BAD REQUEST&quot;),</span>
+<span class="fc" id="L52">        _401_UNAUTHORIZED(401, &quot;UNAUTHORIZED&quot;),</span>
+<span class="fc" id="L53">        _403_FORBIDDEN(403, &quot;FORBIDDEN&quot;),</span>
+<span class="fc" id="L54">        _404_NOT_FOUND(404, &quot;NOT FOUND&quot;),</span>
+<span class="fc" id="L55">        _405_METHOD_NOT_ALLOWED(405, &quot;METHOD NOT ALLOWED&quot;),</span>
+<span class="fc" id="L56">        _406_NOT_ACCEPTABLE(406, &quot;NOT ACCEPTABLE&quot;),</span>
+<span class="fc" id="L57">        _408_REQUEST_TIMEOUT(408, &quot;REQUEST TIMEOUT&quot;),</span>
+<span class="fc" id="L58">        _409_CONFLICT(409, &quot;CONFLICT&quot;),</span>
+<span class="fc" id="L59">        _410_GONE(410, &quot;GONE&quot;),</span>
+<span class="fc" id="L60">        _411_LENGTH_REQUIRED(411, &quot;LENGTH REQUIRED&quot;),</span>
+<span class="fc" id="L61">        _413_PAYLOAD_TOO_LARGE(413, &quot;PAYLOAD TOO LARGE&quot;),</span>
+<span class="fc" id="L62">        _414_URI_TOO_LONG(414, &quot;URI TOO LONG&quot;),</span>
+<span class="fc" id="L63">        _415_UNSUPPORTED_MEDIA_TYPE(415, &quot;UNSUPPORTED MEDIA TYPE&quot;),</span>
+<span class="fc" id="L64">        _426_UPGRADE_REQUIRED(426, &quot;UPGRADE REQUIRED&quot;),</span>
+<span class="fc" id="L65">        _429_TOO_MANY_REQUESTS(429, &quot;TOO MANY REQUESTS&quot;),</span>
+<span class="fc" id="L66">        _431_REQUEST_HEADER_FIELDS_TOO_LARGE(431, &quot;REQUEST HEADER FIELDS TOO LARGE&quot;),</span>
+
+        /* Server error responses (500 – 599) */
+
+<span class="fc" id="L70">        _500_INTERNAL_SERVER_ERROR(500, &quot;INTERNAL SERVER ERROR&quot;),</span>
+<span class="fc" id="L71">        _501_NOT_IMPLEMENTED(501, &quot;NOT IMPLEMENTED&quot;),</span>
+<span class="fc" id="L72">        _502_BAD_GATEWAY(502, &quot;BAD GATEWAY&quot;),</span>
+<span class="fc" id="L73">        _503_SERVICE_UNAVAILABLE(503, &quot;SERVICE UNAVAILABLE&quot;),</span>
+<span class="fc" id="L74">        _504_GATEWAY_TIMEOUT(504, &quot;GATEWAY TIMEOUT&quot;),</span>
+<span class="fc" id="L75">        _505_HTTP_VERSION_NOT_SUPPORTED(505, &quot;HTTP VERSION NOT SUPPORTED&quot;),</span>
+
+        /**
+         * The null object, meant to represent &quot;no status code&quot;
+         */
+<span class="fc" id="L80">        NULL(0, &quot;NULL OBJECT&quot;)</span>
+        ;
+
+        public final int code;
+        public final String shortDescription;
+
+<span class="fc" id="L86">        StatusCode(int code, String shortDescription) {</span>
+<span class="fc" id="L87">            this.code = code;</span>
+<span class="fc" id="L88">            this.shortDescription = shortDescription;</span>
+<span class="fc" id="L89">        }</span>
+
+        static StatusCode findByCode(int code) {
+<span class="fc" id="L92">            return Arrays.stream(StatusCode.values())</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">                    .filter(x -&gt; x.code == code)</span>
+<span class="fc" id="L94">                    .findFirst()</span>
+<span class="fc" id="L95">                    .orElseThrow();</span>
+        }
+    }
+
+    /**
+     * Parses a string value of a status line from an HTTP
+     * server.  If the input value is null or empty, we'll
+     * return a {@link StatusLine} with null-object values
+     */
+    public static StatusLine extractStatusLine(String value) {
+<span class="pc bpc" id="L105" title="1 of 4 branches missed.">        if (value == null || value.isBlank()) {</span>
+<span class="fc" id="L106">            return StatusLine.EMPTY;</span>
+        }
+<span class="fc" id="L108">        Matcher mr = StatusLine.statusLineRegex.matcher(value);</span>
+<span class="fc" id="L109">        mustBeTrue(mr.matches(), String.format(&quot;%s must match the statusLinePattern: %s&quot;, value, statusLinePattern));</span>
+<span class="fc" id="L110">        String version = mr.group(1);</span>
+<span class="pc bpc" id="L111" title="2 of 3 branches missed.">        HttpVersion httpVersion = switch (version) {</span>
+<span class="fc" id="L112">            case &quot;1.1&quot; -&gt; HttpVersion.ONE_DOT_ONE;</span>
+<span class="nc" id="L113">            case &quot;1.0&quot; -&gt; HttpVersion.ONE_DOT_ZERO;</span>
+<span class="pc" id="L114">            default -&gt; throw new RuntimeException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
+        };
+<span class="fc" id="L116">        StatusCode status = StatusCode.findByCode(Integer.parseInt(mr.group(2)));</span>
+
+<span class="fc" id="L118">        return new StatusLine(status, httpVersion, value);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

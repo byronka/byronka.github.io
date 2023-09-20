@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FullSystem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">FullSystem.java</span></div><h1>FullSystem.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import com.renomad.minum.Constants;
+import com.renomad.minum.Context;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.logging.Logger;
+import com.renomad.minum.logging.LoggingLevel;
+import com.renomad.minum.security.ITheBrig;
+import com.renomad.minum.security.TheBrig;
+import com.renomad.minum.utils.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ExecutorService;
+
+/**
+ * This class is responsible for kicking off the entire system.
+ * In particular, look at {@link #start()}
+ */
+public final class FullSystem implements AutoCloseable {
+
+    final ILogger logger;
+    private final Constants constants;
+    private Server server;
+    private WebFramework webFramework;
+    private Server sslServer;
+    Thread shutdownHook;
+    private ITheBrig theBrig;
+    final ExecutorService es;
+    final InputStreamUtils inputStreamUtils;
+    private WebEngine webEngine;
+
+    /**
+     * This flag gives us some control if we need
+     * to call {@link #close()} manually, so close()
+     * doesn't get run again when the shutdownHook
+     * tries calling it.  This is primarily an issue just during
+     * testing.
+     */
+    private boolean hasShutdown;
+
+    private final Context context;
+
+<span class="fc" id="L49">    public FullSystem(Context context) {</span>
+<span class="fc" id="L50">        this.logger = context.getLogger();</span>
+<span class="fc" id="L51">        this.constants = context.getConstants();</span>
+<span class="fc" id="L52">        this.es = context.getExecutorService();</span>
+<span class="fc" id="L53">        this.inputStreamUtils = context.getInputStreamUtils();</span>
+<span class="fc" id="L54">        this.context = context;</span>
+<span class="fc" id="L55">        context.setFullSystem(this);</span>
+<span class="fc" id="L56">    }</span>
+
+    /**
+     * Builds a context object that is appropriate as a
+     * parameter to constructing a {@link FullSystem}
+     */
+    public static Context buildContext() {
+<span class="nc" id="L63">        var constants = new Constants();</span>
+<span class="nc" id="L64">        var executorService = ExtendedExecutor.makeExecutorService(constants);</span>
+<span class="nc" id="L65">        var logger = new Logger(constants, executorService, &quot;primary logger&quot;);</span>
+<span class="nc" id="L66">        var fileUtils = new FileUtils(logger, constants);</span>
+<span class="nc" id="L67">        var inputStreamUtils = new InputStreamUtils(logger, constants);</span>
+
+<span class="nc" id="L69">        var context = new Context();</span>
+
+<span class="nc" id="L71">        context.setConstants(constants);</span>
+<span class="nc" id="L72">        context.setExecutorService(executorService);</span>
+<span class="nc" id="L73">        context.setLogger(logger);</span>
+<span class="nc" id="L74">        context.setFileUtils(fileUtils);</span>
+<span class="nc" id="L75">        context.setInputStreamUtils(inputStreamUtils);</span>
+
+<span class="nc" id="L77">        return context;</span>
+    }
+
+    /**
+     * Expected entry point for typical system instantiation
+     */
+    public static FullSystem initialize() {
+<span class="nc" id="L84">        var context = buildContext();</span>
+<span class="nc" id="L85">        var fullSystem = new FullSystem(context);</span>
+        try {
+<span class="nc" id="L87">            return fullSystem.start();</span>
+<span class="nc" id="L88">        } catch (Exception ex) {</span>
+<span class="nc" id="L89">            throw new RuntimeException(ex);</span>
+        }
+    }
+
+    /**
+     * Kicks off the various bits and pieces.
+     * 
+     * &lt;p&gt;
+     *     There's a number of components to be built and run
+     *     to get this application up and running.  Feel free
+     *     to peruse this method's code to get a sense of it.
+     * &lt;/p&gt;
+     * 
+     */
+    public FullSystem start() throws IOException  {
+        // create a file in our current working directory to indicate we are running
+<span class="fc" id="L105">        createSystemRunningMarker();</span>
+
+        // set up an action to take place if the user shuts us down
+<span class="fc" id="L108">        addShutdownHook();</span>
+        
+        // Add useful startup info to the logs
+<span class="fc" id="L111">        String serverComment = &quot;at http://&quot; + constants.HOST_NAME + &quot;:&quot; + constants.SERVER_PORT + &quot; and https://&quot; + constants.HOST_NAME + &quot;:&quot; + constants.SECURE_SERVER_PORT;</span>
+<span class="fc" id="L112">        System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; &quot; + &quot; *** Minum is starting &quot;+serverComment+&quot; ***&quot;);</span>
+        
+        // instantiate our security code
+<span class="fc" id="L115">        theBrig = new TheBrig(context).initialize();</span>
+        
+        // the web framework handles the HTTP communications
+<span class="fc" id="L118">        webFramework = new WebFramework(context);</span>
+
+        // build the primary http handler - the beating heart of code
+        // that handles HTTP protocol
+<span class="fc" id="L122">        final var webHandler = webFramework.makePrimaryHttpHandler();</span>
+
+        // should we redirect all insecure traffic to https? If so,
+        // then for port 80 all requests will cause a redirect to the secure TLS endpoint
+<span class="fc" id="L126">        boolean shouldRedirect = constants.REDIRECT_TO_SECURE;</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        var nonTlsWebHandler = shouldRedirect ? webFramework.makeRedirectHandler() : webHandler;</span>
+        
+        // kick off the servers - low level internet handlers
+<span class="fc" id="L130">        webEngine = new WebEngine(context);</span>
+<span class="fc" id="L131">        server = webEngine.startServer(es, nonTlsWebHandler);</span>
+<span class="fc" id="L132">        sslServer = webEngine.startSslServer(es, webHandler);</span>
+
+        // document how long to start up the system
+<span class="fc" id="L135">        var now = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;));</span>
+<span class="fc" id="L136">        var formattedNow = now.format(DateTimeFormatter.ISO_INSTANT);</span>
+<span class="fc" id="L137">        var nowMillis = now.toInstant().toEpochMilli();</span>
+<span class="fc" id="L138">        var startupTime = nowMillis - constants.START_TIME;</span>
+<span class="fc" id="L139">        System.out.println(formattedNow + &quot; *** Minum has finished primary startup after &quot; + startupTime + &quot; milliseconds ***&quot;);</span>
+
+<span class="fc" id="L141">        return this;</span>
+    }
+
+    /**
+     * this adds a hook to the Java runtime, so that if the app is running
+     * and a user stops it - by pressing ctrl+c or a unix &quot;kill&quot; command - the
+     * server socket will be shutdown and some messages about closing the server
+     * will log
+     */
+    private void addShutdownHook() {
+<span class="fc" id="L151">        shutdownHook = new Thread(ThrowingRunnable.throwingRunnableWrapper(this::close, logger));</span>
+<span class="fc" id="L152">        Runtime.getRuntime().addShutdownHook(shutdownHook);</span>
+<span class="fc" id="L153">    }</span>
+
+    /**
+     * this saves a file to the home directory, SYSTEM_RUNNING,
+     * that will indicate the system is active
+     */
+    private void createSystemRunningMarker() throws IOException {
+<span class="fc" id="L160">        Files.writeString(Path.of(&quot;SYSTEM_RUNNING&quot;), &quot;This file serves as a marker to indicate the system is running.\n&quot;);</span>
+<span class="fc" id="L161">        new File(&quot;SYSTEM_RUNNING&quot;).deleteOnExit();</span>
+<span class="fc" id="L162">    }</span>
+
+    Server getServer() {
+<span class="fc" id="L165">        return server;</span>
+    }
+
+    Server getSslServer() {
+<span class="nc" id="L169">        return sslServer;</span>
+    }
+
+    public WebFramework getWebFramework() {
+<span class="fc" id="L173">        return webFramework;</span>
+    }
+
+    public ITheBrig getTheBrig() {
+<span class="fc" id="L177">        return theBrig;</span>
+    }
+
+    public Context getContext() {
+<span class="nc" id="L181">        return context;</span>
+    }
+
+    WebEngine getWebEngine() {
+<span class="fc" id="L185">        return webEngine;</span>
+    }
+
+    public void close() {
+
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        if (!hasShutdown) {</span>
+<span class="fc" id="L191">            logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+            try {
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
+<span class="fc" id="L194">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Received shutdown command&quot;);</span>
+
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
+<span class="fc" id="L197">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the server: &quot; + this.server);</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">                if (server != null) server.close();</span>
+
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
+<span class="fc" id="L201">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the SSL server: &quot; + this.sslServer);</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">                if (sslServer != null) sslServer.close();</span>
+
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
+<span class="fc" id="L205">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Killing all the action queues: &quot; + this.context.getActionQueueList());</span>
+<span class="fc" id="L206">                new ActionQueueKiller(context).killAllQueues();</span>
+
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
+<span class="fc" id="L209">                    System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; %s says: Goodbye world!%n&quot;, this);</span>
+
+<span class="nc" id="L211">            } catch (Exception ex) {</span>
+<span class="nc" id="L212">                throw new RuntimeException(ex);</span>
+            } finally {
+<span class="fc" id="L214">                hasShutdown = true;</span>
+            }
+        }
+<span class="fc" id="L217">    }</span>
+
+    /**
+     * A blocking call for our multi-threaded application.
+     * &lt;p&gt;
+     * This method is needed because the entire application is
+     * multi-threaded.  Let me help contextualize the problem
+     * for you:
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     For this application, multi-threaded means that we
+     *     are wrapping our code in {@link Thread} classes and
+     *     having them run using a {@link ExecutorService}.  It's
+     *     sort of like giving instructions to someone else to carry
+     *     out the work and sending them away, trusting the work will
+     *     get done, rather than doing it yourself.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     But, since our entire system is done this way, once we
+     *     have sent all our threads on their way, there's nothing
+     *     left for us to do! Continuing the analogy, it is like
+     *     our whole job is to give other people instructions, and
+     *     then just wait for them to return.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     That's the purpose of this method.  It's to wait for
+     *     the return.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     It's probably best to call this method as one of the
+     *     last statements in the main method, so it is clear where
+     *     execution is blocking.
+     * &lt;/p&gt;
+     */
+    public void block() {
+        try {
+<span class="nc" id="L253">            this.server.getCentralLoopFuture().get();</span>
+<span class="nc" id="L254">            this.sslServer.getCentralLoopFuture().get();</span>
+<span class="nc" id="L255">        } catch (Exception ex) {</span>
+<span class="nc" id="L256">            throw new RuntimeException(ex);</span>
+<span class="nc" id="L257">        }</span>
+<span class="nc" id="L258">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
