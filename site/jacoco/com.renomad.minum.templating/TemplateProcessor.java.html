@@ -72,7 +72,7 @@ public final class TemplateProcessor {
     /**
      * Builds a {@link TemplateProcessor} from a string
      * containing a proper template.  Templated values
-     * are surrounded by double-curly-braces, i.e. {{foo}}
+     * are surrounded by double-curly-braces, i.e. {{foo}} or {{ foo }}
      */
     public static TemplateProcessor buildProcessor(String template) {
 <span class="fc" id="L78">        var tSections = new ArrayList&lt;TemplateSection&gt;();</span>
@@ -93,7 +93,7 @@ public final class TemplateProcessor {
 <span class="pc bpc" id="L93" title="1 of 6 branches missed.">            if (charAtCursor == '}' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '}') {</span>
 <span class="fc" id="L94">                i += 1;</span>
 <span class="pc bpc" id="L95" title="1 of 2 branches missed.">                if (builder.length() &gt; 0) {</span>
-<span class="fc" id="L96">                    tSections.add(new TemplateSection(builder.toString(), null));</span>
+<span class="fc" id="L96">                    tSections.add(new TemplateSection(builder.toString().trim(), null));</span>
 <span class="fc" id="L97">                    builder = new StringBuilder();</span>
                 }
                 continue;

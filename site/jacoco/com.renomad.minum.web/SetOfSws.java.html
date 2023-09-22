@@ -55,7 +55,7 @@ import static com.renomad.minum.utils.Invariants.mustBeFalse;
 <span class="fc" id="L55">                    .filter((x) -&gt; x.getRemoteAddrWithPort().equals(new InetSocketAddress(address, port)))</span>
 <span class="fc" id="L56">                    .toList();</span>
 <span class="pc bpc" id="L57" title="1 of 2 branches missed.">            mustBeFalse(servers.size() &gt; 1, &quot;Too many sockets found with that address&quot;);</span>
-<span class="fc bfc" id="L58" title="All 2 branches covered.">            if (servers.size() == 1) {</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">            if (servers.size() == 1) {</span>
 <span class="fc" id="L59">                return servers.get(0);</span>
             }
 
@@ -65,9 +65,9 @@ import static com.renomad.minum.utils.Invariants.mustBeFalse;
             //
             // on the other hand, this code should probably only be called in testing, so maybe fewer
             // out-of-bounds problems?
-<span class="fc" id="L68">            int finalLoopCount = loopCount;</span>
-<span class="fc" id="L69">            logger.logDebug(() -&gt; String.format(&quot;no server found, sleeping on it... (attempt %d)&quot;, finalLoopCount + 1));</span>
-<span class="fc" id="L70">            MyThread.sleep(10);</span>
+<span class="nc" id="L68">            int finalLoopCount = loopCount;</span>
+<span class="nc" id="L69">            logger.logDebug(() -&gt; String.format(&quot;no server found, sleeping on it... (attempt %d)&quot;, finalLoopCount + 1));</span>
+<span class="nc" id="L70">            MyThread.sleep(10);</span>
         }
 <span class="nc" id="L72">        throw new RuntimeException(&quot;No socket found with that address&quot;);</span>
     }
