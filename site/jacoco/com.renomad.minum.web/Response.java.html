@@ -100,5 +100,29 @@ import java.util.*;
     public static Response htmlOk(String body) {
 <span class="fc" id="L101">        return htmlOk(body, Map.of());</span>
     }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L107" title="2 of 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L108">        Response response = (Response) o;</span>
+<span class="pc bpc" id="L109" title="2 of 6 branches missed.">        return statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Arrays.equals(body, response.body);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L114">        int result = Objects.hash(statusCode, extraHeaders);</span>
+<span class="fc" id="L115">        result = 31 * result + Arrays.hashCode(body);</span>
+<span class="fc" id="L116">        return result;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L121">        return &quot;Response{&quot; +</span>
+                &quot;statusCode=&quot; + statusCode +
+                &quot;, extraHeaders=&quot; + extraHeaders +
+<span class="fc" id="L124">                &quot;, body=&quot; + Arrays.toString(body) +</span>
+                '}';
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

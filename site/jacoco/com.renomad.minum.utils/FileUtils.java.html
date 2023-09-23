@@ -141,7 +141,7 @@ public final class FileUtils {
         }
 
 <span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (badFilePathPatterns.matcher(path).find()) {</span>
-<span class="nc" id="L144">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at makeDirectory: %s&quot;, path.toString()));</span>
+<span class="nc" id="L144">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at makeDirectory: %s&quot;, path));</span>
 <span class="nc" id="L145">            return new byte[0];</span>
         }
 
@@ -179,9 +179,7 @@ public final class FileUtils {
 <span class="fc" id="L179">                return bytes;</span>
 
             }
-<span class="pc bnc" id="L182" title="All 2 branches missed.">        } catch (IOException e){</span>
-<span class="fc" id="L183">            throw e;</span>
-        }
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        }</span>
     }
 
     /**
@@ -192,10 +190,10 @@ public final class FileUtils {
      */
     public byte[] readBinaryFile(String path) {
         try {
-<span class="nc" id="L195">            return readFile(path);</span>
-<span class="nc" id="L196">        } catch (IOException e) {</span>
-<span class="nc" id="L197">            logger.logDebug(() -&gt; path + String.format(&quot;Error while reading file %s, returning empty byte array. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
-<span class="nc" id="L198">            return new byte[0];</span>
+<span class="nc" id="L193">            return readFile(path);</span>
+<span class="nc" id="L194">        } catch (IOException e) {</span>
+<span class="nc" id="L195">            logger.logDebug(() -&gt; path + String.format(&quot;Error while reading file %s, returning empty byte array. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
+<span class="nc" id="L196">            return new byte[0];</span>
         }
     }
 
@@ -207,10 +205,10 @@ public final class FileUtils {
      */
     public String readTextFile(String path) {
         try {
-<span class="fc" id="L210">            return new String(readFile(path));</span>
-<span class="nc" id="L211">        } catch (IOException e) {</span>
-<span class="nc" id="L212">            logger.logDebug(() -&gt; path + String.format(&quot;Error while reading file %s, returning empty string. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
-<span class="nc" id="L213">            return &quot;&quot;;</span>
+<span class="fc" id="L208">            return new String(readFile(path));</span>
+<span class="nc" id="L209">        } catch (IOException e) {</span>
+<span class="nc" id="L210">            logger.logDebug(() -&gt; path + String.format(&quot;Error while reading file %s, returning empty string. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
+<span class="nc" id="L211">            return &quot;&quot;;</span>
         }
     }
 
@@ -225,67 +223,67 @@ public final class FileUtils {
      *  if the path has invalid characters, we'll return a &quot;bad request&quot; response.
      */
     public Response readStaticFile(String path) {
-<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path).find()) {</span>
-<span class="fc" id="L229">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at makeDirectory: %s&quot;, path));</span>
-<span class="fc" id="L230">            return new Response(_400_BAD_REQUEST);</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path).find()) {</span>
+<span class="fc" id="L227">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at makeDirectory: %s&quot;, path));</span>
+<span class="fc" id="L228">            return new Response(_400_BAD_REQUEST);</span>
         }
-<span class="fc" id="L232">        String mimeType = null;</span>
+<span class="fc" id="L230">        String mimeType = null;</span>
 
         byte[] fileContents;
         try {
-<span class="fc" id="L236">            Path staticFilePath = Path.of(constants.STATIC_FILES_DIRECTORY).resolve(path);</span>
-<span class="fc bfc" id="L237" title="All 2 branches covered.">            if (!Files.exists(staticFilePath)) {</span>
-<span class="fc" id="L238">                logger.logDebug(() -&gt; String.format(&quot;No file found at %s&quot;, path));</span>
-<span class="fc" id="L239">                return new Response(_404_NOT_FOUND);</span>
+<span class="fc" id="L234">            Path staticFilePath = Path.of(constants.STATIC_FILES_DIRECTORY).resolve(path);</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">            if (!Files.exists(staticFilePath)) {</span>
+<span class="fc" id="L236">                logger.logDebug(() -&gt; String.format(&quot;No file found at %s&quot;, path));</span>
+<span class="fc" id="L237">                return new Response(_404_NOT_FOUND);</span>
             }
-<span class="fc" id="L241">            fileContents = readFile(staticFilePath.toString());</span>
-<span class="fc" id="L242">        } catch (IOException e) {</span>
-<span class="fc" id="L243">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
-<span class="fc" id="L244">            return new Response(_400_BAD_REQUEST);</span>
-<span class="fc" id="L245">        }</span>
+<span class="fc" id="L239">            fileContents = readFile(staticFilePath.toString());</span>
+<span class="fc" id="L240">        } catch (IOException e) {</span>
+<span class="fc" id="L241">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
+<span class="fc" id="L242">            return new Response(_400_BAD_REQUEST);</span>
+<span class="fc" id="L243">        }</span>
 
         // if the provided path has a dot in it, use that
         // to obtain a suffix for determining file type
-<span class="fc" id="L249">        int suffixBeginIndex = path.lastIndexOf('.');</span>
-<span class="fc bfc" id="L250" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
-<span class="fc" id="L251">            String suffix = path.substring(suffixBeginIndex+1);</span>
-<span class="fc" id="L252">            mimeType = fileSuffixToMime.get(suffix);</span>
+<span class="fc" id="L247">        int suffixBeginIndex = path.lastIndexOf('.');</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
+<span class="fc" id="L249">            String suffix = path.substring(suffixBeginIndex+1);</span>
+<span class="fc" id="L250">            mimeType = fileSuffixToMime.get(suffix);</span>
         }
 
         // if we don't find any registered mime types for this
         // suffix, or if it doesn't have a suffix, set the mime type
         // to application/octet-stream
-<span class="fc bfc" id="L258" title="All 2 branches covered.">        if (mimeType == null) {</span>
-<span class="fc" id="L259">            mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if (mimeType == null) {</span>
+<span class="fc" id="L257">            mimeType = &quot;application/octet-stream&quot;;</span>
         }
 
-<span class="fc" id="L262">        return createOkResponseForStaticFiles(fileContents, mimeType);</span>
+<span class="fc" id="L260">        return createOkResponseForStaticFiles(fileContents, mimeType);</span>
     }
 
     /**
      * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds
      */
     private Response createOkResponseForStaticFiles(byte[] fileContents, String mimeType) {
-<span class="fc" id="L269">        var headers = Map.of(</span>
+<span class="fc" id="L267">        var headers = Map.of(</span>
                 &quot;cache-control&quot;, &quot;max-age=&quot; + constants.STATIC_FILE_CACHE_TIME,
                 &quot;content-type&quot;, mimeType);
 
-<span class="fc" id="L273">        return new Response(</span>
+<span class="fc" id="L271">        return new Response(</span>
                 StatusLine.StatusCode._200_OK,
                 headers,
                 fileContents);
     }
 
     void readExtraMappings(List&lt;String&gt; input) {
-<span class="fc bfc" id="L280" title="All 2 branches covered.">        mustBeTrue(input.size() % 2 == 0, &quot;input must be even (key + value = 2 items). Your input: &quot; + input);</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">        mustBeTrue(input.size() % 2 == 0, &quot;input must be even (key + value = 2 items). Your input: &quot; + input);</span>
 
-<span class="fc bfc" id="L282" title="All 2 branches covered.">        for (int i = 0; i &lt; input.size(); i += 2) {</span>
-<span class="fc" id="L283">            String fileSuffix = input.get(i);</span>
-<span class="fc" id="L284">            String mime = input.get(i+1);</span>
-<span class="fc" id="L285">            logger.logTrace(() -&gt; &quot;Adding mime mapping: &quot; + fileSuffix + &quot; -&gt; &quot; + mime);</span>
-<span class="fc" id="L286">            fileSuffixToMime.put(fileSuffix, mime);</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">        for (int i = 0; i &lt; input.size(); i += 2) {</span>
+<span class="fc" id="L281">            String fileSuffix = input.get(i);</span>
+<span class="fc" id="L282">            String mime = input.get(i+1);</span>
+<span class="fc" id="L283">            logger.logTrace(() -&gt; &quot;Adding mime mapping: &quot; + fileSuffix + &quot; -&gt; &quot; + mime);</span>
+<span class="fc" id="L284">            fileSuffixToMime.put(fileSuffix, mime);</span>
         }
-<span class="fc" id="L288">    }</span>
+<span class="fc" id="L286">    }</span>
 
     /**
      * This getter allows users to add extra mappings
@@ -293,7 +291,7 @@ public final class FileUtils {
      * a user needs one that was not provided.
      */
     public Map&lt;String,String&gt; getSuffixToMime() {
-<span class="fc" id="L296">        return fileSuffixToMime;</span>
+<span class="fc" id="L294">        return fileSuffixToMime;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

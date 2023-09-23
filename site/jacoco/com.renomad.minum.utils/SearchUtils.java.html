@@ -37,8 +37,8 @@ public final class SearchUtils {
      */
     public static &lt;T&gt; T findExactlyOne(Stream&lt;T&gt; streamOfSomething, Predicate&lt;? super T&gt; searchPredicate, Callable&lt;T&gt; alternate) {
 <span class="fc" id="L39">        List&lt;T&gt; listOfThings = streamOfSomething.filter(searchPredicate).toList();</span>
-<span class="fc bfc" id="L40" title="All 4 branches covered.">        mustBeTrue(listOfThings.size() == 0 || listOfThings.size() == 1, &quot;Must be zero or one of this thing, or it's a bug.  We found a size of &quot; + listOfThings.size());</span>
-<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (listOfThings.size() == 0) {</span>
+<span class="fc bfc" id="L40" title="All 4 branches covered.">        mustBeTrue(listOfThings.isEmpty() || listOfThings.size() == 1, &quot;Must be zero or one of this thing, or it's a bug.  We found a size of &quot; + listOfThings.size());</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (listOfThings.isEmpty()) {</span>
             T returnValue;
             try {
 <span class="fc" id="L44">                returnValue = alternate.call();</span>
@@ -51,6 +51,4 @@ public final class SearchUtils {
         }
     }
 }
-
-//   Stream&lt;T&gt; filter(Predicate&lt;? super T&gt; predicate);
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -21,7 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 final class LoggingActionQueue {
     private final String name;
     private final ExecutorService executorService;
-    private final LinkedBlockingQueue&lt;RunnableWithDescription&lt;?&gt;&gt; queue;
+    private final LinkedBlockingQueue&lt;RunnableWithDescription&gt; queue;
 <span class="fc" id="L25">    private boolean stop = false;</span>
     private Thread queueThread;
     private final Constants constants;
@@ -42,39 +42,40 @@ final class LoggingActionQueue {
 <span class="fc" id="L42">            this.queueThread = Thread.currentThread();</span>
             try {
                 while (true) {
-<span class="fc" id="L45">                    RunnableWithDescription&lt;?&gt; action = queue.take();</span>
+<span class="fc" id="L45">                    RunnableWithDescription action = queue.take();</span>
                     try {
 <span class="fc" id="L47">                        action.run();</span>
-<span class="nc" id="L48">                    } catch (Throwable ex) {</span>
+<span class="nc" id="L48">                    } catch (Exception ex) {</span>
 <span class="nc" id="L49">                        System.out.println(ex);</span>
 <span class="fc" id="L50">                    }</span>
 <span class="fc" id="L51">                }</span>
 <span class="fc" id="L52">            } catch (InterruptedException ex) {</span>
-            /*
-            this is what we expect to happen.
-            once this happens, we just continue on.
-            this only gets called when we are trying to shut everything
-            down cleanly
-             */
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; LoggingActionQueue for %s is stopped.%n&quot;, name);</span>
-<span class="nc" id="L60">            } catch (Exception ex) {</span>
-<span class="nc" id="L61">                System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; ERROR: LoggingActionQueue for %s has stopped unexpectedly. error: %s%n&quot;, name, ex);</span>
-<span class="nc" id="L62">                throw ex;</span>
-<span class="fc" id="L63">            }</span>
-<span class="fc" id="L64">        };</span>
-<span class="fc" id="L65">        executorService.submit(queueThread);</span>
-<span class="fc" id="L66">        return this;</span>
+                /*
+                this is what we expect to happen.
+                once this happens, we just continue on.
+                this only gets called when we are trying to shut everything
+                down cleanly
+                 */
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(&quot;%s LoggingActionQueue for %s is stopped.%n&quot;, TimeUtils.getTimestampIsoInstant(), name);</span>
+<span class="fc" id="L60">                Thread.currentThread().interrupt();</span>
+<span class="nc" id="L61">            } catch (Exception ex) {</span>
+<span class="nc" id="L62">                System.out.printf(&quot;%s ERROR: LoggingActionQueue for %s has stopped unexpectedly. error: %s%n&quot;, TimeUtils.getTimestampIsoInstant(), name, ex);</span>
+<span class="nc" id="L63">                throw ex;</span>
+<span class="fc" id="L64">            }</span>
+<span class="fc" id="L65">        };</span>
+<span class="fc" id="L66">        executorService.submit(queueThread);</span>
+<span class="fc" id="L67">        return this;</span>
     }
 
     /**
      * Adds something to the queue to be processed.
      * @param action an action to take with no return value.  (this uses callable so we can collect exceptions)
      */
-    void enqueue(String description, ThrowingRunnable&lt;?&gt; action) {
-<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (! stop) {</span>
-<span class="fc" id="L75">            queue.add(new RunnableWithDescription&lt;&gt;(action, description));</span>
+    void enqueue(String description, ThrowingRunnable action) {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (! stop) {</span>
+<span class="fc" id="L76">            queue.add(new RunnableWithDescription(action, description));</span>
         }
-<span class="fc" id="L77">    }</span>
+<span class="fc" id="L78">    }</span>
 
     /**
      * Stops the action queue
@@ -82,15 +83,14 @@ final class LoggingActionQueue {
      * @param sleepTime how long to wait in milliseconds between loops
      */
     void stop(int count, int sleepTime) {
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping queue &quot; + this);</span>
-<span class="fc" id="L86">        stop = true;</span>
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        for (int i = 0; i &lt; count; i++) {</span>
-<span class="fc" id="L88">            int size = queue.size();</span>
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">            if (!(size &gt; 0)) return;</span>
-<span class="nc bnc" id="L90" title="All 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue not yet empty, has %d elements. waiting...%n&quot;, size);</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(&quot;%s Stopping queue %s%n&quot;, TimeUtils.getTimestampIsoInstant(), this);</span>
+<span class="fc" id="L87">        stop = true;</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        for (int i = 0; i &lt; count; i++) {</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">            if (queue.isEmpty()) return;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;, TimeUtils.getTimestampIsoInstant(), queue.size());</span>
 <span class="nc" id="L91">            MyThread.sleep(sleepTime);</span>
         }
-<span class="nc" id="L93">        System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, this, queue.size(), queue);</span>
+<span class="nc" id="L93">        System.out.printf(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;,TimeUtils.getTimestampIsoInstant(), this, queue.size(), queue);</span>
 <span class="nc" id="L94">    }</span>
 
     /**

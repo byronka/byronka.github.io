@@ -58,9 +58,9 @@ public final class StartLine{
      * On the other hand if it's not a well-formed request, or
      * if we don't have that file, we reply with an error page
      */
-    static final String startLinePattern = &quot;^([A-Z]{3,8}) /(.*) HTTP/(1.1|1.0)$&quot;;
+    static final String START_LINE_PATTERN = &quot;^([A-Z]{3,8}) /(.*) HTTP/(1.1|1.0)$&quot;;
 
-<span class="fc" id="L63">    static final Pattern startLineRegex = Pattern.compile(startLinePattern);</span>
+<span class="fc" id="L63">    static final Pattern startLineRegex = Pattern.compile(START_LINE_PATTERN);</span>
 
     public static StartLine EMPTY(Context context) {
 <span class="fc" id="L66">        return new StartLine(Verb.NONE, PathDetails.empty, HttpVersion.NONE, &quot;&quot;, context);</span>
@@ -82,7 +82,7 @@ public final class StartLine{
 
     /**
      * These are the HTTP Verbs we handle.
-     * @see #startLinePattern
+     * @see #START_LINE_PATTERN
      */
 <span class="fc" id="L87">    public enum Verb {</span>
 <span class="fc" id="L88">        GET,</span>
@@ -112,12 +112,12 @@ public final class StartLine{
 <span class="fc bfc" id="L112" title="All 2 branches covered.">        if (!doesMatch) {</span>
 <span class="fc" id="L113">            return StartLine.EMPTY(context);</span>
         }
-<span class="fc" id="L115">        mustBeTrue(doesMatch, String.format(&quot;%s must match the startLinePattern: %s&quot;, value, startLinePattern));</span>
-<span class="fc" id="L116">        Verb verb = extractVerb(m.group(1));</span>
+<span class="fc" id="L115">        mustBeTrue(doesMatch, String.format(&quot;%s must match the startLinePattern: %s&quot;, value, START_LINE_PATTERN));</span>
+<span class="fc" id="L116">        Verb myVerb = extractVerb(m.group(1));</span>
 <span class="fc" id="L117">        PathDetails pd = extractPathDetails(m.group(2));</span>
 <span class="fc" id="L118">        HttpVersion httpVersion = getHttpVersion(m.group(3));</span>
 
-<span class="fc" id="L120">        return new StartLine(verb, pd, httpVersion, value, context);</span>
+<span class="fc" id="L120">        return new StartLine(myVerb, pd, httpVersion, value, context);</span>
     }
 
     private Verb extractVerb(String verbString) {

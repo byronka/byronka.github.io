@@ -37,7 +37,7 @@
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L30" href="#L30">30</a>  <em class="jxr_javadoccomment">     * The suffix we will apply to each database file</em>
 <a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String databaseFileSuffix = <span class="jxr_string">".ddps"</span>;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DATABASE_FILE_SUFFIX = <span class="jxr_string">".ddps"</span>;
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> T emptyInstance;
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>      <em class="jxr_comment">// some locks we use for certain operations</em>
@@ -76,7 +76,7 @@
 <a class="jxr_linenumber" name="L68" href="#L68">68</a>          actionQueue = <strong class="jxr_keyword">new</strong> <a name="ActionQueue" href="../../../../com/renomad/minum/utils/ActionQueue.html#ActionQueue">ActionQueue</a>(<span class="jxr_string">"DatabaseWriter "</span> + dbDirectory, context).initialize();
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>          <strong class="jxr_keyword">this</strong>.logger = context.getLogger();
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>          <strong class="jxr_keyword">this</strong>.dbDirectory = dbDirectory;
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>          <strong class="jxr_keyword">this</strong>.fullPathForIndexFile = dbDirectory.resolve(<span class="jxr_string">"index"</span> + databaseFileSuffix);
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>          <strong class="jxr_keyword">this</strong>.fullPathForIndexFile = dbDirectory.resolve(<span class="jxr_string">"index"</span> + DATABASE_FILE_SUFFIX);
 <a class="jxr_linenumber" name="L72" href="#L72">72</a>          <strong class="jxr_keyword">this</strong>.emptyInstance = instance;
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>          <strong class="jxr_keyword">this</strong>.fileUtils = context.getFileUtils();
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>  
@@ -146,7 +146,7 @@
 <a class="jxr_linenumber" name="L138" href="#L138">138</a>             data.put(newData.getIndex(), newData);
 <a class="jxr_linenumber" name="L139" href="#L139">139</a> 
 <a class="jxr_linenumber" name="L140" href="#L140">140</a>             <em class="jxr_comment">// now handle the disk portion</em>
-<a class="jxr_linenumber" name="L141" href="#L141">141</a>             <strong class="jxr_keyword">final</strong> Path fullPath = dbDirectory.resolve(newData.getIndex() + databaseFileSuffix);
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>             <strong class="jxr_keyword">final</strong> Path fullPath = dbDirectory.resolve(newData.getIndex() + DATABASE_FILE_SUFFIX);
 <a class="jxr_linenumber" name="L142" href="#L142">142</a>             actionQueue.enqueue(<span class="jxr_string">"persist data to disk"</span>, () -&gt; {
 <a class="jxr_linenumber" name="L143" href="#L143">143</a>                 mustBeTrue(!fullPath.toFile().exists(), fullPath + <span class="jxr_string">" must not already exist before persisting"</span>);
 <a class="jxr_linenumber" name="L144" href="#L144">144</a>                 String serializedData = newData.serialize();
@@ -196,7 +196,7 @@
 <a class="jxr_linenumber" name="L188" href="#L188">188</a> 
 <a class="jxr_linenumber" name="L189" href="#L189">189</a>             <em class="jxr_comment">// now handle the disk portion</em>
 <a class="jxr_linenumber" name="L190" href="#L190">190</a>             actionQueue.enqueue(<span class="jxr_string">"delete data from disk"</span>, () -&gt; {
-<a class="jxr_linenumber" name="L191" href="#L191">191</a>                 <strong class="jxr_keyword">final</strong> Path fullPath = dbDirectory.resolve(dataIndex + databaseFileSuffix);
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>                 <strong class="jxr_keyword">final</strong> Path fullPath = dbDirectory.resolve(dataIndex + DATABASE_FILE_SUFFIX);
 <a class="jxr_linenumber" name="L192" href="#L192">192</a>                 <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L193" href="#L193">193</a>                     mustBeTrue(fullPath.toFile().exists(), fullPath + <span class="jxr_string">" must already exist before deletion"</span>);
 <a class="jxr_linenumber" name="L194" href="#L194">194</a>                     Files.delete(fullPath);
@@ -233,7 +233,7 @@
 <a class="jxr_linenumber" name="L225" href="#L225">225</a> 
 <a class="jxr_linenumber" name="L226" href="#L226">226</a>             <em class="jxr_comment">// now handle the disk portion</em>
 <a class="jxr_linenumber" name="L227" href="#L227">227</a>             actionQueue.enqueue(<span class="jxr_string">"update data on disk"</span>, () -&gt; {
-<a class="jxr_linenumber" name="L228" href="#L228">228</a>                 <strong class="jxr_keyword">final</strong> Path fullPath = dbDirectory.resolve(dataIndex + databaseFileSuffix);
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>                 <strong class="jxr_keyword">final</strong> Path fullPath = dbDirectory.resolve(dataIndex + DATABASE_FILE_SUFFIX);
 <a class="jxr_linenumber" name="L229" href="#L229">229</a>                 <em class="jxr_comment">// if the file isn't already there, throw an exception</em>
 <a class="jxr_linenumber" name="L230" href="#L230">230</a>                 mustBeTrue(fullPath.toFile().exists(), fullPath + <span class="jxr_string">" must already exist during updates"</span>);
 <a class="jxr_linenumber" name="L231" href="#L231">231</a>                 fileUtils.writeString(fullPath, dataUpdate.serialize());
@@ -256,11 +256,11 @@
 <a class="jxr_linenumber" name="L248" href="#L248">248</a>         <em class="jxr_comment">// walk through all the files in this directory, collecting</em>
 <a class="jxr_linenumber" name="L249" href="#L249">249</a>         <em class="jxr_comment">// all regular files (non-subdirectories) except for index.ddps</em>
 <a class="jxr_linenumber" name="L250" href="#L250">250</a>         <strong class="jxr_keyword">try</strong> (<strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> pathStream = Files.walk(dbDirectory)) {
-<a class="jxr_linenumber" name="L251" href="#L251">251</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> listOfFiles = pathStream.filter(path -&gt; {
-<a class="jxr_linenumber" name="L252" href="#L252">252</a>                 <strong class="jxr_keyword">return</strong> Files.exists(path) &amp;&amp;
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> listOfFiles = pathStream.filter(path -&gt;
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>                 Files.exists(path) &amp;&amp;
 <a class="jxr_linenumber" name="L253" href="#L253">253</a>                         Files.isRegularFile(path) &amp;&amp;
-<a class="jxr_linenumber" name="L254" href="#L254">254</a>                         !path.getFileName().toString().startsWith(<span class="jxr_string">"index"</span>);
-<a class="jxr_linenumber" name="L255" href="#L255">255</a>             }).toList();
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>                         !path.getFileName().toString().startsWith(<span class="jxr_string">"index"</span>)
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>             ).toList();
 <a class="jxr_linenumber" name="L256" href="#L256">256</a>             <strong class="jxr_keyword">for</strong> (Path p : listOfFiles) {
 <a class="jxr_linenumber" name="L257" href="#L257">257</a>                 readAndDeserialize(p);
 <a class="jxr_linenumber" name="L258" href="#L258">258</a>             }

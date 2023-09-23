@@ -18,15 +18,16 @@ public final class LRUCache&lt;T&gt; extends LinkedHashMap&lt;String, T&gt; {
     private static final int DEFAULT_MAX_ENTRIES = 100;
     private final int maxSize;
 
+    @Override
     protected boolean removeEldestEntry(Map.Entry&lt;String, T&gt; eldest) {
-<span class="fc bfc" id="L22" title="All 2 branches covered.">        return size() &gt; maxSize;</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        return size() &gt; maxSize;</span>
     }
 
     private LRUCache(int maxSize) {
         // uses the same load factor as found in java.util.Hashmap.DEFAULT_LOAD_FACTOR
-<span class="fc" id="L27">        super(maxSize + 1, 0.75f, true);</span>
-<span class="fc" id="L28">        this.maxSize = maxSize;</span>
-<span class="fc" id="L29">    }</span>
+<span class="fc" id="L28">        super(maxSize + 1, 0.75f, true);</span>
+<span class="fc" id="L29">        this.maxSize = maxSize;</span>
+<span class="fc" id="L30">    }</span>
 
     /**
      * Builds a map that functions as a least-recently used cache.
@@ -40,7 +41,7 @@ public final class LRUCache&lt;T&gt; extends LinkedHashMap&lt;String, T&gt; {
      * what types to build.
      */
     public static &lt;T&gt; Map&lt;String, T&gt; getLruCache() {
-<span class="fc" id="L43">        return getLruCache(DEFAULT_MAX_ENTRIES);</span>
+<span class="fc" id="L44">        return getLruCache(DEFAULT_MAX_ENTRIES);</span>
     }
 
     /**
@@ -54,7 +55,9 @@ public final class LRUCache&lt;T&gt; extends LinkedHashMap&lt;String, T&gt; {
      * what types to build.
      */
     public static &lt;T&gt; Map&lt;String, T&gt; getLruCache(int maxSize) {
-<span class="fc" id="L57">        return Collections.synchronizedMap(new LRUCache&lt;&gt;(maxSize));</span>
+<span class="fc" id="L58">        return Collections.synchronizedMap(new LRUCache&lt;&gt;(maxSize));</span>
     }
+
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

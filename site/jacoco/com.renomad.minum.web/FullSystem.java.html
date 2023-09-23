@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutorService;
  * This class is responsible for kicking off the entire system.
  * In particular, look at {@link #start()}
  */
-public final class FullSystem implements AutoCloseable {
+public final class FullSystem {
 
     final ILogger logger;
     private final Constants constants;
@@ -190,31 +190,35 @@ public final class FullSystem implements AutoCloseable {
 <span class="fc bfc" id="L190" title="All 2 branches covered.">        if (!hasShutdown) {</span>
 <span class="fc" id="L191">            logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
             try {
-<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) {</span>
 <span class="fc" id="L194">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Received shutdown command&quot;);</span>
-
-<span class="pc bpc" id="L196" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
+                }
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) {</span>
 <span class="fc" id="L197">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the server: &quot; + this.server);</span>
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                if (server != null) server.close();</span>
+                }
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">                if (server != null) server.close();</span>
 
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
-<span class="fc" id="L201">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the SSL server: &quot; + this.sslServer);</span>
-<span class="pc bpc" id="L202" title="1 of 2 branches missed.">                if (sslServer != null) sslServer.close();</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) {</span>
+<span class="fc" id="L202">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Stopping the SSL server: &quot; + this.sslServer);</span>
+                }
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                if (sslServer != null) sslServer.close();</span>
 
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
-<span class="fc" id="L205">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Killing all the action queues: &quot; + this.context.getActionQueueList());</span>
-<span class="fc" id="L206">                new ActionQueueKiller(context).killAllQueues();</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) {</span>
+<span class="fc" id="L207">                    System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; Killing all the action queues: &quot; + this.context.getActionQueueList());</span>
+                }
+<span class="fc" id="L209">                new ActionQueueKiller(context).killAllQueues();</span>
 
-<span class="pc bpc" id="L208" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG))</span>
-<span class="fc" id="L209">                    System.out.printf(TimeUtils.getTimestampIsoInstant() + &quot; %s says: Goodbye world!%n&quot;, this);</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">                if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) {</span>
+<span class="fc" id="L212">                    System.out.printf(&quot;%s %s says: Goodbye world!%n&quot;, TimeUtils.getTimestampIsoInstant(), this);</span>
+                }
 
-<span class="nc" id="L211">            } catch (Exception ex) {</span>
-<span class="nc" id="L212">                throw new RuntimeException(ex);</span>
+<span class="nc" id="L215">            } catch (Exception ex) {</span>
+<span class="nc" id="L216">                throw new RuntimeException(ex);</span>
             } finally {
-<span class="fc" id="L214">                hasShutdown = true;</span>
+<span class="fc" id="L218">                hasShutdown = true;</span>
             }
         }
-<span class="fc" id="L217">    }</span>
+<span class="fc" id="L221">    }</span>
 
     /**
      * A blocking call for our multi-threaded application.
@@ -250,11 +254,13 @@ public final class FullSystem implements AutoCloseable {
      */
     public void block() {
         try {
-<span class="nc" id="L253">            this.server.getCentralLoopFuture().get();</span>
-<span class="nc" id="L254">            this.sslServer.getCentralLoopFuture().get();</span>
-<span class="nc" id="L255">        } catch (Exception ex) {</span>
-<span class="nc" id="L256">            throw new RuntimeException(ex);</span>
-<span class="nc" id="L257">        }</span>
-<span class="nc" id="L258">    }</span>
+<span class="nc" id="L257">            this.server.getCentralLoopFuture().get();</span>
+<span class="nc" id="L258">            this.sslServer.getCentralLoopFuture().get();</span>
+<span class="nc" id="L259">        } catch (InterruptedException ex) {</span>
+<span class="nc" id="L260">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L261">        } catch (Exception ex) {</span>
+<span class="nc" id="L262">            throw new RuntimeException(ex);</span>
+<span class="nc" id="L263">        }</span>
+<span class="nc" id="L264">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

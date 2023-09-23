@@ -29,7 +29,7 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
     /**
      * The suffix we will apply to each database file
      */
-    static final String databaseFileSuffix = &quot;.ddps&quot;;
+    static final String DATABASE_FILE_SUFFIX = &quot;.ddps&quot;;
     private final T emptyInstance;
 
     // some locks we use for certain operations
@@ -68,7 +68,7 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
 <span class="fc" id="L68">        actionQueue = new ActionQueue(&quot;DatabaseWriter &quot; + dbDirectory, context).initialize();</span>
 <span class="fc" id="L69">        this.logger = context.getLogger();</span>
 <span class="fc" id="L70">        this.dbDirectory = dbDirectory;</span>
-<span class="fc" id="L71">        this.fullPathForIndexFile = dbDirectory.resolve(&quot;index&quot; + databaseFileSuffix);</span>
+<span class="fc" id="L71">        this.fullPathForIndexFile = dbDirectory.resolve(&quot;index&quot; + DATABASE_FILE_SUFFIX);</span>
 <span class="fc" id="L72">        this.emptyInstance = instance;</span>
 <span class="fc" id="L73">        this.fileUtils = context.getFileUtils();</span>
 
@@ -138,7 +138,7 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
 <span class="fc" id="L138">            data.put(newData.getIndex(), newData);</span>
 
             // now handle the disk portion
-<span class="fc" id="L141">            final Path fullPath = dbDirectory.resolve(newData.getIndex() + databaseFileSuffix);</span>
+<span class="fc" id="L141">            final Path fullPath = dbDirectory.resolve(newData.getIndex() + DATABASE_FILE_SUFFIX);</span>
 <span class="fc" id="L142">            actionQueue.enqueue(&quot;persist data to disk&quot;, () -&gt; {</span>
 <span class="pc bpc" id="L143" title="1 of 2 branches missed.">                mustBeTrue(!fullPath.toFile().exists(), fullPath + &quot; must not already exist before persisting&quot;);</span>
 <span class="fc" id="L144">                String serializedData = newData.serialize();</span>
@@ -188,7 +188,7 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
 
             // now handle the disk portion
 <span class="fc" id="L190">            actionQueue.enqueue(&quot;delete data from disk&quot;, () -&gt; {</span>
-<span class="fc" id="L191">                final Path fullPath = dbDirectory.resolve(dataIndex + databaseFileSuffix);</span>
+<span class="fc" id="L191">                final Path fullPath = dbDirectory.resolve(dataIndex + DATABASE_FILE_SUFFIX);</span>
                 try {
 <span class="fc" id="L193">                    mustBeTrue(fullPath.toFile().exists(), fullPath + &quot; must already exist before deletion&quot;);</span>
 <span class="fc" id="L194">                    Files.delete(fullPath);</span>
@@ -225,7 +225,7 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
 
             // now handle the disk portion
 <span class="fc" id="L227">            actionQueue.enqueue(&quot;update data on disk&quot;, () -&gt; {</span>
-<span class="fc" id="L228">                final Path fullPath = dbDirectory.resolve(dataIndex + databaseFileSuffix);</span>
+<span class="fc" id="L228">                final Path fullPath = dbDirectory.resolve(dataIndex + DATABASE_FILE_SUFFIX);</span>
                 // if the file isn't already there, throw an exception
 <span class="fc" id="L230">                mustBeTrue(fullPath.toFile().exists(), fullPath + &quot; must already exist during updates&quot;);</span>
 <span class="fc" id="L231">                fileUtils.writeString(fullPath, dataUpdate.serialize());</span>
@@ -248,11 +248,11 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
         // walk through all the files in this directory, collecting
         // all regular files (non-subdirectories) except for index.ddps
 <span class="fc" id="L250">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
-<span class="fc" id="L251">            final var listOfFiles = pathStream.filter(path -&gt; {</span>
-<span class="pc bpc" id="L252" title="1 of 2 branches missed.">                return Files.exists(path) &amp;&amp;</span>
+<span class="fc" id="L251">            final var listOfFiles = pathStream.filter(path -&gt;</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">                Files.exists(path) &amp;&amp;</span>
 <span class="fc bfc" id="L253" title="All 2 branches covered.">                        Files.isRegularFile(path) &amp;&amp;</span>
-<span class="fc bfc" id="L254" title="All 2 branches covered.">                        !path.getFileName().toString().startsWith(&quot;index&quot;);</span>
-<span class="fc" id="L255">            }).toList();</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">                        !path.getFileName().toString().startsWith(&quot;index&quot;)</span>
+<span class="fc" id="L255">            ).toList();</span>
 <span class="fc bfc" id="L256" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
 <span class="fc" id="L257">                readAndDeserialize(p);</span>
 <span class="fc" id="L258">            }</span>

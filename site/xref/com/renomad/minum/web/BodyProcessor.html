@@ -42,7 +42,7 @@
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  <em class="jxr_javadoccomment">     * we would rather not include all that data in the logs.</em>
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>  <em class="jxr_javadoccomment">     * So we will cap out at this value.</em>
 <a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>      <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">int</strong> MAX_SIZE_DATA_RETURNED_IN_EXCEPTION = 1024;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> MAX_SIZE_DATA_RETURNED_IN_EXCEPTION = 1024;
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>  
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>      <a name="BodyProcessor" href="../../../../com/renomad/minum/web/BodyProcessor.html#BodyProcessor">BodyProcessor</a>(<a name="Context" href="../../../../com/renomad/minum/Context.html#Context">Context</a> context) {
 <a class="jxr_linenumber" name="L40" href="#L40">40</a>          <strong class="jxr_keyword">this</strong>.context = context;
@@ -99,7 +99,7 @@
 <a class="jxr_linenumber" name="L91" href="#L91">91</a>                  logger.logDebug(() -&gt; <span class="jxr_string">"did not recognize a key-value pattern content-type, returning an empty map and the raw bytes for the body"</span>);
 <a class="jxr_linenumber" name="L92" href="#L92">92</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), bodyBytes, Map.of(), context);
 <a class="jxr_linenumber" name="L93" href="#L93">93</a>              }
-<a class="jxr_linenumber" name="L94" href="#L94">94</a>          } <strong class="jxr_keyword">catch</strong> (Throwable ex) {
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>          } <strong class="jxr_keyword">catch</strong> (Exception ex) {
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ParsingException" href="../../../../com/renomad/minum/htmlparsing/ParsingException.html#ParsingException">ParsingException</a>(<span class="jxr_string">"Unable to parse this body"</span>, ex);
 <a class="jxr_linenumber" name="L96" href="#L96">96</a>          }
 <a class="jxr_linenumber" name="L97" href="#L97">97</a>      }
@@ -132,7 +132,7 @@
 <a class="jxr_linenumber" name="L124" href="#L124">124</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="InvariantException" href="../../../../com/renomad/minum/utils/InvariantException.html#InvariantException">InvariantException</a>(pair[0] + <span class="jxr_string">" was duplicated in the post body - had values of "</span> + StringUtils.byteArrayToString(result) + <span class="jxr_string">" and "</span> + pair[1]);
 <a class="jxr_linenumber" name="L125" href="#L125">125</a>                 }
 <a class="jxr_linenumber" name="L126" href="#L126">126</a>             }
-<a class="jxr_linenumber" name="L127" href="#L127">127</a>         } <strong class="jxr_keyword">catch</strong> (Throwable ex) {
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>         } <strong class="jxr_keyword">catch</strong> (Exception ex) {
 <a class="jxr_linenumber" name="L128" href="#L128">128</a>             String dataToReturn = input;
 <a class="jxr_linenumber" name="L129" href="#L129">129</a>             <strong class="jxr_keyword">if</strong> (input.length() &gt; MAX_SIZE_DATA_RETURNED_IN_EXCEPTION) {
 <a class="jxr_linenumber" name="L130" href="#L130">130</a>                 dataToReturn = input.substring(0, MAX_SIZE_DATA_RETURNED_IN_EXCEPTION) + <span class="jxr_string">" ... (remainder of data trimmed)"</span>;

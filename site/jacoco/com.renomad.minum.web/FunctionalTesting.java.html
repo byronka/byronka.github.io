@@ -8,6 +8,7 @@ import com.renomad.minum.logging.ILogger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -29,19 +30,19 @@ public final class FunctionalTesting {
     private final WebFramework webFramework;
     private final ILogger logger;
 
-<span class="fc" id="L32">    public FunctionalTesting(Context context) {</span>
-<span class="fc" id="L33">        this.context = context;</span>
-<span class="fc" id="L34">        this.webEngine = context.getFullSystem().getWebEngine();</span>
-<span class="fc" id="L35">        this.primaryServer = context.getFullSystem().getServer();</span>
-<span class="fc" id="L36">        this.inputStreamUtils = context.getInputStreamUtils();</span>
-<span class="fc" id="L37">        this.webFramework = context.getFullSystem().getWebFramework();</span>
-<span class="fc" id="L38">        this.logger = context.getLogger();</span>
-<span class="fc" id="L39">    }</span>
+<span class="fc" id="L33">    public FunctionalTesting(Context context) {</span>
+<span class="fc" id="L34">        this.context = context;</span>
+<span class="fc" id="L35">        this.webEngine = context.getFullSystem().getWebEngine();</span>
+<span class="fc" id="L36">        this.primaryServer = context.getFullSystem().getServer();</span>
+<span class="fc" id="L37">        this.inputStreamUtils = context.getInputStreamUtils();</span>
+<span class="fc" id="L38">        this.webFramework = context.getFullSystem().getWebFramework();</span>
+<span class="fc" id="L39">        this.logger = context.getLogger();</span>
+<span class="fc" id="L40">    }</span>
 
     /**
      * A {@link Response} designed to work with {@link FunctionalTesting}
      */
-<span class="fc" id="L44">    public record TestResponse(StatusLine statusLine, Headers headers, Body body) {</span>
+<span class="fc" id="L45">    public record TestResponse(StatusLine statusLine, Headers headers, Body body) {</span>
 
         /**
          * Presuming the response body is HTML, search for a single
@@ -51,14 +52,14 @@ public final class FunctionalTesting {
          * and an exception thrown if more than one found.
          */
         public HtmlParseNode searchOne(TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc" id="L54">            var htmlParser = new HtmlParser();</span>
-<span class="fc" id="L55">            var nodes = htmlParser.parse(body.asString());</span>
-<span class="fc" id="L56">            var searchResults = htmlParser.search(nodes, tagName, attributes);</span>
-<span class="pc bpc" id="L57" title="2 of 4 branches missed.">            mustBeTrue(searchResults.size() == 0 || searchResults.size() == 1, &quot;More than 1 node found.  Here they are:&quot; + searchResults);</span>
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">            if (searchResults.size() == 0) {</span>
-<span class="nc" id="L59">                return HtmlParseNode.EMPTY;</span>
+<span class="fc" id="L55">            var htmlParser = new HtmlParser();</span>
+<span class="fc" id="L56">            var nodes = htmlParser.parse(body.asString());</span>
+<span class="fc" id="L57">            var searchResults = htmlParser.search(nodes, tagName, attributes);</span>
+<span class="pc bpc" id="L58" title="2 of 4 branches missed.">            mustBeTrue(searchResults.isEmpty() || searchResults.size() == 1, &quot;More than 1 node found.  Here they are:&quot; + searchResults);</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">            if (searchResults.isEmpty()) {</span>
+<span class="nc" id="L60">                return HtmlParseNode.EMPTY;</span>
             } else {
-<span class="fc" id="L61">                return searchResults.get(0);</span>
+<span class="fc" id="L62">                return searchResults.get(0);</span>
             }
         }
 
@@ -69,10 +70,9 @@ public final class FunctionalTesting {
          * @return a list of however many elements matched
          */
         public List&lt;HtmlParseNode&gt; search(TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="nc" id="L72">            var htmlParser = new HtmlParser();</span>
-<span class="nc" id="L73">            var nodes = htmlParser.parse(body.asString());</span>
-<span class="nc" id="L74">            var searchResults = htmlParser.search(nodes, tagName, attributes);</span>
-<span class="nc" id="L75">            return searchResults;</span>
+<span class="nc" id="L73">            var htmlParser = new HtmlParser();</span>
+<span class="nc" id="L74">            var nodes = htmlParser.parse(body.asString());</span>
+<span class="nc" id="L75">            return htmlParser.search(nodes, tagName, attributes);</span>
         }
     }
 
@@ -172,47 +172,49 @@ public final class FunctionalTesting {
 <span class="fc" id="L172">        Body body = Body.EMPTY(context);</span>
 <span class="fc" id="L173">        Headers headers = null;</span>
 <span class="fc" id="L174">        StatusLine statusLine = StatusLine.EMPTY;</span>
-<span class="fc" id="L175">        try (var client = webEngine.startClient(primaryServer)) {</span>
-<span class="fc" id="L176">            InputStream is = client.getInputStream();</span>
+<span class="fc" id="L175">        try (Socket socket = new Socket(primaryServer.getHost(), primaryServer.getPort())) {</span>
+<span class="fc" id="L176">            try (var client = webEngine.startClient(socket)) {</span>
+<span class="fc" id="L177">                InputStream is = client.getInputStream();</span>
 
-            // send a POST request
-<span class="fc" id="L179">            client.sendHttpLine(verb + &quot; /&quot;+path+&quot; HTTP/1.1&quot;);</span>
-<span class="fc" id="L180">            client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
-<span class="fc" id="L181">            client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
-<span class="fc bfc" id="L182" title="All 2 branches covered.">            for (String header : extraHeaders) {</span>
-<span class="fc" id="L183">                client.sendHttpLine(header);</span>
-<span class="fc" id="L184">            }</span>
-<span class="fc" id="L185">            client.sendHttpLine(&quot;&quot;);</span>
-<span class="fc" id="L186">            client.send(payload);</span>
+                // send a POST request
+<span class="fc" id="L180">                client.sendHttpLine(verb + &quot; /&quot; + path + &quot; HTTP/1.1&quot;);</span>
+<span class="fc" id="L181">                client.sendHttpLine(&quot;Host: localhost:8080&quot;);</span>
+<span class="fc" id="L182">                client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">                for (String header : extraHeaders) {</span>
+<span class="fc" id="L184">                    client.sendHttpLine(header);</span>
+<span class="fc" id="L185">                }</span>
+<span class="fc" id="L186">                client.sendHttpLine(&quot;&quot;);</span>
+<span class="fc" id="L187">                client.send(payload);</span>
 
-<span class="fc" id="L188">            statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
+<span class="fc" id="L189">                statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
 
-<span class="fc" id="L190">            headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
+<span class="fc" id="L191">                headers = Headers.make(context, inputStreamUtils).extractHeaderInformation(is);</span>
 
-<span class="fc" id="L192">            BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L193">                BodyProcessor bodyProcessor = new BodyProcessor(context);</span>
 
 
-<span class="fc bfc" id="L195" title="All 2 branches covered.">            if (webFramework.isThereIsABody(headers)) {</span>
-<span class="fc" id="L196">                Headers finalHeaders = headers;</span>
-<span class="fc" id="L197">                logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
-<span class="fc" id="L198">                body = bodyProcessor.extractData(is, headers);</span>
-            }
+<span class="fc bfc" id="L196" title="All 2 branches covered.">                if (webFramework.isThereIsABody(headers)) {</span>
+<span class="fc" id="L197">                    Headers finalHeaders = headers;</span>
+<span class="fc" id="L198">                    logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + finalHeaders.contentType());</span>
+<span class="fc" id="L199">                    body = bodyProcessor.extractData(is, headers);</span>
+                }
 
-<span class="nc" id="L201">        } catch (SocketException ex) {</span>
-<span class="nc bnc" id="L202" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;) ||</span>
-<span class="nc bnc" id="L203" title="All 2 branches missed.">                    ex.getMessage().equals(&quot;Connection reset&quot;)) {</span>
+<span class="nc" id="L202">            } catch (SocketException ex) {</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">                if (ex.getMessage().equals(&quot;An established connection was aborted by the software in your host machine&quot;) ||</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                        ex.getMessage().equals(&quot;Connection reset&quot;)) {</span>
                 /*
                 When the server is done communicating with us, it will close
                 the socket on its side, which will cause a SocketException on our side.
                 If the message matches what we have here, it's just that happening, no
                 need to pass it up further, it's expected and ok.
                  */
-            } else {
-<span class="nc" id="L211">                throw ex;</span>
-            }
-<span class="fc" id="L213">        }</span>
+                } else {
+<span class="nc" id="L212">                    throw ex;</span>
+                }
+<span class="fc" id="L214">            }</span>
+        }
 
-<span class="fc" id="L215">        return new TestResponse(statusLine, headers, body);</span>
+<span class="fc" id="L217">        return new TestResponse(statusLine, headers, body);</span>
     }
 
 }

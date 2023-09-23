@@ -43,7 +43,7 @@
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>  <em class="jxr_javadoccomment">     * our stack or some such nonsense.</em>
 <a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L37" href="#L37">37</a>      @Test
-<a class="jxr_linenumber" name="L38" href="#L38">38</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_Server_ForbiddenUse() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_Server_ForbiddenUse() {
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>          Server server = <strong class="jxr_keyword">new</strong> Server(<strong class="jxr_keyword">null</strong>, context, <span class="jxr_string">""</span>, <strong class="jxr_keyword">null</strong>);
 <a class="jxr_linenumber" name="L40" href="#L40">40</a>          <strong class="jxr_keyword">var</strong> builtCore = server.buildExceptionHandlingInnerCore(x -&gt; {
 <a class="jxr_linenumber" name="L41" href="#L41">41</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> ForbiddenUseException(<span class="jxr_string">"Forbidden!"</span>);
@@ -61,7 +61,7 @@
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>  <em class="jxr_javadoccomment">     * as a form of attack.</em>
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>      @Test
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_Server_VulnerabilityAttack() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_Server_VulnerabilityAttack() {
 <a class="jxr_linenumber" name="L57" href="#L57">57</a>          Server server = <strong class="jxr_keyword">new</strong> Server(<strong class="jxr_keyword">null</strong>, context, <span class="jxr_string">""</span>, theBrigMock);
 <a class="jxr_linenumber" name="L58" href="#L58">58</a>          <strong class="jxr_keyword">var</strong> builtCore = server.buildExceptionHandlingInnerCore(x -&gt; {
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> SSLException(<span class="jxr_string">"no cipher suites in common"</span>);
@@ -76,7 +76,7 @@
 <a class="jxr_linenumber" name="L68" href="#L68">68</a>  <em class="jxr_javadoccomment">     * but we don't do different things, we just log it.</em>
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>      @Test
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_Server_SocketException() <strong class="jxr_keyword">throws</strong> Exception  {
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_Server_SocketException() {
 <a class="jxr_linenumber" name="L72" href="#L72">72</a>          Server server = <strong class="jxr_keyword">new</strong> Server(<strong class="jxr_keyword">null</strong>, context, <span class="jxr_string">""</span>, <strong class="jxr_keyword">null</strong>);
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>          <strong class="jxr_keyword">var</strong> builtCore = server.buildExceptionHandlingInnerCore(x -&gt; {
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> SocketException(<span class="jxr_string">"Foo foo is a foo"</span>);
@@ -94,10 +94,10 @@
 <a class="jxr_linenumber" name="L86" href="#L86">86</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_Server_OtherException() {
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>          Server server = <strong class="jxr_keyword">new</strong> Server(<strong class="jxr_keyword">null</strong>, context, <span class="jxr_string">""</span>, <strong class="jxr_keyword">null</strong>);
 <a class="jxr_linenumber" name="L88" href="#L88">88</a>          <strong class="jxr_keyword">var</strong> builtCore = server.buildExceptionHandlingInnerCore(x -&gt; {
-<a class="jxr_linenumber" name="L89" href="#L89">89</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IOException();
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException();
 <a class="jxr_linenumber" name="L90" href="#L90">90</a>          }, <strong class="jxr_keyword">new</strong> <a name="FakeSocketWrapper" href="../../../../com/renomad/minum/web/FakeSocketWrapper.html#FakeSocketWrapper">FakeSocketWrapper</a>());
 <a class="jxr_linenumber" name="L91" href="#L91">91</a>  
-<a class="jxr_linenumber" name="L92" href="#L92">92</a>          assertThrows(IOException.<strong class="jxr_keyword">class</strong>, () -&gt; builtCore.run());
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; builtCore.run());
 <a class="jxr_linenumber" name="L93" href="#L93">93</a>      }
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>  
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>  

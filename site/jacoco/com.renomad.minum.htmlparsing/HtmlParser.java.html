@@ -24,7 +24,7 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
     /**
      * Most total chars we'll read.
      */
-    final static int MAX_HTML_SIZE = 2 * 1024 * 1024;
+    static final int MAX_HTML_SIZE = 2 * 1024 * 1024;
 
     /**
      * Given any HTML input, scan through and generate a tree
@@ -97,246 +97,282 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
 <span class="fc" id="L97">        state.lineColumn += 1;</span>
 
 <span class="fc bfc" id="L99" title="All 2 branches covered.">        if (currentChar == '&lt;') {</span>
-            /* less-than signs are policed strictly */
-<span class="fc bfc" id="L101" title="All 2 branches covered.">            if (state.isInsideAttributeValueQuoted) {</span>
-                /*
-                Here, we're looking at a less-than that
-                is inside a quoted attribute value
-                */
-<span class="fc" id="L106">                state.stringBuilder.append(currentChar);</span>
-            } else {
-<span class="fc" id="L108">                enteringTag(state);</span>
-            }
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        } else if (currentChar == '&gt;') {</span>
-            /* It's allowed to use greater-than signs in a lot of places */
-<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (state.isInsideTag) {</span>
-<span class="fc bfc" id="L113" title="All 2 branches covered.">                if (state.isInsideAttributeValueQuoted) {</span>
-                    /*
-                    Here, we're looking at a greater-than
-                    that is inside a quoted attribute value
-                    */
-<span class="fc" id="L118">                    state.stringBuilder.append(currentChar);</span>
-                } else {
-<span class="pc bpc" id="L120" title="2 of 6 branches missed.">                    if (state.hasEncounteredTagName &amp;&amp; state.tagName.isEmpty() &amp;&amp; state.stringBuilder.length() &gt; 0) {</span>
-                        // We've just finished building the tagname
-<span class="fc" id="L122">                        state.tagName = state.stringBuilder.toString();</span>
-<span class="pc bpc" id="L123" title="1 of 6 branches missed.">                    } else if ( state.stringBuilder.length() &gt; 0 &amp;&amp; state.currentAttributeKey.isBlank() &amp;&amp; state.isReadingAttributeKey) {</span>
-<span class="fc" id="L124">                        state.attributes.put(state.stringBuilder.toString(), &quot;&quot;);</span>
-<span class="fc" id="L125">                        state.stringBuilder = new StringBuilder();</span>
-<span class="fc" id="L126">                        state.isReadingAttributeKey = false;</span>
-<span class="fc bfc" id="L127" title="All 2 branches covered.">                    } else if (!state.currentAttributeKey.isBlank()) {</span>
-                        // if we were in the midst of reading attribute stuff when we hit the closing bracket...
-<span class="fc bfc" id="L129" title="All 2 branches covered.">                        if (state.stringBuilder.length() &gt; 0) {</span>
-<span class="fc" id="L130">                            state.attributes.put(state.currentAttributeKey, state.stringBuilder.toString());</span>
-                        } else {
-<span class="fc" id="L132">                            state.attributes.put(state.currentAttributeKey, &quot;&quot;);</span>
-                        }
-<span class="fc" id="L134">                        state.isInsideAttributeValueQuoted = false;</span>
-<span class="fc" id="L135">                        state.stringBuilder = new StringBuilder();</span>
-<span class="fc" id="L136">                        state.currentAttributeKey = &quot;&quot;;</span>
-                    }
-
-<span class="fc" id="L139">                    exitingTag(state, nodes);</span>
-                }
-            } else {
-                /*
-                This situation means we're looking at a
-                free-floating greater-than symbol in
-                the html text.
-                */
-<span class="fc" id="L147">                state.stringBuilder.append(currentChar);</span>
-            }
+<span class="fc" id="L100">            processLessThan(currentChar, state);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        } else if (currentChar == '&gt;') {</span>
+<span class="fc" id="L102">            processGreaterThan(currentChar, state, nodes);</span>
         } else {
-<span class="fc" id="L150">            addingToken(state, currentChar);</span>
+<span class="fc" id="L104">            addingToken(state, currentChar);</span>
         }
-<span class="fc" id="L152">    }</span>
+<span class="fc" id="L106">    }</span>
+
+    private void processGreaterThan(char currentChar, State state, List&lt;HtmlParseNode&gt; nodes) {
+        /* It's allowed to use greater-than signs in a lot of places */
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (state.isInsideTag) {</span>
+<span class="fc" id="L111">            handleInsideTag(currentChar, state, nodes);</span>
+        } else {
+            /*
+            This situation means we're looking at a
+            free-floating greater-than symbol in
+            the html text.
+            */
+<span class="fc" id="L118">            state.stringBuilder.append(currentChar);</span>
+        }
+<span class="fc" id="L120">    }</span>
+
+    private void handleInsideTag(char currentChar, State state, List&lt;HtmlParseNode&gt; nodes) {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (state.isInsideAttributeValueQuoted) {</span>
+            /*
+            Here, we're looking at a greater-than
+            that is inside a quoted attribute value
+            */
+<span class="fc" id="L128">            state.stringBuilder.append(currentChar);</span>
+        } else {
+<span class="fc" id="L130">            handleTagComponents(state, nodes);</span>
+        }
+<span class="fc" id="L132">    }</span>
+
+    private void handleTagComponents(State state, List&lt;HtmlParseNode&gt; nodes) {
+<span class="pc bpc" id="L135" title="2 of 6 branches missed.">        if (state.hasEncounteredTagName &amp;&amp; state.tagName.isEmpty() &amp;&amp; state.stringBuilder.length() &gt; 0) {</span>
+            // We've just finished building the tagname
+<span class="fc" id="L137">            state.tagName = state.stringBuilder.toString();</span>
+<span class="pc bpc" id="L138" title="1 of 6 branches missed.">        } else if ( state.stringBuilder.length() &gt; 0 &amp;&amp; state.currentAttributeKey.isBlank() &amp;&amp; state.isReadingAttributeKey) {</span>
+<span class="fc" id="L139">            state.attributes.put(state.stringBuilder.toString(), &quot;&quot;);</span>
+<span class="fc" id="L140">            state.stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L141">            state.isReadingAttributeKey = false;</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        } else if (!state.currentAttributeKey.isBlank()) {</span>
+            // if we were in the midst of reading attribute stuff when we hit the closing bracket...
+<span class="fc bfc" id="L144" title="All 2 branches covered.">            if (state.stringBuilder.length() &gt; 0) {</span>
+<span class="fc" id="L145">                state.attributes.put(state.currentAttributeKey, state.stringBuilder.toString());</span>
+            } else {
+<span class="fc" id="L147">                state.attributes.put(state.currentAttributeKey, &quot;&quot;);</span>
+            }
+<span class="fc" id="L149">            state.isInsideAttributeValueQuoted = false;</span>
+<span class="fc" id="L150">            state.stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L151">            state.currentAttributeKey = &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L154">        exitingTag(state, nodes);</span>
+<span class="fc" id="L155">    }</span>
+
+    private void processLessThan(char currentChar, State state) {
+        /* less-than signs are policed strictly */
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (state.isInsideAttributeValueQuoted) {</span>
+            /*
+            Here, we're looking at a less-than that
+            is inside a quoted attribute value
+            */
+<span class="fc" id="L164">            state.stringBuilder.append(currentChar);</span>
+        } else {
+<span class="fc" id="L166">            enteringTag(state);</span>
+        }
+<span class="fc" id="L168">    }</span>
 
     /**
      * When we've read a less-than sign and are entering an HTML tag.
      */
     private void enteringTag(State state) {
-<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (state.stringBuilder.length() &gt; 0) {</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (state.stringBuilder.length() &gt; 0) {</span>
 
-<span class="fc" id="L160">            String textContent = state.stringBuilder.toString();</span>
+<span class="fc" id="L176">            String textContent = state.stringBuilder.toString();</span>
 
             // This is where we add characters if we found any between tags.
-<span class="fc bfc" id="L163" title="All 4 branches covered.">            if (state.parseStack.size() &gt; 0 &amp;&amp; ! textContent.isBlank()) {</span>
-<span class="fc" id="L164">                state.parseStack.peek().innerContent().add(new HtmlParseNode(ParseNodeType.CHARACTERS, TagInfo.EMPTY, new ArrayList&lt;&gt;(), textContent));</span>
+<span class="fc bfc" id="L179" title="All 4 branches covered.">            if (! state.parseStack.isEmpty() &amp;&amp; ! textContent.isBlank()) {</span>
+<span class="fc" id="L180">                state.parseStack.peek().innerContent().add(new HtmlParseNode(ParseNodeType.CHARACTERS, TagInfo.EMPTY, new ArrayList&lt;&gt;(), textContent));</span>
             }
         }
 
-<span class="fc" id="L168">        state.isInsideTag = true;</span>
+<span class="fc" id="L184">        state.isInsideTag = true;</span>
         /*
         not really sure it's a start tag, but if we
         assume it is that's fine, because if we hit
         a forward slash at the beginning, it becomes
         a non-start-tag.
          */
-<span class="fc" id="L175">        state.isStartTag = true;</span>
-<span class="fc" id="L176">        state.stringBuilder = new StringBuilder();</span>
-<span class="fc" id="L177">    }</span>
+<span class="fc" id="L191">        state.isStartTag = true;</span>
+<span class="fc" id="L192">        state.stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L193">    }</span>
 
     /**
      * Called when we've just hit a greater-than sign and thus
      * exited an HTML tag.
      */
     private void exitingTag(State state, List&lt;HtmlParseNode&gt; nodes) {
-<span class="fc" id="L184">        processTag(state, nodes);</span>
+<span class="fc" id="L200">        processTag(state, nodes);</span>
 
-<span class="fc" id="L186">        state.isHalfClosedTag = false;</span>
-<span class="fc" id="L187">        state.isInsideTag = false;</span>
-<span class="fc" id="L188">        state.isStartTag = false;</span>
-<span class="fc" id="L189">        state.isReadingTagName = false;</span>
-<span class="fc" id="L190">        state.tagName = &quot;&quot;;</span>
-<span class="fc" id="L191">        state.attributes = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L192">        state.hasEncounteredTagName = false;</span>
-<span class="fc" id="L193">        state.stringBuilder = new StringBuilder();</span>
-<span class="fc" id="L194">    }</span>
+<span class="fc" id="L202">        state.isHalfClosedTag = false;</span>
+<span class="fc" id="L203">        state.isInsideTag = false;</span>
+<span class="fc" id="L204">        state.isStartTag = false;</span>
+<span class="fc" id="L205">        state.isReadingTagName = false;</span>
+<span class="fc" id="L206">        state.tagName = &quot;&quot;;</span>
+<span class="fc" id="L207">        state.attributes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L208">        state.hasEncounteredTagName = false;</span>
+<span class="fc" id="L209">        state.stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L210">    }</span>
 
     /**
      * The commonest case when reading characters.  Buckle up.
      */
     private void addingToken(State state, char currentChar) {
-<span class="fc bfc" id="L200" title="All 4 branches covered.">        var hasNotBegunReadingTagName = state.isInsideTag &amp;&amp; !state.hasEncounteredTagName;</span>
+<span class="fc bfc" id="L216" title="All 4 branches covered.">        var hasNotBegunReadingTagName = state.isInsideTag &amp;&amp; !state.hasEncounteredTagName;</span>
 
-<span class="fc bfc" id="L202" title="All 2 branches covered.">        if (hasNotBegunReadingTagName) {</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (hasNotBegunReadingTagName) {</span>
 
-<span class="fc bfc" id="L204" title="All 2 branches covered.">            if (currentChar == ' ') {</span>
-                /*
-                At this point, we're inside the tag, and we've encountered whitespace.
-                Seeking the tag name (although we may be inside a closing tag).
-                 */
-<span class="fc" id="L209">                state.stringBuilder = new StringBuilder();</span>
-<span class="fc bfc" id="L210" title="All 2 branches covered.">            } else if (currentChar == '/') {</span>
-                /*
-                hitting a forward-slash symbol means we're looking
-                at the closure of a tag
-                */
-<span class="fc" id="L215">                state.isStartTag = false;</span>
-<span class="fc" id="L216">                state.stringBuilder = new StringBuilder();</span>
-<span class="pc bpc" id="L217" title="1 of 4 branches missed.">            } else if (Character.isLetter(currentChar) || Character.isDigit(currentChar)) {</span>
+<span class="fc" id="L220">            handleBeforeReadingTagName(state, currentChar);</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        } else if (state.isReadingTagName) {</span>
+<span class="fc" id="L222">            handleReadingTagName(state, currentChar);</span>
+<span class="pc bpc" id="L223" title="1 of 4 branches missed.">        } else if (!state.tagName.isEmpty() &amp;&amp; state.isInsideTag) {</span>
+<span class="fc" id="L224">            handleAfterReadingTagName(state, currentChar);</span>
+        } else {
+<span class="fc" id="L226">            state.stringBuilder.append(currentChar);</span>
+        }
+<span class="fc" id="L228">    }</span>
 
-                /*
-                Here, our input could definitely be the letters of a tag name
-                 */
-<span class="fc" id="L222">                state.hasEncounteredTagName = true;</span>
-<span class="fc" id="L223">                state.isReadingTagName = true;</span>
-<span class="fc" id="L224">                state.stringBuilder.append(currentChar);</span>
-            }
-<span class="fc bfc" id="L226" title="All 2 branches covered.">        } else if (state.isReadingTagName) {</span>
-<span class="fc bfc" id="L227" title="All 2 branches covered.">            if (Character.isWhitespace(currentChar)) {</span>
-                /*
-                At this point, we've been reading the tag name and we've encountered whitespace.
-                That means we are done reading the tag name
-                 */
-<span class="fc" id="L232">                state.hasEncounteredTagName = true;</span>
-<span class="fc" id="L233">                state.isReadingTagName = false;</span>
-<span class="fc" id="L234">                state.tagName = state.stringBuilder.toString();</span>
-<span class="fc" id="L235">                state.attributes = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L236">                state.stringBuilder = new StringBuilder();</span>
-            } else {
-                /*
-                Reading the characters of the tag name
-                 */
-<span class="fc" id="L241">                state.hasEncounteredTagName = true;</span>
-<span class="fc" id="L242">                state.tagName = &quot;&quot;;</span>
-<span class="fc" id="L243">                state.stringBuilder.append(currentChar);</span>
-            }
-<span class="pc bpc" id="L245" title="1 of 4 branches missed.">        } else if (!state.tagName.isEmpty() &amp;&amp; state.isInsideTag) {</span>
-            // at this point we have a tagname for our tag, and we're still in the tag
+    private static void handleAfterReadingTagName(State state, char currentChar) {
+        // at this point we have a tagname for our tag, and we're still in the tag
 
             /*
             the following logic looks crazy (sorry) but what it's trying to do
             is to check whether we're in the whitespace between the tagname and
             the start of the (potential) key.
             */
-<span class="fc" id="L253">            boolean atYetAnotherWhitespaceBetweenTagAndAttributes =</span>
-<span class="fc bfc" id="L254" title="All 2 branches covered.">                    state.currentAttributeKey.isEmpty() &amp;&amp;</span>
-<span class="fc bfc" id="L255" title="All 4 branches covered.">                    state.stringBuilder.length() == 0</span>
-                            &amp;&amp; currentChar == ' ';
+<span class="fc" id="L238">        boolean atYetAnotherWhitespaceBetweenTagAndAttributes =</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">                state.currentAttributeKey.isEmpty() &amp;&amp;</span>
+<span class="fc bfc" id="L240" title="All 4 branches covered.">                state.stringBuilder.length() == 0</span>
+                        &amp;&amp; currentChar == ' ';
 
-            // once we cross the chasm between the tag and the potential key,
-            // there's a whole set of logic to run through. Yum. (but by the
-            // way, it's not uncommon to never see a key inside a tag, so none
-            // of this code would ever get run in that case)
-<span class="fc bfc" id="L262" title="All 2 branches covered.">            boolean handlingAttributes = !atYetAnotherWhitespaceBetweenTagAndAttributes;</span>
-<span class="fc bfc" id="L263" title="All 2 branches covered.">            if (handlingAttributes) {</span>
+        // once we cross the chasm between the tag and the potential key,
+        // there's a whole set of logic to run through. Yum. (but by the
+        // way, it's not uncommon to never see a key inside a tag, so none
+        // of this code would ever get run in that case)
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        boolean isHandlingAttributes = !atYetAnotherWhitespaceBetweenTagAndAttributes;</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        if (isHandlingAttributes) {</span>
 
-<span class="fc bfc" id="L265" title="All 2 branches covered.">                if (state.currentAttributeKey.isBlank()) {</span>
-                    /*
-                    because the key is blank, we know we haven't read it all. That's
-                    because when we finish reading the key, we'll add it to currentAttributeKey
-                    and be in the mode of reading the value.
-                     */
-<span class="fc bfc" id="L271" title="All 2 branches covered.">                    if (state.isHalfClosedTag) {</span>
-                        /*
-                        if we got here, it means the previous char was
-                        a forward slash, so the current character *should*
-                        be a closing angle, but it's not! So.. panic.
-                         */
-<span class="fc" id="L277">                        throw new ParsingException(&quot;char after forward slash must be angle bracket.  Char: &quot; + currentChar);</span>
-<span class="fc bfc" id="L278" title="All 4 branches covered.">                    } else if (currentChar == ' ' || currentChar == '=') {</span>
-                        // if we hit whitespace or an equals sign, we're done reading the key
-<span class="fc" id="L280">                        state.currentAttributeKey = state.stringBuilder.toString();</span>
-<span class="fc" id="L281">                        state.isReadingAttributeKey = false;</span>
-<span class="fc" id="L282">                        state.stringBuilder = new StringBuilder();</span>
-<span class="fc bfc" id="L283" title="All 2 branches covered.">                    } else if (currentChar == '/') {</span>
-                        // a forward-slash cannot be in the attribute key
-<span class="fc" id="L285">                        state.isReadingAttributeKey = false;</span>
-<span class="fc" id="L286">                        state.isHalfClosedTag = true;</span>
-                    } else {
-                        // otherwise keep on reading
-<span class="fc" id="L289">                        state.stringBuilder.append(currentChar);</span>
-                        // and note we are reading the key
-<span class="fc" id="L291">                        state.isReadingAttributeKey = true;</span>
-                    }
-                } else {
-                    // reading in the (potential) attribute value
+<span class="fc bfc" id="L250" title="All 2 branches covered.">            if (state.currentAttributeKey.isBlank()) {</span>
+                /*
+                because the key is blank, we know we haven't read it all. That's
+                because when we finish reading the key, we'll add it to currentAttributeKey
+                and be in the mode of reading the value.
+                 */
+<span class="fc" id="L256">                handleNotFullyReadAttributeKey(state, currentChar);</span>
+            } else {
+                // reading in the (potential) attribute value
 
-<span class="fc bfc" id="L296" title="All 2 branches covered.">                    if (state.isInsideAttributeValueQuoted) {</span>
-                        // if we're already inside a quoted area, encountering a
-                        // closing quote will take us out of it.
-<span class="fc bfc" id="L299" title="All 2 branches covered.">                        if (currentChar == state.quoteType.literal) {</span>
-                            // if we hit the matching end-quote, switch modes
-<span class="fc" id="L301">                            state.isInsideAttributeValueQuoted = false;</span>
-<span class="fc" id="L302">                            state.quoteType = QuoteType.NONE;</span>
-<span class="fc" id="L303">                            state.attributes.put(state.currentAttributeKey, state.stringBuilder.toString());</span>
-<span class="fc" id="L304">                            state.stringBuilder = new StringBuilder();</span>
-<span class="fc" id="L305">                            state.currentAttributeKey = &quot;&quot;;</span>
-<span class="fc" id="L306">                            state.isReadingAttributeKey = false;</span>
-                        } else {
-                            // otherwise keep on trucking, adding characters
-<span class="fc" id="L309">                            state.stringBuilder.append(currentChar);</span>
-                        }
-                    } else {
-<span class="fc bfc" id="L312" title="All 4 branches covered.">                        if (currentChar == '&quot;' || currentChar == '\'') {</span>
-                            /*
-                            if we're not currently inside a quoted area but encounter
-                            a quote, switch modes.
-                             */
-<span class="fc" id="L317">                            state.isInsideAttributeValueQuoted = true;</span>
-<span class="fc" id="L318">                            state.quoteType = QuoteType.byLiteral(currentChar);</span>
-<span class="fc bfc" id="L319" title="All 4 branches covered.">                        } else if (state.stringBuilder.length() &gt; 0 &amp;&amp; currentChar == ' ') {</span>
-                            /*
-                            if we're not in a quoted area and encounter a space, then
-                            we're done reading the attribute value and can add the key-value
-                            pair to the map.
-                             */
-<span class="fc" id="L325">                            state.attributes.put(state.currentAttributeKey, state.stringBuilder.toString());</span>
-<span class="fc" id="L326">                            state.isReadingAttributeKey = false;</span>
-<span class="fc" id="L327">                            state.stringBuilder = new StringBuilder();</span>
-<span class="fc" id="L328">                            state.currentAttributeKey = &quot;&quot;;</span>
-                        } else {
-                            // otherwise keep trucking along adding characters
-<span class="fc" id="L331">                            state.stringBuilder.append(currentChar);</span>
-                        }
-                    }
-                }
+<span class="fc" id="L260">                handlePotentialAttributeValue(state, currentChar);</span>
             }
-<span class="fc" id="L336">        } else {</span>
-<span class="fc" id="L337">            state.stringBuilder.append(currentChar);</span>
         }
-<span class="fc" id="L339">    }</span>
+<span class="fc" id="L263">    }</span>
+
+    private static void handlePotentialAttributeValue(State state, char currentChar) {
+<span class="fc bfc" id="L266" title="All 2 branches covered.">        if (state.isInsideAttributeValueQuoted) {</span>
+            // if we're already inside a quoted area, encountering a
+            // closing quote will take us out of it.
+<span class="fc bfc" id="L269" title="All 2 branches covered.">            if (currentChar == state.quoteType.literal) {</span>
+                // if we hit the matching end-quote, switch modes
+<span class="fc" id="L271">                state.isInsideAttributeValueQuoted = false;</span>
+<span class="fc" id="L272">                state.quoteType = QuoteType.NONE;</span>
+<span class="fc" id="L273">                state.attributes.put(state.currentAttributeKey, state.stringBuilder.toString());</span>
+<span class="fc" id="L274">                state.stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L275">                state.currentAttributeKey = &quot;&quot;;</span>
+<span class="fc" id="L276">                state.isReadingAttributeKey = false;</span>
+            } else {
+                // otherwise keep on trucking, adding characters
+<span class="fc" id="L279">                state.stringBuilder.append(currentChar);</span>
+            }
+        } else {
+<span class="fc bfc" id="L282" title="All 4 branches covered.">            if (currentChar == '&quot;' || currentChar == '\'') {</span>
+                /*
+                if we're not currently inside a quoted area but encounter
+                a quote, switch modes.
+                 */
+<span class="fc" id="L287">                state.isInsideAttributeValueQuoted = true;</span>
+<span class="fc" id="L288">                state.quoteType = QuoteType.byLiteral(currentChar);</span>
+<span class="fc bfc" id="L289" title="All 4 branches covered.">            } else if (state.stringBuilder.length() &gt; 0 &amp;&amp; currentChar == ' ') {</span>
+                /*
+                if we're not in a quoted area and encounter a space, then
+                we're done reading the attribute value and can add the key-value
+                pair to the map.
+                 */
+<span class="fc" id="L295">                state.attributes.put(state.currentAttributeKey, state.stringBuilder.toString());</span>
+<span class="fc" id="L296">                state.isReadingAttributeKey = false;</span>
+<span class="fc" id="L297">                state.stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L298">                state.currentAttributeKey = &quot;&quot;;</span>
+            } else {
+                // otherwise keep trucking along adding characters
+<span class="fc" id="L301">                state.stringBuilder.append(currentChar);</span>
+            }
+        }
+<span class="fc" id="L304">    }</span>
+
+    private static void handleNotFullyReadAttributeKey(State state, char currentChar) {
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        if (state.isHalfClosedTag) {</span>
+            /*
+            if we got here, it means the previous char was
+            a forward slash, so the current character *should*
+            be a closing angle, but it's not! So.. panic.
+             */
+<span class="fc" id="L313">            throw new ParsingException(&quot;char after forward slash must be angle bracket.  Char: &quot; + currentChar);</span>
+<span class="fc bfc" id="L314" title="All 4 branches covered.">        } else if (currentChar == ' ' || currentChar == '=') {</span>
+            // if we hit whitespace or an equals sign, we're done reading the key
+<span class="fc" id="L316">            state.currentAttributeKey = state.stringBuilder.toString();</span>
+<span class="fc" id="L317">            state.isReadingAttributeKey = false;</span>
+<span class="fc" id="L318">            state.stringBuilder = new StringBuilder();</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">        } else if (currentChar == '/') {</span>
+            // a forward-slash cannot be in the attribute key
+<span class="fc" id="L321">            state.isReadingAttributeKey = false;</span>
+<span class="fc" id="L322">            state.isHalfClosedTag = true;</span>
+        } else {
+            // otherwise keep on reading
+<span class="fc" id="L325">            state.stringBuilder.append(currentChar);</span>
+            // and note we are reading the key
+<span class="fc" id="L327">            state.isReadingAttributeKey = true;</span>
+        }
+<span class="fc" id="L329">    }</span>
+
+    private static void handleReadingTagName(State state, char currentChar) {
+<span class="fc bfc" id="L332" title="All 2 branches covered.">        if (Character.isWhitespace(currentChar)) {</span>
+            /*
+            At this point, we've been reading the tag name and we've encountered whitespace.
+            That means we are done reading the tag name
+             */
+<span class="fc" id="L337">            state.hasEncounteredTagName = true;</span>
+<span class="fc" id="L338">            state.isReadingTagName = false;</span>
+<span class="fc" id="L339">            state.tagName = state.stringBuilder.toString();</span>
+<span class="fc" id="L340">            state.attributes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L341">            state.stringBuilder = new StringBuilder();</span>
+        } else {
+            /*
+            Reading the characters of the tag name
+             */
+<span class="fc" id="L346">            state.hasEncounteredTagName = true;</span>
+<span class="fc" id="L347">            state.tagName = &quot;&quot;;</span>
+<span class="fc" id="L348">            state.stringBuilder.append(currentChar);</span>
+        }
+<span class="fc" id="L350">    }</span>
+
+    private static void handleBeforeReadingTagName(State state, char currentChar) {
+<span class="fc bfc" id="L353" title="All 2 branches covered.">        if (currentChar == ' ') {</span>
+            /*
+            At this point, we're inside the tag, and we've encountered whitespace.
+            Seeking the tag name (although we may be inside a closing tag).
+             */
+<span class="fc" id="L358">            state.stringBuilder = new StringBuilder();</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">        } else if (currentChar == '/') {</span>
+            /*
+            hitting a forward-slash symbol means we're looking
+            at the closure of a tag
+            */
+<span class="fc" id="L364">            state.isStartTag = false;</span>
+<span class="fc" id="L365">            state.stringBuilder = new StringBuilder();</span>
+<span class="pc bpc" id="L366" title="1 of 4 branches missed.">        } else if (Character.isLetter(currentChar) || Character.isDigit(currentChar)) {</span>
+
+            /*
+            Here, our input could definitely be the letters of a tag name
+             */
+<span class="fc" id="L371">            state.hasEncounteredTagName = true;</span>
+<span class="fc" id="L372">            state.isReadingTagName = true;</span>
+<span class="fc" id="L373">            state.stringBuilder.append(currentChar);</span>
+        }
+<span class="fc" id="L375">    }</span>
 
     /**
      * This examines the results of reading a tag - if it's
@@ -345,73 +381,73 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
      * component of how we are able to nest the tags properly.
      */
     private void processTag(State state, List&lt;HtmlParseNode&gt; nodes) {
-<span class="fc" id="L348">        String tagNameString = state.tagName;</span>
+<span class="fc" id="L384">        String tagNameString = state.tagName;</span>
         TagName tagName;
-<span class="fc" id="L350">        String upperCaseToken = tagNameString.toUpperCase(Locale.ROOT);</span>
+<span class="fc" id="L386">        String upperCaseToken = tagNameString.toUpperCase(Locale.ROOT);</span>
         try {
-<span class="fc" id="L352">            tagName = TagName.valueOf(upperCaseToken);</span>
-<span class="fc" id="L353">        } catch (IllegalArgumentException ex) {</span>
-<span class="fc" id="L354">            throw new ParsingException(&quot;Invalid HTML element: &quot; + upperCaseToken + &quot; at line &quot; + state.lineRow + &quot; and at the &quot; + state.lineColumn + &quot;th character&quot;);</span>
-<span class="fc" id="L355">        }</span>
-<span class="fc" id="L356">        var tagInfo = new TagInfo(tagName, state.attributes);</span>
-<span class="fc bfc" id="L357" title="All 2 branches covered.">        if (state.isStartTag) {</span>
-<span class="fc" id="L358">            HtmlParseNode newNode = new HtmlParseNode(ParseNodeType.ELEMENT, tagInfo, new ArrayList&lt;&gt;(), &quot;&quot;);</span>
+<span class="fc" id="L388">            tagName = TagName.valueOf(upperCaseToken);</span>
+<span class="fc" id="L389">        } catch (IllegalArgumentException ex) {</span>
+<span class="fc" id="L390">            throw new ParsingException(&quot;Invalid HTML element: &quot; + upperCaseToken + &quot; at line &quot; + state.lineRow + &quot; and at the &quot; + state.lineColumn + &quot;th character&quot;);</span>
+<span class="fc" id="L391">        }</span>
+<span class="fc" id="L392">        var tagInfo = new TagInfo(tagName, state.attributes);</span>
+<span class="fc bfc" id="L393" title="All 2 branches covered.">        if (state.isStartTag) {</span>
+<span class="fc" id="L394">            HtmlParseNode newNode = new HtmlParseNode(ParseNodeType.ELEMENT, tagInfo, new ArrayList&lt;&gt;(), &quot;&quot;);</span>
 
-<span class="fc bfc" id="L360" title="All 2 branches covered.">            if (state.parseStack.size() &gt; 0) {</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">            if (! state.parseStack.isEmpty()) {</span>
                 // if we're inside an html element,
                 // add this to the inner content
-<span class="fc" id="L363">                state.parseStack.peek().innerContent().add(newNode);</span>
+<span class="fc" id="L399">                state.parseStack.peek().innerContent().add(newNode);</span>
             }
 
-<span class="fc bfc" id="L366" title="All 4 branches covered.">            if (state.parseStack.size() == 0 &amp;&amp; tagName.isVoidElement) {</span>
+<span class="fc bfc" id="L402" title="All 4 branches covered.">            if (state.parseStack.isEmpty() &amp;&amp; tagName.isVoidElement) {</span>
                 // if we're at the root level and encountering a void element,
                 // add it to the root-level list of nodes
-<span class="fc" id="L369">                nodes.add(newNode);</span>
-<span class="fc bfc" id="L370" title="All 2 branches covered.">            } else if (!tagName.isVoidElement) {</span>
-<span class="fc" id="L371">                state.parseStack.push(newNode);</span>
+<span class="fc" id="L405">                nodes.add(newNode);</span>
+<span class="fc bfc" id="L406" title="All 2 branches covered.">            } else if (!tagName.isVoidElement) {</span>
+<span class="fc" id="L407">                state.parseStack.push(newNode);</span>
             }
-<span class="fc" id="L373">        } else {</span>
+<span class="fc" id="L409">        } else {</span>
             // if we're leaving an end-tag, it means we have a
             // full element with potentially inner content
-<span class="fc" id="L376">            HtmlParseNode htmlParseNode = state.parseStack.pop();</span>
+<span class="fc" id="L412">            HtmlParseNode htmlParseNode = state.parseStack.pop();</span>
 
              /*
             If the stack is a size of zero at this point, it means we're at the
             roots of our HTML code, which means it's the proper time to add the
             topmost element we just popped into a list.
              */
-<span class="fc bfc" id="L383" title="All 2 branches covered.">            if (state.parseStack.size() == 0) {</span>
-<span class="fc" id="L384">                nodes.add(htmlParseNode);</span>
+<span class="fc bfc" id="L419" title="All 2 branches covered.">            if (state.parseStack.isEmpty()) {</span>
+<span class="fc" id="L420">                nodes.add(htmlParseNode);</span>
             }
-<span class="fc" id="L386">            TagName expectedTagName = htmlParseNode.tagInfo().tagName();</span>
-<span class="fc bfc" id="L387" title="All 2 branches covered.">            if (expectedTagName != tagName) {</span>
-<span class="fc" id="L388">                throw new ParsingException(&quot;Did not find expected element. &quot; + &quot;Expected: &quot; + expectedTagName + &quot; at line &quot; + state.lineRow + &quot; and at the &quot; + state.lineColumn + &quot;th character&quot;);</span>
+<span class="fc" id="L422">            TagName expectedTagName = htmlParseNode.tagInfo().tagName();</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">            if (expectedTagName != tagName) {</span>
+<span class="fc" id="L424">                throw new ParsingException(&quot;Did not find expected element. &quot; + &quot;Expected: &quot; + expectedTagName + &quot; at line &quot; + state.lineRow + &quot; and at the &quot; + state.lineColumn + &quot;th character&quot;);</span>
             }
         }
-<span class="fc" id="L391">    }</span>
+<span class="fc" id="L427">    }</span>
 
-<span class="fc" id="L393">    private enum QuoteType {</span>
-<span class="fc" id="L394">        SINGLE_QUOTED('\''), DOUBLE_QUOTED('&quot;'), NONE(Character.MIN_VALUE);</span>
+<span class="fc" id="L429">    private enum QuoteType {</span>
+<span class="fc" id="L430">        SINGLE_QUOTED('\''), DOUBLE_QUOTED('&quot;'), NONE(Character.MIN_VALUE);</span>
 
         public final char literal;
 
-<span class="fc" id="L398">        QuoteType(char literal) {</span>
-<span class="fc" id="L399">            this.literal = literal;</span>
-<span class="fc" id="L400">        }</span>
+<span class="fc" id="L434">        QuoteType(char literal) {</span>
+<span class="fc" id="L435">            this.literal = literal;</span>
+<span class="fc" id="L436">        }</span>
 
         public static QuoteType byLiteral(char currentChar) {
-<span class="pc bpc" id="L403" title="1 of 4 branches missed.">            mustBeTrue(currentChar == '\'' || currentChar == '&quot;', &quot;There are only two valid characters here.&quot;);</span>
-<span class="fc bfc" id="L404" title="All 2 branches covered.">            if (currentChar == '\'') {</span>
-<span class="fc" id="L405">                return QuoteType.SINGLE_QUOTED;</span>
+<span class="pc bpc" id="L439" title="1 of 4 branches missed.">            mustBeTrue(currentChar == '\'' || currentChar == '&quot;', &quot;There are only two valid characters here.&quot;);</span>
+<span class="fc bfc" id="L440" title="All 2 branches covered.">            if (currentChar == '\'') {</span>
+<span class="fc" id="L441">                return QuoteType.SINGLE_QUOTED;</span>
             } else  {
-<span class="fc" id="L407">                return QuoteType.DOUBLE_QUOTED;</span>
+<span class="fc" id="L443">                return QuoteType.DOUBLE_QUOTED;</span>
             }
         }
     }
 
     private static class State {
         static State buildNewState() {
-<span class="fc" id="L414">            return new State(0, false, new StringBuilder(), new Stack&lt;&gt;(), false, false, true, false, &quot;&quot;, &quot;&quot;, new HashMap&lt;&gt;(), QuoteType.NONE, false, false, 1, 0);</span>
+<span class="fc" id="L450">            return new State(0, false, new StringBuilder(), new ArrayDeque&lt;&gt;(), false, false, true, false, &quot;&quot;, &quot;&quot;, new HashMap&lt;&gt;(), QuoteType.NONE, false, false, 1, 0);</span>
         }
 
         /**
@@ -435,7 +471,7 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
         /**
          * A stack of HtmlParseNodes, used to see how far deep in the tree we are
          */
-        Stack&lt;HtmlParseNode&gt; parseStack;
+        Deque&lt;HtmlParseNode&gt; parseStack;
         /**
          * True if we have successfully encountered the first letter of the tag
          */
@@ -495,28 +531,28 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
          * a character at a time.
          */
         public State(int charsRead, boolean isInsideTag, StringBuilder stringBuilder,
-                     Stack&lt;HtmlParseNode&gt; parseStack, boolean hasEncounteredTagName, boolean isReadingTagName,
+                     Deque&lt;HtmlParseNode&gt; parseStack, boolean hasEncounteredTagName, boolean isReadingTagName,
                      boolean isStartTag, boolean isInsideAttributeValueQuoted, String tagName,
                      String currentAttributeKey, Map&lt;String, String&gt; attributes, QuoteType quoteType,
-<span class="fc" id="L501">                     boolean isReadingAttributeKey, boolean isHalfClosedTag, int lineRow, int lineColumn) {</span>
+<span class="fc" id="L537">                     boolean isReadingAttributeKey, boolean isHalfClosedTag, int lineRow, int lineColumn) {</span>
 
-<span class="fc" id="L503">            this.charsRead = charsRead;</span>
-<span class="fc" id="L504">            this.isInsideTag = isInsideTag;</span>
-<span class="fc" id="L505">            this.stringBuilder = stringBuilder;</span>
-<span class="fc" id="L506">            this.parseStack = parseStack;</span>
-<span class="fc" id="L507">            this.hasEncounteredTagName = hasEncounteredTagName;</span>
-<span class="fc" id="L508">            this.isReadingTagName = isReadingTagName;</span>
-<span class="fc" id="L509">            this.isStartTag = isStartTag;</span>
-<span class="fc" id="L510">            this.isInsideAttributeValueQuoted = isInsideAttributeValueQuoted;</span>
-<span class="fc" id="L511">            this.tagName = tagName;</span>
-<span class="fc" id="L512">            this.currentAttributeKey = currentAttributeKey;</span>
-<span class="fc" id="L513">            this.attributes = attributes;</span>
-<span class="fc" id="L514">            this.quoteType = quoteType;</span>
-<span class="fc" id="L515">            this.isReadingAttributeKey = isReadingAttributeKey;</span>
-<span class="fc" id="L516">            this.isHalfClosedTag = isHalfClosedTag;</span>
-<span class="fc" id="L517">            this.lineRow = lineRow;</span>
-<span class="fc" id="L518">            this.lineColumn = lineColumn;</span>
-<span class="fc" id="L519">        }</span>
+<span class="fc" id="L539">            this.charsRead = charsRead;</span>
+<span class="fc" id="L540">            this.isInsideTag = isInsideTag;</span>
+<span class="fc" id="L541">            this.stringBuilder = stringBuilder;</span>
+<span class="fc" id="L542">            this.parseStack = parseStack;</span>
+<span class="fc" id="L543">            this.hasEncounteredTagName = hasEncounteredTagName;</span>
+<span class="fc" id="L544">            this.isReadingTagName = isReadingTagName;</span>
+<span class="fc" id="L545">            this.isStartTag = isStartTag;</span>
+<span class="fc" id="L546">            this.isInsideAttributeValueQuoted = isInsideAttributeValueQuoted;</span>
+<span class="fc" id="L547">            this.tagName = tagName;</span>
+<span class="fc" id="L548">            this.currentAttributeKey = currentAttributeKey;</span>
+<span class="fc" id="L549">            this.attributes = attributes;</span>
+<span class="fc" id="L550">            this.quoteType = quoteType;</span>
+<span class="fc" id="L551">            this.isReadingAttributeKey = isReadingAttributeKey;</span>
+<span class="fc" id="L552">            this.isHalfClosedTag = isHalfClosedTag;</span>
+<span class="fc" id="L553">            this.lineRow = lineRow;</span>
+<span class="fc" id="L554">            this.lineColumn = lineColumn;</span>
+<span class="fc" id="L555">        }</span>
     }
 
     /**
@@ -524,12 +560,12 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
      * If one is found, it is returned.  If more than one is found, an exception is thrown.
      */
     public List&lt;HtmlParseNode&gt; search(List&lt;HtmlParseNode&gt; nodes, TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc" id="L527">        List&lt;HtmlParseNode&gt; foundNodes = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L528" title="All 2 branches covered.">        for (var node : nodes) {</span>
-<span class="fc" id="L529">            var result = node.search(tagName, attributes);</span>
-<span class="fc" id="L530">            foundNodes.addAll(result);</span>
-<span class="fc" id="L531">        }</span>
-<span class="fc" id="L532">        return foundNodes;</span>
+<span class="fc" id="L563">        List&lt;HtmlParseNode&gt; foundNodes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L564" title="All 2 branches covered.">        for (var node : nodes) {</span>
+<span class="fc" id="L565">            var result = node.search(tagName, attributes);</span>
+<span class="fc" id="L566">            foundNodes.addAll(result);</span>
+<span class="fc" id="L567">        }</span>
+<span class="fc" id="L568">        return foundNodes;</span>
     }
 
 }

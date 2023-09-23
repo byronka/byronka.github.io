@@ -35,14 +35,14 @@ public final class TestFramework {
      *     &lt;/code&gt;
      * &lt;/pre&gt;
      */
-    public static &lt;T,TESTING extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, ThrowingRunnable&lt;TESTING&gt; r) {
+    public static &lt;T&gt; T assertThrows(Class&lt;T&gt; myEx, ThrowingRunnable r) {
 <span class="fc" id="L39">        return assertThrows(myEx, null, r);</span>
     }
 
     // quick note about the warning suppression - we already checked that the
     // case will be valid, when we checked if (!myEx.isInstance(ex)).
     @SuppressWarnings(&quot;unchecked&quot;)
-    public static &lt;T,TESTING extends Exception&gt; T assertThrows(Class&lt;T&gt; myEx, String expectedMsg, ThrowingRunnable&lt;TESTING&gt; r) {
+    public static &lt;T&gt; T assertThrows(Class&lt;T&gt; myEx, String expectedMsg, ThrowingRunnable r) {
         try {
 <span class="fc" id="L47">            r.run();</span>
 <span class="fc" id="L48">            throw new TestFailureException(&quot;Failed to throw exception&quot;);</span>
