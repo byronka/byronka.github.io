@@ -40,9 +40,9 @@
 <a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> java.util.regex.Matcher;
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>  
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.testing.TestFramework.*;
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.StartLine.Verb.GET;
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.StartLine.Verb.POST;
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.StartLine.startLineRegex;
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.RequestLine.Method.GET;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.RequestLine.Method.POST;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.RequestLine.startLineRegex;
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.StatusLine.StatusCode._200_OK;
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.StatusLine.StatusCode._404_NOT_FOUND;
 <a class="jxr_linenumber" name="L40" href="#L40">40</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.HttpVersion.ONE_DOT_ONE;
@@ -224,8 +224,8 @@
 <a class="jxr_linenumber" name="L216" href="#L216">216</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L217" href="#L217">217</a>     <strong class="jxr_keyword">class</strong> Summation {
 <a class="jxr_linenumber" name="L218" href="#L218">218</a>         <strong class="jxr_keyword">static</strong> Response addTwoNumbers(Request r) {
-<a class="jxr_linenumber" name="L219" href="#L219">219</a>             <strong class="jxr_keyword">int</strong> aValue = Integer.parseInt(r.startLine().queryString().get(<span class="jxr_string">"a"</span>));
-<a class="jxr_linenumber" name="L220" href="#L220">220</a>             <strong class="jxr_keyword">int</strong> bValue = Integer.parseInt(r.startLine().getPathDetails().queryString().get(<span class="jxr_string">"b"</span>));
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>             <strong class="jxr_keyword">int</strong> aValue = Integer.parseInt(r.requestLine().queryString().get(<span class="jxr_string">"a"</span>));
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>             <strong class="jxr_keyword">int</strong> bValue = Integer.parseInt(r.requestLine().getPathDetails().queryString().get(<span class="jxr_string">"b"</span>));
 <a class="jxr_linenumber" name="L221" href="#L221">221</a>             <strong class="jxr_keyword">int</strong> sum = aValue + bValue;
 <a class="jxr_linenumber" name="L222" href="#L222">222</a>             String sumString = String.valueOf(sum);
 <a class="jxr_linenumber" name="L223" href="#L223">223</a>             <strong class="jxr_keyword">return</strong> Response.htmlOk(sumString);
@@ -293,20 +293,20 @@
 <a class="jxr_linenumber" name="L285" href="#L285">285</a> 
 <a class="jxr_linenumber" name="L286" href="#L286">286</a>     @Test
 <a class="jxr_linenumber" name="L287" href="#L287">287</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_StartLine_Post() {
-<a class="jxr_linenumber" name="L288" href="#L288">288</a>         StartLine sl = StartLine.EMPTY(context).extractStartLine(<span class="jxr_string">"POST /something HTTP/1.0"</span>);
-<a class="jxr_linenumber" name="L289" href="#L289">289</a>         assertEquals(sl.getVerb(), POST);
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>         RequestLine sl = RequestLine.EMPTY(context).extractStartLine(<span class="jxr_string">"POST /something HTTP/1.0"</span>);
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>         assertEquals(sl.getMethod(), POST);
 <a class="jxr_linenumber" name="L290" href="#L290">290</a>     }
 <a class="jxr_linenumber" name="L291" href="#L291">291</a> 
 <a class="jxr_linenumber" name="L292" href="#L292">292</a>     @Test
 <a class="jxr_linenumber" name="L293" href="#L293">293</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_StartLine_EmptyPath() {
-<a class="jxr_linenumber" name="L294" href="#L294">294</a>         StartLine sl = StartLine.EMPTY(context).extractStartLine(<span class="jxr_string">"GET / HTTP/1.1"</span>);
-<a class="jxr_linenumber" name="L295" href="#L295">295</a>         assertEquals(sl.getVerb(), GET);
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>         RequestLine sl = RequestLine.EMPTY(context).extractStartLine(<span class="jxr_string">"GET / HTTP/1.1"</span>);
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>         assertEquals(sl.getMethod(), GET);
 <a class="jxr_linenumber" name="L296" href="#L296">296</a>         assertEquals(sl.getPathDetails().isolatedPath(), <span class="jxr_string">""</span>);
 <a class="jxr_linenumber" name="L297" href="#L297">297</a>     }
 <a class="jxr_linenumber" name="L298" href="#L298">298</a> 
 <a class="jxr_linenumber" name="L299" href="#L299">299</a>     @Test
-<a class="jxr_linenumber" name="L300" href="#L300">300</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_StartLine_MissingVerb() {
-<a class="jxr_linenumber" name="L301" href="#L301">301</a>             <em class="jxr_comment">// missing verb</em>
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_StartLine_MissingMethod() {
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>             <em class="jxr_comment">// missing method</em>
 <a class="jxr_linenumber" name="L302" href="#L302">302</a>             List&lt;String&gt; badStartLines = List.of(
 <a class="jxr_linenumber" name="L303" href="#L303">303</a>                     <span class="jxr_string">"/something HTTP/1.1"</span>,
 <a class="jxr_linenumber" name="L304" href="#L304">304</a>                     <span class="jxr_string">"GET HTTP/1.1"</span>,
@@ -316,9 +316,9 @@
 <a class="jxr_linenumber" name="L308" href="#L308">308</a>                     <span class="jxr_string">""</span>
 <a class="jxr_linenumber" name="L309" href="#L309">309</a>             );
 <a class="jxr_linenumber" name="L310" href="#L310">310</a>             <strong class="jxr_keyword">for</strong> (String s : badStartLines) {
-<a class="jxr_linenumber" name="L311" href="#L311">311</a>                 assertEquals(StartLine.EMPTY(context).extractStartLine(s), StartLine.EMPTY(context));
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>                 assertEquals(RequestLine.EMPTY(context).extractStartLine(s), RequestLine.EMPTY(context));
 <a class="jxr_linenumber" name="L312" href="#L312">312</a>             }
-<a class="jxr_linenumber" name="L313" href="#L313">313</a>             assertThrows(InvariantException.<strong class="jxr_keyword">class</strong>, () -&gt; StartLine.EMPTY(context).extractStartLine(<strong class="jxr_keyword">null</strong>));
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>             assertThrows(InvariantException.<strong class="jxr_keyword">class</strong>, () -&gt; RequestLine.EMPTY(context).extractStartLine(<strong class="jxr_keyword">null</strong>));
 <a class="jxr_linenumber" name="L314" href="#L314">314</a>     }
 <a class="jxr_linenumber" name="L315" href="#L315">315</a> 
 <a class="jxr_linenumber" name="L316" href="#L316">316</a>     @Test
@@ -568,7 +568,7 @@
 <a class="jxr_linenumber" name="L560" href="#L560">560</a> 
 <a class="jxr_linenumber" name="L561" href="#L561">561</a>         <em class="jxr_comment">// This is the core of the test - here's where we'll process receiving a multipart data</em>
 <a class="jxr_linenumber" name="L562" href="#L562">562</a> 
-<a class="jxr_linenumber" name="L563" href="#L563">563</a>         <strong class="jxr_keyword">final</strong> Function&lt;StartLine, Function&lt;Request, Response&gt;&gt; testHandler = (sl -&gt; r -&gt; {
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>         <strong class="jxr_keyword">final</strong> Function&lt;RequestLine, Function&lt;Request, Response&gt;&gt; testHandler = (sl -&gt; r -&gt; {
 <a class="jxr_linenumber" name="L564" href="#L564">564</a>             <strong class="jxr_keyword">if</strong> (r.body().asString(<span class="jxr_string">"text1"</span>).equals(<span class="jxr_string">"I am a value that is text"</span>) &amp;&amp;
 <a class="jxr_linenumber" name="L565" href="#L565">565</a>                     (r.body().asBytes(<span class="jxr_string">"image_uploads"</span>))[0] == 1 &amp;&amp;
 <a class="jxr_linenumber" name="L566" href="#L566">566</a>                     (r.body().asBytes(<span class="jxr_string">"image_uploads"</span>))[1] == 2 &amp;&amp;
@@ -620,7 +620,7 @@
 <a class="jxr_linenumber" name="L612" href="#L612">612</a>         String startLineString = <span class="jxr_string">"GET /.well-known/acme-challenge/foobar HTTP/1.1"</span>;
 <a class="jxr_linenumber" name="L613" href="#L613">613</a> 
 <a class="jxr_linenumber" name="L614" href="#L614">614</a>         <em class="jxr_comment">// Convert it to a typed value</em>
-<a class="jxr_linenumber" name="L615" href="#L615">615</a>         <strong class="jxr_keyword">var</strong> startLine = StartLine.EMPTY(context).extractStartLine(startLineString);
+<a class="jxr_linenumber" name="L615" href="#L615">615</a>         <strong class="jxr_keyword">var</strong> startLine = RequestLine.EMPTY(context).extractStartLine(startLineString);
 <a class="jxr_linenumber" name="L616" href="#L616">616</a> 
 <a class="jxr_linenumber" name="L617" href="#L617">617</a>         <em class="jxr_comment">// instantiate a web framework to do the processing.  We're TDD'ing some new</em>
 <a class="jxr_linenumber" name="L618" href="#L618">618</a>         <em class="jxr_comment">// code inside this.</em>
@@ -628,7 +628,7 @@
 <a class="jxr_linenumber" name="L620" href="#L620">620</a> 
 <a class="jxr_linenumber" name="L621" href="#L621">621</a>         <em class="jxr_comment">// register a path to handle this pattern.  Wishful-thinking for the win.</em>
 <a class="jxr_linenumber" name="L622" href="#L622">622</a>         webFramework.registerPartialPath(GET, <span class="jxr_string">".well-known/acme-challenge"</span>, request -&gt; {
-<a class="jxr_linenumber" name="L623" href="#L623">623</a>             String path = request.startLine().getPathDetails().isolatedPath();
+<a class="jxr_linenumber" name="L623" href="#L623">623</a>             String path = request.requestLine().getPathDetails().isolatedPath();
 <a class="jxr_linenumber" name="L624" href="#L624">624</a>             <strong class="jxr_keyword">return</strong> Response.htmlOk(<span class="jxr_string">"value was "</span> + path);
 <a class="jxr_linenumber" name="L625" href="#L625">625</a>         });
 <a class="jxr_linenumber" name="L626" href="#L626">626</a> 
@@ -655,7 +655,7 @@
 <a class="jxr_linenumber" name="L647" href="#L647">647</a>     @Test
 <a class="jxr_linenumber" name="L648" href="#L648">648</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_KeepAlive_Http_1_0() <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="L649" href="#L649">649</a> 
-<a class="jxr_linenumber" name="L650" href="#L650">650</a>         <strong class="jxr_keyword">final</strong> Function&lt;StartLine, Function&lt;Request, Response&gt;&gt; testHandler = (sl -&gt; r -&gt; {
+<a class="jxr_linenumber" name="L650" href="#L650">650</a>         <strong class="jxr_keyword">final</strong> Function&lt;RequestLine, Function&lt;Request, Response&gt;&gt; testHandler = (sl -&gt; r -&gt; {
 <a class="jxr_linenumber" name="L651" href="#L651">651</a>            <strong class="jxr_keyword">return</strong> Response.htmlOk(<span class="jxr_string">"looking good!"</span>);
 <a class="jxr_linenumber" name="L652" href="#L652">652</a>         });
 <a class="jxr_linenumber" name="L653" href="#L653">653</a> 
@@ -756,7 +756,7 @@
 <a class="jxr_linenumber" name="L748" href="#L748">748</a>         <strong class="jxr_keyword">var</strong> webFramework = <strong class="jxr_keyword">new</strong> WebFramework(context, <strong class="jxr_keyword">default</strong>_zdt);
 <a class="jxr_linenumber" name="L749" href="#L749">749</a> 
 <a class="jxr_linenumber" name="L750" href="#L750">750</a>         <em class="jxr_comment">//</em>
-<a class="jxr_linenumber" name="L751" href="#L751">751</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L751" href="#L751">751</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L752" href="#L752">752</a>         assertTrue(webFramework.findHandlerByPartialMatch(startLine) == <strong class="jxr_keyword">null</strong>);
 <a class="jxr_linenumber" name="L753" href="#L753">753</a>     }
 <a class="jxr_linenumber" name="L754" href="#L754">754</a> 
@@ -770,7 +770,7 @@
 <a class="jxr_linenumber" name="L762" href="#L762">762</a> 
 <a class="jxr_linenumber" name="L763" href="#L763">763</a>         webFramework.registerPartialPath(GET, <span class="jxr_string">"mypath"</span>, helloHandler);
 <a class="jxr_linenumber" name="L764" href="#L764">764</a> 
-<a class="jxr_linenumber" name="L765" href="#L765">765</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L765" href="#L765">765</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L766" href="#L766">766</a>         assertEquals(webFramework.findHandlerByPartialMatch(startLine), helloHandler);
 <a class="jxr_linenumber" name="L767" href="#L767">767</a>     }
 <a class="jxr_linenumber" name="L768" href="#L768">768</a> 
@@ -781,18 +781,18 @@
 <a class="jxr_linenumber" name="L773" href="#L773">773</a> 
 <a class="jxr_linenumber" name="L774" href="#L774">774</a>         webFramework.registerPartialPath(GET, <span class="jxr_string">"mypath"</span>, helloHandler);
 <a class="jxr_linenumber" name="L775" href="#L775">775</a> 
-<a class="jxr_linenumber" name="L776" href="#L776">776</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"mypa_DOES_NOT_MATCH"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L776" href="#L776">776</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypa_DOES_NOT_MATCH"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L777" href="#L777">777</a>         assertTrue(webFramework.findHandlerByPartialMatch(startLine) == <strong class="jxr_keyword">null</strong>);
 <a class="jxr_linenumber" name="L778" href="#L778">778</a>     }
 <a class="jxr_linenumber" name="L779" href="#L779">779</a> 
 <a class="jxr_linenumber" name="L780" href="#L780">780</a>     @Test
-<a class="jxr_linenumber" name="L781" href="#L781">781</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_PartialMatch_DifferentVerb() {
+<a class="jxr_linenumber" name="L781" href="#L781">781</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_PartialMatch_DifferentMethod() {
 <a class="jxr_linenumber" name="L782" href="#L782">782</a>         <strong class="jxr_keyword">var</strong> webFramework = <strong class="jxr_keyword">new</strong> WebFramework(context, <strong class="jxr_keyword">default</strong>_zdt);
 <a class="jxr_linenumber" name="L783" href="#L783">783</a>         Function&lt;Request, Response&gt; helloHandler = request -&gt; Response.htmlOk(<span class="jxr_string">"hello"</span>);
 <a class="jxr_linenumber" name="L784" href="#L784">784</a> 
 <a class="jxr_linenumber" name="L785" href="#L785">785</a>         webFramework.registerPartialPath(GET, <span class="jxr_string">"mypath"</span>, helloHandler);
 <a class="jxr_linenumber" name="L786" href="#L786">786</a> 
-<a class="jxr_linenumber" name="L787" href="#L787">787</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> StartLine(POST, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L787" href="#L787">787</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(POST, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L788" href="#L788">788</a>         assertTrue(webFramework.findHandlerByPartialMatch(startLine) == <strong class="jxr_keyword">null</strong>);
 <a class="jxr_linenumber" name="L789" href="#L789">789</a>     }
 <a class="jxr_linenumber" name="L790" href="#L790">790</a> 
@@ -804,7 +804,7 @@
 <a class="jxr_linenumber" name="L796" href="#L796">796</a>         webFramework.registerPartialPath(GET, <span class="jxr_string">"mypath"</span>, helloHandler);
 <a class="jxr_linenumber" name="L797" href="#L797">797</a>         webFramework.registerPartialPath(GET, <span class="jxr_string">"m"</span>, helloHandler);
 <a class="jxr_linenumber" name="L798" href="#L798">798</a> 
-<a class="jxr_linenumber" name="L799" href="#L799">799</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L799" href="#L799">799</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L800" href="#L800">800</a>         assertEquals(webFramework.findHandlerByPartialMatch(startLine), helloHandler);
 <a class="jxr_linenumber" name="L801" href="#L801">801</a>     }
 <a class="jxr_linenumber" name="L802" href="#L802">802</a> 
@@ -813,19 +813,19 @@
 <a class="jxr_linenumber" name="L805" href="#L805">805</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L806" href="#L806">806</a>     @Test
 <a class="jxr_linenumber" name="L807" href="#L807">807</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_QueryString_NullPathdetails() {
-<a class="jxr_linenumber" name="L808" href="#L808">808</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">null</strong>, ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L808" href="#L808">808</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">null</strong>, ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L809" href="#L809">809</a>         assertEquals(startLine.queryString(), <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;());
 <a class="jxr_linenumber" name="L810" href="#L810">810</a>     }
 <a class="jxr_linenumber" name="L811" href="#L811">811</a> 
 <a class="jxr_linenumber" name="L812" href="#L812">812</a>     @Test
 <a class="jxr_linenumber" name="L813" href="#L813">813</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_QueryString_NullQueryString() {
-<a class="jxr_linenumber" name="L814" href="#L814">814</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, <strong class="jxr_keyword">null</strong>), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L814" href="#L814">814</a>         <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, <strong class="jxr_keyword">null</strong>), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L815" href="#L815">815</a>         assertEquals(startLine.queryString(), <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;());
 <a class="jxr_linenumber" name="L816" href="#L816">816</a>     }
 <a class="jxr_linenumber" name="L817" href="#L817">817</a> 
 <a class="jxr_linenumber" name="L818" href="#L818">818</a>     @Test
 <a class="jxr_linenumber" name="L819" href="#L819">819</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_QueryString_EmptyQueryString() {
-<a class="jxr_linenumber" name="L820" href="#L820">820</a>         <strong class="jxr_keyword">var</strong> startLIne = <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
+<a class="jxr_linenumber" name="L820" href="#L820">820</a>         <strong class="jxr_keyword">var</strong> startLIne = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context);
 <a class="jxr_linenumber" name="L821" href="#L821">821</a>         assertEquals(startLIne.queryString(), <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;());
 <a class="jxr_linenumber" name="L822" href="#L822">822</a>     }
 <a class="jxr_linenumber" name="L823" href="#L823">823</a> 
@@ -836,11 +836,11 @@
 <a class="jxr_linenumber" name="L828" href="#L828">828</a>     @Test
 <a class="jxr_linenumber" name="L829" href="#L829">829</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_StartLine_Hashing() {
 <a class="jxr_linenumber" name="L830" href="#L830">830</a>         <strong class="jxr_keyword">var</strong> startLines = Map.of(
-<a class="jxr_linenumber" name="L831" href="#L831">831</a>                 <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"foo"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context),   <span class="jxr_string">"foo"</span>,
-<a class="jxr_linenumber" name="L832" href="#L832">832</a>                 <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"bar"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context),   <span class="jxr_string">"bar"</span>,
-<a class="jxr_linenumber" name="L833" href="#L833">833</a>                 <strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"baz"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context),   <span class="jxr_string">"baz"</span>
+<a class="jxr_linenumber" name="L831" href="#L831">831</a>                 <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"foo"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context),   <span class="jxr_string">"foo"</span>,
+<a class="jxr_linenumber" name="L832" href="#L832">832</a>                 <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"bar"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context),   <span class="jxr_string">"bar"</span>,
+<a class="jxr_linenumber" name="L833" href="#L833">833</a>                 <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"baz"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context),   <span class="jxr_string">"baz"</span>
 <a class="jxr_linenumber" name="L834" href="#L834">834</a>         );
-<a class="jxr_linenumber" name="L835" href="#L835">835</a>         assertEquals(startLines.get(<strong class="jxr_keyword">new</strong> StartLine(GET, <strong class="jxr_keyword">new</strong> StartLine.PathDetails(<span class="jxr_string">"bar"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context)), <span class="jxr_string">"bar"</span>);
+<a class="jxr_linenumber" name="L835" href="#L835">835</a>         assertEquals(startLines.get(<strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"bar"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">""</span>, context)), <span class="jxr_string">"bar"</span>);
 <a class="jxr_linenumber" name="L836" href="#L836">836</a>     }
 <a class="jxr_linenumber" name="L837" href="#L837">837</a> 
 <a class="jxr_linenumber" name="L838" href="#L838">838</a>     <em class="jxr_javadoccomment">/**</em>
@@ -852,8 +852,8 @@
 <a class="jxr_linenumber" name="L844" href="#L844">844</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; context.getConstants().MAX_QUERY_STRING_KEYS_COUNT + 2; i++) {
 <a class="jxr_linenumber" name="L845" href="#L845">845</a>                 sb.append(String.format(<span class="jxr_string">"foo%d=bar%d&amp;"</span>, i, i));
 <a class="jxr_linenumber" name="L846" href="#L846">846</a>         }
-<a class="jxr_linenumber" name="L847" href="#L847">847</a>         StartLine startLine = StartLine.EMPTY(context);
-<a class="jxr_linenumber" name="L848" href="#L848">848</a>         assertThrows(ForbiddenUseException.<strong class="jxr_keyword">class</strong>, () -&gt; startLine.extractMapFromQueryString(sb.toString()));
+<a class="jxr_linenumber" name="L847" href="#L847">847</a>         RequestLine requestLine = RequestLine.EMPTY(context);
+<a class="jxr_linenumber" name="L848" href="#L848">848</a>         assertThrows(ForbiddenUseException.<strong class="jxr_keyword">class</strong>, () -&gt; requestLine.extractMapFromQueryString(sb.toString()));
 <a class="jxr_linenumber" name="L849" href="#L849">849</a>     }
 <a class="jxr_linenumber" name="L850" href="#L850">850</a> 
 <a class="jxr_linenumber" name="L851" href="#L851">851</a>     <em class="jxr_javadoccomment">/**</em>
@@ -861,8 +861,8 @@
 <a class="jxr_linenumber" name="L853" href="#L853">853</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L854" href="#L854">854</a>     @Test
 <a class="jxr_linenumber" name="L855" href="#L855">855</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ExtractMapFromQueryString_NoEqualsSign() {
-<a class="jxr_linenumber" name="L856" href="#L856">856</a>         StartLine startLine = StartLine.EMPTY(context);
-<a class="jxr_linenumber" name="L857" href="#L857">857</a>         <strong class="jxr_keyword">var</strong> result = startLine.extractMapFromQueryString(<span class="jxr_string">"foo"</span>);
+<a class="jxr_linenumber" name="L856" href="#L856">856</a>         RequestLine requestLine = RequestLine.EMPTY(context);
+<a class="jxr_linenumber" name="L857" href="#L857">857</a>         <strong class="jxr_keyword">var</strong> result = requestLine.extractMapFromQueryString(<span class="jxr_string">"foo"</span>);
 <a class="jxr_linenumber" name="L858" href="#L858">858</a>         assertEquals(result, Map.of());
 <a class="jxr_linenumber" name="L859" href="#L859">859</a>     }
 <a class="jxr_linenumber" name="L860" href="#L860">860</a> 

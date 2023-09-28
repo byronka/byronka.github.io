@@ -57,19 +57,19 @@
 <a class="jxr_linenumber" name="L49" href="#L49">49</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L50" href="#L50">50</a>  <em class="jxr_javadoccomment">     * This is used as a key when registering endpoints</em>
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>      record VerbPath(StartLine.Verb verb, String path) { }
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>      record MethodPath(RequestLine.Method method, String path) { }
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>  
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>  <em class="jxr_javadoccomment">     * The list of paths that our system is registered to handle.</em>
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;VerbPath, Function&lt;Request, Response&gt;&gt; registeredDynamicPaths;
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;MethodPath, Function&lt;Request, Response&gt;&gt; registeredDynamicPaths;
 <a class="jxr_linenumber" name="L58" href="#L58">58</a>  
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>  <em class="jxr_javadoccomment">     * These are registrations for paths that partially match, for example,</em>
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment">     * if the client sends us GET /.well-known/acme-challenge/HGr8U1IeTW4kY_Z6UIyaakzOkyQgPr_7ArlLgtZE8SX</em>
 <a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment">     * and we want to match ".well-known/acme-challenge"</em>
 <a class="jxr_linenumber" name="L63" href="#L63">63</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;VerbPath, Function&lt;Request, Response&gt;&gt; registeredPartialPaths;
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;MethodPath, Function&lt;Request, Response&gt;&gt; registeredPartialPaths;
 <a class="jxr_linenumber" name="L65" href="#L65">65</a>  
 <a class="jxr_linenumber" name="L66" href="#L66">66</a>      <em class="jxr_comment">// This is just used for testing.  If it's null, we use the real time.</em>
 <a class="jxr_linenumber" name="L67" href="#L67">67</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> ZonedDateTime overrideForDateTime;
@@ -82,16 +82,16 @@
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_javadoccomment">     * code lives here will be inserted into a slot within the server code.</em>
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>  <em class="jxr_javadoccomment">     * See {@link Server#start(ExecutorService, ThrowingConsumer)}</em>
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>  <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>  <em class="jxr_javadoccomment">     * @param handlerFinder bear with me...  This is a function, that takes a {@link StartLine}, and</em>
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>  <em class="jxr_javadoccomment">     * @param handlerFinder bear with me...  This is a function, that takes a {@link RequestLine}, and</em>
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>  <em class="jxr_javadoccomment">     *                      returns a {@link Function} that handles the {@link Request} -&gt; {@link Response}.</em>
 <a class="jxr_linenumber" name="L79" href="#L79">79</a>  <em class="jxr_javadoccomment">     *                      Normally, you would just use {@link #makePrimaryHttpHandler()} and the default code at</em>
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>  <em class="jxr_javadoccomment">     *                      {@link #findEndpointForThisStartline(StartLine)} would be called.  However, you can provide</em>
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>  <em class="jxr_javadoccomment">     *                      {@link #findEndpointForThisStartline(RequestLine)} would be called.  However, you can provide</em>
 <a class="jxr_linenumber" name="L81" href="#L81">81</a>  <em class="jxr_javadoccomment">     *                      a handler here if you want to override that behavior, for example in tests when</em>
 <a class="jxr_linenumber" name="L82" href="#L82">82</a>  <em class="jxr_javadoccomment">     *                      you want a bit more control.</em>
 <a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment">     *                      &lt;br&gt;</em>
 <a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_javadoccomment">     *                      The common case definition of this is found at {@link #findEndpointForThisStartline}</em>
 <a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>      ThrowingConsumer&lt;ISocketWrapper, IOException&gt; makePrimaryHttpHandler(Function&lt;StartLine, Function&lt;Request, Response&gt;&gt; handlerFinder) {
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      ThrowingConsumer&lt;ISocketWrapper, IOException&gt; makePrimaryHttpHandler(Function&lt;RequestLine, Function&lt;Request, Response&gt;&gt; handlerFinder) {
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>  
 <a class="jxr_linenumber" name="L88" href="#L88">88</a>          <em class="jxr_comment">// build the handler</em>
 <a class="jxr_linenumber" name="L89" href="#L89">89</a>  
@@ -131,7 +131,7 @@
 <a class="jxr_linenumber" name="L123" href="#L123">123</a>                     }
 <a class="jxr_linenumber" name="L124" href="#L124">124</a> 
 <a class="jxr_linenumber" name="L125" href="#L125">125</a>                     logger.logTrace(() -&gt; sw + <span class="jxr_string">": raw startline received: "</span> + rawStartLine);
-<a class="jxr_linenumber" name="L126" href="#L126">126</a>                     <strong class="jxr_keyword">var</strong> sl = StartLine.EMPTY(context).extractStartLine(rawStartLine);
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>                     <strong class="jxr_keyword">var</strong> sl = RequestLine.EMPTY(context).extractStartLine(rawStartLine);
 <a class="jxr_linenumber" name="L127" href="#L127">127</a>                     logger.logTrace(() -&gt; sw + <span class="jxr_string">": StartLine received: "</span> + sl.toString());
 <a class="jxr_linenumber" name="L128" href="#L128">128</a>                     <strong class="jxr_keyword">if</strong> (sl.getRawValue().isBlank()) {
 <a class="jxr_linenumber" name="L129" href="#L129">129</a>                         <em class="jxr_comment">/*</em>
@@ -227,10 +227,10 @@
 <a class="jxr_linenumber" name="L219" href="#L219">219</a>                     logger.logTrace(() -&gt; <span class="jxr_string">"Sending headers back: "</span> + response);
 <a class="jxr_linenumber" name="L220" href="#L220">220</a>                     sw.send(response);
 <a class="jxr_linenumber" name="L221" href="#L221">221</a> 
-<a class="jxr_linenumber" name="L222" href="#L222">222</a>                     <strong class="jxr_keyword">if</strong> (clientRequest.startLine().getVerb() == StartLine.Verb.HEAD) {
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>                     <strong class="jxr_keyword">if</strong> (clientRequest.requestLine().getMethod() == RequestLine.Method.HEAD) {
 <a class="jxr_linenumber" name="L223" href="#L223">223</a>                         Request finalClientRequest = clientRequest;
 <a class="jxr_linenumber" name="L224" href="#L224">224</a>                         logger.logDebug(() -&gt; <span class="jxr_string">"client "</span> + finalClientRequest.remoteRequester() +
-<a class="jxr_linenumber" name="L225" href="#L225">225</a>                                 <span class="jxr_string">" is requesting HEAD for "</span>+ finalClientRequest.startLine().getPathDetails().isolatedPath() +
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>                                 <span class="jxr_string">" is requesting HEAD for "</span>+ finalClientRequest.requestLine().getPathDetails().isolatedPath() +
 <a class="jxr_linenumber" name="L226" href="#L226">226</a>                                 <span class="jxr_string">".  Excluding body from response"</span>);
 <a class="jxr_linenumber" name="L227" href="#L227">227</a>                     } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L228" href="#L228">228</a>                         sw.send(resultingResponse.body());
@@ -264,7 +264,7 @@
 <a class="jxr_linenumber" name="L256" href="#L256">256</a>                         <strong class="jxr_keyword">return</strong>;
 <a class="jxr_linenumber" name="L257" href="#L257">257</a>                     }
 <a class="jxr_linenumber" name="L258" href="#L258">258</a> 
-<a class="jxr_linenumber" name="L259" href="#L259">259</a>                     <strong class="jxr_keyword">var</strong> sl = StartLine.EMPTY(context).extractStartLine(rawStartLine);
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>                     <strong class="jxr_keyword">var</strong> sl = RequestLine.EMPTY(context).extractStartLine(rawStartLine);
 <a class="jxr_linenumber" name="L260" href="#L260">260</a> 
 <a class="jxr_linenumber" name="L261" href="#L261">261</a>                     <em class="jxr_comment">// just ignore all the rest of the incoming lines.  TCP is duplex -</em>
 <a class="jxr_linenumber" name="L262" href="#L262">262</a>                     <em class="jxr_comment">// we'll just start talking back the moment we understand the first line.</em>
@@ -359,11 +359,11 @@
 <a class="jxr_linenumber" name="L351" href="#L351">351</a>     }
 <a class="jxr_linenumber" name="L352" href="#L352">352</a> 
 <a class="jxr_linenumber" name="L353" href="#L353">353</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L354" href="#L354">354</a> <em class="jxr_javadoccomment">     * Looks through the mappings of {@link VerbPath} and path to registered endpoints</em>
+<a class="jxr_linenumber" name="L354" href="#L354">354</a> <em class="jxr_javadoccomment">     * Looks through the mappings of {@link MethodPath} and path to registered endpoints</em>
 <a class="jxr_linenumber" name="L355" href="#L355">355</a> <em class="jxr_javadoccomment">     * or the static cache and returns the appropriate one (If we</em>
 <a class="jxr_linenumber" name="L356" href="#L356">356</a> <em class="jxr_javadoccomment">     * do not find anything, return null)</em>
 <a class="jxr_linenumber" name="L357" href="#L357">357</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L358" href="#L358">358</a>     Function&lt;Request, Response&gt; findEndpointForThisStartline(<a name="StartLine" href="../../../../com/renomad/minum/web/StartLine.html#StartLine">StartLine</a> sl) {
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>     Function&lt;Request, Response&gt; findEndpointForThisStartline(<a name="RequestLine" href="../../../../com/renomad/minum/web/RequestLine.html#RequestLine">RequestLine</a> sl) {
 <a class="jxr_linenumber" name="L359" href="#L359">359</a>         Function&lt;Request, Response&gt; handler;
 <a class="jxr_linenumber" name="L360" href="#L360">360</a>         logger.logTrace(() -&gt; <span class="jxr_string">"Seeking a handler for "</span> + sl);
 <a class="jxr_linenumber" name="L361" href="#L361">361</a> 
@@ -372,9 +372,9 @@
 <a class="jxr_linenumber" name="L364" href="#L364">364</a> 
 <a class="jxr_linenumber" name="L365" href="#L365">365</a>         <em class="jxr_comment">// if the user is asking for a HEAD request, they want to run a GET command</em>
 <a class="jxr_linenumber" name="L366" href="#L366">366</a>         <em class="jxr_comment">// but don't want the body.  We'll simply exclude sending the body, later on, when returning the data</em>
-<a class="jxr_linenumber" name="L367" href="#L367">367</a>         StartLine.Verb verb = sl.getVerb() == StartLine.Verb.HEAD ? StartLine.Verb.GET : sl.getVerb();
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>         RequestLine.Method method = sl.getMethod() == RequestLine.Method.HEAD ? RequestLine.Method.GET : sl.getMethod();
 <a class="jxr_linenumber" name="L368" href="#L368">368</a> 
-<a class="jxr_linenumber" name="L369" href="#L369">369</a>         VerbPath key = <strong class="jxr_keyword">new</strong> VerbPath(verb, requestedPath);
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>         MethodPath key = <strong class="jxr_keyword">new</strong> MethodPath(method, requestedPath);
 <a class="jxr_linenumber" name="L370" href="#L370">370</a>         handler = registeredDynamicPaths.get(key);
 <a class="jxr_linenumber" name="L371" href="#L371">371</a> 
 <a class="jxr_linenumber" name="L372" href="#L372">372</a>         <strong class="jxr_keyword">if</strong> (handler == <strong class="jxr_keyword">null</strong>) {
@@ -395,8 +395,8 @@
 <a class="jxr_linenumber" name="L387" href="#L387">387</a> <em class="jxr_javadoccomment">     * last ditch effort - look on disk.  This response will either</em>
 <a class="jxr_linenumber" name="L388" href="#L388">388</a> <em class="jxr_javadoccomment">     * be the file to return, or null if we didn't find anything.</em>
 <a class="jxr_linenumber" name="L389" href="#L389">389</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L390" href="#L390">390</a>     <strong class="jxr_keyword">private</strong> Function&lt;Request, Response&gt; findHandlerByFilesOnDisk(<a name="StartLine" href="../../../../com/renomad/minum/web/StartLine.html#StartLine">StartLine</a> sl) {
-<a class="jxr_linenumber" name="L391" href="#L391">391</a>         <strong class="jxr_keyword">if</strong> (sl.getVerb() != StartLine.Verb.GET) {
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>     <strong class="jxr_keyword">private</strong> Function&lt;Request, Response&gt; findHandlerByFilesOnDisk(<a name="RequestLine" href="../../../../com/renomad/minum/web/RequestLine.html#RequestLine">RequestLine</a> sl) {
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>         <strong class="jxr_keyword">if</strong> (sl.getMethod() != RequestLine.Method.GET) {
 <a class="jxr_linenumber" name="L392" href="#L392">392</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
 <a class="jxr_linenumber" name="L393" href="#L393">393</a>         }
 <a class="jxr_linenumber" name="L394" href="#L394">394</a>         String requestedPath = sl.getPathDetails().isolatedPath();
@@ -411,14 +411,14 @@
 <a class="jxr_linenumber" name="L403" href="#L403">403</a>     <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L404" href="#L404">404</a> <em class="jxr_javadoccomment">     * let's see if we can match the registered paths against a **portion** of the startline</em>
 <a class="jxr_linenumber" name="L405" href="#L405">405</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L406" href="#L406">406</a>     Function&lt;Request, Response&gt; findHandlerByPartialMatch(<a name="StartLine" href="../../../../com/renomad/minum/web/StartLine.html#StartLine">StartLine</a> sl) {
+<a class="jxr_linenumber" name="L406" href="#L406">406</a>     Function&lt;Request, Response&gt; findHandlerByPartialMatch(<a name="RequestLine" href="../../../../com/renomad/minum/web/RequestLine.html#RequestLine">RequestLine</a> sl) {
 <a class="jxr_linenumber" name="L407" href="#L407">407</a>         String requestedPath = sl.getPathDetails().isolatedPath();
-<a class="jxr_linenumber" name="L408" href="#L408">408</a>         <strong class="jxr_keyword">var</strong> verbPathFunctionEntry = registeredPartialPaths.entrySet().stream()
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>         <strong class="jxr_keyword">var</strong> methodPathFunctionEntry = registeredPartialPaths.entrySet().stream()
 <a class="jxr_linenumber" name="L409" href="#L409">409</a>                 .filter(x -&gt; requestedPath.startsWith(x.getKey().path()) &amp;&amp;
-<a class="jxr_linenumber" name="L410" href="#L410">410</a>                         x.getKey().verb().equals(sl.getVerb()))
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>                         x.getKey().method().equals(sl.getMethod()))
 <a class="jxr_linenumber" name="L411" href="#L411">411</a>                 .findFirst().orElse(<strong class="jxr_keyword">null</strong>);
-<a class="jxr_linenumber" name="L412" href="#L412">412</a>         <strong class="jxr_keyword">if</strong> (verbPathFunctionEntry != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L413" href="#L413">413</a>             <strong class="jxr_keyword">return</strong> verbPathFunctionEntry.getValue();
+<a class="jxr_linenumber" name="L412" href="#L412">412</a>         <strong class="jxr_keyword">if</strong> (methodPathFunctionEntry != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>             <strong class="jxr_keyword">return</strong> methodPathFunctionEntry.getValue();
 <a class="jxr_linenumber" name="L414" href="#L414">414</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L415" href="#L415">415</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
 <a class="jxr_linenumber" name="L416" href="#L416">416</a>         }
@@ -456,19 +456,19 @@
 <a class="jxr_linenumber" name="L448" href="#L448">448</a> 
 <a class="jxr_linenumber" name="L449" href="#L449">449</a>     <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L450" href="#L450">450</a> <em class="jxr_javadoccomment">     * Add a new handler in the web application for a combination</em>
-<a class="jxr_linenumber" name="L451" href="#L451">451</a> <em class="jxr_javadoccomment">     * of a {@link com.renomad.minum.web.StartLine.Verb}, a path, and then provide</em>
+<a class="jxr_linenumber" name="L451" href="#L451">451</a> <em class="jxr_javadoccomment">     * of a {@link RequestLine.Method}, a path, and then provide</em>
 <a class="jxr_linenumber" name="L452" href="#L452">452</a> <em class="jxr_javadoccomment">     * the code to handle a request.</em>
 <a class="jxr_linenumber" name="L453" href="#L453">453</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
 <a class="jxr_linenumber" name="L454" href="#L454">454</a> <em class="jxr_javadoccomment">     * Note that the path text expected is *after* the first forward slash,</em>
 <a class="jxr_linenumber" name="L455" href="#L455">455</a> <em class="jxr_javadoccomment">     * so for example with {@code <a href="http://foo.com/mypath" target="alexandria_uri">http://foo.com/mypath</a>}, you provide us "mypath"</em>
 <a class="jxr_linenumber" name="L456" href="#L456">456</a> <em class="jxr_javadoccomment">     * here.</em>
 <a class="jxr_linenumber" name="L457" href="#L457">457</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L458" href="#L458">458</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<a class="jxr_linenumber" name="L459" href="#L459">459</a>         registeredDynamicPaths.put(<strong class="jxr_keyword">new</strong> VerbPath(verb, pathName), webHandler);
+<a class="jxr_linenumber" name="L458" href="#L458">458</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPath(RequestLine.Method method, String pathName, Function&lt;Request, Response&gt; webHandler) {
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>         registeredDynamicPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
 <a class="jxr_linenumber" name="L460" href="#L460">460</a>     }
 <a class="jxr_linenumber" name="L461" href="#L461">461</a> 
 <a class="jxr_linenumber" name="L462" href="#L462">462</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L463" href="#L463">463</a> <em class="jxr_javadoccomment">     * Similar to {@link #registerPath(StartLine.Verb, String, Function)} except that the paths</em>
+<a class="jxr_linenumber" name="L463" href="#L463">463</a> <em class="jxr_javadoccomment">     * Similar to {@link #registerPath(RequestLine.Method, String, Function)} except that the paths</em>
 <a class="jxr_linenumber" name="L464" href="#L464">464</a> <em class="jxr_javadoccomment">     * registered here may be partially matched.</em>
 <a class="jxr_linenumber" name="L465" href="#L465">465</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
 <a class="jxr_linenumber" name="L466" href="#L466">466</a> <em class="jxr_javadoccomment">     *     For example, if you register &lt;pre&gt;.well-known/acme-challenge&lt;/pre&gt; then it</em>
@@ -477,7 +477,7 @@
 <a class="jxr_linenumber" name="L469" href="#L469">469</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
 <a class="jxr_linenumber" name="L470" href="#L470">470</a> <em class="jxr_javadoccomment">     *     What if I didn't have the ability to match partial paths? In</em>
 <a class="jxr_linenumber" name="L471" href="#L471">471</a> <em class="jxr_javadoccomment">     * that case, if I tried &lt;pre&gt;GET .well-known/acme-challenge/sadoifpiefewsfae&lt;/pre&gt;</em>
-<a class="jxr_linenumber" name="L472" href="#L472">472</a> <em class="jxr_javadoccomment">     * I would get an {@link StartLine.PathDetails#isolatedPath()} of</em>
+<a class="jxr_linenumber" name="L472" href="#L472">472</a> <em class="jxr_javadoccomment">     * I would get an {@link RequestLine.PathDetails#isolatedPath()} of</em>
 <a class="jxr_linenumber" name="L473" href="#L473">473</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;.well-known/acme-challenge/sadoifpiefewsfae&lt;/pre&gt; which wouldn't</em>
 <a class="jxr_linenumber" name="L474" href="#L474">474</a> <em class="jxr_javadoccomment">     * match anything I could statically register.</em>
 <a class="jxr_linenumber" name="L475" href="#L475">475</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
@@ -485,8 +485,8 @@
 <a class="jxr_linenumber" name="L477" href="#L477">477</a> <em class="jxr_javadoccomment">     *     Be careful here, be thoughtful - partial paths will</em>
 <a class="jxr_linenumber" name="L478" href="#L478">478</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
 <a class="jxr_linenumber" name="L479" href="#L479">479</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L480" href="#L480">480</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPartialPath(StartLine.Verb verb, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<a class="jxr_linenumber" name="L481" href="#L481">481</a>         registeredPartialPaths.put(<strong class="jxr_keyword">new</strong> VerbPath(verb, pathName), webHandler);
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPartialPath(RequestLine.Method method, String pathName, Function&lt;Request, Response&gt; webHandler) {
+<a class="jxr_linenumber" name="L481" href="#L481">481</a>         registeredPartialPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
 <a class="jxr_linenumber" name="L482" href="#L482">482</a>     }
 <a class="jxr_linenumber" name="L483" href="#L483">483</a> 
 <a class="jxr_linenumber" name="L484" href="#L484">484</a>     <em class="jxr_javadoccomment">/**</em>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StartLine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">StartLine.java</span></div><h1>StartLine.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RequestLine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">RequestLine.java</span></div><h1>RequestLine.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
 
 import com.renomad.minum.Constants;
 import com.renomad.minum.Context;
@@ -18,9 +18,9 @@ import static com.renomad.minum.utils.Invariants.mustNotBeNull;
  * &quot;start line&quot; in an HTTP request.  For example,
  * GET /foo HTTP/1.1
  */
-public final class StartLine{
+public final class RequestLine {
 
-    private final Verb verb;
+    private final Method method;
     private final PathDetails pathDetails;
     private final HttpVersion version;
     private final String rawValue;
@@ -29,19 +29,19 @@ public final class StartLine{
     private final ILogger logger;
 
     /**
-     * @param verb GET, POST, etc.
+     * @param method GET, POST, etc.
      * @param pathDetails See {@link PathDetails}
      * @param version the version of HTTP (1.0 or 1.1) we're receiving
      * @param rawValue the entire raw string of the start line
      */
-    public StartLine(
-            Verb verb,
+    public RequestLine(
+            Method method,
             PathDetails pathDetails,
             HttpVersion version,
             String rawValue,
             Context context
 <span class="fc" id="L43">    ) {</span>
-<span class="fc" id="L44">        this.verb = verb;</span>
+<span class="fc" id="L44">        this.method = method;</span>
 <span class="fc" id="L45">        this.pathDetails = pathDetails;</span>
 <span class="fc" id="L46">        this.version = version;</span>
 <span class="fc" id="L47">        this.rawValue = rawValue;</span>
@@ -58,12 +58,12 @@ public final class StartLine{
      * On the other hand if it's not a well-formed request, or
      * if we don't have that file, we reply with an error page
      */
-    static final String START_LINE_PATTERN = &quot;^([A-Z]{3,8}) /(.*) HTTP/(1.1|1.0)$&quot;;
+    static final String REQUEST_LINE_PATTERN = &quot;^([A-Z]{3,8}) /(.*) HTTP/(1.1|1.0)$&quot;;
 
-<span class="fc" id="L63">    static final Pattern startLineRegex = Pattern.compile(START_LINE_PATTERN);</span>
+<span class="fc" id="L63">    static final Pattern startLineRegex = Pattern.compile(REQUEST_LINE_PATTERN);</span>
 
-    public static StartLine EMPTY(Context context) {
-<span class="fc" id="L66">        return new StartLine(Verb.NONE, PathDetails.empty, HttpVersion.NONE, &quot;&quot;, context);</span>
+    public static RequestLine EMPTY(Context context) {
+<span class="fc" id="L66">        return new RequestLine(Method.NONE, PathDetails.empty, HttpVersion.NONE, &quot;&quot;, context);</span>
     }
 
     /**
@@ -81,10 +81,10 @@ public final class StartLine{
     }
 
     /**
-     * These are the HTTP Verbs we handle.
-     * @see #START_LINE_PATTERN
+     * These are the HTTP methods we handle.
+     * @see #REQUEST_LINE_PATTERN
      */
-<span class="fc" id="L87">    public enum Verb {</span>
+<span class="fc" id="L87">    public enum Method {</span>
 <span class="fc" id="L88">        GET,</span>
 <span class="fc" id="L89">        POST,</span>
 <span class="fc" id="L90">        PUT,</span>
@@ -95,7 +95,7 @@ public final class StartLine{
 <span class="fc" id="L95">        HEAD,</span>
 
         /**
-         * Represents the null value of Verb
+         * Represents the null value of Method
          */
 <span class="fc" id="L100">        NONE</span>
     }
@@ -104,28 +104,28 @@ public final class StartLine{
      * Given the string value of a startline (like GET /hello HTTP/1.1)
      * validate and extract the values for our use.
      */
-    public StartLine extractStartLine(String value) {
+    public RequestLine extractStartLine(String value) {
 <span class="fc" id="L108">        mustNotBeNull(value);</span>
-<span class="fc" id="L109">        Matcher m = StartLine.startLineRegex.matcher(value);</span>
+<span class="fc" id="L109">        Matcher m = RequestLine.startLineRegex.matcher(value);</span>
         // run the regex
 <span class="fc" id="L111">        var doesMatch = m.matches();</span>
 <span class="fc bfc" id="L112" title="All 2 branches covered.">        if (!doesMatch) {</span>
-<span class="fc" id="L113">            return StartLine.EMPTY(context);</span>
+<span class="fc" id="L113">            return RequestLine.EMPTY(context);</span>
         }
-<span class="fc" id="L115">        mustBeTrue(doesMatch, String.format(&quot;%s must match the startLinePattern: %s&quot;, value, START_LINE_PATTERN));</span>
-<span class="fc" id="L116">        Verb myVerb = extractVerb(m.group(1));</span>
+<span class="fc" id="L115">        mustBeTrue(doesMatch, String.format(&quot;%s must match the startLinePattern: %s&quot;, value, REQUEST_LINE_PATTERN));</span>
+<span class="fc" id="L116">        Method myMethod = extractMethod(m.group(1));</span>
 <span class="fc" id="L117">        PathDetails pd = extractPathDetails(m.group(2));</span>
 <span class="fc" id="L118">        HttpVersion httpVersion = getHttpVersion(m.group(3));</span>
 
-<span class="fc" id="L120">        return new StartLine(myVerb, pd, httpVersion, value, context);</span>
+<span class="fc" id="L120">        return new RequestLine(myMethod, pd, httpVersion, value, context);</span>
     }
 
-    private Verb extractVerb(String verbString) {
+    private Method extractMethod(String methodString) {
         try {
-<span class="fc" id="L125">            return Verb.valueOf(verbString.toUpperCase(Locale.ROOT));</span>
+<span class="fc" id="L125">            return Method.valueOf(methodString.toUpperCase(Locale.ROOT));</span>
 <span class="nc" id="L126">        } catch (Exception ex) {</span>
-<span class="nc" id="L127">            logger.logDebug(() -&gt; &quot;Unable to convert verb to enum: &quot; + verbString);</span>
-<span class="nc" id="L128">            return Verb.NONE;</span>
+<span class="nc" id="L127">            logger.logDebug(() -&gt; &quot;Unable to convert method to enum: &quot; + methodString);</span>
+<span class="nc" id="L128">            return Method.NONE;</span>
         }
     }
 
@@ -194,8 +194,8 @@ public final class StartLine{
         }
     }
 
-    public Verb getVerb() {
-<span class="fc" id="L198">        return verb;</span>
+    public Method getMethod() {
+<span class="fc" id="L198">        return method;</span>
     }
 
     public PathDetails getPathDetails() {
@@ -214,19 +214,19 @@ public final class StartLine{
     public boolean equals(Object o) {
 <span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (this == o) return true;</span>
 <span class="pc bpc" id="L216" title="2 of 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L217">        StartLine startLine = (StartLine) o;</span>
-<span class="pc bpc" id="L218" title="4 of 8 branches missed.">        return verb == startLine.verb &amp;&amp; Objects.equals(pathDetails, startLine.pathDetails) &amp;&amp; version == startLine.version &amp;&amp; Objects.equals(rawValue, startLine.rawValue);</span>
+<span class="fc" id="L217">        RequestLine requestLine = (RequestLine) o;</span>
+<span class="pc bpc" id="L218" title="4 of 8 branches missed.">        return method == requestLine.method &amp;&amp; Objects.equals(pathDetails, requestLine.pathDetails) &amp;&amp; version == requestLine.version &amp;&amp; Objects.equals(rawValue, requestLine.rawValue);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L223">        return Objects.hash(verb, pathDetails, version, rawValue);</span>
+<span class="fc" id="L223">        return Objects.hash(method, pathDetails, version, rawValue);</span>
     }
 
     @Override
     public String toString() {
 <span class="fc" id="L228">        return &quot;StartLine{&quot; +</span>
-                &quot;verb=&quot; + verb +
+                &quot;method=&quot; + method +
                 &quot;, pathDetails=&quot; + pathDetails +
                 &quot;, version=&quot; + version +
                 &quot;, rawValue='&quot; + rawValue + '\'' +
