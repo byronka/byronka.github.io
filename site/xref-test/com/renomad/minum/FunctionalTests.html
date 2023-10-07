@@ -162,20 +162,21 @@
 <a class="jxr_linenumber" name="L154" href="#L154">154</a>         <em class="jxr_comment">// we have to wait for it to get through some processing before we check.</em>
 <a class="jxr_linenumber" name="L155" href="#L155">155</a>         MyThread.sleep(70);
 <a class="jxr_linenumber" name="L156" href="#L156">156</a>         String failureMsg = logger.findFirstMessageThatContains(<span class="jxr_string">"in readLine"</span>, 10);
-<a class="jxr_linenumber" name="L157" href="#L157">157</a>         assertEquals(failureMsg, <span class="jxr_string">"in readLine, client sent more bytes than allowed.  Current max: 500"</span>);
-<a class="jxr_linenumber" name="L158" href="#L158">158</a> 
-<a class="jxr_linenumber" name="L159" href="#L159">159</a>         <em class="jxr_comment">// ******* IMPORTANT!!! This needs to be the last test, since it locks us out ************</em>
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>         assertEquals(failureMsg.length(), 1105);
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>         assertTrue(failureMsg.contains(<span class="jxr_string">"in readLine, client sent more bytes than allowed.  Current max: 1024.  Contents: GET /aaaaaaaaaaaaaaaaaaaaaaa"</span>));
+<a class="jxr_linenumber" name="L159" href="#L159">159</a> 
 <a class="jxr_linenumber" name="L160" href="#L160">160</a>         <em class="jxr_comment">// ******* IMPORTANT!!! This needs to be the last test, since it locks us out ************</em>
-<a class="jxr_linenumber" name="L161" href="#L161">161</a> 
-<a class="jxr_linenumber" name="L162" href="#L162">162</a>         logger.test(<span class="jxr_string">"if we try sending a request that looks like an attack, immediately block the client, don't even return a normal response"</span>);
-<a class="jxr_linenumber" name="L163" href="#L163">163</a>         assertEquals(ft.get(<span class="jxr_string">"version"</span>).statusLine().status(), NULL);
-<a class="jxr_linenumber" name="L164" href="#L164">164</a>         MyThread.sleep(50);
-<a class="jxr_linenumber" name="L165" href="#L165">165</a>         String vulnMsg = logger.findFirstMessageThatContains(<span class="jxr_string">"looking for a vulnerability"</span>, 15);
-<a class="jxr_linenumber" name="L166" href="#L166">166</a>         assertTrue(vulnMsg.contains(<span class="jxr_string">"is looking for a vulnerability, for this: version"</span>), <span class="jxr_string">"expect to find correct error in this: "</span> + vulnMsg);
-<a class="jxr_linenumber" name="L167" href="#L167">167</a> 
-<a class="jxr_linenumber" name="L168" href="#L168">168</a>     }
-<a class="jxr_linenumber" name="L169" href="#L169">169</a> 
-<a class="jxr_linenumber" name="L170" href="#L170">170</a> }
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>         <em class="jxr_comment">// ******* IMPORTANT!!! This needs to be the last test, since it locks us out ************</em>
+<a class="jxr_linenumber" name="L162" href="#L162">162</a> 
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>         logger.test(<span class="jxr_string">"if we try sending a request that looks like an attack, immediately block the client, don't even return a normal response"</span>);
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>         assertEquals(ft.get(<span class="jxr_string">"version"</span>).statusLine().status(), NULL);
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>         MyThread.sleep(50);
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>         String vulnMsg = logger.findFirstMessageThatContains(<span class="jxr_string">"looking for a vulnerability"</span>, 15);
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>         assertTrue(vulnMsg.contains(<span class="jxr_string">"is looking for a vulnerability, for this: version"</span>), <span class="jxr_string">"expect to find correct error in this: "</span> + vulnMsg);
+<a class="jxr_linenumber" name="L168" href="#L168">168</a> 
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>     }
+<a class="jxr_linenumber" name="L170" href="#L170">170</a> 
+<a class="jxr_linenumber" name="L171" href="#L171">171</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2023. All rights reserved.</div>

@@ -90,24 +90,27 @@ public final class InputStreamUtils {
 <span class="fc" id="L90">        final var result = new ByteArrayOutputStream(constants.MAX_READ_LINE_SIZE_BYTES / 3);</span>
 <span class="pc bpc" id="L91" title="1 of 2 branches missed.">        for (int i = 0; i &lt;= (constants.MAX_READ_LINE_SIZE_BYTES + 1); i++) {</span>
 <span class="fc bfc" id="L92" title="All 2 branches covered.">            if (i == constants.MAX_READ_LINE_SIZE_BYTES) {</span>
-<span class="fc" id="L93">                logger.logDebug(() -&gt; &quot;in readLine, client sent more bytes than allowed.  Current max: &quot; + constants.MAX_READ_LINE_SIZE_BYTES);</span>
-<span class="fc" id="L94">                inputStream.close();</span>
-<span class="fc" id="L95">                return &quot;&quot;;</span>
+<span class="fc" id="L93">                logger.logDebug(() -&gt; String.format(</span>
+                        &quot;in readLine, client sent more bytes than allowed.  Current max: %d.  Contents: %s&quot;,
+<span class="fc" id="L95">                        constants.MAX_READ_LINE_SIZE_BYTES,</span>
+<span class="fc" id="L96">                        result.toString(StandardCharsets.UTF_8)));</span>
+<span class="fc" id="L97">                inputStream.close();</span>
+<span class="fc" id="L98">                return &quot;&quot;;</span>
             }
-<span class="fc" id="L97">            int a = inputStream.read();</span>
+<span class="fc" id="L100">            int a = inputStream.read();</span>
 
-<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (a == -1) return null;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (a == -1) return null;</span>
 
-<span class="fc bfc" id="L101" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) {</span>
-<span class="fc" id="L102">                continue;</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) {</span>
+<span class="fc" id="L105">                continue;</span>
             }
 
-<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
 
-<span class="fc" id="L107">            result.write(a);</span>
+<span class="fc" id="L110">            result.write(a);</span>
 
         }
-<span class="fc" id="L110">        return result.toString(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L113">        return result.toString(StandardCharsets.UTF_8);</span>
     }
 
 
@@ -115,29 +118,29 @@ public final class InputStreamUtils {
      * Reads &quot;lengthToRead&quot; bytes from the input stream
      */
     public byte[] read(int lengthToRead, InputStream inputStream) throws IOException {
-<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if (lengthToRead &gt; constants.MAX_READ_SIZE_BYTES) {</span>
-<span class="nc" id="L119">            throw new ForbiddenUseException(&quot;client requested to send more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES + &quot; asked to receive: &quot; + lengthToRead);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if (lengthToRead &gt; constants.MAX_READ_SIZE_BYTES) {</span>
+<span class="nc" id="L122">            throw new ForbiddenUseException(&quot;client requested to send more bytes than allowed.  Current max: &quot; + constants.MAX_READ_SIZE_BYTES + &quot; asked to receive: &quot; + lengthToRead);</span>
         }
-<span class="fc" id="L121">        final int typicalBufferSize = 1024 * 8;</span>
-<span class="fc" id="L122">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
+<span class="fc" id="L124">        final int typicalBufferSize = 1024 * 8;</span>
+<span class="fc" id="L125">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
         byte[] data;
-<span class="fc" id="L124">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L127">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
         int read;
-<span class="fc" id="L126">        int totalRead = 0;</span>
-<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        while ((read = inputStream.read(buf)) &gt;= 0) {</span>
-<span class="fc" id="L128">            totalRead += read;</span>
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">            if (totalRead &lt; lengthToRead) {</span>
+<span class="fc" id="L129">        int totalRead = 0;</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        while ((read = inputStream.read(buf)) &gt;= 0) {</span>
+<span class="fc" id="L131">            totalRead += read;</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">            if (totalRead &lt; lengthToRead) {</span>
                 // if we haven't gotten everything we wanted, write this to the output and loop again
-<span class="nc" id="L131">                baos.write(buf, 0, read);</span>
+<span class="nc" id="L134">                baos.write(buf, 0, read);</span>
             } else {
-<span class="fc" id="L133">                baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
-<span class="fc" id="L134">                break;</span>
+<span class="fc" id="L136">                baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
+<span class="fc" id="L137">                break;</span>
             }
         }
-<span class="fc" id="L137">        data = baos.toByteArray();</span>
+<span class="fc" id="L140">        data = baos.toByteArray();</span>
 
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        mustBeTrue(data.length == lengthToRead, String.format(&quot;lengthToRead of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead));</span>
-<span class="fc" id="L140">        return data;</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        mustBeTrue(data.length == lengthToRead, String.format(&quot;lengthToRead of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead));</span>
+<span class="fc" id="L143">        return data;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

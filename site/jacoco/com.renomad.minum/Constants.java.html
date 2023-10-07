@@ -31,7 +31,7 @@ public final class Constants {
 <span class="fc" id="L31">        KEYSTORE_PASSWORD = properties.getProperty(&quot;KEYSTORE_PASSWORD&quot;,  &quot;&quot;);</span>
 <span class="fc" id="L32">        REDIRECT_TO_SECURE = getProp(&quot;REDIRECT_TO_SECURE&quot;, false);</span>
 <span class="fc" id="L33">        MAX_READ_SIZE_BYTES = getProp(&quot;MAX_READ_SIZE_BYTES&quot;,  10 * 1024 * 1024);</span>
-<span class="fc" id="L34">        MAX_READ_LINE_SIZE_BYTES = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 500);</span>
+<span class="fc" id="L34">        MAX_READ_LINE_SIZE_BYTES = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 1024);</span>
 <span class="fc" id="L35">        MAX_QUERY_STRING_KEYS_COUNT = getProp(&quot;MAX_QUERY_STRING_KEYS_COUNT&quot;, 20);</span>
 <span class="fc" id="L36">        MOST_COOKIES_WELL_LOOK_THROUGH = getProp(&quot;MOST_COOKIES_WELL_LOOK_THROUGH&quot;, 5);</span>
 <span class="fc" id="L37">        MAX_HEADERS_COUNT = getProp(&quot;MAX_HEADERS_COUNT&quot;, 70);</span>
@@ -46,7 +46,8 @@ public final class Constants {
 <span class="fc" id="L46">        EXTRA_MIME_MAPPINGS = getProp(&quot;EXTRA_MIME_MAPPINGS&quot;, &quot;&quot;);</span>
 <span class="fc" id="L47">        STATIC_FILE_CACHE_TIME = getProp(&quot;STATIC_FILE_CACHE_TIME&quot;, 60 * 5);</span>
 <span class="fc" id="L48">        USE_CACHE_FOR_STATIC_FILES = getProp(&quot;USE_CACHE_FOR_STATIC_FILES&quot;, true);</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L49">        MAX_ELEMENTS_LRU_CACHE_STATIC_FILES = getProp(&quot;MAX_ELEMENTS_LRU_CACHE_STATIC_FILES&quot;, 1000);</span>
+<span class="fc" id="L50">    }</span>
 
     /**
      * The port for our regular, non-encrypted server
@@ -108,7 +109,10 @@ public final class Constants {
     public final int MAX_READ_SIZE_BYTES;
 
     /**
-     * The most bytes we'll read as a single line
+     * The most bytes we'll read as a single line.
+     * Could be pretty large, for example, I have seen cases where
+     * the cookies being sent, like on localhost, could
+     * be in excess of 500 bytes.
      */
     public final int MAX_READ_LINE_SIZE_BYTES;
 
@@ -211,11 +215,25 @@ public final class Constants {
     public final boolean USE_CACHE_FOR_STATIC_FILES;
 
     /**
+     * This constant controls the maximum number of elements for the {@link com.renomad.minum.utils.LRUCache}
+     * we create for use by {@link com.renomad.minum.utils.FileUtils}. As files are read
+     * by FileUtil's methods, they will be stored in this cache, to avoid reading from
+     * disk.  However, caching can certainly complicate things, so if you would prefer
+     * not to store these values in a cache, set {@link USE_CACHE_FOR_STATIC_FILES} to false.
+     * &lt;p&gt;
+     *     The unit here is the number of elements to store in the cache.  Be aware: elements
+     *     can be of any size, so two caches each having a max size of 1000 elements could be
+     *     drastically different sizes.
+     * &lt;/p&gt;
+     */
+    public final int MAX_ELEMENTS_LRU_CACHE_STATIC_FILES;
+
+    /**
      * A helper method to remove some redundant boilerplate code for grabbing
      * configuration values from minum.config
      */
     private int getProp(String propName, int propDefault) {
-<span class="fc" id="L218">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L236">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -223,7 +241,7 @@ public final class Constants {
      * configuration values from minum.config
      */
     private boolean getProp(String propName, boolean propDefault) {
-<span class="fc" id="L226">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L244">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -231,7 +249,16 @@ public final class Constants {
      * configuration values from minum.config
      */
     private List&lt;String&gt; getProp(String propName, String propDefault) {
-<span class="fc" id="L234">        return Arrays.asList(properties.getProperty(propName, propDefault).split(&quot;,&quot;));</span>
+<span class="fc" id="L252">        String propValue = properties.getProperty(propName);</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">        if (propValue == null) {</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">            if (propDefault.isBlank()) {</span>
+<span class="nc" id="L255">                return List.of();</span>
+            } else {
+<span class="nc" id="L257">                return Arrays.asList(propDefault.split(&quot;,&quot;));</span>
+            }
+        } else {
+<span class="fc" id="L260">            return Arrays.asList(propValue.split(&quot;,&quot;));</span>
+        }
     }
 
 
@@ -240,17 +267,16 @@ public final class Constants {
      * properties file should be shown when it's read.
      */
     private Properties getConfiguredProperties() {
-<span class="fc" id="L243">        var props = new Properties();</span>
-<span class="fc" id="L244">        String fileName = &quot;minum.config&quot;;</span>
-<span class="fc" id="L245">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
-<span class="fc" id="L246">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
+<span class="fc" id="L270">        var props = new Properties();</span>
+<span class="fc" id="L271">        String fileName = &quot;minum.config&quot;;</span>
+<span class="fc" id="L272">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
+<span class="fc" id="L273">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
                     &quot; found properties file at ./minum.config.  Loading properties&quot;);
-<span class="fc" id="L248">            props.load(fis);</span>
-<span class="nc" id="L249">        } catch (Exception ex) {</span>
-<span class="nc" id="L250">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
-<span class="nc" id="L251">            System.exit(1);</span>
-<span class="fc" id="L252">        }</span>
-<span class="fc" id="L253">        return props;</span>
+<span class="fc" id="L275">            props.load(fis);</span>
+<span class="nc" id="L276">        } catch (Exception ex) {</span>
+<span class="nc" id="L277">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
+<span class="fc" id="L278">        }</span>
+<span class="fc" id="L279">        return props;</span>
     }
 
 
@@ -260,14 +286,14 @@ public final class Constants {
      * in {@link LoggingLevel}.
      */
     private List&lt;LoggingLevel&gt; convertLoggingStringsToEnums(List&lt;String&gt; logLevels) {
-<span class="fc" id="L263">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
-<span class="fc" id="L264">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L265" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
-<span class="pc bpc" id="L266" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
-<span class="fc" id="L267">                enabledLoggingLevels.add(t);</span>
+<span class="fc" id="L289">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
+<span class="fc" id="L290">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
+<span class="fc" id="L293">                enabledLoggingLevels.add(t);</span>
             }
         }
-<span class="fc" id="L270">        return enabledLoggingLevels;</span>
+<span class="fc" id="L296">        return enabledLoggingLevels;</span>
     }
 }
 
