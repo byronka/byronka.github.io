@@ -64,19 +64,20 @@ public final class StringUtils {
 <span class="fc bfc" id="L64" title="All 2 branches covered.">        if (input == null) {</span>
 <span class="fc" id="L65">            return &quot;&quot;;</span>
         }
-<span class="fc" id="L67">        return input</span>
-<span class="fc" id="L68">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
-<span class="fc" id="L69">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
+<span class="fc" id="L67">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
+<span class="fc" id="L68">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="fc" id="L69">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
+<span class="fc" id="L70">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
     }
 
     /**
      * Encodes UTF-8 text using URL-encoding
      */
     public static String encode(String str) {
-<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (str == null) {</span>
-<span class="fc" id="L77">            return &quot;%NULL%&quot;;</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (str == null) {</span>
+<span class="fc" id="L78">            return &quot;%NULL%&quot;;</span>
         }
-<span class="fc" id="L79">        return URLEncoder.encode(str, UTF_8);</span>
+<span class="fc" id="L80">        return URLEncoder.encode(str, UTF_8);</span>
     }
 
     /**
@@ -85,42 +86,42 @@ public final class StringUtils {
      * which is our way to signify null.
      */
     public static String decode(String str) {
-<span class="fc" id="L88">        mustNotBeNull(str);</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
-<span class="fc" id="L90">            return null;</span>
+<span class="fc" id="L89">        mustNotBeNull(str);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
+<span class="fc" id="L91">            return null;</span>
         }
-<span class="fc" id="L92">        return URLDecoder.decode(str, UTF_8);</span>
+<span class="fc" id="L93">        return URLDecoder.decode(str, UTF_8);</span>
     }
 
     public static String generateSecureRandomString(int length) {
-<span class="fc" id="L96">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
-<span class="fc" id="L97">        final var sr = new SecureRandom();</span>
+<span class="fc" id="L97">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
+<span class="fc" id="L98">        final var sr = new SecureRandom();</span>
 
-<span class="fc" id="L99">        return IntStream.range(1, length+1)</span>
-<span class="fc" id="L100">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
-<span class="fc" id="L101">                .map(Object::toString)</span>
-<span class="fc" id="L102">                .collect(Collectors.joining());</span>
+<span class="fc" id="L100">        return IntStream.range(1, length+1)</span>
+<span class="fc" id="L101">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
+<span class="fc" id="L102">                .map(Object::toString)</span>
+<span class="fc" id="L103">                .collect(Collectors.joining());</span>
     }
 
     /**
      * Converts a list of bytes to a string. Returns null if the input is null.
      */
     public static String byteListToString(List&lt;Byte&gt; byteList) {
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (byteList == null) return null;</span>
-<span class="fc" id="L110">        final int size = byteList.size();</span>
-<span class="fc" id="L111">        final var buf = new byte[size];</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        for (int i = 0; i &lt; size; i++) {</span>
-<span class="fc" id="L113">            buf[i] = byteList.get(i);</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (byteList == null) return null;</span>
+<span class="fc" id="L111">        final int size = byteList.size();</span>
+<span class="fc" id="L112">        final var buf = new byte[size];</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        for (int i = 0; i &lt; size; i++) {</span>
+<span class="fc" id="L114">            buf[i] = byteList.get(i);</span>
         }
-<span class="fc" id="L115">        return new String(buf, UTF_8);</span>
+<span class="fc" id="L116">        return new String(buf, UTF_8);</span>
     }
 
     /**
      * Converts an array of bytes to a string. Returns null if the input is null.
      */
     public static String byteArrayToString(byte[] byteArray) {
-<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (byteArray == null) return null;</span>
-<span class="fc" id="L123">        return new String(byteArray, UTF_8);</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (byteArray == null) return null;</span>
+<span class="fc" id="L124">        return new String(byteArray, UTF_8);</span>
     }
 
 
