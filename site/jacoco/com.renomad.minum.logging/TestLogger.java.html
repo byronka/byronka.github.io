@@ -113,19 +113,21 @@ public class TestLogger extends Logger {
      *              up to {@link #MAX_CACHE_SIZE}
      */
     public String findFirstMessageThatContains(String value, int lines) {
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (lines &gt; MAX_CACHE_SIZE) throw new RuntimeException(String.format(&quot;Can only get up to %s lines from the log&quot;, MAX_CACHE_SIZE));</span>
-<span class="fc bfc" id="L117" title="All 2 branches covered.">        var fromIndex = recentLogLines.size() - lines &lt; 0 ? 0 : recentLogLines.size() - lines;</span>
-<span class="fc" id="L118">        var lineList = recentLogLines.stream().toList().subList(fromIndex, recentLogLines.size());</span>
-<span class="fc" id="L119">        var values = lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
-<span class="fc" id="L120">        int size = values.size();</span>
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if (size == 0) {</span>
-<span class="nc" id="L122">            throw new RuntimeException(value + &quot; was not found in &quot; + String.join(&quot;;&quot;, lineList));</span>
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        } else if (size == 1) {</span>
-<span class="fc" id="L124">            return values.get(0);</span>
-<span class="nc bnc" id="L125" title="All 2 branches missed.">        } else if (size &gt;= 2) {</span>
-<span class="nc" id="L126">            throw new RuntimeException(&quot;multiple values found: &quot; + values);</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (lines &gt; MAX_CACHE_SIZE) {</span>
+<span class="nc" id="L117">            throw new TestLoggerException(String.format(&quot;Can only get up to %s lines from the log&quot;, MAX_CACHE_SIZE));</span>
         }
-<span class="nc" id="L128">        throw new RuntimeException(&quot;Shouldn't be possible to get here.&quot;);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        var fromIndex = recentLogLines.size() - lines &lt; 0 ? 0 : recentLogLines.size() - lines;</span>
+<span class="fc" id="L120">        var lineList = recentLogLines.stream().toList().subList(fromIndex, recentLogLines.size());</span>
+<span class="fc" id="L121">        var values = lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
+<span class="fc" id="L122">        int size = values.size();</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (size == 0) {</span>
+<span class="nc" id="L124">            throw new TestLoggerException(value + &quot; was not found in &quot; + String.join(&quot;;&quot;, lineList));</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        } else if (size == 1) {</span>
+<span class="fc" id="L126">            return values.get(0);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        } else if (size &gt;= 2) {</span>
+<span class="nc" id="L128">            throw new TestLoggerException(&quot;multiple values found: &quot; + values);</span>
+        }
+<span class="nc" id="L130">        throw new TestLoggerException(&quot;Shouldn't be possible to get here.&quot;);</span>
     }
 
     /**
@@ -139,7 +141,7 @@ public class TestLogger extends Logger {
      * &lt;/p&gt;
      */
     public String findFirstMessageThatContains(String value) {
-<span class="fc" id="L142">        return findFirstMessageThatContains(value, 3);</span>
+<span class="fc" id="L144">        return findFirstMessageThatContains(value, 3);</span>
     }
 
     /**
@@ -149,14 +151,14 @@ public class TestLogger extends Logger {
      */
     public void test(String msg) {
         // put together some pretty-looking text graphics to show the suiteName of our test in log
-<span class="fc" id="L152">        final var baseLength = 11;</span>
-<span class="fc" id="L153">        final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
+<span class="fc" id="L154">        final var baseLength = 11;</span>
+<span class="fc" id="L155">        final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
 
-<span class="fc" id="L155">        loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
-<span class="fc" id="L156">            testCount += 1;</span>
-<span class="fc" id="L157">            System.out.printf(&quot;%n+%s+%n| TEST %d: %s |%n+%s+%n%n&quot;, dashes, testCount, msg, dashes);</span>
-<span class="fc" id="L158">        });</span>
-<span class="fc" id="L159">    }</span>
+<span class="fc" id="L157">        loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L158">            testCount += 1;</span>
+<span class="fc" id="L159">            System.out.printf(&quot;%n+%s+%n| TEST %d: %s |%n+%s+%n%n&quot;, dashes, testCount, msg, dashes);</span>
+<span class="fc" id="L160">        });</span>
+<span class="fc" id="L161">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

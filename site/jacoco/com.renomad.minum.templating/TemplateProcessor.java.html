@@ -77,29 +77,37 @@ public final class TemplateProcessor {
     public static TemplateProcessor buildProcessor(String template) {
 <span class="fc" id="L78">        var tSections = new ArrayList&lt;TemplateSection&gt;();</span>
 <span class="fc" id="L79">        StringBuilder builder = new StringBuilder();</span>
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        for (int i = 0; i &lt; template.length(); i++) {</span>
+        // this flag is to help us understand whether we are currently reading the
+        // name of a template literal.
+        // e.g. in the case of hello {{ name }}, &quot;name&quot; is the literal.
+<span class="fc" id="L83">        boolean isInsideTemplateKeyLiteral = false;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (int i = 0; i &lt; template.length(); i++) {</span>
 
-<span class="fc" id="L82">            char charAtCursor = template.charAt(i);</span>
+<span class="fc" id="L86">            char charAtCursor = template.charAt(i);</span>
 
-<span class="pc bpc" id="L84" title="1 of 6 branches missed.">            if (charAtCursor == '{' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '{') {</span>
-<span class="fc" id="L85">                i += 1;</span>
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">                if (builder.length() &gt; 0) {</span>
-<span class="fc" id="L87">                    tSections.add(new TemplateSection(null, builder.toString()));</span>
-<span class="fc" id="L88">                    builder = new StringBuilder();</span>
+<span class="pc bpc" id="L88" title="1 of 6 branches missed.">            if (charAtCursor == '{' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '{') {</span>
+                // we were outside, now we're inside.
+<span class="fc" id="L90">                isInsideTemplateKeyLiteral = true;</span>
+<span class="fc" id="L91">                i += 1;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">                if (builder.length() &gt; 0) {</span>
+<span class="fc" id="L93">                    tSections.add(new TemplateSection(null, builder.toString()));</span>
+<span class="fc" id="L94">                    builder = new StringBuilder();</span>
                 }
                 continue;
             }
 
-<span class="pc bpc" id="L93" title="1 of 6 branches missed.">            if (charAtCursor == '}' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '}') {</span>
-<span class="fc" id="L94">                i += 1;</span>
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">                if (builder.length() &gt; 0) {</span>
-<span class="fc" id="L96">                    tSections.add(new TemplateSection(builder.toString().trim(), null));</span>
-<span class="fc" id="L97">                    builder = new StringBuilder();</span>
+<span class="fc bfc" id="L99" title="All 8 branches covered.">            if (charAtCursor == '}' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '}' &amp;&amp; isInsideTemplateKeyLiteral) {</span>
+                // we were inside, now we're outside.
+<span class="fc" id="L101">                isInsideTemplateKeyLiteral = false;</span>
+<span class="fc" id="L102">                i += 1;</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">                if (builder.length() &gt; 0) {</span>
+<span class="fc" id="L104">                    tSections.add(new TemplateSection(builder.toString().trim(), null));</span>
+<span class="fc" id="L105">                    builder = new StringBuilder();</span>
                 }
                 continue;
             }
 
-<span class="fc" id="L102">            builder.append(charAtCursor);</span>
+<span class="fc" id="L110">            builder.append(charAtCursor);</span>
 
             /*
              if we're at the end of the template, it's our last chance to
@@ -107,12 +115,19 @@ public final class TemplateProcessor {
              at the end, and it's not a closing brace, it's a malformed
              template.
              */
-<span class="fc bfc" id="L110" title="All 2 branches covered.">            if (i == template.length() - 1) {</span>
-<span class="fc" id="L111">                tSections.add(new TemplateSection(null, builder.toString()));</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (i == template.length() - 1) {</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                if (isInsideTemplateKeyLiteral) {</span>
+                    // if we're exiting this string while inside a template literal, then
+                    // we're reading a corrupted input, and we should make that clear
+                    // to our caller.
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                    String templateSample = template.length() &gt; 10 ? template.substring(0, 10) : template;</span>
+<span class="fc" id="L124">                    throw new TemplateParseException(&quot;parsing failed for string starting with &quot; + templateSample);</span>
+                }
+<span class="fc" id="L126">                tSections.add(new TemplateSection(null, builder.toString()));</span>
             }
         }
 
-<span class="fc" id="L115">        return new TemplateProcessor(tSections);</span>
+<span class="fc" id="L130">        return new TemplateProcessor(tSections);</span>
     }
 }
 

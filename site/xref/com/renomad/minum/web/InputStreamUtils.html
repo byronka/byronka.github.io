@@ -59,98 +59,99 @@
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L52" href="#L52">52</a>      <strong class="jxr_keyword">public</strong> byte[] readChunkedEncoding(InputStream inputStream) <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> result = <strong class="jxr_keyword">new</strong> ByteArrayOutputStream( );
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> countRead = 0; countRead &lt;= (constants.MAX_READ_SIZE_BYTES + 1); )  {
-<a class="jxr_linenumber" name="L55" href="#L55">55</a>              <strong class="jxr_keyword">if</strong> (countRead == constants.MAX_READ_SIZE_BYTES) {
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>                  logger.logDebug(() -&gt; <span class="jxr_string">"client sent more bytes than allowed.  Current max: "</span> + constants.MAX_READ_SIZE_BYTES);
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>                  inputStream.close();
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> byte[0];
-<a class="jxr_linenumber" name="L59" href="#L59">59</a>              }
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>              String countToReadString = readLine(inputStream);
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>              <strong class="jxr_keyword">if</strong> (countToReadString == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> byte[0];
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>              }
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>              mustNotBeNull(countToReadString);
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>              <strong class="jxr_keyword">int</strong> countToRead = Integer.parseInt(countToReadString, 16);
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>  
-<a class="jxr_linenumber" name="L67" href="#L67">67</a>              result.write(read(countToRead, inputStream));
-<a class="jxr_linenumber" name="L68" href="#L68">68</a>              countRead += countToRead;
-<a class="jxr_linenumber" name="L69" href="#L69">69</a>  
-<a class="jxr_linenumber" name="L70" href="#L70">70</a>              readLine(inputStream);
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>              <strong class="jxr_keyword">if</strong> (countToRead == 0) {
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>                  readLine(inputStream);
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>                  <strong class="jxr_keyword">break</strong>;
-<a class="jxr_linenumber" name="L74" href="#L74">74</a>              }
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>  
-<a class="jxr_linenumber" name="L76" href="#L76">76</a>          }
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>          <strong class="jxr_keyword">return</strong> result.toByteArray();
-<a class="jxr_linenumber" name="L78" href="#L78">78</a>      }
-<a class="jxr_linenumber" name="L79" href="#L79">79</a>  
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L81" href="#L81">81</a>  <em class="jxr_javadoccomment">     * Reads a line of text, stopping when reading a newline.</em>
-<a class="jxr_linenumber" name="L82" href="#L82">82</a>  <em class="jxr_javadoccomment">     * Skips over carriage returns, so we read a HTTP_CRLF properly.</em>
-<a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
-<a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_javadoccomment">     * If the stream ends, return null</em>
-<a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>      <strong class="jxr_keyword">public</strong> String readLine(InputStream inputStream) <strong class="jxr_keyword">throws</strong> IOException  {
-<a class="jxr_linenumber" name="L87" href="#L87">87</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> NEWLINE_DECIMAL = 10;
-<a class="jxr_linenumber" name="L88" href="#L88">88</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> CARRIAGE_RETURN_DECIMAL = 13;
-<a class="jxr_linenumber" name="L89" href="#L89">89</a>  
-<a class="jxr_linenumber" name="L90" href="#L90">90</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> result = <strong class="jxr_keyword">new</strong> ByteArrayOutputStream(constants.MAX_READ_LINE_SIZE_BYTES / 3);
-<a class="jxr_linenumber" name="L91" href="#L91">91</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt;= (constants.MAX_READ_LINE_SIZE_BYTES + 1); i++) {
-<a class="jxr_linenumber" name="L92" href="#L92">92</a>              <strong class="jxr_keyword">if</strong> (i == constants.MAX_READ_LINE_SIZE_BYTES) {
-<a class="jxr_linenumber" name="L93" href="#L93">93</a>                  logger.logDebug(() -&gt; String.format(
-<a class="jxr_linenumber" name="L94" href="#L94">94</a>                          <span class="jxr_string">"in readLine, client sent more bytes than allowed.  Current max: %d.  Contents: %s"</span>,
-<a class="jxr_linenumber" name="L95" href="#L95">95</a>                          constants.MAX_READ_LINE_SIZE_BYTES,
-<a class="jxr_linenumber" name="L96" href="#L96">96</a>                          result.toString(StandardCharsets.UTF_8)));
-<a class="jxr_linenumber" name="L97" href="#L97">97</a>                  inputStream.close();
-<a class="jxr_linenumber" name="L98" href="#L98">98</a>                  <strong class="jxr_keyword">return</strong> <span class="jxr_string">""</span>;
-<a class="jxr_linenumber" name="L99" href="#L99">99</a>              }
-<a class="jxr_linenumber" name="L100" href="#L100">100</a>             <strong class="jxr_keyword">int</strong> a = inputStream.read();
-<a class="jxr_linenumber" name="L101" href="#L101">101</a> 
-<a class="jxr_linenumber" name="L102" href="#L102">102</a>             <strong class="jxr_keyword">if</strong> (a == -1) <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
-<a class="jxr_linenumber" name="L103" href="#L103">103</a> 
-<a class="jxr_linenumber" name="L104" href="#L104">104</a>             <strong class="jxr_keyword">if</strong> (a == CARRIAGE_RETURN_DECIMAL) {
-<a class="jxr_linenumber" name="L105" href="#L105">105</a>                 <strong class="jxr_keyword">continue</strong>;
-<a class="jxr_linenumber" name="L106" href="#L106">106</a>             }
-<a class="jxr_linenumber" name="L107" href="#L107">107</a> 
-<a class="jxr_linenumber" name="L108" href="#L108">108</a>             <strong class="jxr_keyword">if</strong> (a == NEWLINE_DECIMAL) <strong class="jxr_keyword">break</strong>;
-<a class="jxr_linenumber" name="L109" href="#L109">109</a> 
-<a class="jxr_linenumber" name="L110" href="#L110">110</a>             result.write(a);
-<a class="jxr_linenumber" name="L111" href="#L111">111</a> 
-<a class="jxr_linenumber" name="L112" href="#L112">112</a>         }
-<a class="jxr_linenumber" name="L113" href="#L113">113</a>         <strong class="jxr_keyword">return</strong> result.toString(StandardCharsets.UTF_8);
-<a class="jxr_linenumber" name="L114" href="#L114">114</a>     }
-<a class="jxr_linenumber" name="L115" href="#L115">115</a> 
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>          <strong class="jxr_keyword">int</strong> countRead = 0;
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          <strong class="jxr_keyword">while</strong> (countRead &lt;= (constants.MAX_READ_SIZE_BYTES + 1))  {
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>              <strong class="jxr_keyword">if</strong> (countRead == constants.MAX_READ_SIZE_BYTES) {
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>                  logger.logDebug(() -&gt; <span class="jxr_string">"client sent more bytes than allowed.  Current max: "</span> + constants.MAX_READ_SIZE_BYTES);
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>                  inputStream.close();
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> byte[0];
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>              }
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>              String countToReadString = readLine(inputStream);
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>              <strong class="jxr_keyword">if</strong> (countToReadString == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> byte[0];
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>              }
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>              mustNotBeNull(countToReadString);
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>              <strong class="jxr_keyword">int</strong> countToRead = Integer.parseInt(countToReadString, 16);
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>              result.write(read(countToRead, inputStream));
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>              countRead += countToRead;
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>              readLine(inputStream);
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>              <strong class="jxr_keyword">if</strong> (countToRead == 0) {
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>                  readLine(inputStream);
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>                  <strong class="jxr_keyword">break</strong>;
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>              }
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>          }
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>          <strong class="jxr_keyword">return</strong> result.toByteArray();
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>      }
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>  
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  <em class="jxr_javadoccomment">     * Reads a line of text, stopping when reading a newline.</em>
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment">     * Skips over carriage returns, so we read a HTTP_CRLF properly.</em>
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment">     * If the stream ends, return null</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      <strong class="jxr_keyword">public</strong> String readLine(InputStream inputStream) <strong class="jxr_keyword">throws</strong> IOException  {
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> NEWLINE_DECIMAL = 10;
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> CARRIAGE_RETURN_DECIMAL = 13;
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> result = <strong class="jxr_keyword">new</strong> ByteArrayOutputStream(constants.MAX_READ_LINE_SIZE_BYTES / 3);
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt;= (constants.MAX_READ_LINE_SIZE_BYTES + 1); i++) {
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>              <strong class="jxr_keyword">if</strong> (i == constants.MAX_READ_LINE_SIZE_BYTES) {
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>                  logger.logDebug(() -&gt; String.format(
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>                          <span class="jxr_string">"in readLine, client sent more bytes than allowed.  Current max: %d.  Contents: %s"</span>,
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>                          constants.MAX_READ_LINE_SIZE_BYTES,
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>                          result.toString(StandardCharsets.UTF_8)));
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>                  inputStream.close();
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>                  <strong class="jxr_keyword">return</strong> <span class="jxr_string">""</span>;
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>             }
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>             <strong class="jxr_keyword">int</strong> a = inputStream.read();
+<a class="jxr_linenumber" name="L102" href="#L102">102</a> 
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>             <strong class="jxr_keyword">if</strong> (a == -1) <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> 
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>             <strong class="jxr_keyword">if</strong> (a == CARRIAGE_RETURN_DECIMAL) {
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>                 <strong class="jxr_keyword">continue</strong>;
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>             }
+<a class="jxr_linenumber" name="L108" href="#L108">108</a> 
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>             <strong class="jxr_keyword">if</strong> (a == NEWLINE_DECIMAL) <strong class="jxr_keyword">break</strong>;
+<a class="jxr_linenumber" name="L110" href="#L110">110</a> 
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>             result.write(a);
+<a class="jxr_linenumber" name="L112" href="#L112">112</a> 
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>         }
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>         <strong class="jxr_keyword">return</strong> result.toString(StandardCharsets.UTF_8);
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>     }
 <a class="jxr_linenumber" name="L116" href="#L116">116</a> 
-<a class="jxr_linenumber" name="L117" href="#L117">117</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L118" href="#L118">118</a> <em class="jxr_javadoccomment">     * Reads "lengthToRead" bytes from the input stream</em>
-<a class="jxr_linenumber" name="L119" href="#L119">119</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L120" href="#L120">120</a>     <strong class="jxr_keyword">public</strong> byte[] read(<strong class="jxr_keyword">int</strong> lengthToRead, InputStream inputStream) <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L121" href="#L121">121</a>         <strong class="jxr_keyword">if</strong> (lengthToRead &gt; constants.MAX_READ_SIZE_BYTES) {
-<a class="jxr_linenumber" name="L122" href="#L122">122</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client requested to send more bytes than allowed.  Current max: "</span> + constants.MAX_READ_SIZE_BYTES + <span class="jxr_string">" asked to receive: "</span> + lengthToRead);
-<a class="jxr_linenumber" name="L123" href="#L123">123</a>         }
-<a class="jxr_linenumber" name="L124" href="#L124">124</a>         <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> typicalBufferSize = 1024 * 8;
-<a class="jxr_linenumber" name="L125" href="#L125">125</a>         byte[] buf = <strong class="jxr_keyword">new</strong> byte[Math.min(lengthToRead, typicalBufferSize)]; <em class="jxr_comment">// 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</em>
-<a class="jxr_linenumber" name="L126" href="#L126">126</a>         byte[] data;
-<a class="jxr_linenumber" name="L127" href="#L127">127</a>         ByteArrayOutputStream baos = <strong class="jxr_keyword">new</strong> ByteArrayOutputStream();
-<a class="jxr_linenumber" name="L128" href="#L128">128</a>         <strong class="jxr_keyword">int</strong> read;
-<a class="jxr_linenumber" name="L129" href="#L129">129</a>         <strong class="jxr_keyword">int</strong> totalRead = 0;
-<a class="jxr_linenumber" name="L130" href="#L130">130</a>         <strong class="jxr_keyword">while</strong> ((read = inputStream.read(buf)) &gt;= 0) {
-<a class="jxr_linenumber" name="L131" href="#L131">131</a>             totalRead += read;
-<a class="jxr_linenumber" name="L132" href="#L132">132</a>             <strong class="jxr_keyword">if</strong> (totalRead &lt; lengthToRead) {
-<a class="jxr_linenumber" name="L133" href="#L133">133</a>                 <em class="jxr_comment">// if we haven't gotten everything we wanted, write this to the output and loop again</em>
-<a class="jxr_linenumber" name="L134" href="#L134">134</a>                 baos.write(buf, 0, read);
-<a class="jxr_linenumber" name="L135" href="#L135">135</a>             } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L136" href="#L136">136</a>                 baos.write(buf, 0, read - (totalRead - lengthToRead));
-<a class="jxr_linenumber" name="L137" href="#L137">137</a>                 <strong class="jxr_keyword">break</strong>;
-<a class="jxr_linenumber" name="L138" href="#L138">138</a>             }
-<a class="jxr_linenumber" name="L139" href="#L139">139</a>         }
-<a class="jxr_linenumber" name="L140" href="#L140">140</a>         data = baos.toByteArray();
-<a class="jxr_linenumber" name="L141" href="#L141">141</a> 
-<a class="jxr_linenumber" name="L142" href="#L142">142</a>         mustBeTrue(data.length == lengthToRead, String.format(<span class="jxr_string">"lengthToRead of bytes read (%d) must be what we expected (%d)"</span>, data.length, lengthToRead));
-<a class="jxr_linenumber" name="L143" href="#L143">143</a>         <strong class="jxr_keyword">return</strong> data;
-<a class="jxr_linenumber" name="L144" href="#L144">144</a>     }
-<a class="jxr_linenumber" name="L145" href="#L145">145</a> }
+<a class="jxr_linenumber" name="L117" href="#L117">117</a> 
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> <em class="jxr_javadoccomment">     * Reads "lengthToRead" bytes from the input stream</em>
+<a class="jxr_linenumber" name="L120" href="#L120">120</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>     <strong class="jxr_keyword">public</strong> byte[] read(<strong class="jxr_keyword">int</strong> lengthToRead, InputStream inputStream) <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>         <strong class="jxr_keyword">if</strong> (lengthToRead &gt; constants.MAX_READ_SIZE_BYTES) {
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client requested to send more bytes than allowed.  Current max: "</span> + constants.MAX_READ_SIZE_BYTES + <span class="jxr_string">" asked to receive: "</span> + lengthToRead);
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>         }
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>         <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> typicalBufferSize = 1024 * 8;
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>         byte[] buf = <strong class="jxr_keyword">new</strong> byte[Math.min(lengthToRead, typicalBufferSize)]; <em class="jxr_comment">// 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</em>
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>         byte[] data;
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>         ByteArrayOutputStream baos = <strong class="jxr_keyword">new</strong> ByteArrayOutputStream();
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>         <strong class="jxr_keyword">int</strong> read;
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>         <strong class="jxr_keyword">int</strong> totalRead = 0;
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>         <strong class="jxr_keyword">while</strong> ((read = inputStream.read(buf)) &gt;= 0) {
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>             totalRead += read;
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>             <strong class="jxr_keyword">if</strong> (totalRead &lt; lengthToRead) {
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>                 <em class="jxr_comment">// if we haven't gotten everything we wanted, write this to the output and loop again</em>
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>                 baos.write(buf, 0, read);
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>             } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>                 baos.write(buf, 0, read - (totalRead - lengthToRead));
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>                 <strong class="jxr_keyword">break</strong>;
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>             }
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>         }
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>         data = baos.toByteArray();
+<a class="jxr_linenumber" name="L142" href="#L142">142</a> 
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>         mustBeTrue(data.length == lengthToRead, String.format(<span class="jxr_string">"lengthToRead of bytes read (%d) must be what we expected (%d)"</span>, data.length, lengthToRead));
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>         <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>     }
+<a class="jxr_linenumber" name="L146" href="#L146">146</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2023. All rights reserved.</div>

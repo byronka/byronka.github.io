@@ -164,7 +164,7 @@ final class BodyProcessor {
      * }
      * &lt;/pre&gt;
      */
-<span class="fc" id="L167">    private final static Pattern multiformNameRegex = Pattern.compile(&quot;\\bname\\b=\&quot;(?&lt;namevalue&gt;.*?)\&quot;&quot;);</span>
+<span class="fc" id="L167">    private static final Pattern multiformNameRegex = Pattern.compile(&quot;\\bname\\b=\&quot;(?&lt;namevalue&gt;.*?)\&quot;&quot;);</span>
 
     /**
      * Extract multipart/form data from a body.  See docs/http_protocol/returning_values_from_multipart_rfc_7578.txt
@@ -185,7 +185,7 @@ final class BodyProcessor {
 <span class="nc" id="L185">            } catch (IOException e) {</span>
                 // This is an InputStream we built ourselves from local data.
                 // there's no reason why it should fail.
-<span class="nc" id="L188">                throw new RuntimeException(e);</span>
+<span class="nc" id="L188">                throw new WebServerException(e);</span>
 <span class="fc" id="L189">            }</span>
 
 <span class="fc" id="L191">            List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
@@ -203,7 +203,7 @@ final class BodyProcessor {
 <span class="nc" id="L203">                } catch (IOException e) {</span>
                     // This is an InputStream we built ourselves from local data.
                     // there's no reason why it should fail.
-<span class="nc" id="L206">                    throw new RuntimeException(e);</span>
+<span class="nc" id="L206">                    throw new WebServerException(e);</span>
 <span class="fc" id="L207">                }</span>
 <span class="fc" id="L208">                result.put(name, data);</span>
 <span class="fc" id="L209">                partitionHeaders.put(name, headers);</span>
