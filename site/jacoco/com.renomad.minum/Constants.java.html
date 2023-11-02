@@ -250,14 +250,25 @@ public final class Constants {
      */
     private List&lt;String&gt; getProp(String propName, String propDefault) {
 <span class="fc" id="L252">        String propValue = properties.getProperty(propName);</span>
-<span class="pc bpc" id="L253" title="1 of 2 branches missed.">        if (propValue == null) {</span>
-<span class="nc bnc" id="L254" title="All 2 branches missed.">            if (propDefault.isBlank()) {</span>
-<span class="nc" id="L255">                return List.of();</span>
+<span class="fc" id="L253">        return extractList(propValue, propDefault);</span>
+    }
+
+    /**
+     * Extract a list out of a comma-delimited string.
+     * &lt;br&gt;
+     * Example: a,b, c, d -&gt; List.of(&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;)
+     * @param propValue the value of a property
+     * @param propDefault the default value to use, if the propValue is null
+     */
+    static List&lt;String&gt; extractList(String propValue, String propDefault) {
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">        if (propValue == null) {</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">            if (propDefault.isBlank()) {</span>
+<span class="nc" id="L266">                return List.of();</span>
             } else {
-<span class="nc" id="L257">                return Arrays.asList(propDefault.split(&quot;,&quot;));</span>
+<span class="nc" id="L268">                return Arrays.asList(propDefault.trim().split(&quot;\\s*,\\s*&quot;));</span>
             }
         } else {
-<span class="fc" id="L260">            return Arrays.asList(propValue.split(&quot;,&quot;));</span>
+<span class="fc" id="L271">            return Arrays.asList(propValue.trim().split(&quot;\\s*,\\s*&quot;));</span>
         }
     }
 
@@ -267,16 +278,16 @@ public final class Constants {
      * properties file should be shown when it's read.
      */
     private Properties getConfiguredProperties() {
-<span class="fc" id="L270">        var props = new Properties();</span>
-<span class="fc" id="L271">        String fileName = &quot;minum.config&quot;;</span>
-<span class="fc" id="L272">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
-<span class="fc" id="L273">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
+<span class="fc" id="L281">        var props = new Properties();</span>
+<span class="fc" id="L282">        String fileName = &quot;minum.config&quot;;</span>
+<span class="fc" id="L283">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
+<span class="fc" id="L284">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
                     &quot; found properties file at ./minum.config.  Loading properties&quot;);
-<span class="fc" id="L275">            props.load(fis);</span>
-<span class="nc" id="L276">        } catch (Exception ex) {</span>
-<span class="nc" id="L277">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
-<span class="fc" id="L278">        }</span>
-<span class="fc" id="L279">        return props;</span>
+<span class="fc" id="L286">            props.load(fis);</span>
+<span class="nc" id="L287">        } catch (Exception ex) {</span>
+<span class="nc" id="L288">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
+<span class="fc" id="L289">        }</span>
+<span class="fc" id="L290">        return props;</span>
     }
 
 
@@ -286,14 +297,14 @@ public final class Constants {
      * in {@link LoggingLevel}.
      */
     private List&lt;LoggingLevel&gt; convertLoggingStringsToEnums(List&lt;String&gt; logLevels) {
-<span class="fc" id="L289">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
-<span class="fc" id="L290">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L291" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
-<span class="pc bpc" id="L292" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
-<span class="fc" id="L293">                enabledLoggingLevels.add(t);</span>
+<span class="fc" id="L300">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
+<span class="fc" id="L301">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
+<span class="fc" id="L304">                enabledLoggingLevels.add(t);</span>
             }
         }
-<span class="fc" id="L296">        return enabledLoggingLevels;</span>
+<span class="fc" id="L307">        return enabledLoggingLevels;</span>
     }
 }
 
