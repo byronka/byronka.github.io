@@ -17,37 +17,45 @@ public final class Constants {
 
     private Properties properties;
 
-<span class="fc" id="L20">    public Constants() {</span>
-<span class="fc" id="L21">        properties = getConfiguredProperties();</span>
+    public Constants() {
+<span class="fc" id="L21">        this(null);</span>
+<span class="fc" id="L22">    }</span>
 
-<span class="fc" id="L23">        SERVER_PORT = getProp(&quot;SERVER_PORT&quot;,  8080);</span>
-<span class="fc" id="L24">        SECURE_SERVER_PORT = getProp(&quot;SSL_SERVER_PORT&quot;,  8443);</span>
-<span class="fc" id="L25">        HOST_NAME = properties.getProperty(&quot;HOST_NAME&quot;,  &quot;localhost&quot;);</span>
-<span class="fc" id="L26">        DB_DIRECTORY = properties.getProperty(&quot;DB_DIRECTORY&quot;,  &quot;db&quot;);</span>
-<span class="fc" id="L27">        STATIC_FILES_DIRECTORY = properties.getProperty(&quot;STATIC_FILES_DIRECTORY&quot;,  &quot;static&quot;);</span>
-<span class="fc" id="L28">        LOG_LEVELS = convertLoggingStringsToEnums(getProp(&quot;LOG_LEVELS&quot;, &quot;DEBUG,TRACE,ASYNC_ERROR,AUDIT&quot;));</span>
-<span class="fc" id="L29">        USE_VIRTUAL = getProp(&quot;USE_VIRTUAL&quot;, false);</span>
-<span class="fc" id="L30">        KEYSTORE_PATH = properties.getProperty(&quot;KEYSTORE_PATH&quot;,  &quot;&quot;);</span>
-<span class="fc" id="L31">        KEYSTORE_PASSWORD = properties.getProperty(&quot;KEYSTORE_PASSWORD&quot;,  &quot;&quot;);</span>
-<span class="fc" id="L32">        REDIRECT_TO_SECURE = getProp(&quot;REDIRECT_TO_SECURE&quot;, false);</span>
-<span class="fc" id="L33">        MAX_READ_SIZE_BYTES = getProp(&quot;MAX_READ_SIZE_BYTES&quot;,  10 * 1024 * 1024);</span>
-<span class="fc" id="L34">        MAX_READ_LINE_SIZE_BYTES = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 1024);</span>
-<span class="fc" id="L35">        MAX_QUERY_STRING_KEYS_COUNT = getProp(&quot;MAX_QUERY_STRING_KEYS_COUNT&quot;, 20);</span>
-<span class="fc" id="L36">        MOST_COOKIES_WELL_LOOK_THROUGH = getProp(&quot;MOST_COOKIES_WELL_LOOK_THROUGH&quot;, 5);</span>
-<span class="fc" id="L37">        MAX_HEADERS_COUNT = getProp(&quot;MAX_HEADERS_COUNT&quot;, 70);</span>
-<span class="fc" id="L38">        MAX_TOKENIZER_PARTITIONS = getProp(&quot;MAX_TOKENIZER_PARTITIONS&quot;, 1000);</span>
-<span class="fc" id="L39">        SOCKET_TIMEOUT_MILLIS = getProp(&quot;SOCKET_TIMEOUT_MILLIS&quot;, 7 * 1000);</span>
-<span class="fc" id="L40">        KEEP_ALIVE_TIMEOUT_SECONDS = getProp(&quot;KEEP_ALIVE_TIMEOUT_SECONDS&quot;, 3);</span>
-<span class="fc" id="L41">        VULN_SEEKING_JAIL_DURATION = getProp(&quot;VULN_SEEKING_JAIL_DURATION&quot;, 10 * 1000);</span>
-<span class="fc" id="L42">        IS_THE_BRIG_ENABLED = getProp(&quot;IS_THE_BRIG_ENABLED&quot;, false);</span>
-<span class="fc" id="L43">        SUSPICIOUS_ERRORS = getProp(&quot;SUSPICIOUS_ERRORS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L44">        SUSPICIOUS_PATHS = getProp(&quot;SUSPICIOUS_PATHS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L45">        START_TIME = System.currentTimeMillis();</span>
-<span class="fc" id="L46">        EXTRA_MIME_MAPPINGS = getProp(&quot;EXTRA_MIME_MAPPINGS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L47">        STATIC_FILE_CACHE_TIME = getProp(&quot;STATIC_FILE_CACHE_TIME&quot;, 60 * 5);</span>
-<span class="fc" id="L48">        USE_CACHE_FOR_STATIC_FILES = getProp(&quot;USE_CACHE_FOR_STATIC_FILES&quot;, true);</span>
-<span class="fc" id="L49">        MAX_ELEMENTS_LRU_CACHE_STATIC_FILES = getProp(&quot;MAX_ELEMENTS_LRU_CACHE_STATIC_FILES&quot;, 1000);</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L24">    public Constants(Properties props) {</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (props == null) {</span>
+<span class="fc" id="L26">            properties = getConfiguredProperties();</span>
+        } else {
+<span class="fc" id="L28">            properties = props;</span>
+        }
+
+<span class="fc" id="L31">        SERVER_PORT = getProp(&quot;SERVER_PORT&quot;,  8080);</span>
+<span class="fc" id="L32">        SECURE_SERVER_PORT = getProp(&quot;SSL_SERVER_PORT&quot;,  8443);</span>
+<span class="fc" id="L33">        HOST_NAME = properties.getProperty(&quot;HOST_NAME&quot;,  &quot;localhost&quot;);</span>
+<span class="fc" id="L34">        DB_DIRECTORY = properties.getProperty(&quot;DB_DIRECTORY&quot;,  &quot;db&quot;);</span>
+<span class="fc" id="L35">        STATIC_FILES_DIRECTORY = properties.getProperty(&quot;STATIC_FILES_DIRECTORY&quot;,  &quot;static&quot;);</span>
+<span class="fc" id="L36">        LOG_LEVELS = convertLoggingStringsToEnums(getProp(&quot;LOG_LEVELS&quot;, &quot;DEBUG,TRACE,ASYNC_ERROR,AUDIT&quot;));</span>
+<span class="fc" id="L37">        USE_VIRTUAL = getProp(&quot;USE_VIRTUAL&quot;, false);</span>
+<span class="fc" id="L38">        KEYSTORE_PATH = properties.getProperty(&quot;KEYSTORE_PATH&quot;,  &quot;&quot;);</span>
+<span class="fc" id="L39">        KEYSTORE_PASSWORD = properties.getProperty(&quot;KEYSTORE_PASSWORD&quot;,  &quot;&quot;);</span>
+<span class="fc" id="L40">        REDIRECT_TO_SECURE = getProp(&quot;REDIRECT_TO_SECURE&quot;, false);</span>
+<span class="fc" id="L41">        MAX_READ_SIZE_BYTES = getProp(&quot;MAX_READ_SIZE_BYTES&quot;,  10 * 1024 * 1024);</span>
+<span class="fc" id="L42">        MAX_READ_LINE_SIZE_BYTES = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 1024);</span>
+<span class="fc" id="L43">        MAX_QUERY_STRING_KEYS_COUNT = getProp(&quot;MAX_QUERY_STRING_KEYS_COUNT&quot;, 20);</span>
+<span class="fc" id="L44">        MOST_COOKIES_WELL_LOOK_THROUGH = getProp(&quot;MOST_COOKIES_WELL_LOOK_THROUGH&quot;, 5);</span>
+<span class="fc" id="L45">        MAX_HEADERS_COUNT = getProp(&quot;MAX_HEADERS_COUNT&quot;, 70);</span>
+<span class="fc" id="L46">        MAX_TOKENIZER_PARTITIONS = getProp(&quot;MAX_TOKENIZER_PARTITIONS&quot;, 1000);</span>
+<span class="fc" id="L47">        SOCKET_TIMEOUT_MILLIS = getProp(&quot;SOCKET_TIMEOUT_MILLIS&quot;, 7 * 1000);</span>
+<span class="fc" id="L48">        KEEP_ALIVE_TIMEOUT_SECONDS = getProp(&quot;KEEP_ALIVE_TIMEOUT_SECONDS&quot;, 3);</span>
+<span class="fc" id="L49">        VULN_SEEKING_JAIL_DURATION = getProp(&quot;VULN_SEEKING_JAIL_DURATION&quot;, 10 * 1000);</span>
+<span class="fc" id="L50">        IS_THE_BRIG_ENABLED = getProp(&quot;IS_THE_BRIG_ENABLED&quot;, false);</span>
+<span class="fc" id="L51">        SUSPICIOUS_ERRORS = getProp(&quot;SUSPICIOUS_ERRORS&quot;, &quot;&quot;);</span>
+<span class="fc" id="L52">        SUSPICIOUS_PATHS = getProp(&quot;SUSPICIOUS_PATHS&quot;, &quot;&quot;);</span>
+<span class="fc" id="L53">        START_TIME = System.currentTimeMillis();</span>
+<span class="fc" id="L54">        EXTRA_MIME_MAPPINGS = getProp(&quot;EXTRA_MIME_MAPPINGS&quot;, &quot;&quot;);</span>
+<span class="fc" id="L55">        STATIC_FILE_CACHE_TIME = getProp(&quot;STATIC_FILE_CACHE_TIME&quot;, 60 * 5);</span>
+<span class="fc" id="L56">        USE_CACHE_FOR_STATIC_FILES = getProp(&quot;USE_CACHE_FOR_STATIC_FILES&quot;, true);</span>
+<span class="fc" id="L57">        MAX_ELEMENTS_LRU_CACHE_STATIC_FILES = getProp(&quot;MAX_ELEMENTS_LRU_CACHE_STATIC_FILES&quot;, 1000);</span>
+<span class="fc" id="L58">    }</span>
 
     /**
      * The port for our regular, non-encrypted server
@@ -233,7 +241,7 @@ public final class Constants {
      * configuration values from minum.config
      */
     private int getProp(String propName, int propDefault) {
-<span class="fc" id="L236">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L244">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -241,7 +249,7 @@ public final class Constants {
      * configuration values from minum.config
      */
     private boolean getProp(String propName, boolean propDefault) {
-<span class="fc" id="L244">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L252">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -249,8 +257,8 @@ public final class Constants {
      * configuration values from minum.config
      */
     private List&lt;String&gt; getProp(String propName, String propDefault) {
-<span class="fc" id="L252">        String propValue = properties.getProperty(propName);</span>
-<span class="fc" id="L253">        return extractList(propValue, propDefault);</span>
+<span class="fc" id="L260">        String propValue = properties.getProperty(propName);</span>
+<span class="fc" id="L261">        return extractList(propValue, propDefault);</span>
     }
 
     /**
@@ -261,33 +269,32 @@ public final class Constants {
      * @param propDefault the default value to use, if the propValue is null
      */
     static List&lt;String&gt; extractList(String propValue, String propDefault) {
-<span class="pc bpc" id="L264" title="1 of 2 branches missed.">        if (propValue == null) {</span>
-<span class="nc bnc" id="L265" title="All 2 branches missed.">            if (propDefault.isBlank()) {</span>
-<span class="nc" id="L266">                return List.of();</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (propValue == null) {</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">            if (propDefault.isBlank()) {</span>
+<span class="fc" id="L274">                return List.of();</span>
             } else {
-<span class="nc" id="L268">                return Arrays.asList(propDefault.trim().split(&quot;\\s*,\\s*&quot;));</span>
+<span class="fc" id="L276">                return Arrays.asList(propDefault.trim().split(&quot;\\s*,\\s*&quot;));</span>
             }
         } else {
-<span class="fc" id="L271">            return Arrays.asList(propValue.trim().split(&quot;\\s*,\\s*&quot;));</span>
+<span class="fc" id="L279">            return Arrays.asList(propValue.trim().split(&quot;\\s*,\\s*&quot;));</span>
         }
     }
 
 
     /**
-     * This overload allows you to specify that the contents of the
-     * properties file should be shown when it's read.
+     * Reads property files from minum.config
      */
-    private Properties getConfiguredProperties() {
-<span class="fc" id="L281">        var props = new Properties();</span>
-<span class="fc" id="L282">        String fileName = &quot;minum.config&quot;;</span>
-<span class="fc" id="L283">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
-<span class="fc" id="L284">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
+    public static Properties getConfiguredProperties() {
+<span class="fc" id="L288">        var props = new Properties();</span>
+<span class="fc" id="L289">        String fileName = &quot;minum.config&quot;;</span>
+<span class="fc" id="L290">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
+<span class="fc" id="L291">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
                     &quot; found properties file at ./minum.config.  Loading properties&quot;);
-<span class="fc" id="L286">            props.load(fis);</span>
-<span class="nc" id="L287">        } catch (Exception ex) {</span>
-<span class="nc" id="L288">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
-<span class="fc" id="L289">        }</span>
-<span class="fc" id="L290">        return props;</span>
+<span class="fc" id="L293">            props.load(fis);</span>
+<span class="nc" id="L294">        } catch (Exception ex) {</span>
+<span class="nc" id="L295">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
+<span class="fc" id="L296">        }</span>
+<span class="fc" id="L297">        return props;</span>
     }
 
 
@@ -297,14 +304,14 @@ public final class Constants {
      * in {@link LoggingLevel}.
      */
     private List&lt;LoggingLevel&gt; convertLoggingStringsToEnums(List&lt;String&gt; logLevels) {
-<span class="fc" id="L300">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
-<span class="fc" id="L301">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L302" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
-<span class="pc bpc" id="L303" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
-<span class="fc" id="L304">                enabledLoggingLevels.add(t);</span>
+<span class="fc" id="L307">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
+<span class="fc" id="L308">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L309" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
+<span class="fc" id="L311">                enabledLoggingLevels.add(t);</span>
             }
         }
-<span class="fc" id="L307">        return enabledLoggingLevels;</span>
+<span class="fc" id="L314">        return enabledLoggingLevels;</span>
     }
 }
 
