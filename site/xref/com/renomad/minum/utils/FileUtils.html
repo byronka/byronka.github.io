@@ -247,8 +247,8 @@
 <a class="jxr_linenumber" name="L239" href="#L239">239</a>         byte[] fileContents;
 <a class="jxr_linenumber" name="L240" href="#L240">240</a>         <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L241" href="#L241">241</a>             Path staticFilePath = Path.of(constants.STATIC_FILES_DIRECTORY).resolve(path);
-<a class="jxr_linenumber" name="L242" href="#L242">242</a>             <strong class="jxr_keyword">if</strong> (!Files.exists(staticFilePath)) {
-<a class="jxr_linenumber" name="L243" href="#L243">243</a>                 logger.logDebug(() -&gt; String.format(<span class="jxr_string">"No file found at %s"</span>, path));
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>             <strong class="jxr_keyword">if</strong> (!Files.isRegularFile(staticFilePath)) {
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>                 logger.logDebug(() -&gt; String.format(<span class="jxr_string">"No readable file found at %s"</span>, path));
 <a class="jxr_linenumber" name="L244" href="#L244">244</a>                 <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> Response(_404_NOT_FOUND);
 <a class="jxr_linenumber" name="L245" href="#L245">245</a>             }
 <a class="jxr_linenumber" name="L246" href="#L246">246</a>             fileContents = readFile(staticFilePath.toString());

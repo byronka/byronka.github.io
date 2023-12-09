@@ -239,14 +239,14 @@ public final class FileUtils {
         byte[] fileContents;
         try {
 <span class="fc" id="L241">            Path staticFilePath = Path.of(constants.STATIC_FILES_DIRECTORY).resolve(path);</span>
-<span class="fc bfc" id="L242" title="All 2 branches covered.">            if (!Files.exists(staticFilePath)) {</span>
-<span class="fc" id="L243">                logger.logDebug(() -&gt; String.format(&quot;No file found at %s&quot;, path));</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">            if (!Files.isRegularFile(staticFilePath)) {</span>
+<span class="fc" id="L243">                logger.logDebug(() -&gt; String.format(&quot;No readable file found at %s&quot;, path));</span>
 <span class="fc" id="L244">                return new Response(_404_NOT_FOUND);</span>
             }
 <span class="fc" id="L246">            fileContents = readFile(staticFilePath.toString());</span>
-<span class="fc" id="L247">        } catch (IOException e) {</span>
-<span class="fc" id="L248">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
-<span class="fc" id="L249">            return new Response(_400_BAD_REQUEST);</span>
+<span class="nc" id="L247">        } catch (IOException e) {</span>
+<span class="nc" id="L248">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
+<span class="nc" id="L249">            return new Response(_400_BAD_REQUEST);</span>
 <span class="fc" id="L250">        }</span>
 
         // if the provided path has a dot in it, use that
