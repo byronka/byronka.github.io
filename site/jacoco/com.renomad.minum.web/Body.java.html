@@ -3,7 +3,9 @@
 import com.renomad.minum.Context;
 import com.renomad.minum.utils.StringUtils;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -31,7 +33,7 @@ import java.util.Set;
  */
 public final class Body {
 
-<span class="fc" id="L34">    private static final byte[] EMPTY_BYTES = new byte[0];</span>
+<span class="fc" id="L36">    private static final byte[] EMPTY_BYTES = new byte[0];</span>
     private final Map&lt;String, byte[]&gt; bodyMap;
     private final byte[] raw;
     private final Context context;
@@ -42,7 +44,7 @@ public final class Body {
      * need an instantiated body.
      */
     public static Body EMPTY(Context context) {
-<span class="fc" id="L45">        return new Body(Map.of(), EMPTY_BYTES, Map.of(), context);</span>
+<span class="fc" id="L47">        return new Body(Map.of(), EMPTY_BYTES, Map.of(), context);</span>
     }
 
     /**
@@ -53,12 +55,12 @@ public final class Body {
      * @param partitionHeaders if the body is of type form/multipart, each partition will have its own headers,
      *                         including content length and content type, and possibly more.
      */
-<span class="fc" id="L56">    public Body(Map&lt;String, byte[]&gt; bodyMap, byte[] raw, Map&lt;String, Headers&gt; partitionHeaders, Context context) {</span>
-<span class="fc" id="L57">        this.bodyMap = bodyMap;</span>
-<span class="fc" id="L58">        this.raw = raw;</span>
-<span class="fc" id="L59">        this.context = context;</span>
-<span class="fc" id="L60">        this.headers = partitionHeaders;</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L58">    public Body(Map&lt;String, byte[]&gt; bodyMap, byte[] raw, Map&lt;String, Headers&gt; partitionHeaders, Context context) {</span>
+<span class="fc" id="L59">        this.bodyMap = bodyMap;</span>
+<span class="fc" id="L60">        this.raw = raw;</span>
+<span class="fc" id="L61">        this.context = context;</span>
+<span class="fc" id="L62">        this.headers = partitionHeaders;</span>
+<span class="fc" id="L63">    }</span>
 
     /**
      * Return the body as a string, presuming
@@ -76,11 +78,11 @@ public final class Body {
      *
      */
     public String asString(String key) {
-<span class="fc" id="L79">        byte[] byteArray = bodyMap.get(key);</span>
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (byteArray == null) {</span>
-<span class="fc" id="L81">            return &quot;&quot;;</span>
+<span class="fc" id="L81">        byte[] byteArray = bodyMap.get(key);</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (byteArray == null) {</span>
+<span class="fc" id="L83">            return &quot;&quot;;</span>
         } else {
-<span class="fc" id="L83">            return StringUtils.byteArrayToString(byteArray).trim();</span>
+<span class="fc" id="L85">            return StringUtils.byteArrayToString(byteArray).trim();</span>
         }
 
     }
@@ -91,7 +93,7 @@ public final class Body {
      * than converting the bytes to a string.
      */
     public String asString() {
-<span class="fc" id="L94">        return StringUtils.byteArrayToString(raw).trim();</span>
+<span class="fc" id="L96">        return StringUtils.byteArrayToString(raw).trim();</span>
     }
 
     /**
@@ -102,14 +104,14 @@ public final class Body {
      * this will get the value by its key.
      */
     public byte[] asBytes(String key) {
-<span class="fc" id="L105">        return bodyMap.get(key);</span>
+<span class="fc" id="L107">        return bodyMap.get(key);</span>
     }
 
     /**
      * Returns the raw bytes of this HTTP message's body
      */
     public byte[] asBytes() {
-<span class="fc" id="L112">        return this.raw;</span>
+<span class="fc" id="L114">        return this.raw;</span>
     }
 
     /**
@@ -139,14 +141,14 @@ public final class Body {
      * &lt;/pre&gt;
      */
     public Headers partitionHeaders(String partitionName) {
-<span class="fc" id="L142">        return this.headers.get(partitionName);</span>
+<span class="fc" id="L144">        return this.headers.get(partitionName);</span>
     }
 
     /**
      * Get all the keys for the key-value pairs in the body
      */
     public Set&lt;String&gt; getKeys() {
-<span class="nc" id="L149">        return bodyMap.keySet();</span>
+<span class="fc" id="L151">        return bodyMap.keySet();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
