@@ -71,13 +71,12 @@ final class LoggingActionQueue {
 
     /**
      * Adds something to the queue to be processed.
-     * @param action an action to take with no return value.  (this uses callable so we can collect exceptions)
      */
     void enqueue(String description, ThrowingRunnable action) {
-<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (! stop) {</span>
-<span class="fc" id="L78">            queue.add(new RunnableWithDescription(action, description));</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (! stop) {</span>
+<span class="fc" id="L77">            queue.add(new RunnableWithDescription(action, description));</span>
         }
-<span class="fc" id="L80">    }</span>
+<span class="fc" id="L79">    }</span>
 
     /**
      * Stops the action queue
@@ -85,15 +84,15 @@ final class LoggingActionQueue {
      * @param sleepTime how long to wait in milliseconds between loops
      */
     void stop(int count, int sleepTime) {
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(&quot;%s Stopping queue %s%n&quot;, TimeUtils.getTimestampIsoInstant(), this);</span>
-<span class="fc" id="L89">        stop = true;</span>
-<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        for (int i = 0; i &lt; count; i++) {</span>
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">            if (queue.isEmpty()) return;</span>
-<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;, TimeUtils.getTimestampIsoInstant(), queue.size());</span>
-<span class="nc" id="L93">            MyThread.sleep(sleepTime);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(&quot;%s Stopping queue %s%n&quot;, TimeUtils.getTimestampIsoInstant(), this);</span>
+<span class="fc" id="L88">        stop = true;</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        for (int i = 0; i &lt; count; i++) {</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">            if (queue.isEmpty()) return;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.printf(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;, TimeUtils.getTimestampIsoInstant(), queue.size());</span>
+<span class="nc" id="L92">            MyThread.sleep(sleepTime);</span>
         }
-<span class="nc" id="L95">        System.out.printf(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;,TimeUtils.getTimestampIsoInstant(), this, queue.size(), queue);</span>
-<span class="nc" id="L96">    }</span>
+<span class="nc" id="L94">        System.out.printf(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;,TimeUtils.getTimestampIsoInstant(), this, queue.size(), queue);</span>
+<span class="nc" id="L95">    }</span>
 
     /**
      * This will prevent any new actions being
@@ -103,12 +102,12 @@ final class LoggingActionQueue {
      * block until the queue is empty.
      */
     public void stop() {
-<span class="fc" id="L106">        stop(5, 20);</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L105">        stop(5, 20);</span>
+<span class="fc" id="L106">    }</span>
 
     @Override
     public String toString() {
-<span class="fc" id="L111">        return this.name;</span>
+<span class="fc" id="L110">        return this.name;</span>
     }
 
 }

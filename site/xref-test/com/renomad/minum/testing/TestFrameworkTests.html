@@ -22,50 +22,64 @@
 <a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment">     */</em>
 <a class="jxr_linenumber" name="L15" href="#L15">15</a>      @Test
 <a class="jxr_linenumber" name="L16" href="#L16">16</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_AssertThrows_NoException() {
-<a class="jxr_linenumber" name="L17" href="#L17">17</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertThrows(IOException.<strong class="jxr_keyword">class</strong>, () -&gt; {}));
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertThrows(IOException.<strong class="jxr_keyword">class</strong>, () -&gt; {}));
 <a class="jxr_linenumber" name="L18" href="#L18">18</a>      }
 <a class="jxr_linenumber" name="L19" href="#L19">19</a>  
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>      @Test
 <a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_AssertThrows_AssertOnMessage() {
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"Did not get expected message (I am foo). Instead, got: Failed to throw exception"</span>, () -&gt; assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"I am foo"</span>, () -&gt; {}));
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"Did not get expected message (I am foo). Instead, got: Failed to throw exception"</span>, () -&gt; assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"I am foo"</span>, () -&gt; {}));
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>      }
 <a class="jxr_linenumber" name="L24" href="#L24">24</a>  
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>      @Test
 <a class="jxr_linenumber" name="L26" href="#L26">26</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertEquals_Basic() {
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>          assertEquals(<strong class="jxr_keyword">true</strong>, <strong class="jxr_keyword">true</strong>);
-<a class="jxr_linenumber" name="L28" href="#L28">28</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEquals(<strong class="jxr_keyword">true</strong>, false));
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEquals(<strong class="jxr_keyword">true</strong>, false));
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>      }
 <a class="jxr_linenumber" name="L30" href="#L30">30</a>  
 <a class="jxr_linenumber" name="L31" href="#L31">31</a>      @Test
 <a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertEquals_Lists() {
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>          assertEquals(List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>), List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>));
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEquals(List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>)));
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEquals(List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>, <span class="jxr_string">"d"</span>)));
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEquals(List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>)));
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEquals(List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>, <span class="jxr_string">"d"</span>)));
 <a class="jxr_linenumber" name="L36" href="#L36">36</a>      }
 <a class="jxr_linenumber" name="L37" href="#L37">37</a>  
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>      @Test
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertEquals_ListsDifferentOrders() {
 <a class="jxr_linenumber" name="L40" href="#L40">40</a>          assertEqualsDisregardOrder(List.of(<span class="jxr_string">"a"</span>, <span class="jxr_string">"b"</span>), List.of(<span class="jxr_string">"b"</span>, <span class="jxr_string">"a"</span>));
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEqualsDisregardOrder(List.of(<span class="jxr_string">"a"</span>, <span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"b"</span>, <span class="jxr_string">"a"</span>)));
-<a class="jxr_linenumber" name="L42" href="#L42">42</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEqualsDisregardOrder(List.of(<span class="jxr_string">"a"</span>, <span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"b"</span>, <span class="jxr_string">"a"</span>, <span class="jxr_string">"d"</span>)));
-<a class="jxr_linenumber" name="L43" href="#L43">43</a>      }
-<a class="jxr_linenumber" name="L44" href="#L44">44</a>  
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>      @Test
-<a class="jxr_linenumber" name="L46" href="#L46">46</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertTrue_Basic() {
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>          assertTrue(<strong class="jxr_keyword">true</strong>);
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertTrue(false));
-<a class="jxr_linenumber" name="L49" href="#L49">49</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertTrue(false, <span class="jxr_string">"Here is a message shown during failure"</span>));
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>      }
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>  
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>      @Test
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertFalse_Basic() {
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>          assertFalse(false);
-<a class="jxr_linenumber" name="L55" href="#L55">55</a>          assertThrows(RuntimeException.<strong class="jxr_keyword">class</strong>, () -&gt; assertFalse(<strong class="jxr_keyword">true</strong>));
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>      }
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>  
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>  }
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEqualsDisregardOrder(List.of(<span class="jxr_string">"a"</span>, <span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"b"</span>, <span class="jxr_string">"a"</span>)));
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEqualsDisregardOrder(List.of(<span class="jxr_string">"a"</span>, <span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"b"</span>, <span class="jxr_string">"a"</span>, <span class="jxr_string">"d"</span>)));
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>          <strong class="jxr_keyword">var</strong> ex = assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEqualsDisregardOrder(List.of(<span class="jxr_string">"a"</span>, <span class="jxr_string">"b"</span>, <span class="jxr_string">"c"</span>), List.of(<span class="jxr_string">"b"</span>, <span class="jxr_string">"a"</span>, <span class="jxr_string">"d"</span>), <span class="jxr_string">"Should be in order"</span>));
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>          assertTrue(ex.getMessage().contains(<span class="jxr_string">"Should be in order"</span>));
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>      }
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>      @Test
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertTrue_Basic() {
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>          assertTrue(<strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertTrue(false));
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"Here is a message shown during failure"</span>, () -&gt; assertTrue(false, <span class="jxr_string">"Here is a message shown during failure"</span>));
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>      }
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>  
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>      @Test
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertFalse_Basic() {
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>          assertFalse(false);
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertFalse(<strong class="jxr_keyword">true</strong>));
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>      }
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>      @Test
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertFalse_WithMessage() {
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>          assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"should be false"</span>, () -&gt; assertFalse(<strong class="jxr_keyword">true</strong>, <span class="jxr_string">"should be false"</span>));
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>      }
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>      @Test
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_assertEqualsByteArray() {
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>          assertEqualByteArray(<strong class="jxr_keyword">new</strong> byte[]{1,2,3}, <strong class="jxr_keyword">new</strong> byte[]{1,2,3});
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>          <strong class="jxr_keyword">var</strong> ex = assertThrows(TestFailureException.<strong class="jxr_keyword">class</strong>, () -&gt; assertEqualByteArray(<strong class="jxr_keyword">new</strong> byte[]{1,2,3}, <strong class="jxr_keyword">new</strong> byte[]{4,5,6}, <span class="jxr_string">"should be equal arrays"</span>));
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>          assertTrue(ex.getMessage().contains(<span class="jxr_string">"should be equal arrays"</span>));
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>      }
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2023. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2024. All rights reserved.</div>
 </body>
 </html>
