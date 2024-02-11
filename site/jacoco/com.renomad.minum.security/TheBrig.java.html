@@ -7,6 +7,7 @@ import com.renomad.minum.database.DbData;
 import com.renomad.minum.logging.ILogger;
 import com.renomad.minum.logging.LoggingLevel;
 import com.renomad.minum.utils.MyThread;
+import com.renomad.minum.utils.SearchUtils;
 import com.renomad.minum.utils.TimeUtils;
 
 import java.nio.file.Path;
@@ -18,7 +19,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import static com.renomad.minum.utils.Invariants.mustBeTrue;
 import static com.renomad.minum.utils.SerializationUtils.deserializeHelper;
 import static com.renomad.minum.utils.SerializationUtils.serializeHelper;
 
@@ -27,7 +27,7 @@ import static com.renomad.minum.utils.SerializationUtils.serializeHelper;
  */
 public final class TheBrig implements ITheBrig {
     private final ExecutorService es;
-    private final Db&lt;Inmate&gt; db;
+    private final Db&lt;Inmate&gt; inmatesDb;
     private final ILogger logger;
     private final Constants constants;
 <span class="fc" id="L33">    private final ReentrantLock lock = new ReentrantLock();</span>
@@ -111,8 +111,8 @@ public final class TheBrig implements ITheBrig {
 <span class="fc" id="L111">        this.constants = context.getConstants();</span>
 <span class="fc" id="L112">        this.logger = context.getLogger();</span>
 <span class="fc" id="L113">        Path dbDir = Path.of(constants.DB_DIRECTORY);</span>
-<span class="fc" id="L114">        this.db = new Db&lt;&gt;(dbDir.resolve(&quot;the_brig&quot;), context, Inmate.EMPTY);</span>
-<span class="fc" id="L115">        this.clientKeys = this.db.values().stream().collect(Collectors.toMap(Inmate::getClientId, Inmate::getDuration));</span>
+<span class="fc" id="L114">        this.inmatesDb = new Db&lt;&gt;(dbDir.resolve(&quot;the_brig&quot;), context, Inmate.EMPTY);</span>
+<span class="fc" id="L115">        this.clientKeys = this.inmatesDb.values().stream().collect(Collectors.toMap(Inmate::getClientId, Inmate::getDuration));</span>
 <span class="fc" id="L116">        this.sleepTime = sleepTime;</span>
 <span class="fc" id="L117">    }</span>
 
@@ -175,70 +175,72 @@ public final class TheBrig implements ITheBrig {
 <span class="fc" id="L175">        }</span>
 <span class="fc bfc" id="L176" title="All 2 branches covered.">        for (var k : keysToRemove) {</span>
 <span class="fc" id="L177">            logger.logTrace(() -&gt; &quot;TheBrig: removing &quot; + k + &quot; from jail&quot;);</span>
-<span class="fc" id="L178">            List&lt;Inmate&gt; inmates1 = db.values().stream().filter(x -&gt; x.clientId.equals(k)).toList();</span>
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">            mustBeTrue(inmates1.size() == 1, &quot;There must be exactly one inmate found or there's a bug&quot;);</span>
-<span class="fc" id="L180">            Inmate inmateToRemove = inmates1.get(0);</span>
-<span class="fc" id="L181">            clientKeys.remove(k);</span>
-<span class="fc" id="L182">            db.delete(inmateToRemove);</span>
-<span class="fc" id="L183">        }</span>
-<span class="fc" id="L184">        Thread.sleep(sleepTime);</span>
-<span class="fc" id="L185">    }</span>
+<span class="fc" id="L178">            Inmate inmateToRemove = SearchUtils.findExactlyOne(inmatesDb.values().stream(), x -&gt; x.clientId.equals(k));</span>
+<span class="fc" id="L179">            clientKeys.remove(k);</span>
+<span class="fc" id="L180">            inmatesDb.delete(inmateToRemove);</span>
+<span class="fc" id="L181">        }</span>
+<span class="fc" id="L182">        Thread.sleep(sleepTime);</span>
+<span class="fc" id="L183">    }</span>
 
     private void reviewForParole(long now, List&lt;String&gt; keysToRemove, Map.Entry&lt;String, Long&gt; e) {
-<span class="fc bfc" id="L188" title="All 2 branches covered.">        if (e.getValue() &lt; now) {</span>
-<span class="fc" id="L189">            logger.logTrace(() -&gt; &quot;UnderInvestigation: &quot; + e.getKey() + &quot; has paid its dues and is getting released&quot;);</span>
-<span class="fc" id="L190">            keysToRemove.add(e.getKey());</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        if (e.getValue() &lt; now) {</span>
+<span class="fc" id="L187">            logger.logTrace(() -&gt; &quot;UnderInvestigation: &quot; + e.getKey() + &quot; has paid its dues and is getting released&quot;);</span>
+<span class="fc" id="L188">            keysToRemove.add(e.getKey());</span>
         }
-<span class="fc" id="L192">    }</span>
+<span class="fc" id="L190">    }</span>
 
     @Override
     public void stop() {
-<span class="fc" id="L196">        logger.logDebug(() -&gt; &quot;TheBrig has been told to stop&quot;);</span>
-<span class="pc bpc" id="L197" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 10; i++) {</span>
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (myThread != null) {</span>
-<span class="fc" id="L199">                logger.logDebug(() -&gt; &quot;TheBrig: Sending interrupt to thread&quot;);</span>
-<span class="fc" id="L200">                myThread.interrupt();</span>
-<span class="fc" id="L201">                return;</span>
+<span class="fc" id="L194">        logger.logDebug(() -&gt; &quot;TheBrig has been told to stop&quot;);</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 10; i++) {</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">            if (myThread != null) {</span>
+<span class="fc" id="L197">                logger.logDebug(() -&gt; &quot;TheBrig: Sending interrupt to thread&quot;);</span>
+<span class="fc" id="L198">                myThread.interrupt();</span>
+<span class="fc" id="L199">                return;</span>
             } else {
-<span class="nc" id="L203">                MyThread.sleep(20);</span>
+<span class="nc" id="L201">                MyThread.sleep(20);</span>
             }
         }
-<span class="nc" id="L206">        throw new SecurityException(&quot;TheBrig: Leaving without successfully stopping thread&quot;);</span>
+<span class="nc" id="L204">        throw new SecurityException(&quot;TheBrig: Leaving without successfully stopping thread&quot;);</span>
     }
 
 
     @Override
     public void sendToJail(String clientIdentifier, long sentenceDuration) {
-<span class="pc bpc" id="L212" title="1 of 2 branches missed.">        if (!constants.IS_THE_BRIG_ENABLED) {</span>
-<span class="nc" id="L213">            return;</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if (!constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="nc" id="L211">            return;</span>
         }
-<span class="fc" id="L215">        lock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+<span class="fc" id="L213">        lock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
         try {
-<span class="fc" id="L217">            logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds&quot;);</span>
-<span class="fc" id="L218">            clientKeys.put(clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="pc" id="L219">            var existingInmates = db.values().stream().filter(x -&gt; x.clientId.equals(clientIdentifier)).count();</span>
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">            mustBeTrue(existingInmates &lt; 2, &quot;count of inmates must be either 0 or 1, anything else is a bug&quot;);</span>
-<span class="pc bpc" id="L221" title="1 of 2 branches missed.">            if (existingInmates == 0) {</span>
-<span class="fc" id="L222">                Inmate newInmate = new Inmate(0L, clientIdentifier, System.currentTimeMillis() + sentenceDuration);</span>
-<span class="fc" id="L223">                db.write(newInmate);</span>
+<span class="fc" id="L215">            logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds&quot;);</span>
+<span class="fc" id="L216">            long newDuration = System.currentTimeMillis() + sentenceDuration;</span>
+<span class="fc" id="L217">            clientKeys.put(clientIdentifier, newDuration);</span>
+<span class="fc" id="L218">            Inmate existingInmate = SearchUtils.findExactlyOne(inmatesDb.values().stream(), x -&gt; x.clientId.equals(clientIdentifier));</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if (existingInmate == null) {</span>
+                // if this is a new inmate, add them
+<span class="fc" id="L221">                Inmate newInmate = new Inmate(0L, clientIdentifier, newDuration);</span>
+<span class="fc" id="L222">                inmatesDb.write(newInmate);</span>
+<span class="fc" id="L223">            } else {</span>
+                // if this is an existing inmate continuing to attack us, just update their duration
+<span class="fc" id="L225">                inmatesDb.update(new Inmate(existingInmate.index, existingInmate.clientId, newDuration));</span>
             }
         } finally {
-<span class="fc" id="L226">            lock.unlock();</span>
+<span class="fc" id="L228">            lock.unlock();</span>
         }
 
-<span class="fc" id="L229">    }</span>
+<span class="fc" id="L231">    }</span>
 
     @Override
     public boolean isInJail(String clientIdentifier) {
-<span class="pc bpc" id="L233" title="1 of 2 branches missed.">        if (!constants.IS_THE_BRIG_ENABLED) {</span>
-<span class="nc" id="L234">            return false;</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">        if (!constants.IS_THE_BRIG_ENABLED) {</span>
+<span class="nc" id="L236">            return false;</span>
         }
-<span class="fc" id="L236">        return clientKeys.containsKey(clientIdentifier);</span>
+<span class="fc" id="L238">        return clientKeys.containsKey(clientIdentifier);</span>
     }
 
     @Override
     public List&lt;Map.Entry&lt;String, Long&gt;&gt; getInmates() {
-<span class="nc" id="L241">        return clientKeys.entrySet().stream().toList();</span>
+<span class="nc" id="L243">        return clientKeys.entrySet().stream().toList();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -95,14 +95,14 @@
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>                  }
 <a class="jxr_linenumber" name="L88" href="#L88">88</a>                  String parsingError = <span class="jxr_string">"Did not find a valid boundary value for the multipart input. Returning an empty map and the raw bytes for the body. Header was: "</span> + contentType;
 <a class="jxr_linenumber" name="L89" href="#L89">89</a>                  logger.logDebug(() -&gt; parsingError);
-<a class="jxr_linenumber" name="L90" href="#L90">90</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), bodyBytes, Map.of(), context);
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), bodyBytes, Map.of());
 <a class="jxr_linenumber" name="L91" href="#L91">91</a>              } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L92" href="#L92">92</a>                  logger.logDebug(() -&gt; <span class="jxr_string">"did not recognize a key-value pattern content-type, returning an empty map and the raw bytes for the body"</span>);
-<a class="jxr_linenumber" name="L93" href="#L93">93</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), bodyBytes, Map.of(), context);
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), bodyBytes, Map.of());
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>              }
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>          } <strong class="jxr_keyword">catch</strong> (Exception ex) {
 <a class="jxr_linenumber" name="L96" href="#L96">96</a>              logger.logDebug(() -&gt; <span class="jxr_string">"Unable to parse this body. returning an empty map and the raw bytes for the body.  Exception message: "</span> + ex.getMessage());
-<a class="jxr_linenumber" name="L97" href="#L97">97</a>              <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), bodyBytes, Map.of(), context);
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>              <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), bodyBytes, Map.of());
 <a class="jxr_linenumber" name="L98" href="#L98">98</a>          }
 <a class="jxr_linenumber" name="L99" href="#L99">99</a>      }
 <a class="jxr_linenumber" name="L100" href="#L100">100</a> 
@@ -116,7 +116,7 @@
 <a class="jxr_linenumber" name="L108" href="#L108">108</a> <em class="jxr_javadoccomment">     * for example, {@code valuea=3&amp;valueb=this+is+something}</em>
 <a class="jxr_linenumber" name="L109" href="#L109">109</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L110" href="#L110">110</a>     <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> parseUrlEncodedForm(String input) {
-<a class="jxr_linenumber" name="L111" href="#L111">111</a>         <strong class="jxr_keyword">if</strong> (input.isEmpty()) <strong class="jxr_keyword">return</strong> Body.EMPTY(context);
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>         <strong class="jxr_keyword">if</strong> (input.isEmpty()) <strong class="jxr_keyword">return</strong> Body.EMPTY;
 <a class="jxr_linenumber" name="L112" href="#L112">112</a>         <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> postedPairs = <strong class="jxr_keyword">new</strong> HashMap&lt;String, byte[]&gt;();
 <a class="jxr_linenumber" name="L113" href="#L113">113</a> 
 <a class="jxr_linenumber" name="L114" href="#L114">114</a>         <strong class="jxr_keyword">try</strong> {
@@ -140,9 +140,9 @@
 <a class="jxr_linenumber" name="L132" href="#L132">132</a>                 dataToReturn = input.substring(0, MAX_SIZE_DATA_RETURNED_IN_EXCEPTION) + <span class="jxr_string">" ... (remainder of data trimmed)"</span>;
 <a class="jxr_linenumber" name="L133" href="#L133">133</a>             }
 <a class="jxr_linenumber" name="L134" href="#L134">134</a>             logger.logDebug(() -&gt; <span class="jxr_string">"Unable to parse this body. returning an empty map and the raw bytes for the body.  Exception message: "</span> + ex.getMessage());
-<a class="jxr_linenumber" name="L135" href="#L135">135</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), dataToReturn.getBytes(StandardCharsets.UTF_8), Map.of(), context);
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), dataToReturn.getBytes(StandardCharsets.UTF_8), Map.of());
 <a class="jxr_linenumber" name="L136" href="#L136">136</a>         }
-<a class="jxr_linenumber" name="L137" href="#L137">137</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(postedPairs, input.getBytes(StandardCharsets.UTF_8), Map.of(), context);
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(postedPairs, input.getBytes(StandardCharsets.UTF_8), Map.of());
 <a class="jxr_linenumber" name="L138" href="#L138">138</a>     }
 <a class="jxr_linenumber" name="L139" href="#L139">139</a> 
 <a class="jxr_linenumber" name="L140" href="#L140">140</a>     <em class="jxr_javadoccomment">/**</em>
@@ -227,11 +227,11 @@
 <a class="jxr_linenumber" name="L219" href="#L219">219</a>                     returnedData = StringUtils.byteArrayToString(body);
 <a class="jxr_linenumber" name="L220" href="#L220">220</a>                 }
 <a class="jxr_linenumber" name="L221" href="#L221">221</a>                 logger.logDebug(() -&gt; <span class="jxr_string">"No name value found in the headers of a partition. Data: "</span> + returnedData);
-<a class="jxr_linenumber" name="L222" href="#L222">222</a>                 <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), body, Map.of(), context);
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>                 <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), body, Map.of());
 <a class="jxr_linenumber" name="L223" href="#L223">223</a>             }
 <a class="jxr_linenumber" name="L224" href="#L224">224</a> 
 <a class="jxr_linenumber" name="L225" href="#L225">225</a>         }
-<a class="jxr_linenumber" name="L226" href="#L226">226</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(result, body, partitionHeaders, context);
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(result, body, partitionHeaders);
 <a class="jxr_linenumber" name="L227" href="#L227">227</a>     }
 <a class="jxr_linenumber" name="L228" href="#L228">228</a> 
 <a class="jxr_linenumber" name="L229" href="#L229">229</a>     <em class="jxr_javadoccomment">/**</em>

@@ -148,10 +148,13 @@
 <a class="jxr_linenumber" name="L140" href="#L140">140</a>         }
 <a class="jxr_linenumber" name="L141" href="#L141">141</a>         data = baos.toByteArray();
 <a class="jxr_linenumber" name="L142" href="#L142">142</a> 
-<a class="jxr_linenumber" name="L143" href="#L143">143</a>         mustBeTrue(data.length == lengthToRead, String.format(<span class="jxr_string">"lengthToRead of bytes read (%d) must be what we expected (%d)"</span>, data.length, lengthToRead));
-<a class="jxr_linenumber" name="L144" href="#L144">144</a>         <strong class="jxr_keyword">return</strong> data;
-<a class="jxr_linenumber" name="L145" href="#L145">145</a>     }
-<a class="jxr_linenumber" name="L146" href="#L146">146</a> }
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>         <strong class="jxr_keyword">if</strong> (data.length != lengthToRead) {
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>             String message = String.format(<span class="jxr_string">"length of bytes read (%d) must be what we expected (%d)"</span>, data.length, lengthToRead);
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(message);
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>         }
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>         <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>     }
+<a class="jxr_linenumber" name="L149" href="#L149">149</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

@@ -127,41 +127,44 @@ final class Server implements AutoCloseable {
                 }
 
 <span class="fc" id="L129">            } catch (ForbiddenUseException ex) {</span>
-<span class="fc" id="L130">                logger.logDebug(ex::getMessage);</span>
-<span class="fc" id="L131">            } catch (IOException ex) {</span>
-<span class="fc" id="L132">                logger.logDebug(() -&gt; ex.getMessage() + &quot; (at Server.start)&quot;);</span>
-<span class="fc" id="L133">                String suspiciousClues = underInvestigation.isClientLookingForVulnerabilities(ex.getMessage());</span>
-
-<span class="pc bpc" id="L135" title="2 of 4 branches missed.">                if (suspiciousClues.length() &gt; 0 &amp;&amp; theBrig != null) {</span>
-<span class="fc" id="L136">                    logger.logDebug(() -&gt; sw.getRemoteAddr() + &quot; is looking for vulnerabilities, for this: &quot; + suspiciousClues);</span>
-<span class="fc" id="L137">                    theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
+<span class="fc" id="L130">                logger.logDebug(() -&gt; sw.getRemoteAddr() + &quot; is looking for vulnerabilities, for this: &quot; + ex.getMessage());</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                if (theBrig != null) {</span>
+<span class="nc" id="L132">                    theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
                 }
-<span class="fc" id="L139">            }</span>
-<span class="fc" id="L140">        };</span>
-<span class="fc" id="L141">        return innerServerCode;</span>
+<span class="fc" id="L134">            } catch (IOException ex) {</span>
+<span class="fc" id="L135">                logger.logDebug(() -&gt; ex.getMessage() + &quot; (at Server.start)&quot;);</span>
+<span class="fc" id="L136">                String suspiciousClues = underInvestigation.isClientLookingForVulnerabilities(ex.getMessage());</span>
+
+<span class="pc bpc" id="L138" title="2 of 4 branches missed.">                if (suspiciousClues.length() &gt; 0 &amp;&amp; theBrig != null) {</span>
+<span class="fc" id="L139">                    logger.logDebug(() -&gt; sw.getRemoteAddr() + &quot; is looking for vulnerabilities, for this: &quot; + suspiciousClues);</span>
+<span class="fc" id="L140">                    theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, constants.VULN_SEEKING_JAIL_DURATION);</span>
+                }
+<span class="fc" id="L142">            }</span>
+<span class="fc" id="L143">        };</span>
+<span class="fc" id="L144">        return innerServerCode;</span>
     }
 
     public void close() throws IOException {
         // close all the running sockets
-<span class="fc" id="L146">        setOfSWs.stopAllServers();</span>
-<span class="fc" id="L147">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L149">        setOfSWs.stopAllServers();</span>
+<span class="fc" id="L150">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
         // close the primary server socket
-<span class="fc" id="L149">        serverSocket.close();</span>
-<span class="fc" id="L150">    }</span>
+<span class="fc" id="L152">        serverSocket.close();</span>
+<span class="fc" id="L153">    }</span>
 
     /**
      * Get the string version of the address of this
      * server.  See {@link InetAddress#getHostAddress()}
      */
     String getHost() {
-<span class="fc" id="L157">        return serverSocket.getInetAddress().getHostAddress();</span>
+<span class="fc" id="L160">        return serverSocket.getInetAddress().getHostAddress();</span>
     }
 
     /**
      * See {@link ServerSocket#getLocalPort()}
      */
     int getPort() {
-<span class="fc" id="L164">        return serverSocket.getLocalPort();</span>
+<span class="fc" id="L167">        return serverSocket.getLocalPort();</span>
     }
 
     /**
@@ -169,7 +172,7 @@ final class Server implements AutoCloseable {
      * connected to a client SocketWrapper.
      */
     ISocketWrapper getServer(ISocketWrapper sw) {
-<span class="fc" id="L172">        return setOfSWs.getSocketWrapperByRemoteAddr(sw.getLocalAddr(), sw.getLocalPort());</span>
+<span class="fc" id="L175">        return setOfSWs.getSocketWrapperByRemoteAddr(sw.getLocalAddr(), sw.getLocalPort());</span>
     }
 
     /**
@@ -180,8 +183,8 @@ final class Server implements AutoCloseable {
      * to deregister themselves from this list by using this method.
      */
     void removeMyRecord(ISocketWrapper socketWrapper) {
-<span class="fc" id="L183">        setOfSWs.remove(socketWrapper);</span>
-<span class="fc" id="L184">    }</span>
+<span class="fc" id="L186">        setOfSWs.remove(socketWrapper);</span>
+<span class="fc" id="L187">    }</span>
 
     /**
      * Returns the name of this server, which is set
@@ -189,7 +192,7 @@ final class Server implements AutoCloseable {
      */
     @Override
     public String toString() {
-<span class="fc" id="L192">        return this.serverName;</span>
+<span class="fc" id="L195">        return this.serverName;</span>
     }
 
     /**
@@ -197,7 +200,7 @@ final class Server implements AutoCloseable {
      * server object, which is obtained during {@link #start(ExecutorService, ThrowingConsumer)}
      */
     Future&lt;?&gt; getCentralLoopFuture() {
-<span class="nc" id="L200">        return centralLoopFuture;</span>
+<span class="nc" id="L203">        return centralLoopFuture;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

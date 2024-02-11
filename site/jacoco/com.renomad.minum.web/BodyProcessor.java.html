@@ -87,14 +87,14 @@ final class BodyProcessor {
                 }
 <span class="nc" id="L88">                String parsingError = &quot;Did not find a valid boundary value for the multipart input. Returning an empty map and the raw bytes for the body. Header was: &quot; + contentType;</span>
 <span class="nc" id="L89">                logger.logDebug(() -&gt; parsingError);</span>
-<span class="nc" id="L90">                return new Body(Map.of(), bodyBytes, Map.of(), context);</span>
+<span class="nc" id="L90">                return new Body(Map.of(), bodyBytes, Map.of());</span>
             } else {
 <span class="fc" id="L92">                logger.logDebug(() -&gt; &quot;did not recognize a key-value pattern content-type, returning an empty map and the raw bytes for the body&quot;);</span>
-<span class="fc" id="L93">                return new Body(Map.of(), bodyBytes, Map.of(), context);</span>
+<span class="fc" id="L93">                return new Body(Map.of(), bodyBytes, Map.of());</span>
             }
 <span class="nc" id="L95">        } catch (Exception ex) {</span>
 <span class="nc" id="L96">            logger.logDebug(() -&gt; &quot;Unable to parse this body. returning an empty map and the raw bytes for the body.  Exception message: &quot; + ex.getMessage());</span>
-<span class="nc" id="L97">            return new Body(Map.of(), bodyBytes, Map.of(), context);</span>
+<span class="nc" id="L97">            return new Body(Map.of(), bodyBytes, Map.of());</span>
         }
     }
 
@@ -108,7 +108,7 @@ final class BodyProcessor {
      * for example, {@code valuea=3&amp;valueb=this+is+something}
      */
     Body parseUrlEncodedForm(String input) {
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (input.isEmpty()) return Body.EMPTY(context);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (input.isEmpty()) return Body.EMPTY;</span>
 <span class="fc" id="L112">        final var postedPairs = new HashMap&lt;String, byte[]&gt;();</span>
 
         try {
@@ -132,9 +132,9 @@ final class BodyProcessor {
 <span class="fc" id="L132">                dataToReturn = input.substring(0, MAX_SIZE_DATA_RETURNED_IN_EXCEPTION) + &quot; ... (remainder of data trimmed)&quot;;</span>
             }
 <span class="fc" id="L134">            logger.logDebug(() -&gt; &quot;Unable to parse this body. returning an empty map and the raw bytes for the body.  Exception message: &quot; + ex.getMessage());</span>
-<span class="fc" id="L135">            return new Body(Map.of(), dataToReturn.getBytes(StandardCharsets.UTF_8), Map.of(), context);</span>
+<span class="fc" id="L135">            return new Body(Map.of(), dataToReturn.getBytes(StandardCharsets.UTF_8), Map.of());</span>
 <span class="fc" id="L136">        }</span>
-<span class="fc" id="L137">        return new Body(postedPairs, input.getBytes(StandardCharsets.UTF_8), Map.of(), context);</span>
+<span class="fc" id="L137">        return new Body(postedPairs, input.getBytes(StandardCharsets.UTF_8), Map.of());</span>
     }
 
     /**
@@ -219,11 +219,11 @@ final class BodyProcessor {
 <span class="fc" id="L219">                    returnedData = StringUtils.byteArrayToString(body);</span>
                 }
 <span class="fc" id="L221">                logger.logDebug(() -&gt; &quot;No name value found in the headers of a partition. Data: &quot; + returnedData);</span>
-<span class="fc" id="L222">                return new Body(Map.of(), body, Map.of(), context);</span>
+<span class="fc" id="L222">                return new Body(Map.of(), body, Map.of());</span>
             }
 
 <span class="fc" id="L225">        }</span>
-<span class="fc" id="L226">        return new Body(result, body, partitionHeaders, context);</span>
+<span class="fc" id="L226">        return new Body(result, body, partitionHeaders);</span>
     }
 
     /**

@@ -140,8 +140,11 @@ public final class InputStreamUtils {
         }
 <span class="fc" id="L141">        data = baos.toByteArray();</span>
 
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        mustBeTrue(data.length == lengthToRead, String.format(&quot;lengthToRead of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead));</span>
-<span class="fc" id="L144">        return data;</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (data.length != lengthToRead) {</span>
+<span class="nc" id="L144">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
+<span class="nc" id="L145">            throw new ForbiddenUseException(message);</span>
+        }
+<span class="fc" id="L147">        return data;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -135,79 +135,82 @@
 <a class="jxr_linenumber" name="L127" href="#L127">127</a>                 }
 <a class="jxr_linenumber" name="L128" href="#L128">128</a> 
 <a class="jxr_linenumber" name="L129" href="#L129">129</a>             } <strong class="jxr_keyword">catch</strong> (<a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a> ex) {
-<a class="jxr_linenumber" name="L130" href="#L130">130</a>                 logger.logDebug(ex::getMessage);
-<a class="jxr_linenumber" name="L131" href="#L131">131</a>             } <strong class="jxr_keyword">catch</strong> (IOException ex) {
-<a class="jxr_linenumber" name="L132" href="#L132">132</a>                 logger.logDebug(() -&gt; ex.getMessage() + <span class="jxr_string">" (at Server.start)"</span>);
-<a class="jxr_linenumber" name="L133" href="#L133">133</a>                 String suspiciousClues = underInvestigation.isClientLookingForVulnerabilities(ex.getMessage());
-<a class="jxr_linenumber" name="L134" href="#L134">134</a> 
-<a class="jxr_linenumber" name="L135" href="#L135">135</a>                 <strong class="jxr_keyword">if</strong> (suspiciousClues.length() &gt; 0 &amp;&amp; theBrig != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L136" href="#L136">136</a>                     logger.logDebug(() -&gt; sw.getRemoteAddr() + <span class="jxr_string">" is looking for vulnerabilities, for this: "</span> + suspiciousClues);
-<a class="jxr_linenumber" name="L137" href="#L137">137</a>                     theBrig.sendToJail(sw.getRemoteAddr() + <span class="jxr_string">"_vuln_seeking"</span>, constants.VULN_SEEKING_JAIL_DURATION);
-<a class="jxr_linenumber" name="L138" href="#L138">138</a>                 }
-<a class="jxr_linenumber" name="L139" href="#L139">139</a>             }
-<a class="jxr_linenumber" name="L140" href="#L140">140</a>         };
-<a class="jxr_linenumber" name="L141" href="#L141">141</a>         <strong class="jxr_keyword">return</strong> innerServerCode;
-<a class="jxr_linenumber" name="L142" href="#L142">142</a>     }
-<a class="jxr_linenumber" name="L143" href="#L143">143</a> 
-<a class="jxr_linenumber" name="L144" href="#L144">144</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> close() <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L145" href="#L145">145</a>         <em class="jxr_comment">// close all the running sockets</em>
-<a class="jxr_linenumber" name="L146" href="#L146">146</a>         setOfSWs.stopAllServers();
-<a class="jxr_linenumber" name="L147" href="#L147">147</a>         logger.logTrace(() -&gt; <span class="jxr_string">"close called on "</span> + <strong class="jxr_keyword">this</strong>);
-<a class="jxr_linenumber" name="L148" href="#L148">148</a>         <em class="jxr_comment">// close the primary server socket</em>
-<a class="jxr_linenumber" name="L149" href="#L149">149</a>         serverSocket.close();
-<a class="jxr_linenumber" name="L150" href="#L150">150</a>     }
-<a class="jxr_linenumber" name="L151" href="#L151">151</a> 
-<a class="jxr_linenumber" name="L152" href="#L152">152</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L153" href="#L153">153</a> <em class="jxr_javadoccomment">     * Get the string version of the address of this</em>
-<a class="jxr_linenumber" name="L154" href="#L154">154</a> <em class="jxr_javadoccomment">     * server.  See {@link InetAddress#getHostAddress()}</em>
-<a class="jxr_linenumber" name="L155" href="#L155">155</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L156" href="#L156">156</a>     String getHost() {
-<a class="jxr_linenumber" name="L157" href="#L157">157</a>         <strong class="jxr_keyword">return</strong> serverSocket.getInetAddress().getHostAddress();
-<a class="jxr_linenumber" name="L158" href="#L158">158</a>     }
-<a class="jxr_linenumber" name="L159" href="#L159">159</a> 
-<a class="jxr_linenumber" name="L160" href="#L160">160</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L161" href="#L161">161</a> <em class="jxr_javadoccomment">     * See {@link ServerSocket#getLocalPort()}</em>
-<a class="jxr_linenumber" name="L162" href="#L162">162</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L163" href="#L163">163</a>     <strong class="jxr_keyword">int</strong> getPort() {
-<a class="jxr_linenumber" name="L164" href="#L164">164</a>         <strong class="jxr_keyword">return</strong> serverSocket.getLocalPort();
-<a class="jxr_linenumber" name="L165" href="#L165">165</a>     }
-<a class="jxr_linenumber" name="L166" href="#L166">166</a> 
-<a class="jxr_linenumber" name="L167" href="#L167">167</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L168" href="#L168">168</a> <em class="jxr_javadoccomment">     * This is a helper method to find the server SocketWrapper</em>
-<a class="jxr_linenumber" name="L169" href="#L169">169</a> <em class="jxr_javadoccomment">     * connected to a client SocketWrapper.</em>
-<a class="jxr_linenumber" name="L170" href="#L170">170</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L171" href="#L171">171</a>     <a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> getServer(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> sw) {
-<a class="jxr_linenumber" name="L172" href="#L172">172</a>         <strong class="jxr_keyword">return</strong> setOfSWs.getSocketWrapperByRemoteAddr(sw.getLocalAddr(), sw.getLocalPort());
-<a class="jxr_linenumber" name="L173" href="#L173">173</a>     }
-<a class="jxr_linenumber" name="L174" href="#L174">174</a> 
-<a class="jxr_linenumber" name="L175" href="#L175">175</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L176" href="#L176">176</a> <em class="jxr_javadoccomment">     * When we first create a SocketWrapper in Server, we provide it</em>
-<a class="jxr_linenumber" name="L177" href="#L177">177</a> <em class="jxr_javadoccomment">     * a reference back to this object, so that it can call</em>
-<a class="jxr_linenumber" name="L178" href="#L178">178</a> <em class="jxr_javadoccomment">     * this command.  This class maintains a list of open</em>
-<a class="jxr_linenumber" name="L179" href="#L179">179</a> <em class="jxr_javadoccomment">     * sockets in setOfSWs, and allows generated SocketWrappers</em>
-<a class="jxr_linenumber" name="L180" href="#L180">180</a> <em class="jxr_javadoccomment">     * to deregister themselves from this list by using this method.</em>
-<a class="jxr_linenumber" name="L181" href="#L181">181</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L182" href="#L182">182</a>     <strong class="jxr_keyword">void</strong> removeMyRecord(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> socketWrapper) {
-<a class="jxr_linenumber" name="L183" href="#L183">183</a>         setOfSWs.remove(socketWrapper);
-<a class="jxr_linenumber" name="L184" href="#L184">184</a>     }
-<a class="jxr_linenumber" name="L185" href="#L185">185</a> 
-<a class="jxr_linenumber" name="L186" href="#L186">186</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L187" href="#L187">187</a> <em class="jxr_javadoccomment">     * Returns the name of this server, which is set</em>
-<a class="jxr_linenumber" name="L188" href="#L188">188</a> <em class="jxr_javadoccomment">     * when the server is instantiated.</em>
-<a class="jxr_linenumber" name="L189" href="#L189">189</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L190" href="#L190">190</a>     @Override
-<a class="jxr_linenumber" name="L191" href="#L191">191</a>     <strong class="jxr_keyword">public</strong> String toString() {
-<a class="jxr_linenumber" name="L192" href="#L192">192</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>.serverName;
-<a class="jxr_linenumber" name="L193" href="#L193">193</a>     }
-<a class="jxr_linenumber" name="L194" href="#L194">194</a> 
-<a class="jxr_linenumber" name="L195" href="#L195">195</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L196" href="#L196">196</a> <em class="jxr_javadoccomment">     * Obtain the {@link Future} of the central loop of this</em>
-<a class="jxr_linenumber" name="L197" href="#L197">197</a> <em class="jxr_javadoccomment">     * server object, which is obtained during {@link #start(ExecutorService, ThrowingConsumer)}</em>
-<a class="jxr_linenumber" name="L198" href="#L198">198</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L199" href="#L199">199</a>     Future&lt;?&gt; getCentralLoopFuture() {
-<a class="jxr_linenumber" name="L200" href="#L200">200</a>         <strong class="jxr_keyword">return</strong> centralLoopFuture;
-<a class="jxr_linenumber" name="L201" href="#L201">201</a>     }
-<a class="jxr_linenumber" name="L202" href="#L202">202</a> }
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>                 logger.logDebug(() -&gt; sw.getRemoteAddr() + <span class="jxr_string">" is looking for vulnerabilities, for this: "</span> + ex.getMessage());
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>                 <strong class="jxr_keyword">if</strong> (theBrig != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>                     theBrig.sendToJail(sw.getRemoteAddr() + <span class="jxr_string">"_vuln_seeking"</span>, constants.VULN_SEEKING_JAIL_DURATION);
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>                 }
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>             } <strong class="jxr_keyword">catch</strong> (IOException ex) {
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>                 logger.logDebug(() -&gt; ex.getMessage() + <span class="jxr_string">" (at Server.start)"</span>);
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>                 String suspiciousClues = underInvestigation.isClientLookingForVulnerabilities(ex.getMessage());
+<a class="jxr_linenumber" name="L137" href="#L137">137</a> 
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>                 <strong class="jxr_keyword">if</strong> (suspiciousClues.length() &gt; 0 &amp;&amp; theBrig != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>                     logger.logDebug(() -&gt; sw.getRemoteAddr() + <span class="jxr_string">" is looking for vulnerabilities, for this: "</span> + suspiciousClues);
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>                     theBrig.sendToJail(sw.getRemoteAddr() + <span class="jxr_string">"_vuln_seeking"</span>, constants.VULN_SEEKING_JAIL_DURATION);
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>                 }
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>             }
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>         };
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>         <strong class="jxr_keyword">return</strong> innerServerCode;
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>     }
+<a class="jxr_linenumber" name="L146" href="#L146">146</a> 
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> close() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>         <em class="jxr_comment">// close all the running sockets</em>
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>         setOfSWs.stopAllServers();
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>         logger.logTrace(() -&gt; <span class="jxr_string">"close called on "</span> + <strong class="jxr_keyword">this</strong>);
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>         <em class="jxr_comment">// close the primary server socket</em>
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>         serverSocket.close();
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>     }
+<a class="jxr_linenumber" name="L154" href="#L154">154</a> 
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L156" href="#L156">156</a> <em class="jxr_javadoccomment">     * Get the string version of the address of this</em>
+<a class="jxr_linenumber" name="L157" href="#L157">157</a> <em class="jxr_javadoccomment">     * server.  See {@link InetAddress#getHostAddress()}</em>
+<a class="jxr_linenumber" name="L158" href="#L158">158</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>     String getHost() {
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>         <strong class="jxr_keyword">return</strong> serverSocket.getInetAddress().getHostAddress();
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>     }
+<a class="jxr_linenumber" name="L162" href="#L162">162</a> 
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L164" href="#L164">164</a> <em class="jxr_javadoccomment">     * See {@link ServerSocket#getLocalPort()}</em>
+<a class="jxr_linenumber" name="L165" href="#L165">165</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>     <strong class="jxr_keyword">int</strong> getPort() {
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>         <strong class="jxr_keyword">return</strong> serverSocket.getLocalPort();
+<a class="jxr_linenumber" name="L168" href="#L168">168</a>     }
+<a class="jxr_linenumber" name="L169" href="#L169">169</a> 
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L171" href="#L171">171</a> <em class="jxr_javadoccomment">     * This is a helper method to find the server SocketWrapper</em>
+<a class="jxr_linenumber" name="L172" href="#L172">172</a> <em class="jxr_javadoccomment">     * connected to a client SocketWrapper.</em>
+<a class="jxr_linenumber" name="L173" href="#L173">173</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>     <a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> getServer(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> sw) {
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>         <strong class="jxr_keyword">return</strong> setOfSWs.getSocketWrapperByRemoteAddr(sw.getLocalAddr(), sw.getLocalPort());
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>     }
+<a class="jxr_linenumber" name="L177" href="#L177">177</a> 
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L179" href="#L179">179</a> <em class="jxr_javadoccomment">     * When we first create a SocketWrapper in Server, we provide it</em>
+<a class="jxr_linenumber" name="L180" href="#L180">180</a> <em class="jxr_javadoccomment">     * a reference back to this object, so that it can call</em>
+<a class="jxr_linenumber" name="L181" href="#L181">181</a> <em class="jxr_javadoccomment">     * this command.  This class maintains a list of open</em>
+<a class="jxr_linenumber" name="L182" href="#L182">182</a> <em class="jxr_javadoccomment">     * sockets in setOfSWs, and allows generated SocketWrappers</em>
+<a class="jxr_linenumber" name="L183" href="#L183">183</a> <em class="jxr_javadoccomment">     * to deregister themselves from this list by using this method.</em>
+<a class="jxr_linenumber" name="L184" href="#L184">184</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>     <strong class="jxr_keyword">void</strong> removeMyRecord(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> socketWrapper) {
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>         setOfSWs.remove(socketWrapper);
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>     }
+<a class="jxr_linenumber" name="L188" href="#L188">188</a> 
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L190" href="#L190">190</a> <em class="jxr_javadoccomment">     * Returns the name of this server, which is set</em>
+<a class="jxr_linenumber" name="L191" href="#L191">191</a> <em class="jxr_javadoccomment">     * when the server is instantiated.</em>
+<a class="jxr_linenumber" name="L192" href="#L192">192</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>     @Override
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>     <strong class="jxr_keyword">public</strong> String toString() {
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>.serverName;
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>     }
+<a class="jxr_linenumber" name="L197" href="#L197">197</a> 
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L199" href="#L199">199</a> <em class="jxr_javadoccomment">     * Obtain the {@link Future} of the central loop of this</em>
+<a class="jxr_linenumber" name="L200" href="#L200">200</a> <em class="jxr_javadoccomment">     * server object, which is obtained during {@link #start(ExecutorService, ThrowingConsumer)}</em>
+<a class="jxr_linenumber" name="L201" href="#L201">201</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>     Future&lt;?&gt; getCentralLoopFuture() {
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>         <strong class="jxr_keyword">return</strong> centralLoopFuture;
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>     }
+<a class="jxr_linenumber" name="L205" href="#L205">205</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>
