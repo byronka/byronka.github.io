@@ -14,7 +14,7 @@ public final class RegexUtils {
     }
 
     /**
-     * Makes it a bit easier to find a value in a string using a
+     * Helper to find a value in a string using a
      * Regex. Note, this is not nearly as performant, since
      * each call to this method will compile the regular
      * expression.
@@ -40,10 +40,13 @@ public final class RegexUtils {
     }
 
     /**
-     * Makes it a bit easier to find a value in a string using a
-     * Regex. Note, this is not nearly as performant, since
-     * each call to this method will compile the regular
-     * expression.
+     * Find a value by regular expression, for testing
+     * &lt;p&gt;
+     * A helper method to make things it easier to find a value in a string using a
+     * Regex. &lt;em&gt;This method is slow, since
+     * each call will compile the regular
+     * expression.&lt;/em&gt;
+     * &lt;/p&gt;
      * &lt;p&gt;
      *     This version is similar to {@link #find(String, String)} except
      *     that it allows you to specify a match group by name.
@@ -60,7 +63,7 @@ public final class RegexUtils {
      * &lt;/p&gt;
      * &lt;p&gt;
      *     &lt;pre&gt;
-     *         {@code find(&quot;\\bname\\b=\&quot;(?&lt;namevalue&gt;.*?)\&quot;&quot;, &quot;namevalue&quot;, data)}
+     *         {@code find(&quot;\\bname\\b=\&quot;(?&lt;namevalue&gt;.*?)\&quot;&quot;, data, &quot;namevalue&quot;)}
      *     &lt;/pre&gt;
      * &lt;/p&gt;
      * &lt;p&gt;
@@ -69,14 +72,14 @@ public final class RegexUtils {
      *     right after the opening parenthesis a question mark and
      *     then a string literal surrounded by angle brackets
      * &lt;/p&gt;
-     * &lt;p&gt;&lt;b&gt;Important!!!&lt;/b&gt;: the name of the match group must be alphanumeric - do
+     * &lt;p&gt;&lt;b&gt;Important&lt;/b&gt;: the name of the match group must be alphanumeric - do
      * &lt;b&gt;not&lt;/b&gt; use any special characters or punctuation&lt;/p&gt;
      * @return returns the first match found, or an empty string
      */
     public static String find(String regex, String data, String matchGroupName) {
-<span class="fc" id="L77">        Pattern pattern = Pattern.compile(regex);</span>
-<span class="fc" id="L78">        Matcher matcher = pattern.matcher(data);</span>
-<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        return matcher.find() ? matcher.group(matchGroupName) : &quot;&quot;;</span>
+<span class="fc" id="L80">        Pattern pattern = Pattern.compile(regex);</span>
+<span class="fc" id="L81">        Matcher matcher = pattern.matcher(data);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        return matcher.find() ? matcher.group(matchGroupName) : &quot;&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * These nodes represent the types of things we may encounter when parsing an HTML string, which
- * for our purposes is just the types in {@link ParseNodeType}.  Depending on the type,
- * different values will be filled out, but by coalescing them into this one class, it simplifies
- * our code.
+ * Represents the expected types of things we may encounter when parsing an HTML string, which
+ * for our purposes is {@link ParseNodeType}.
+ * &lt;p&gt;
  * See &lt;a href=&quot;https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements&quot;&gt;W3.org Elements&lt;/a&gt;
+ * &lt;/p&gt;
  */
 <span class="fc" id="L14">public record HtmlParseNode(ParseNodeType type,</span>
                             TagInfo tagInfo,
@@ -19,53 +19,61 @@ import java.util.Map;
 <span class="fc" id="L19">    public static final HtmlParseNode EMPTY = new HtmlParseNode(ParseNodeType.ELEMENT, TagInfo.EMPTY, List.of(), &quot;EMPTY HTMLPARSENODE&quot;);</span>
 
     /**
+     * Return a list of strings of the text content of the tree.
+     * &lt;p&gt;
      * This method traverses the tree from this node downwards,
-     * adding the text content as it goes.
+     * adding the text content as it goes. Its main purpose is to
+     * quickly render all the strings out of an HTML document at once.
+     * &lt;/p&gt;
      */
     public List&lt;String&gt; print() {
-<span class="fc" id="L26">        var myList = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L27">        recursiveTreeWalk(myList);</span>
-<span class="fc" id="L28">        return myList;</span>
+<span class="fc" id="L30">        var myList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L31">        recursiveTreeWalk(myList);</span>
+<span class="fc" id="L32">        return myList;</span>
     }
 
     private void recursiveTreeWalk(ArrayList&lt;String&gt; myList) {
-<span class="fc bfc" id="L32" title="All 2 branches covered.">        for (var hpn : innerContent) {</span>
-<span class="fc" id="L33">            hpn.recursiveTreeWalk(myList);</span>
-<span class="fc" id="L34">        }</span>
-<span class="pc bpc" id="L35" title="1 of 4 branches missed.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
-<span class="fc" id="L36">            myList.add(textContent);</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (var hpn : innerContent) {</span>
+<span class="fc" id="L37">            hpn.recursiveTreeWalk(myList);</span>
+<span class="fc" id="L38">        }</span>
+<span class="pc bpc" id="L39" title="1 of 4 branches missed.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
+<span class="fc" id="L40">            myList.add(textContent);</span>
         }
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L42">    }</span>
 
     /**
-     * This searches for a single node in the HTML.  If it
-     * finds more than one match, it will throw an exception.
-     * If none are found, HtmlParseNode.EMPTY is returned.
+     * Return a list of {@link HtmlParseNode} nodes in the HTML that match provided attributes.
      */
     public List&lt;HtmlParseNode&gt; search(TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc" id="L46">        var myList = new ArrayList&lt;HtmlParseNode&gt;();</span>
-<span class="fc" id="L47">        recursiveTreeWalkSearch(myList, tagName, attributes);</span>
-<span class="fc" id="L48">        return myList;</span>
+<span class="fc" id="L48">        var myList = new ArrayList&lt;HtmlParseNode&gt;();</span>
+<span class="fc" id="L49">        recursiveTreeWalkSearch(myList, tagName, attributes);</span>
+<span class="fc" id="L50">        return myList;</span>
     }
 
     private void recursiveTreeWalkSearch(ArrayList&lt;HtmlParseNode&gt; myList, TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (this.tagInfo().tagName().equals(tagName) &amp;&amp; this.tagInfo().attributes().entrySet().containsAll(attributes.entrySet())) {</span>
-<span class="fc" id="L53">            myList.add(this);</span>
+<span class="fc bfc" id="L54" title="All 4 branches covered.">        if (this.tagInfo().tagName().equals(tagName) &amp;&amp; this.tagInfo().attributes().entrySet().containsAll(attributes.entrySet())) {</span>
+<span class="fc" id="L55">            myList.add(this);</span>
         }
-<span class="fc bfc" id="L55" title="All 2 branches covered.">        for (var htmlParseNode : innerContent) {</span>
-<span class="fc" id="L56">            htmlParseNode.recursiveTreeWalkSearch(myList, tagName, attributes);</span>
-<span class="fc" id="L57">        }</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (var htmlParseNode : innerContent) {</span>
+<span class="fc" id="L58">            htmlParseNode.recursiveTreeWalkSearch(myList, tagName, attributes);</span>
+<span class="fc" id="L59">        }</span>
+<span class="fc" id="L60">    }</span>
 
     /**
-     * If the element you're looking at has just one inner
-     * content item, and it's a CHARACTERS element, return it.
+     * Return the inner text
+     * &lt;p&gt;
+     * If this element has only one inner
+     * content item, and it's a {@link ParseNodeType.CHARACTERS} element, return its text content.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     Otherwise, return an empty string.
+     * &lt;/p&gt;
      */
     public String innerText() {
-<span class="pc bpc" id="L65" title="2 of 4 branches missed.">       if (innerContent.size() == 1 &amp;&amp; innerContent.get(0).type == ParseNodeType.CHARACTERS) {</span>
-<span class="fc" id="L66">           return innerContent.get(0).textContent;</span>
+<span class="pc bpc" id="L73" title="2 of 4 branches missed.">       if (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {</span>
+<span class="fc" id="L74">           return innerContent.getFirst().textContent;</span>
        } else {
-<span class="nc" id="L68">           return &quot;&quot;;</span>
+<span class="nc" id="L76">           return &quot;&quot;;</span>
        }
     }
 

@@ -582,32 +582,33 @@
 <a class="jxr_linenumber" name="L574" href="#L574">574</a> <em class="jxr_javadoccomment">     * match anything I could statically register.</em>
 <a class="jxr_linenumber" name="L575" href="#L575">575</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
 <a class="jxr_linenumber" name="L576" href="#L576">576</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L577" href="#L577">577</a> <em class="jxr_javadoccomment">     *     Be careful here, be thoughtful - partial paths will</em>
-<a class="jxr_linenumber" name="L578" href="#L578">578</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L579" href="#L579">579</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L580" href="#L580">580</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPartialPath(RequestLine.Method method, String pathName, Function&lt;Request, Response&gt; webHandler) {
-<a class="jxr_linenumber" name="L581" href="#L581">581</a>         registeredPartialPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
-<a class="jxr_linenumber" name="L582" href="#L582">582</a>     }
-<a class="jxr_linenumber" name="L583" href="#L583">583</a> 
-<a class="jxr_linenumber" name="L584" href="#L584">584</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L585" href="#L585">585</a> <em class="jxr_javadoccomment">     * This allows users to add extra mappings</em>
-<a class="jxr_linenumber" name="L586" href="#L586">586</a> <em class="jxr_javadoccomment">     * between file suffixes and mime types, in case</em>
-<a class="jxr_linenumber" name="L587" href="#L587">587</a> <em class="jxr_javadoccomment">     * a user needs one that was not provided.</em>
-<a class="jxr_linenumber" name="L588" href="#L588">588</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L589" href="#L589">589</a> <em class="jxr_javadoccomment">     *     This is made available through the</em>
-<a class="jxr_linenumber" name="L590" href="#L590">590</a> <em class="jxr_javadoccomment">     *     web framework.</em>
-<a class="jxr_linenumber" name="L591" href="#L591">591</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L592" href="#L592">592</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L593" href="#L593">593</a> <em class="jxr_javadoccomment">     *     Example:</em>
-<a class="jxr_linenumber" name="L594" href="#L594">594</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L595" href="#L595">595</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;</em>
-<a class="jxr_linenumber" name="L596" href="#L596">596</a> <em class="jxr_javadoccomment">     * {@code webFramework.addMimeForSuffix().put("foo","text/foo")}</em>
-<a class="jxr_linenumber" name="L597" href="#L597">597</a> <em class="jxr_javadoccomment">     * &lt;/pre&gt;</em>
-<a class="jxr_linenumber" name="L598" href="#L598">598</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L599" href="#L599">599</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> addMimeForSuffix(String suffix, String mimeType) {
-<a class="jxr_linenumber" name="L600" href="#L600">600</a>         fileUtils.getSuffixToMime().put(suffix, mimeType);
-<a class="jxr_linenumber" name="L601" href="#L601">601</a>     }
-<a class="jxr_linenumber" name="L602" href="#L602">602</a> }
+<a class="jxr_linenumber" name="L577" href="#L577">577</a> <em class="jxr_javadoccomment">     *     Be careful here, be thoughtful - partial paths will match a lot, and may</em>
+<a class="jxr_linenumber" name="L578" href="#L578">578</a> <em class="jxr_javadoccomment">     *     overlap with other URL's for your app, such as endpoints and static files.</em>
+<a class="jxr_linenumber" name="L579" href="#L579">579</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L580" href="#L580">580</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L581" href="#L581">581</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPartialPath(RequestLine.Method method, String pathName, Function&lt;Request, Response&gt; webHandler) {
+<a class="jxr_linenumber" name="L582" href="#L582">582</a>         registeredPartialPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>     }
+<a class="jxr_linenumber" name="L584" href="#L584">584</a> 
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L586" href="#L586">586</a> <em class="jxr_javadoccomment">     * This allows users to add extra mappings</em>
+<a class="jxr_linenumber" name="L587" href="#L587">587</a> <em class="jxr_javadoccomment">     * between file suffixes and mime types, in case</em>
+<a class="jxr_linenumber" name="L588" href="#L588">588</a> <em class="jxr_javadoccomment">     * a user needs one that was not provided.</em>
+<a class="jxr_linenumber" name="L589" href="#L589">589</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L590" href="#L590">590</a> <em class="jxr_javadoccomment">     *     This is made available through the</em>
+<a class="jxr_linenumber" name="L591" href="#L591">591</a> <em class="jxr_javadoccomment">     *     web framework.</em>
+<a class="jxr_linenumber" name="L592" href="#L592">592</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L593" href="#L593">593</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L594" href="#L594">594</a> <em class="jxr_javadoccomment">     *     Example:</em>
+<a class="jxr_linenumber" name="L595" href="#L595">595</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L596" href="#L596">596</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;</em>
+<a class="jxr_linenumber" name="L597" href="#L597">597</a> <em class="jxr_javadoccomment">     * {@code webFramework.addMimeForSuffix().put("foo","text/foo")}</em>
+<a class="jxr_linenumber" name="L598" href="#L598">598</a> <em class="jxr_javadoccomment">     * &lt;/pre&gt;</em>
+<a class="jxr_linenumber" name="L599" href="#L599">599</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L600" href="#L600">600</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> addMimeForSuffix(String suffix, String mimeType) {
+<a class="jxr_linenumber" name="L601" href="#L601">601</a>         fileUtils.getSuffixToMime().put(suffix, mimeType);
+<a class="jxr_linenumber" name="L602" href="#L602">602</a>     }
+<a class="jxr_linenumber" name="L603" href="#L603">603</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

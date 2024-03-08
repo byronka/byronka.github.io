@@ -3,7 +3,7 @@
 
 /**
  * Possible tag names per the W3C HTML spec.
- * Pulled mostly from https://www.w3.org/TR/2012/WD-html-markup-20121025/elements.html
+ * Pulled from https://www.w3.org/TR/2012/WD-html-markup-20121025/elements.html
  */
 <span class="fc" id="L8">public enum TagName {</span>
 <span class="fc" id="L9">    A(false), ABBR(false), ADDRESS(false), AREA(true), ARTICLE(false),</span>
@@ -30,18 +30,25 @@
 <span class="fc" id="L30">    WBR(true),</span>
 
     /**
-     * This is a special one, maybe I need to handle this better,
-     * but it's mostly unimportant to me for now.
+     * In HTML, the doctype is the required preamble found at the top of
+     * all documents. Its sole purpose is to prevent a browser from
+     * switching into so-called &quot;quirks mode&quot; when rendering a document;
+     * that is, it ensures that the browser makes a best-effort attempt at
+     * following the relevant specifications, rather than using a
+     * different rendering mode that is incompatible with some specifications.
      */
-<span class="fc" id="L36">     DOCTYPE(true),</span>
+<span class="fc" id="L40">     DOCTYPE(true),</span>
 
 
     /**
      * Used to indicate that no tag was found, to avoid use of null
      */
-<span class="fc" id="L42">    NULL(false)</span>
+<span class="fc" id="L46">    NULL(false)</span>
     ;
 
+    /**
+     * Void elements are disallowed to have closing tags
+     */
     public final boolean isVoidElement;
 
     /**
@@ -49,8 +56,8 @@
      * a closing tag.  (see &lt;a href=&quot;https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#void-element&quot;&gt;void elements&lt;/a&gt;)
      * @param isVoidElement
      */
-<span class="fc" id="L52">    TagName(boolean isVoidElement) {</span>
-<span class="fc" id="L53">        this.isVoidElement = isVoidElement;</span>
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L59">    TagName(boolean isVoidElement) {</span>
+<span class="fc" id="L60">        this.isVoidElement = isVoidElement;</span>
+<span class="fc" id="L61">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
