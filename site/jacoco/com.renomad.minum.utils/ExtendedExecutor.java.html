@@ -18,17 +18,17 @@ public final class ExtendedExecutor extends ThreadPoolExecutor {
             TimeUnit unit,
             BlockingQueue&lt;Runnable&gt; workQueue,
             ThreadFactory threadFactory) {
-<span class="nc" id="L21">        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);</span>
-<span class="nc" id="L22">    }</span>
+<span class="fc" id="L21">        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);</span>
+<span class="fc" id="L22">    }</span>
 
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
-<span class="nc" id="L26">        super.afterExecute(r, t);</span>
-<span class="nc bnc" id="L27" title="All 4 branches missed.">        if (t == null</span>
+<span class="fc" id="L26">        super.afterExecute(r, t);</span>
+<span class="pc bpc" id="L27" title="2 of 4 branches missed.">        if (t == null</span>
                 &amp;&amp; r instanceof Future&lt;?&gt;
-<span class="nc bnc" id="L29" title="All 2 branches missed.">                &amp;&amp; ((Future&lt;?&gt;)r).isDone()) {</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">                &amp;&amp; ((Future&lt;?&gt;)r).isDone()) {</span>
             try {
-<span class="nc" id="L31">                ((Future&lt;?&gt;) r).get();</span>
+<span class="fc" id="L31">                ((Future&lt;?&gt;) r).get();</span>
 <span class="nc" id="L32">            } catch (CancellationException ce) {</span>
 <span class="nc" id="L33">                t = ce;</span>
 <span class="nc" id="L34">            } catch (ExecutionException ee) {</span>
@@ -36,24 +36,24 @@ public final class ExtendedExecutor extends ThreadPoolExecutor {
 <span class="nc" id="L36">            } catch (InterruptedException ie) {</span>
                 // ignore/reset
 <span class="nc" id="L38">                Thread.currentThread().interrupt();</span>
-<span class="nc" id="L39">            }</span>
+<span class="pc" id="L39">            }</span>
         }
-<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (t != null)</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (t != null)</span>
 <span class="nc" id="L42">            System.out.println(t);</span>
-<span class="nc" id="L43">    }</span>
+<span class="fc" id="L43">    }</span>
 
     public static ExecutorService makeExecutorService(Constants constants) {
 <span class="fc" id="L46">        boolean useVirtualThreads = constants.USE_VIRTUAL;</span>
 <span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if (constants.LOG_LEVELS.contains(LoggingLevel.DEBUG)) System.out.println(TimeUtils.getTimestampIsoInstant() + &quot; use virtual threads? &quot; + useVirtualThreads);</span>
-<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (useVirtualThreads) {</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (useVirtualThreads) {</span>
             // the following line is only usable with the virtual threads API, which
             // is available on JDK 19/20 in preview mode, or JDK 21 without preview.
 <span class="fc" id="L51">            return Executors.newVirtualThreadPerTaskExecutor();</span>
         } else {
-<span class="nc" id="L53">            return new ExtendedExecutor(0, Integer.MAX_VALUE,</span>
+<span class="fc" id="L53">            return new ExtendedExecutor(0, Integer.MAX_VALUE,</span>
                     60L, TimeUnit.SECONDS,
                     new SynchronousQueue&lt;&gt;(),
-<span class="nc" id="L56">                    Executors.defaultThreadFactory());</span>
+<span class="fc" id="L56">                    Executors.defaultThreadFactory());</span>
         }
     }
 
