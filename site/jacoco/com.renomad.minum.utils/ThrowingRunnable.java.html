@@ -14,16 +14,21 @@ import com.renomad.minum.logging.ILogger;
 @FunctionalInterface
 public interface ThrowingRunnable {
 
-    void run();
+    /**
+     * The reason this throws an exception is so that lambdas
+     * don't need to try-catch their thrown exceptions when they
+     * use this.
+     */
+    void run() throws Exception;
 
     static Runnable throwingRunnableWrapper(ThrowingRunnable throwingRunnable, ILogger logger) {
-<span class="fc" id="L20">        return () -&gt; {</span>
+<span class="fc" id="L25">        return () -&gt; {</span>
             try {
-<span class="fc" id="L22">                throwingRunnable.run();</span>
-<span class="fc" id="L23">            } catch (Exception ex) {</span>
-<span class="fc" id="L24">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
-<span class="fc" id="L25">            }</span>
-<span class="fc" id="L26">        };</span>
+<span class="fc" id="L27">                throwingRunnable.run();</span>
+<span class="fc" id="L28">            } catch (Exception ex) {</span>
+<span class="fc" id="L29">                logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="fc" id="L30">            }</span>
+<span class="fc" id="L31">        };</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

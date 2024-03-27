@@ -36,13 +36,13 @@
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>      <strong class="jxr_keyword">public</strong> List&lt;String&gt; print() {
 <a class="jxr_linenumber" name="L30" href="#L30">30</a>          <strong class="jxr_keyword">var</strong> myList = <strong class="jxr_keyword">new</strong> ArrayList&lt;String&gt;();
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>          recursiveTreeWalk(myList);
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>          recursiveTreeWalk(myList, innerContent, textContent);
 <a class="jxr_linenumber" name="L32" href="#L32">32</a>          <strong class="jxr_keyword">return</strong> myList;
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>      }
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> recursiveTreeWalk(ArrayList&lt;String&gt; myList) {
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">var</strong> hpn : innerContent) {
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>              hpn.recursiveTreeWalk(myList);
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> recursiveTreeWalk(ArrayList&lt;String&gt; myList, List&lt;HtmlParseNode&gt; innerContent, String textContent) {
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>          <strong class="jxr_keyword">for</strong> (HtmlParseNode hpn : innerContent) {
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>              recursiveTreeWalk(myList, hpn.innerContent, hpn.textContent);
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>          }
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>          <strong class="jxr_keyword">if</strong> (textContent != <strong class="jxr_keyword">null</strong> &amp;&amp; ! textContent.isBlank()) {
 <a class="jxr_linenumber" name="L40" href="#L40">40</a>              myList.add(textContent);
@@ -77,7 +77,7 @@
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>  <em class="jxr_javadoccomment">     *     Otherwise, return an empty string.</em>
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>  <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
 <a class="jxr_linenumber" name="L71" href="#L71">71</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <strong class="jxr_keyword">public</strong> String innerText() {
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <strong class="jxr_keyword">static</strong> String innerText(List&lt;HtmlParseNode&gt; innerContent) {
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>         <strong class="jxr_keyword">if</strong> (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>             <strong class="jxr_keyword">return</strong> innerContent.getFirst().textContent;
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>         } <strong class="jxr_keyword">else</strong> {
@@ -85,7 +85,11 @@
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>         }
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>      }
 <a class="jxr_linenumber" name="L79" href="#L79">79</a>  
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>  }
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>      <strong class="jxr_keyword">public</strong> String innerText() {
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>          <strong class="jxr_keyword">return</strong> innerText(innerContent);
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>      }
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>  
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

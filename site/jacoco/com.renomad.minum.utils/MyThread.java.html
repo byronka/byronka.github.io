@@ -19,11 +19,15 @@ public final class MyThread {
     public static void sleep(long millis) {
         try {
 <span class="fc" id="L21">            Thread.sleep(millis);</span>
-<span class="nc" id="L22">        } catch (InterruptedException e) {</span>
-<span class="nc" id="L23">            System.out.println(e);</span>
-<span class="nc" id="L24">            Thread.currentThread().interrupt();</span>
-<span class="fc" id="L25">        }</span>
+<span class="fc" id="L22">        } catch (InterruptedException e) {</span>
+<span class="fc" id="L23">            handleInterrupted(e);</span>
+<span class="fc" id="L24">        }</span>
 
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L26">    }</span>
+
+    static void handleInterrupted(InterruptedException e) {
+<span class="fc" id="L29">        System.out.println(&quot;Interruption during MyThread.sleep: &quot; + e);</span>
+<span class="fc" id="L30">        Thread.currentThread().interrupt();</span>
+<span class="fc" id="L31">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

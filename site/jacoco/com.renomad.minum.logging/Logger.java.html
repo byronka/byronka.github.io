@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Logger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.logging</a> &gt; <span class="el_source">Logger.java</span></div><h1>Logger.java</h1><pre class="source lang-java linenums">package com.renomad.minum.logging;
 
 import com.renomad.minum.Constants;
+import com.renomad.minum.utils.AbstractActionQueue;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -18,9 +19,9 @@ public class Logger implements ILogger {
      * our messages thread-safely by taking
      * them off the top of a queue.
      */
-    protected final LoggingActionQueue loggingActionQueue;
+    protected final AbstractActionQueue loggingActionQueue;
     private final ExecutorService executorService;
-    private Map&lt;LoggingLevel, Boolean&gt; activeLogLevels;
+    private final Map&lt;LoggingLevel, Boolean&gt; activeLogLevels;
 
     /**
      * Constructor
@@ -30,83 +31,93 @@ public class Logger implements ILogger {
      * @param name sets a name on the {@link LoggingActionQueue} to aid debugging, to
      *             help distinguish queues.
      */
-<span class="fc" id="L33">    public Logger(Constants constants, ExecutorService executorService, String name) {</span>
-<span class="fc" id="L34">        this.executorService = executorService;</span>
-<span class="fc" id="L35">        loggingActionQueue = new LoggingActionQueue(&quot;loggerPrinter&quot; + name, executorService, constants).initialize();</span>
-<span class="fc" id="L36">        toggleDefaultLogging(constants.LOG_LEVELS);</span>
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L34">    public Logger(Constants constants, ExecutorService executorService, String name) {</span>
+<span class="fc" id="L35">        this.executorService = executorService;</span>
+<span class="fc" id="L36">        loggingActionQueue = new LoggingActionQueue(&quot;loggerPrinter&quot; + name, executorService, constants).initialize();</span>
+<span class="fc" id="L37">        activeLogLevels = convertToMap(constants.logLevels);</span>
+<span class="fc" id="L38">    }</span>
 
     /**
-     * for the various kinds of minum.logging which can be enabled/disabled,
-     * turn on the expected types of minum.logging.
+     * Convert the list of enabled log levels to a map of enum -&gt; boolean
      */
-    private void toggleDefaultLogging(List&lt;LoggingLevel&gt; enabledLoggingLevels) {
-<span class="fc" id="L44">        activeLogLevels = new EnumMap&lt;&gt;(LoggingLevel.class);</span>
+    static Map&lt;LoggingLevel, Boolean&gt; convertToMap(List&lt;LoggingLevel&gt; enabledLoggingLevels) {
+<span class="fc" id="L44">        Map&lt;LoggingLevel, Boolean&gt; activeLogLevels = new EnumMap&lt;&gt;(LoggingLevel.class);</span>
 <span class="fc bfc" id="L45" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
 <span class="fc" id="L46">            activeLogLevels.put(t, enabledLoggingLevels.contains(t));</span>
         }
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L48">        return activeLogLevels;</span>
+    }
 
     @Override
     public void logDebug(ThrowingSupplier&lt;String, Exception&gt; msg) {
-<span class="fc" id="L52">        logHelper(msg, LoggingLevel.DEBUG);</span>
-<span class="fc" id="L53">    }</span>
+<span class="fc" id="L53">        logHelper(msg, LoggingLevel.DEBUG, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L54">    }</span>
 
     @Override
     public void logTrace(ThrowingSupplier&lt;String, Exception&gt; msg) {
-<span class="fc" id="L57">        logHelper(msg, LoggingLevel.TRACE);</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L58">        logHelper(msg, LoggingLevel.TRACE, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L59">    }</span>
 
     @Override
     public void logAudit(ThrowingSupplier&lt;String, Exception&gt; msg) {
-<span class="fc" id="L62">        logHelper(msg, LoggingLevel.AUDIT);</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L63">        logHelper(msg, LoggingLevel.AUDIT, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L64">    }</span>
 
     @Override
     public void stop() {
-<span class="fc" id="L67">        this.loggingActionQueue.stop();</span>
-<span class="fc" id="L68">        this.executorService.shutdownNow();</span>
-<span class="fc" id="L69">    }</span>
+<span class="fc" id="L68">        this.loggingActionQueue.stop();</span>
+<span class="fc" id="L69">        this.executorService.shutdownNow();</span>
+<span class="fc" id="L70">    }</span>
 
     @Override
     public void logAsyncError(ThrowingSupplier&lt;String, Exception&gt; msg) {
-<span class="fc" id="L73">        logHelper(msg, LoggingLevel.ASYNC_ERROR);</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L74">        logHelper(msg, LoggingLevel.ASYNC_ERROR, activeLogLevels, loggingActionQueue);</span>
+<span class="fc" id="L75">    }</span>
 
     /**
      * A helper method to reduce duplication
      */
-    private void logHelper(ThrowingSupplier&lt;String, Exception&gt; msg, LoggingLevel loggingLevel) {
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (Boolean.TRUE.equals(activeLogLevels.get(loggingLevel))) {</span>
+    static void logHelper(
+            ThrowingSupplier&lt;String, Exception&gt; msg,
+            LoggingLevel loggingLevel,
+            Map&lt;LoggingLevel, Boolean&gt; activeLogLevels,
+            AbstractActionQueue loggingActionQueue
+            ) {
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (Boolean.TRUE.equals(activeLogLevels.get(loggingLevel))) {</span>
         String receivedMessage;
             try {
-<span class="fc" id="L83">                receivedMessage = msg.get();</span>
-<span class="fc" id="L84">            } catch (Exception ex) {</span>
-<span class="fc" id="L85">                receivedMessage = &quot;EXCEPTION DURING GET: &quot; + ex;</span>
-<span class="fc" id="L86">            }</span>
-<span class="fc" id="L87">            String finalReceivedMessage = receivedMessage;</span>
-<span class="fc" id="L88">            loggingActionQueue.enqueue(&quot;Logger#logHelper(&quot;+receivedMessage+&quot;)&quot;, () -&gt; {</span>
-<span class="fc" id="L89">                Object[] args = new Object[]{getTimestampIsoInstant(), loggingLevel.name(), showWhiteSpace(finalReceivedMessage)};</span>
-<span class="fc" id="L90">                System.out.printf(&quot;%s\t%s\t%s%n&quot;, args);</span>
-<span class="fc" id="L91">            });</span>
+<span class="fc" id="L89">                receivedMessage = msg.get();</span>
+<span class="fc" id="L90">            } catch (Exception ex) {</span>
+<span class="fc" id="L91">                receivedMessage = &quot;EXCEPTION DURING GET: &quot; + ex;</span>
+<span class="fc" id="L92">            }</span>
+<span class="fc" id="L93">            String finalReceivedMessage = receivedMessage;</span>
+<span class="fc bfc" id="L94" title="All 4 branches covered.">            if (loggingActionQueue == null || loggingActionQueue.isStopped()) {</span>
+<span class="fc" id="L95">                Object[] args = new Object[]{getTimestampIsoInstant(), loggingLevel.name(), showWhiteSpace(finalReceivedMessage)};</span>
+<span class="fc" id="L96">                System.out.printf(&quot;%s\t%s\t%s%n&quot;, args);</span>
+<span class="fc" id="L97">            } else {</span>
+<span class="fc" id="L98">                loggingActionQueue.enqueue(&quot;Logger#logHelper(&quot; + receivedMessage + &quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L99">                    Object[] args = new Object[]{getTimestampIsoInstant(), loggingLevel.name(), showWhiteSpace(finalReceivedMessage)};</span>
+<span class="fc" id="L100">                    System.out.printf(&quot;%s\t%s\t%s%n&quot;, args);</span>
+<span class="fc" id="L101">                });</span>
+            }
         }
-<span class="fc" id="L93">    }</span>
+<span class="fc" id="L104">    }</span>
 
     /**
      * Given a string that may have whitespace chars, render it in a way we can see
      */
-    private static String showWhiteSpace(String msg) {
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (msg == null) return &quot;(NULL)&quot;;</span>
+    static String showWhiteSpace(String msg) {
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (msg == null) return &quot;(NULL)&quot;;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (msg.isEmpty()) return &quot;(EMPTY)&quot;;</span>
+
         // if we have tabs, returns, newlines in the text, show them
-<span class="fc" id="L101">        String text = msg</span>
-<span class="fc" id="L102">                .replace(&quot;\t&quot;, &quot;\\t&quot;)</span>
-<span class="fc" id="L103">                .replace(&quot;\r&quot;, &quot;\\r&quot;)</span>
-<span class="fc" id="L104">                .replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
-        // if the text is an empty string, render that
-<span class="fc bfc" id="L106" title="All 2 branches covered.">        text = text.isEmpty() ? &quot;(EMPTY)&quot; : text;</span>
-        // if the text is nothing but whitespace, show that
-<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        text = text.isBlank() ? &quot;(BLANK)&quot; : text;</span>
-<span class="fc" id="L109">        return text;</span>
+<span class="fc" id="L114">        String text = msg</span>
+<span class="fc" id="L115">                .replace(&quot;\t&quot;, &quot;\\t&quot;)</span>
+<span class="fc" id="L116">                .replace(&quot;\r&quot;, &quot;\\r&quot;)</span>
+<span class="fc" id="L117">                .replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
+
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (text.isBlank()) return &quot;(BLANK)&quot;;</span>
+<span class="fc" id="L120">        return text;</span>
     }
 
 }

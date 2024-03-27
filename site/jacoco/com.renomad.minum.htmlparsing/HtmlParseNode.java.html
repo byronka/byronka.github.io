@@ -28,15 +28,15 @@ import java.util.Map;
      */
     public List&lt;String&gt; print() {
 <span class="fc" id="L30">        var myList = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L31">        recursiveTreeWalk(myList);</span>
+<span class="fc" id="L31">        recursiveTreeWalk(myList, innerContent, textContent);</span>
 <span class="fc" id="L32">        return myList;</span>
     }
 
-    private void recursiveTreeWalk(ArrayList&lt;String&gt; myList) {
-<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (var hpn : innerContent) {</span>
-<span class="fc" id="L37">            hpn.recursiveTreeWalk(myList);</span>
+    static void recursiveTreeWalk(ArrayList&lt;String&gt; myList, List&lt;HtmlParseNode&gt; innerContent, String textContent) {
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (HtmlParseNode hpn : innerContent) {</span>
+<span class="fc" id="L37">            recursiveTreeWalk(myList, hpn.innerContent, hpn.textContent);</span>
 <span class="fc" id="L38">        }</span>
-<span class="pc bpc" id="L39" title="1 of 4 branches missed.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
+<span class="fc bfc" id="L39" title="All 4 branches covered.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
 <span class="fc" id="L40">            myList.add(textContent);</span>
         }
 <span class="fc" id="L42">    }</span>
@@ -69,12 +69,16 @@ import java.util.Map;
      *     Otherwise, return an empty string.
      * &lt;/p&gt;
      */
-    public String innerText() {
-<span class="pc bpc" id="L73" title="2 of 4 branches missed.">       if (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {</span>
+    static String innerText(List&lt;HtmlParseNode&gt; innerContent) {
+<span class="fc bfc" id="L73" title="All 4 branches covered.">       if (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {</span>
 <span class="fc" id="L74">           return innerContent.getFirst().textContent;</span>
        } else {
-<span class="nc" id="L76">           return &quot;&quot;;</span>
+<span class="fc" id="L76">           return &quot;&quot;;</span>
        }
+    }
+
+    public String innerText() {
+<span class="fc" id="L81">        return innerText(innerContent);</span>
     }
 
 }

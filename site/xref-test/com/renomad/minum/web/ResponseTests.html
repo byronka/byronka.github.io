@@ -17,47 +17,45 @@
 <a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="ResponseTests" href="../../../../com/renomad/minum/web/ResponseTests.html#ResponseTests">ResponseTests</a> {
 <a class="jxr_linenumber" name="L10" href="#L10">10</a>  
 <a class="jxr_linenumber" name="L11" href="#L11">11</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_javadoccomment">     * Two {@link Response} should be considered equal</em>
-<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_javadoccomment">     * if they have equal content.</em>
-<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L15" href="#L15">15</a>      @Test
-<a class="jxr_linenumber" name="L16" href="#L16">16</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTwoResponsesEqual() {
-<a class="jxr_linenumber" name="L17" href="#L17">17</a>          Response response1 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
-<a class="jxr_linenumber" name="L18" href="#L18">18</a>          Response response2 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>          assertEquals(response1, response2);
-<a class="jxr_linenumber" name="L20" href="#L20">20</a>      }
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>      @Test
-<a class="jxr_linenumber" name="L23" href="#L23">23</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTwoResponsesNotEqual() {
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>          Response response1 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>          Response response2 = Response.htmlOk(<span class="jxr_string">"bar"</span>);
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>          assertFalse(response1.equals(response2));
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_javadoccomment">     * If we use two different {@link Response} as keys in a</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_javadoccomment">     * map, they will be treated as the same if they have</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_javadoccomment">     * the same content.  That is why here, I can use</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_javadoccomment">     * response1 as a key to get response2's value.</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>      @Test
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testUseResponseAsKey() {
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>          <strong class="jxr_keyword">var</strong> myMap = <strong class="jxr_keyword">new</strong> HashMap&lt;Response, Integer&gt;();
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>          Response response1 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>          Response response2 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>          myMap.put(response1, 42);
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>          myMap.put(response2, 88);
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>          assertEquals(myMap.get(response1), 88);
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>      }
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>  
-<a class="jxr_linenumber" name="L29" href="#L29">29</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <em class="jxr_javadoccomment">     * If we use two different {@link Response} as keys in a</em>
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment">     * map, they will be treated as the same if they have</em>
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <em class="jxr_javadoccomment">     * the same content.  That is why here, I can use</em>
-<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <em class="jxr_javadoccomment">     * response1 as a key to get response2's value.</em>
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>      @Test
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testToString() {
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>          Response response1 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>          assertEquals(response1.toString(), <span class="jxr_string">"Response{statusCode=CODE_200_OK, extraHeaders={Content-Type=text/html; charset=UTF-8}, body=[102, 111, 111]}"</span>);
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>      }
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>      @Test
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testUseResponseAsKey() {
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>          <strong class="jxr_keyword">var</strong> myMap = <strong class="jxr_keyword">new</strong> HashMap&lt;Response, Integer&gt;();
-<a class="jxr_linenumber" name="L38" href="#L38">38</a>          Response response1 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
-<a class="jxr_linenumber" name="L39" href="#L39">39</a>          Response response2 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
-<a class="jxr_linenumber" name="L40" href="#L40">40</a>  
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>          myMap.put(response1, 42);
-<a class="jxr_linenumber" name="L42" href="#L42">42</a>          myMap.put(response2, 88);
-<a class="jxr_linenumber" name="L43" href="#L43">43</a>  
-<a class="jxr_linenumber" name="L44" href="#L44">44</a>          assertEquals(myMap.get(response1), 88);
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>      }
-<a class="jxr_linenumber" name="L46" href="#L46">46</a>  
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>      @Test
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testToString() {
-<a class="jxr_linenumber" name="L49" href="#L49">49</a>          Response response1 = Response.htmlOk(<span class="jxr_string">"foo"</span>);
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>          assertEquals(response1.toString(), <span class="jxr_string">"Response{statusCode=_200_OK, extraHeaders={Content-Type=text/html; charset=UTF-8}, body=[102, 111, 111]}"</span>);
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>      }
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>  }
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testResponseConstructor1() {
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>          Response response = <strong class="jxr_keyword">new</strong> Response(StatusLine.StatusCode.CODE_200_OK, <strong class="jxr_keyword">new</strong> byte[]{1, 2, 3});
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>          assertTrue(response.extraHeaders().isEmpty());
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>          assertEquals(response.statusCode(), StatusLine.StatusCode.CODE_200_OK);
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>          assertEqualByteArray(response.body(), <strong class="jxr_keyword">new</strong> byte[]{1, 2, 3});
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>      }
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>      @Test
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testResponseConstructor2() {
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>          Response response = <strong class="jxr_keyword">new</strong> Response(StatusLine.StatusCode.CODE_200_OK, <span class="jxr_string">"testing"</span>);
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>          assertTrue(response.extraHeaders().isEmpty());
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>          assertEquals(response.statusCode(), StatusLine.StatusCode.CODE_200_OK);
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>          assertEquals(<strong class="jxr_keyword">new</strong> String(response.body()), <span class="jxr_string">"testing"</span>);
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>      }
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

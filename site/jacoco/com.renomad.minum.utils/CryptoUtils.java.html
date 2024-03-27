@@ -33,19 +33,24 @@ public final class CryptoUtils {
      * Hash the input string with the provided PBKDF2 algorithm, and return a string representation
      * Note that the PBKDF2WithHmacSHA1 algorithm is specifically designed to take a long time,
      * to slow down an attacker.
-     *&lt;br&gt;&lt;br&gt;
+     * &lt;p&gt;
      * See docs/http_protocol/password_storage_cheat_sheet
+     * &lt;/p&gt;
      */
     public static String createPasswordHash(String password, String salt) {
-<span class="fc" id="L40">        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), 65536, 128);</span>
+<span class="fc" id="L41">        return createPasswordHash(password, salt, &quot;PBKDF2WithHmacSHA1&quot;);</span>
+    }
+
+    static String createPasswordHash(String password, String salt, String algorithm) {
+<span class="fc" id="L45">        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), 65536, 128);</span>
         final SecretKeyFactory factory;
 
         try {
-<span class="fc" id="L44">            factory = SecretKeyFactory.getInstance(&quot;PBKDF2WithHmacSHA1&quot;);</span>
-<span class="fc" id="L45">            final byte[] hashed = factory.generateSecret(spec).getEncoded();</span>
-<span class="fc" id="L46">            return bytesToHex(hashed);</span>
-<span class="nc" id="L47">        } catch (Exception e) {</span>
-<span class="nc" id="L48">            throw new RuntimeException(e);</span>
+<span class="fc" id="L49">            factory = SecretKeyFactory.getInstance(algorithm);</span>
+<span class="fc" id="L50">            final byte[] hashed = factory.generateSecret(spec).getEncoded();</span>
+<span class="fc" id="L51">            return bytesToHex(hashed);</span>
+<span class="fc" id="L52">        } catch (Exception e) {</span>
+<span class="fc" id="L53">            throw new UtilsException(e);</span>
         }
     }
 

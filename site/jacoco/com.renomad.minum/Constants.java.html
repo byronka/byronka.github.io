@@ -4,10 +4,7 @@ import com.renomad.minum.logging.LoggingLevel;
 import com.renomad.minum.utils.TimeUtils;
 
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Very important system design decisions are made here.  All
@@ -15,93 +12,89 @@ import java.util.Properties;
  */
 public final class Constants {
 
-    private Properties properties;
+    private final Properties properties;
 
     public Constants() {
-<span class="fc" id="L21">        this(null);</span>
-<span class="fc" id="L22">    }</span>
+<span class="fc" id="L18">        this(null);</span>
+<span class="fc" id="L19">    }</span>
 
-<span class="fc" id="L24">    public Constants(Properties props) {</span>
-<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (props == null) {</span>
-<span class="fc" id="L26">            properties = getConfiguredProperties();</span>
-        } else {
-<span class="fc" id="L28">            properties = props;</span>
-        }
+<span class="fc" id="L21">    public Constants(Properties props) {</span>
+<span class="fc" id="L22">        properties = Objects.requireNonNullElseGet(props, Constants::getConfiguredProperties);</span>
 
-<span class="fc" id="L31">        SERVER_PORT = getProp(&quot;SERVER_PORT&quot;,  8080);</span>
-<span class="fc" id="L32">        SECURE_SERVER_PORT = getProp(&quot;SSL_SERVER_PORT&quot;,  8443);</span>
-<span class="fc" id="L33">        HOST_NAME = properties.getProperty(&quot;HOST_NAME&quot;,  &quot;localhost&quot;);</span>
-<span class="fc" id="L34">        DB_DIRECTORY = properties.getProperty(&quot;DB_DIRECTORY&quot;,  &quot;db&quot;);</span>
-<span class="fc" id="L35">        STATIC_FILES_DIRECTORY = properties.getProperty(&quot;STATIC_FILES_DIRECTORY&quot;,  &quot;static&quot;);</span>
-<span class="fc" id="L36">        LOG_LEVELS = convertLoggingStringsToEnums(getProp(&quot;LOG_LEVELS&quot;, &quot;DEBUG,TRACE,ASYNC_ERROR,AUDIT&quot;));</span>
-<span class="fc" id="L37">        USE_VIRTUAL = getProp(&quot;USE_VIRTUAL&quot;, false);</span>
-<span class="fc" id="L38">        KEYSTORE_PATH = properties.getProperty(&quot;KEYSTORE_PATH&quot;,  &quot;&quot;);</span>
-<span class="fc" id="L39">        KEYSTORE_PASSWORD = properties.getProperty(&quot;KEYSTORE_PASSWORD&quot;,  &quot;&quot;);</span>
-<span class="fc" id="L40">        REDIRECT_TO_SECURE = getProp(&quot;REDIRECT_TO_SECURE&quot;, false);</span>
-<span class="fc" id="L41">        MAX_READ_SIZE_BYTES = getProp(&quot;MAX_READ_SIZE_BYTES&quot;,  10 * 1024 * 1024);</span>
-<span class="fc" id="L42">        MAX_READ_LINE_SIZE_BYTES = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 1024);</span>
-<span class="fc" id="L43">        MAX_QUERY_STRING_KEYS_COUNT = getProp(&quot;MAX_QUERY_STRING_KEYS_COUNT&quot;, 20);</span>
-<span class="fc" id="L44">        MOST_COOKIES_WELL_LOOK_THROUGH = getProp(&quot;MOST_COOKIES_WELL_LOOK_THROUGH&quot;, 5);</span>
-<span class="fc" id="L45">        MAX_HEADERS_COUNT = getProp(&quot;MAX_HEADERS_COUNT&quot;, 70);</span>
-<span class="fc" id="L46">        MAX_TOKENIZER_PARTITIONS = getProp(&quot;MAX_TOKENIZER_PARTITIONS&quot;, 1000);</span>
-<span class="fc" id="L47">        SOCKET_TIMEOUT_MILLIS = getProp(&quot;SOCKET_TIMEOUT_MILLIS&quot;, 7 * 1000);</span>
-<span class="fc" id="L48">        KEEP_ALIVE_TIMEOUT_SECONDS = getProp(&quot;KEEP_ALIVE_TIMEOUT_SECONDS&quot;, 3);</span>
-<span class="fc" id="L49">        VULN_SEEKING_JAIL_DURATION = getProp(&quot;VULN_SEEKING_JAIL_DURATION&quot;, 10 * 1000);</span>
-<span class="fc" id="L50">        IS_THE_BRIG_ENABLED = getProp(&quot;IS_THE_BRIG_ENABLED&quot;, false);</span>
-<span class="fc" id="L51">        SUSPICIOUS_ERRORS = getProp(&quot;SUSPICIOUS_ERRORS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L52">        SUSPICIOUS_PATHS = getProp(&quot;SUSPICIOUS_PATHS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L53">        START_TIME = System.currentTimeMillis();</span>
-<span class="fc" id="L54">        EXTRA_MIME_MAPPINGS = getProp(&quot;EXTRA_MIME_MAPPINGS&quot;, &quot;&quot;);</span>
-<span class="fc" id="L55">        STATIC_FILE_CACHE_TIME = getProp(&quot;STATIC_FILE_CACHE_TIME&quot;, 60 * 5);</span>
-<span class="fc" id="L56">        USE_CACHE_FOR_STATIC_FILES = getProp(&quot;USE_CACHE_FOR_STATIC_FILES&quot;, true);</span>
-<span class="fc" id="L57">        MAX_ELEMENTS_LRU_CACHE_STATIC_FILES = getProp(&quot;MAX_ELEMENTS_LRU_CACHE_STATIC_FILES&quot;, 1000);</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L24">        serverPort = getProp(&quot;SERVER_PORT&quot;,  8080);</span>
+<span class="fc" id="L25">        secureServerPort = getProp(&quot;SSL_SERVER_PORT&quot;,  8443);</span>
+<span class="fc" id="L26">        hostName = properties.getProperty(&quot;HOST_NAME&quot;,  &quot;localhost&quot;);</span>
+<span class="fc" id="L27">        dbDirectory = properties.getProperty(&quot;DB_DIRECTORY&quot;,  &quot;db&quot;);</span>
+<span class="fc" id="L28">        staticFilesDirectory = properties.getProperty(&quot;STATIC_FILES_DIRECTORY&quot;,  &quot;static&quot;);</span>
+<span class="fc" id="L29">        logLevels = convertLoggingStringsToEnums(getProp(&quot;LOG_LEVELS&quot;, &quot;DEBUG,TRACE,ASYNC_ERROR,AUDIT&quot;));</span>
+<span class="fc" id="L30">        useVirtual = getProp(&quot;USE_VIRTUAL&quot;, false);</span>
+<span class="fc" id="L31">        keystorePath = properties.getProperty(&quot;KEYSTORE_PATH&quot;,  &quot;&quot;);</span>
+<span class="fc" id="L32">        keystorePassword = properties.getProperty(&quot;KEYSTORE_PASSWORD&quot;,  &quot;&quot;);</span>
+<span class="fc" id="L33">        redirectToSecure = getProp(&quot;REDIRECT_TO_SECURE&quot;, false);</span>
+<span class="fc" id="L34">        maxReadSizeBytes = getProp(&quot;MAX_READ_SIZE_BYTES&quot;,  10 * 1024 * 1024);</span>
+<span class="fc" id="L35">        maxReadLineSizeBytes = getProp(&quot;MAX_READ_LINE_SIZE_BYTES&quot;, 1024);</span>
+<span class="fc" id="L36">        maxQueryStringKeysCount = getProp(&quot;MAX_QUERY_STRING_KEYS_COUNT&quot;, 20);</span>
+<span class="fc" id="L37">        mostCookiesWellLookThrough = getProp(&quot;MOST_COOKIES_WELL_LOOK_THROUGH&quot;, 5);</span>
+<span class="fc" id="L38">        maxHeadersCount = getProp(&quot;MAX_HEADERS_COUNT&quot;, 70);</span>
+<span class="fc" id="L39">        maxTokenizerPartitions = getProp(&quot;MAX_TOKENIZER_PARTITIONS&quot;, 1000);</span>
+<span class="fc" id="L40">        socketTimeoutMillis = getProp(&quot;SOCKET_TIMEOUT_MILLIS&quot;, 7 * 1000);</span>
+<span class="fc" id="L41">        keepAliveTimeoutSeconds = getProp(&quot;KEEP_ALIVE_TIMEOUT_SECONDS&quot;, 3);</span>
+<span class="fc" id="L42">        vulnSeekingJailDuration = getProp(&quot;VULN_SEEKING_JAIL_DURATION&quot;, 10 * 1000);</span>
+<span class="fc" id="L43">        isTheBrigEnabled = getProp(&quot;IS_THE_BRIG_ENABLED&quot;, false);</span>
+<span class="fc" id="L44">        suspiciousErrors = getProp(&quot;SUSPICIOUS_ERRORS&quot;, &quot;&quot;);</span>
+<span class="fc" id="L45">        suspiciousPaths = getProp(&quot;SUSPICIOUS_PATHS&quot;, &quot;&quot;);</span>
+<span class="fc" id="L46">        startTime = System.currentTimeMillis();</span>
+<span class="fc" id="L47">        extraMimeMappings = getProp(&quot;EXTRA_MIME_MAPPINGS&quot;, &quot;&quot;);</span>
+<span class="fc" id="L48">        staticFileCacheTime = getProp(&quot;STATIC_FILE_CACHE_TIME&quot;, 60 * 5);</span>
+<span class="fc" id="L49">        useCacheForStaticFiles = getProp(&quot;USE_CACHE_FOR_STATIC_FILES&quot;, true);</span>
+<span class="fc" id="L50">        maxElementsLruCacheStaticFiles = getProp(&quot;MAX_ELEMENTS_LRU_CACHE_STATIC_FILES&quot;, 1000);</span>
+<span class="fc" id="L51">    }</span>
 
     /**
      * The port for our regular, non-encrypted server
      */
-    public final int SERVER_PORT;
+    public final int serverPort;
 
     /**
      * The port for our encrypted server
      */
-    public final int SECURE_SERVER_PORT;
+    public final int secureServerPort;
 
     /**
      * This is returned as the &quot;host:&quot; attribute in an HTTP request
      */
-    public final String HOST_NAME;
+    public final String hostName;
 
     /**
      * This is the root directory of our database
      */
-    public final String DB_DIRECTORY;
+    public final String dbDirectory;
 
     /**
      * Root directory of static files
      */
-    public final String STATIC_FILES_DIRECTORY;
+    public final String staticFilesDirectory;
 
     /**
      * The default logging levels
      */
-    public final List&lt;LoggingLevel&gt; LOG_LEVELS;
+    public final List&lt;LoggingLevel&gt; logLevels;
 
     /**
      * If true, use the new Java &quot;Project Loom&quot; virtual threads instead of
      * regular threads.
      */
-    public final boolean USE_VIRTUAL;
+    public final boolean useVirtual;
 
     /**
      * The path to the keystore, required for encrypted TLS communication
      */
-    public final String KEYSTORE_PATH;
+    public final String keystorePath;
 
     /**
      * The password of the keystore, used for TLS
      */
-    public final String KEYSTORE_PASSWORD;
+    public final String keystorePassword;
 
 
     /**
@@ -109,12 +102,12 @@ public final class Constants {
      * redirect to the secure schema.  This is mostly used in production
      * environments and is thus defaulted to false.
      */
-    public final boolean REDIRECT_TO_SECURE;
+    public final boolean redirectToSecure;
 
     /**
      * this is the most bytes we'll read from a socket
      */
-    public final int MAX_READ_SIZE_BYTES;
+    public final int maxReadSizeBytes;
 
     /**
      * The most bytes we'll read as a single line.
@@ -122,69 +115,69 @@ public final class Constants {
      * the cookies being sent, like on localhost, could
      * be in excess of 500 bytes.
      */
-    public final int MAX_READ_LINE_SIZE_BYTES;
+    public final int maxReadLineSizeBytes;
 
     /**
      * A user can only provide up to this many query string keys
      */
-    public final int MAX_QUERY_STRING_KEYS_COUNT;
+    public final int maxQueryStringKeysCount;
 
     /**
      * Totally nonsense if we find more than this many matches of cookies in the headers.
      */
-    public final int MOST_COOKIES_WELL_LOOK_THROUGH;
+    public final int mostCookiesWellLookThrough;
 
     /**
      * We'll only read this many headers off a message.  Anything more is bonkers / hacking.
      */
-    public final int MAX_HEADERS_COUNT;
+    public final int maxHeadersCount;
 
     /**
      * We have a tokenizer that can split a string into partitions.  When
      * would we ever need it to split this many?
      */
-    public final int MAX_TOKENIZER_PARTITIONS;
+    public final int maxTokenizerPartitions;
 
     /**
      * How long will we let a socket live before we crash it closed?
      * See {@link java.net.Socket#setSoTimeout(int)}
      */
-    public final int SOCKET_TIMEOUT_MILLIS;
+    public final int socketTimeoutMillis;
 
     /**
      * We include this value in the keep-alive header. It lets the
      * browser know how long to hold the socket open, in seconds,
      * before it decides we aren't sending anything else and closes it.
      */
-    public final int KEEP_ALIVE_TIMEOUT_SECONDS;
+    public final int keepAliveTimeoutSeconds;
 
     /**
      * If a client does something that we consider an indicator for attacking, put them in
      * jail for a longer duration.
      */
-    public final int VULN_SEEKING_JAIL_DURATION;
+    public final int vulnSeekingJailDuration;
 
     /**
      * TheBrig is what puts client ip's in jail, if we feel they are attacking us.
      * If this is disabled, that functionality is removed.
      */
-    public final boolean IS_THE_BRIG_ENABLED;
+    public final boolean isTheBrigEnabled;
 
     /**
      * These are a list of error messages that often indicate unusual behavior, maybe an attacker
      */
-    public final List&lt;String&gt; SUSPICIOUS_ERRORS;
+    public final List&lt;String&gt; suspiciousErrors;
 
     /**
      * These are a list of paths that often indicate unusual behavior, maybe an attacker
      */
-    public final List&lt;String&gt; SUSPICIOUS_PATHS;
+    public final List&lt;String&gt; suspiciousPaths;
 
     /**
      * This value is the result of running System.currentTimeMillis() when this
      * class gets instantiated, and that is done at the very beginning.
      */
-    public final long START_TIME;
+    public final long startTime;
 
     /**
      * These are key-value pairs for mappings between a file
@@ -193,10 +186,10 @@ public final class Constants {
      *     These are read by our system in the StaticFilesCache
      *     as key-1,value-1,key-2,value-2,... and so on.
      * &lt;/p&gt;
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+     * @see &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types&quot;&gt;Basics of HTTP&lt;/a&gt;
      *
      */
-    public final List&lt;String&gt; EXTRA_MIME_MAPPINGS;
+    public final List&lt;String&gt; extraMimeMappings;
 
     /**
      * Length of time, in seconds, for static files to be cached,
@@ -205,7 +198,7 @@ public final class Constants {
      *     {@code Cache-Control: max-age=300}
      * &lt;/pre&gt;
      */
-    public final long STATIC_FILE_CACHE_TIME;
+    public final long staticFileCacheTime;
 
     /**
      * Whether we will use caching for the static files.
@@ -220,28 +213,28 @@ public final class Constants {
      *     not have caching enabled - it can confuse.
      * &lt;/p&gt;
      */
-    public final boolean USE_CACHE_FOR_STATIC_FILES;
+    public final boolean useCacheForStaticFiles;
 
     /**
      * This constant controls the maximum number of elements for the {@link com.renomad.minum.utils.LRUCache}
      * we create for use by {@link com.renomad.minum.utils.FileUtils}. As files are read
      * by FileUtil's methods, they will be stored in this cache, to avoid reading from
      * disk.  However, caching can certainly complicate things, so if you would prefer
-     * not to store these values in a cache, set {@link USE_CACHE_FOR_STATIC_FILES} to false.
+     * not to store these values in a cache, set {@link #useCacheForStaticFiles} to false.
      * &lt;p&gt;
      *     The unit here is the number of elements to store in the cache.  Be aware: elements
      *     can be of any size, so two caches each having a max size of 1000 elements could be
      *     drastically different sizes.
      * &lt;/p&gt;
      */
-    public final int MAX_ELEMENTS_LRU_CACHE_STATIC_FILES;
+    public final int maxElementsLruCacheStaticFiles;
 
     /**
      * A helper method to remove some redundant boilerplate code for grabbing
      * configuration values from minum.config
      */
     private int getProp(String propName, int propDefault) {
-<span class="fc" id="L244">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L237">        return Integer.parseInt(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -249,7 +242,7 @@ public final class Constants {
      * configuration values from minum.config
      */
     private boolean getProp(String propName, boolean propDefault) {
-<span class="fc" id="L252">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
+<span class="fc" id="L245">        return Boolean.parseBoolean(properties.getProperty(propName, String.valueOf(propDefault)));</span>
     }
 
     /**
@@ -257,8 +250,8 @@ public final class Constants {
      * configuration values from minum.config
      */
     private List&lt;String&gt; getProp(String propName, String propDefault) {
-<span class="fc" id="L260">        String propValue = properties.getProperty(propName);</span>
-<span class="fc" id="L261">        return extractList(propValue, propDefault);</span>
+<span class="fc" id="L253">        String propValue = properties.getProperty(propName);</span>
+<span class="fc" id="L254">        return extractList(propValue, propDefault);</span>
     }
 
     /**
@@ -269,32 +262,34 @@ public final class Constants {
      * @param propDefault the default value to use, if the propValue is null
      */
     static List&lt;String&gt; extractList(String propValue, String propDefault) {
-<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (propValue == null) {</span>
-<span class="fc bfc" id="L273" title="All 2 branches covered.">            if (propDefault.isBlank()) {</span>
-<span class="fc" id="L274">                return List.of();</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">        if (propValue == null) {</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">            if (propDefault.isBlank()) {</span>
+<span class="fc" id="L267">                return List.of();</span>
             } else {
-<span class="fc" id="L276">                return Arrays.asList(propDefault.trim().split(&quot;\\s*,\\s*&quot;));</span>
+<span class="fc" id="L269">                return Arrays.asList(propDefault.trim().split(&quot;\\s*,\\s*&quot;));</span>
             }
         } else {
-<span class="fc" id="L279">            return Arrays.asList(propValue.trim().split(&quot;\\s*,\\s*&quot;));</span>
+<span class="fc" id="L272">            return Arrays.asList(propValue.trim().split(&quot;\\s*,\\s*&quot;));</span>
         }
     }
 
+    public static Properties getConfiguredProperties() {
+<span class="fc" id="L277">        return getConfiguredProperties(&quot;minum.config&quot;);</span>
+    }
 
     /**
-     * Reads property files from minum.config
+     * Reads properties from minum.config
      */
-    public static Properties getConfiguredProperties() {
-<span class="fc" id="L288">        var props = new Properties();</span>
-<span class="fc" id="L289">        String fileName = &quot;minum.config&quot;;</span>
-<span class="fc" id="L290">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
-<span class="fc" id="L291">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
+    static Properties getConfiguredProperties(String fileName) {
+<span class="fc" id="L284">        var props = new Properties();</span>
+<span class="fc" id="L285">        try (FileInputStream fis = new FileInputStream(fileName)) {</span>
+<span class="fc" id="L286">            System.out.println(TimeUtils.getTimestampIsoInstant() +</span>
                     &quot; found properties file at ./minum.config.  Loading properties&quot;);
-<span class="fc" id="L293">            props.load(fis);</span>
-<span class="nc" id="L294">        } catch (Exception ex) {</span>
-<span class="nc" id="L295">            System.out.println(ConfigErrorMessage.getConfigErrorMessage());</span>
-<span class="fc" id="L296">        }</span>
-<span class="fc" id="L297">        return props;</span>
+<span class="fc" id="L288">            props.load(fis);</span>
+<span class="fc" id="L289">        } catch (Exception ex) {</span>
+<span class="fc" id="L290">            System.out.println(CONFIG_ERROR_MESSAGE);</span>
+<span class="fc" id="L291">        }</span>
+<span class="fc" id="L292">        return props;</span>
     }
 
 
@@ -303,15 +298,45 @@ public final class Constants {
      * convert it to a list of enums.  Log levels are enumerated
      * in {@link LoggingLevel}.
      */
-    private List&lt;LoggingLevel&gt; convertLoggingStringsToEnums(List&lt;String&gt; logLevels) {
-<span class="fc" id="L307">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
-<span class="fc" id="L308">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L309" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
-<span class="pc bpc" id="L310" title="1 of 2 branches missed.">            if (logLevelStrings.contains(t.name())) {</span>
-<span class="fc" id="L311">                enabledLoggingLevels.add(t);</span>
+    static List&lt;LoggingLevel&gt; convertLoggingStringsToEnums(List&lt;String&gt; logLevels) {
+<span class="fc" id="L302">        List&lt;String&gt; logLevelStrings = logLevels.stream().map(String::toUpperCase).toList();</span>
+<span class="fc" id="L303">        List&lt;LoggingLevel&gt; enabledLoggingLevels = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">        for (LoggingLevel t : LoggingLevel.values()) {</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">            if (logLevelStrings.contains(t.name())) {</span>
+<span class="fc" id="L306">                enabledLoggingLevels.add(t);</span>
             }
         }
-<span class="fc" id="L314">        return enabledLoggingLevels;</span>
+<span class="fc" id="L309">        return enabledLoggingLevels;</span>
+    }
+
+    private static final String CONFIG_ERROR_MESSAGE = &quot;&quot;&quot;
+                
+                
+                
+                ----------------------------------------------------------------
+                ----------------- System Configuration Missing -----------------
+                ----------------------------------------------------------------
+                
+                No properties file found at ./minum.config
+                
+                Continuing, using defaults.  See source code for Minum for an
+                example minum.config, which will allow you to customize behavior.
+                
+                ----------------------------------------------------------------
+                ----------------------------------------------------------------
+                &quot;&quot;&quot;;
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L331" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L332" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L333">        Constants constants = (Constants) o;</span>
+<span class="fc bfc" id="L334" title="All 56 branches covered.">        return serverPort == constants.serverPort &amp;&amp; secureServerPort == constants.secureServerPort &amp;&amp; useVirtual == constants.useVirtual &amp;&amp; redirectToSecure == constants.redirectToSecure &amp;&amp; maxReadSizeBytes == constants.maxReadSizeBytes &amp;&amp; maxReadLineSizeBytes == constants.maxReadLineSizeBytes &amp;&amp; maxQueryStringKeysCount == constants.maxQueryStringKeysCount &amp;&amp; mostCookiesWellLookThrough == constants.mostCookiesWellLookThrough &amp;&amp; maxHeadersCount == constants.maxHeadersCount &amp;&amp; maxTokenizerPartitions == constants.maxTokenizerPartitions &amp;&amp; socketTimeoutMillis == constants.socketTimeoutMillis &amp;&amp; keepAliveTimeoutSeconds == constants.keepAliveTimeoutSeconds &amp;&amp; vulnSeekingJailDuration == constants.vulnSeekingJailDuration &amp;&amp; isTheBrigEnabled == constants.isTheBrigEnabled &amp;&amp; startTime == constants.startTime &amp;&amp; staticFileCacheTime == constants.staticFileCacheTime &amp;&amp; useCacheForStaticFiles == constants.useCacheForStaticFiles &amp;&amp; maxElementsLruCacheStaticFiles == constants.maxElementsLruCacheStaticFiles &amp;&amp; Objects.equals(properties, constants.properties) &amp;&amp; Objects.equals(hostName, constants.hostName) &amp;&amp; Objects.equals(dbDirectory, constants.dbDirectory) &amp;&amp; Objects.equals(staticFilesDirectory, constants.staticFilesDirectory) &amp;&amp; Objects.equals(logLevels, constants.logLevels) &amp;&amp; Objects.equals(keystorePath, constants.keystorePath) &amp;&amp; Objects.equals(keystorePassword, constants.keystorePassword) &amp;&amp; Objects.equals(suspiciousErrors, constants.suspiciousErrors) &amp;&amp; Objects.equals(suspiciousPaths, constants.suspiciousPaths) &amp;&amp; Objects.equals(extraMimeMappings, constants.extraMimeMappings);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L339">        return Objects.hash(properties, serverPort, secureServerPort, hostName, dbDirectory, staticFilesDirectory, logLevels, useVirtual, keystorePath, keystorePassword, redirectToSecure, maxReadSizeBytes, maxReadLineSizeBytes, maxQueryStringKeysCount, mostCookiesWellLookThrough, maxHeadersCount, maxTokenizerPartitions, socketTimeoutMillis, keepAliveTimeoutSeconds, vulnSeekingJailDuration, isTheBrigEnabled, suspiciousErrors, suspiciousPaths, startTime, extraMimeMappings, staticFileCacheTime, useCacheForStaticFiles, maxElementsLruCacheStaticFiles);</span>
     }
 }
 

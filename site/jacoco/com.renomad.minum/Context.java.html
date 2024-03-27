@@ -3,15 +3,15 @@
 import com.renomad.minum.database.Db;
 import com.renomad.minum.database.DbData;
 import com.renomad.minum.logging.ILogger;
-import com.renomad.minum.utils.ActionQueue;
+import com.renomad.minum.utils.AbstractActionQueue;
 import com.renomad.minum.utils.FileUtils;
 import com.renomad.minum.web.FullSystem;
-import com.renomad.minum.web.InputStreamUtils;
+import com.renomad.minum.web.IInputStreamUtils;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
@@ -30,78 +30,79 @@ import java.util.concurrent.ExecutorService;
  */
 public final class Context {
 
-    private InputStreamUtils inputStreamUtils;
+<span class="fc" id="L33">    public static final Context EMPTY = new Context();</span>
+    private IInputStreamUtils inputStreamUtils;
     private FileUtils fileUtils;
     private ILogger logger;
     private ExecutorService executorService;
     private Constants constants;
     private FullSystem fullSystem;
-    private final List&lt;ActionQueue&gt; actionQueueList;
+    private final Queue&lt;AbstractActionQueue&gt; aqQueue;
 
     /**
      * In order to avoid statics or singletons allow certain objects to be widely
      * available, we'll store them in this class.
      */
-<span class="fc" id="L45">    public Context() {</span>
-<span class="fc" id="L46">        this.actionQueueList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L46">    public Context() {</span>
+<span class="fc" id="L47">        this.aqQueue = new LinkedBlockingQueue&lt;&gt;();</span>
+<span class="fc" id="L48">    }</span>
 
-    public void setInputStreamUtils(InputStreamUtils inputStreamUtils) {
-<span class="fc" id="L50">        this.inputStreamUtils = inputStreamUtils;</span>
-<span class="fc" id="L51">    }</span>
+    public void setInputStreamUtils(IInputStreamUtils inputStreamUtils) {
+<span class="fc" id="L51">        this.inputStreamUtils = inputStreamUtils;</span>
+<span class="fc" id="L52">    }</span>
 
-    public InputStreamUtils getInputStreamUtils() {
-<span class="fc" id="L54">        return inputStreamUtils;</span>
+    public IInputStreamUtils getInputStreamUtils() {
+<span class="fc" id="L55">        return inputStreamUtils;</span>
     }
 
     public FileUtils getFileUtils() {
-<span class="fc" id="L58">        return fileUtils;</span>
+<span class="fc" id="L59">        return fileUtils;</span>
     }
 
     public void setFileUtils(FileUtils fileUtils) {
-<span class="fc" id="L62">        this.fileUtils = fileUtils;</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L63">        this.fileUtils = fileUtils;</span>
+<span class="fc" id="L64">    }</span>
 
     public void setLogger(ILogger logger) {
-<span class="fc" id="L66">        this.logger = logger;</span>
-<span class="fc" id="L67">    }</span>
+<span class="fc" id="L67">        this.logger = logger;</span>
+<span class="fc" id="L68">    }</span>
 
     public ILogger getLogger() {
-<span class="fc" id="L70">        return logger;</span>
+<span class="fc" id="L71">        return logger;</span>
     }
 
     public void setExecutorService(ExecutorService executorService) {
-<span class="fc" id="L74">        this.executorService = executorService;</span>
-<span class="fc" id="L75">    }</span>
+<span class="fc" id="L75">        this.executorService = executorService;</span>
+<span class="fc" id="L76">    }</span>
 
     public ExecutorService getExecutorService() {
-<span class="fc" id="L78">        return executorService;</span>
+<span class="fc" id="L79">        return executorService;</span>
     }
 
     public void setConstants(Constants constants) {
-<span class="fc" id="L82">        this.constants = constants;</span>
-<span class="fc" id="L83">    }</span>
+<span class="fc" id="L83">        this.constants = constants;</span>
+<span class="fc" id="L84">    }</span>
     public Constants getConstants() {
-<span class="fc" id="L85">        return constants;</span>
+<span class="fc" id="L86">        return constants;</span>
     }
 
     public void setFullSystem(FullSystem fullSystem) {
-<span class="fc" id="L89">        this.fullSystem = fullSystem;</span>
-<span class="fc" id="L90">    }</span>
+<span class="fc" id="L90">        this.fullSystem = fullSystem;</span>
+<span class="fc" id="L91">    }</span>
 
     public FullSystem getFullSystem() {
-<span class="fc" id="L93">        return fullSystem;</span>
+<span class="fc" id="L94">        return fullSystem;</span>
     }
 
-    public List&lt;ActionQueue&gt; getActionQueueList() {
-<span class="fc" id="L97">        return actionQueueList;</span>
+    public Queue&lt;AbstractActionQueue&gt; getAqQueue() {
+<span class="fc" id="L98">            return aqQueue;</span>
     }
 
     /**
      * This is a helper method to instantiate a {@link Db} class,
      * avoiding the need for a user to provide the root database
      * directory and the context.
-     *
+     * &lt;p&gt;
      * Since this is a generic method, a bit of care is required when
      * calling.  Try to use a pattern like this:
      * &lt;pre&gt;
@@ -116,7 +117,7 @@ public final class Context {
      *                 to deserialize the data when reading.
      */
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
-<span class="fc" id="L119">        return new Db&lt;&gt;(Path.of(constants.DB_DIRECTORY, name), this, instance);</span>
+<span class="fc" id="L120">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

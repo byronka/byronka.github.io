@@ -15,15 +15,14 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
 <span class="fc" id="L15">public record TemplateSection(String key, String subString) {</span>
 
     public String render(Map&lt;String, String&gt; myMap) {
-<span class="pc bpc" id="L18" title="1 of 4 branches missed.">        mustBeTrue(subString != null || key != null, &quot;Either the key or substring must exist&quot;);</span>
+<span class="fc bfc" id="L18" title="All 4 branches covered.">        mustBeTrue(subString != null || key != null, &quot;Either the key or substring must exist&quot;);</span>
 <span class="fc bfc" id="L19" title="All 2 branches covered.">        if (subString != null) {</span>
-<span class="pc bpc" id="L20" title="1 of 2 branches missed.">            mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">            mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
 <span class="fc" id="L21">            return subString;</span>
         } else {
-<span class="pc bpc" id="L23" title="1 of 2 branches missed.">            mustBeTrue(subString == null, &quot;If this object has a key, then it must not have a substring&quot;);</span>
-<span class="fc" id="L24">            var value = myMap.get(key);</span>
-<span class="fc bfc" id="L25" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
-<span class="fc" id="L26">            return value;</span>
+<span class="fc" id="L23">            var value = myMap.get(key);</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
+<span class="fc" id="L25">            return value;</span>
         }
     }
 
