@@ -2,7 +2,6 @@
 
 import com.renomad.minum.exceptions.ForbiddenUseException;
 import com.renomad.minum.security.Inmate;
-import com.renomad.minum.security.TheBrig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,15 +28,15 @@ public final class SerializationUtils {
      * &lt;/p&gt;
      */
     public static String serializeHelper(Object... values) {
-<span class="fc" id="L32">        StringBuilder sb = new StringBuilder();</span>
-<span class="fc bfc" id="L33" title="All 2 branches covered.">        for (int i = 0; i &lt; values.length-1; i++) {</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">            String value = values[i] == null ? null : values[i].toString();</span>
-<span class="fc" id="L35">            sb.append(StringUtils.encode(value)).append(&quot;|&quot;);</span>
+<span class="fc" id="L31">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        for (int i = 0; i &lt; values.length-1; i++) {</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">            String value = values[i] == null ? null : values[i].toString();</span>
+<span class="fc" id="L34">            sb.append(StringUtils.encode(value)).append(&quot;|&quot;);</span>
         }
         // append the last value with no pipe symbol afterwards
-<span class="fc bfc" id="L38" title="All 2 branches covered.">        String lastValue = values[values.length - 1] == null ? null : values[values.length - 1].toString();</span>
-<span class="fc" id="L39">        sb.append(StringUtils.encode(lastValue));</span>
-<span class="fc" id="L40">        return sb.toString();</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        String lastValue = values[values.length - 1] == null ? null : values[values.length - 1].toString();</span>
+<span class="fc" id="L38">        sb.append(StringUtils.encode(lastValue));</span>
+<span class="fc" id="L39">        return sb.toString();</span>
     }
 
     /**
@@ -52,7 +51,7 @@ public final class SerializationUtils {
      * @param serializedText the string we are splitting into tokens
      */
     public static List&lt;String&gt; deserializeHelper(String serializedText) {
-<span class="fc" id="L55">        return tokenizer(serializedText, '|').stream().map(StringUtils::decode).toList();</span>
+<span class="fc" id="L54">        return tokenizer(serializedText, '|').stream().map(StringUtils::decode).toList();</span>
     }
 
     /**
@@ -65,29 +64,29 @@ public final class SerializationUtils {
      * @return a list of strings.  If the delimiter is not found, we will just return the whole string
      */
     public static List&lt;String&gt; tokenizer(String serializedText, char delimiter, int maxTokens) {
-<span class="fc" id="L68">        final var resultList = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L69">        var currentPlace = 0;</span>
-<span class="fc" id="L70">        for(int i = 0; ; i++) {</span>
-<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (i &gt;=  maxTokens) {</span>
-<span class="fc" id="L72">                throw new ForbiddenUseException(&quot;too many partitions in the tokenizer.  Current max: &quot; + maxTokens);</span>
+<span class="fc" id="L67">        final var resultList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L68">        var currentPlace = 0;</span>
+<span class="fc" id="L69">        for(int i = 0; ; i++) {</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if (i &gt;=  maxTokens) {</span>
+<span class="fc" id="L71">                throw new ForbiddenUseException(&quot;too many partitions in the tokenizer.  Current max: &quot; + maxTokens);</span>
             }
-<span class="fc" id="L74">            final var nextDelimiterIndex = serializedText.indexOf(delimiter, currentPlace);</span>
-<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (nextDelimiterIndex == -1) {</span>
+<span class="fc" id="L73">            final var nextDelimiterIndex = serializedText.indexOf(delimiter, currentPlace);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            if (nextDelimiterIndex == -1) {</span>
                 // if we don't see any delimiters ahead, grab the rest of the text from our current place
-<span class="fc" id="L77">                resultList.add(serializedText.substring(currentPlace));</span>
-<span class="fc" id="L78">                break;</span>
+<span class="fc" id="L76">                resultList.add(serializedText.substring(currentPlace));</span>
+<span class="fc" id="L77">                break;</span>
             }
-<span class="fc" id="L80">            resultList.add(serializedText.substring(currentPlace, nextDelimiterIndex));</span>
-<span class="fc" id="L81">            currentPlace = nextDelimiterIndex + 1;</span>
+<span class="fc" id="L79">            resultList.add(serializedText.substring(currentPlace, nextDelimiterIndex));</span>
+<span class="fc" id="L80">            currentPlace = nextDelimiterIndex + 1;</span>
         }
 
-<span class="fc" id="L84">        return resultList;</span>
+<span class="fc" id="L83">        return resultList;</span>
     }
 
     public static List&lt;String&gt; tokenizer(String serializedText, char delimiter) {
         // specify a reasonable maximum if given no value
-<span class="fc" id="L89">        int maxTokens = 200;</span>
-<span class="fc" id="L90">        return tokenizer(serializedText, delimiter, maxTokens);</span>
+<span class="fc" id="L88">        int maxTokens = 200;</span>
+<span class="fc" id="L89">        return tokenizer(serializedText, delimiter, maxTokens);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

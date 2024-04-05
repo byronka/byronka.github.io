@@ -35,94 +35,96 @@ public final class InputStreamUtils implements IInputStreamUtils {
 <span class="fc" id="L35">                    throw new ForbiddenUseException(&quot;client sent more bytes than allowed.  Current max: &quot; + constants.maxReadSizeBytes);</span>
                 }
 <span class="fc" id="L37">                int a = inputStream.read();</span>
-<span class="fc bfc" id="L38" title="All 2 branches covered.">                if (a == -1) return byteListToArray(result);</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">                if (a == -1) {</span>
+<span class="fc" id="L39">                    return byteListToArray(result);</span>
+                }
 
-<span class="fc" id="L40">                result.add((byte) a);</span>
+<span class="fc" id="L42">                result.add((byte) a);</span>
             }
-<span class="fc" id="L42">        } catch (IOException ex) {</span>
-<span class="fc" id="L43">            throw new UtilsException(ex);</span>
+<span class="fc" id="L44">        } catch (IOException ex) {</span>
+<span class="fc" id="L45">            throw new UtilsException(ex);</span>
         }
     }
 
     @Override
     public byte[] readChunkedEncoding(InputStream inputStream) {
-<span class="fc" id="L49">        final var result = new ByteArrayOutputStream( );</span>
+<span class="fc" id="L51">        final var result = new ByteArrayOutputStream( );</span>
         try {
             while (true) {
-<span class="fc" id="L52">                String countToReadString = readLine(inputStream);</span>
-<span class="fc bfc" id="L53" title="All 2 branches covered.">                if (countToReadString.isEmpty()) {</span>
-<span class="fc" id="L54">                    return new byte[0];</span>
+<span class="fc" id="L54">                String countToReadString = readLine(inputStream);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">                if (countToReadString.isEmpty()) {</span>
+<span class="fc" id="L56">                    return new byte[0];</span>
                 }
-<span class="fc" id="L56">                mustNotBeNull(countToReadString);</span>
-<span class="fc" id="L57">                int countToRead = Integer.parseInt(countToReadString, 16);</span>
+<span class="fc" id="L58">                mustNotBeNull(countToReadString);</span>
+<span class="fc" id="L59">                int countToRead = Integer.parseInt(countToReadString, 16);</span>
 
-<span class="fc" id="L59">                result.write(read(countToRead, inputStream));</span>
+<span class="fc" id="L61">                result.write(read(countToRead, inputStream));</span>
 
-<span class="fc" id="L61">                readLine(inputStream);</span>
-<span class="fc bfc" id="L62" title="All 2 branches covered.">                if (countToRead == 0) {</span>
-<span class="fc" id="L63">                    readLine(inputStream);</span>
-<span class="fc" id="L64">                    break;</span>
+<span class="fc" id="L63">                readLine(inputStream);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                if (countToRead == 0) {</span>
+<span class="fc" id="L65">                    readLine(inputStream);</span>
+<span class="fc" id="L66">                    break;</span>
                 }
 
-<span class="fc" id="L67">            }</span>
-<span class="fc" id="L68">        } catch (IOException ex) {</span>
-<span class="fc" id="L69">            throw new UtilsException(ex);</span>
-<span class="fc" id="L70">        }</span>
-<span class="fc" id="L71">        return result.toByteArray();</span>
+<span class="fc" id="L69">            }</span>
+<span class="fc" id="L70">        } catch (IOException ex) {</span>
+<span class="fc" id="L71">            throw new UtilsException(ex);</span>
+<span class="fc" id="L72">        }</span>
+<span class="fc" id="L73">        return result.toByteArray();</span>
     }
 
     @Override
     public String readLine(InputStream inputStream) throws IOException  {
-<span class="fc" id="L76">        final int NEWLINE_DECIMAL = 10;</span>
-<span class="fc" id="L77">        final int CARRIAGE_RETURN_DECIMAL = 13;</span>
+<span class="fc" id="L78">        final int NEWLINE_DECIMAL = 10;</span>
+<span class="fc" id="L79">        final int CARRIAGE_RETURN_DECIMAL = 13;</span>
 
-<span class="fc" id="L79">        final var result = new ByteArrayOutputStream(constants.maxReadLineSizeBytes / 3);</span>
-<span class="fc" id="L80">        for (int i = 0;; i++) {</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (i &gt;= constants.maxReadLineSizeBytes) {</span>
-<span class="fc" id="L82">                inputStream.close();</span>
-<span class="fc" id="L83">                throw new ForbiddenUseException(&quot;client sent more bytes than allowed for a single line.  Current max: &quot; + constants.maxReadLineSizeBytes);</span>
+<span class="fc" id="L81">        final var result = new ByteArrayOutputStream(constants.maxReadLineSizeBytes / 3);</span>
+<span class="fc" id="L82">        for (int i = 0;; i++) {</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            if (i &gt;= constants.maxReadLineSizeBytes) {</span>
+<span class="fc" id="L84">                inputStream.close();</span>
+<span class="fc" id="L85">                throw new ForbiddenUseException(&quot;client sent more bytes than allowed for a single line.  Current max: &quot; + constants.maxReadLineSizeBytes);</span>
             }
-<span class="fc" id="L85">            int a = inputStream.read();</span>
-<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (a == -1) return result.toString(StandardCharsets.UTF_8);</span>
-<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) continue;</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
-<span class="fc" id="L89">            result.write(a);</span>
+<span class="fc" id="L87">            int a = inputStream.read();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (a == -1) return result.toString(StandardCharsets.UTF_8);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) continue;</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
+<span class="fc" id="L91">            result.write(a);</span>
         }
-<span class="fc" id="L91">        return result.toString(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L93">        return result.toString(StandardCharsets.UTF_8);</span>
     }
 
     @Override
     public byte[] read(int lengthToRead, InputStream inputStream) {
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (lengthToRead &gt;= constants.maxReadSizeBytes) {</span>
-<span class="fc" id="L97">            throw new ForbiddenUseException(&quot;client requested to send more bytes than allowed.  Current max: &quot; + constants.maxReadSizeBytes + &quot; asked to receive: &quot; + lengthToRead);</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (lengthToRead &gt;= constants.maxReadSizeBytes) {</span>
+<span class="fc" id="L99">            throw new ForbiddenUseException(&quot;client requested to send more bytes than allowed.  Current max: &quot; + constants.maxReadSizeBytes + &quot; asked to receive: &quot; + lengthToRead);</span>
         }
-<span class="fc" id="L99">        final int typicalBufferSize = 1024 * 8;</span>
-<span class="fc" id="L100">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
+<span class="fc" id="L101">        final int typicalBufferSize = 1024 * 8;</span>
+<span class="fc" id="L102">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
         byte[] data;
-<span class="fc" id="L102">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L104">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
         int read;
-<span class="fc" id="L104">        int totalRead = 0;</span>
+<span class="fc" id="L106">        int totalRead = 0;</span>
         try {
-<span class="fc bfc" id="L106" title="All 2 branches covered.">            while ((read = inputStream.read(buf)) &gt;= 0) {</span>
-<span class="fc" id="L107">                totalRead += read;</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">                if (totalRead &lt; lengthToRead) {</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            while ((read = inputStream.read(buf)) &gt;= 0) {</span>
+<span class="fc" id="L109">                totalRead += read;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">                if (totalRead &lt; lengthToRead) {</span>
                     // if we haven't gotten everything we wanted, write this to the output and loop again
-<span class="fc" id="L110">                    baos.write(buf, 0, read);</span>
+<span class="fc" id="L112">                    baos.write(buf, 0, read);</span>
                 } else {
-<span class="fc" id="L112">                    baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
-<span class="fc" id="L113">                    break;</span>
+<span class="fc" id="L114">                    baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
+<span class="fc" id="L115">                    break;</span>
                 }
             }
-<span class="fc" id="L116">        } catch (IOException ex) {</span>
-<span class="fc" id="L117">            throw new UtilsException(ex);</span>
-<span class="fc" id="L118">        }</span>
-<span class="fc" id="L119">        data = baos.toByteArray();</span>
+<span class="fc" id="L118">        } catch (IOException ex) {</span>
+<span class="fc" id="L119">            throw new UtilsException(ex);</span>
+<span class="fc" id="L120">        }</span>
+<span class="fc" id="L121">        data = baos.toByteArray();</span>
 
-<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (data.length != lengthToRead) {</span>
-<span class="fc" id="L122">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
-<span class="fc" id="L123">            throw new ForbiddenUseException(message);</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (data.length != lengthToRead) {</span>
+<span class="fc" id="L124">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
+<span class="fc" id="L125">            throw new ForbiddenUseException(message);</span>
         }
-<span class="fc" id="L125">        return data;</span>
+<span class="fc" id="L127">        return data;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
