@@ -118,10 +118,18 @@ import java.util.*;
 
     @Override
     public String toString() {
-<span class="fc" id="L121">        return &quot;Response{&quot; +</span>
+        String arrayString;
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (body.length &gt; 10) {</span>
+<span class="fc" id="L123">            byte[] newBytes = new byte[10];</span>
+<span class="fc" id="L124">            System.arraycopy(body, 0, newBytes, 0, 10);</span>
+<span class="fc" id="L125">            arrayString = Arrays.toString(newBytes) + &quot;...&quot;;</span>
+<span class="fc" id="L126">        } else {</span>
+<span class="fc" id="L127">            arrayString = Arrays.toString(body);</span>
+        }
+<span class="fc" id="L129">        return &quot;Response{&quot; +</span>
                 &quot;statusCode=&quot; + statusCode +
                 &quot;, extraHeaders=&quot; + extraHeaders +
-<span class="fc" id="L124">                &quot;, body=&quot; + Arrays.toString(body) +</span>
+                &quot;, body=&quot; + arrayString +
                 '}';
     }
 }

@@ -15,19 +15,21 @@ public final class MyThread {
      * wrapped so that it prints the exception's stacktrace
      * instead of letting it bubble up.
      * @param millis length of time in milliseconds.
+     * @return false if the sleep succeeded without being interrupted
      */
-    public static void sleep(long millis) {
+    public static boolean sleep(long millis) {
         try {
-<span class="fc" id="L21">            Thread.sleep(millis);</span>
-<span class="fc" id="L22">        } catch (InterruptedException e) {</span>
-<span class="fc" id="L23">            handleInterrupted(e);</span>
-<span class="fc" id="L24">        }</span>
-
-<span class="fc" id="L26">    }</span>
+<span class="fc" id="L22">            Thread.sleep(millis);</span>
+<span class="fc" id="L23">        } catch (InterruptedException e) {</span>
+<span class="fc" id="L24">            handleInterrupted(e);</span>
+<span class="fc" id="L25">            return false;</span>
+<span class="fc" id="L26">        }</span>
+<span class="fc" id="L27">        return true;</span>
+    }
 
     static void handleInterrupted(InterruptedException e) {
-<span class="fc" id="L29">        System.out.println(&quot;Interruption during MyThread.sleep: &quot; + e);</span>
-<span class="fc" id="L30">        Thread.currentThread().interrupt();</span>
-<span class="fc" id="L31">    }</span>
+<span class="fc" id="L31">        System.out.println(&quot;Interruption during MyThread.sleep: &quot; + e);</span>
+<span class="fc" id="L32">        Thread.currentThread().interrupt();</span>
+<span class="fc" id="L33">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

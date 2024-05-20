@@ -126,13 +126,21 @@
 <a class="jxr_linenumber" name="L118" href="#L118">118</a> 
 <a class="jxr_linenumber" name="L119" href="#L119">119</a>     @Override
 <a class="jxr_linenumber" name="L120" href="#L120">120</a>     <strong class="jxr_keyword">public</strong> String toString() {
-<a class="jxr_linenumber" name="L121" href="#L121">121</a>         <strong class="jxr_keyword">return</strong> <span class="jxr_string">"Response{"</span> +
-<a class="jxr_linenumber" name="L122" href="#L122">122</a>                 <span class="jxr_string">"statusCode="</span> + statusCode +
-<a class="jxr_linenumber" name="L123" href="#L123">123</a>                 <span class="jxr_string">", extraHeaders="</span> + extraHeaders +
-<a class="jxr_linenumber" name="L124" href="#L124">124</a>                 <span class="jxr_string">", body="</span> + Arrays.toString(body) +
-<a class="jxr_linenumber" name="L125" href="#L125">125</a>                 '}';
-<a class="jxr_linenumber" name="L126" href="#L126">126</a>     }
-<a class="jxr_linenumber" name="L127" href="#L127">127</a> }
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>         String arrayString;
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>         <strong class="jxr_keyword">if</strong> (body.length &gt; 10) {
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>             byte[] newBytes = <strong class="jxr_keyword">new</strong> byte[10];
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>             System.arraycopy(body, 0, newBytes, 0, 10);
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>             arrayString = Arrays.toString(newBytes) + <span class="jxr_string">"..."</span>;
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>             arrayString = Arrays.toString(body);
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>         }
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>         <strong class="jxr_keyword">return</strong> <span class="jxr_string">"Response{"</span> +
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>                 <span class="jxr_string">"statusCode="</span> + statusCode +
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>                 <span class="jxr_string">", extraHeaders="</span> + extraHeaders +
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>                 <span class="jxr_string">", body="</span> + arrayString +
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>                 '}';
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>     }
+<a class="jxr_linenumber" name="L135" href="#L135">135</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

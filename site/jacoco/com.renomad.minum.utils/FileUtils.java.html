@@ -36,45 +36,43 @@ public final class FileUtils {
     private final ILogger logger;
     private final Constants constants;
     private final Map&lt;String, String&gt; fileSuffixToMime;
-    private final Map&lt;String, byte[]&gt; lruCache;
     private final IFileReader fileReader;
 
-<span class="fc" id="L42">    public FileUtils(ILogger logger, Constants constants) {</span>
-<span class="fc" id="L43">        this.logger = logger;</span>
-<span class="fc" id="L44">        this.constants = constants;</span>
-<span class="fc" id="L45">        fileSuffixToMime = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L46">        addDefaultValuesForMimeMap();</span>
-<span class="fc" id="L47">        readExtraMimeMappings(constants.extraMimeMappings);</span>
-<span class="fc" id="L48">        lruCache = LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles);</span>
-<span class="fc" id="L49">        fileReader = new FileReader(lruCache, constants.useCacheForStaticFiles, logger);</span>
-<span class="fc" id="L50">    }</span>
+    public FileUtils(ILogger logger, Constants constants) {
+<span class="fc" id="L42">        this(</span>
+                logger,
+                constants,
+                new FileReader(
+<span class="fc" id="L46">                        LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles),</span>
+                        constants.useCacheForStaticFiles,
+                        logger));
+<span class="fc" id="L49">    }</span>
 
     /**
      * This version of the constructor is mainly for testing
      */
-<span class="fc" id="L55">    FileUtils(ILogger logger, Constants constants, IFileReader fileReader) {</span>
-<span class="fc" id="L56">        this.logger = logger;</span>
-<span class="fc" id="L57">        this.constants = constants;</span>
-<span class="fc" id="L58">        fileSuffixToMime = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L59">        addDefaultValuesForMimeMap();</span>
-<span class="fc" id="L60">        readExtraMimeMappings(constants.extraMimeMappings);</span>
-<span class="fc" id="L61">        lruCache = LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles);</span>
-<span class="fc" id="L62">        this.fileReader = fileReader;</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L54">    FileUtils(ILogger logger, Constants constants, IFileReader fileReader) {</span>
+<span class="fc" id="L55">        this.logger = logger;</span>
+<span class="fc" id="L56">        this.constants = constants;</span>
+<span class="fc" id="L57">        fileSuffixToMime = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L58">        addDefaultValuesForMimeMap();</span>
+<span class="fc" id="L59">        readExtraMimeMappings(constants.extraMimeMappings);</span>
+<span class="fc" id="L60">        this.fileReader = fileReader;</span>
+<span class="fc" id="L61">    }</span>
 
     /**
      * These are the default starting values for mappings
      * between file suffixes and appropriate mime types
      */
     private void addDefaultValuesForMimeMap() {
-<span class="fc" id="L70">        fileSuffixToMime.put(&quot;css&quot;, &quot;text/css&quot;);</span>
-<span class="fc" id="L71">        fileSuffixToMime.put(&quot;js&quot;, &quot;application/javascript&quot;);</span>
-<span class="fc" id="L72">        fileSuffixToMime.put(&quot;webp&quot;, &quot;image/webp&quot;);</span>
-<span class="fc" id="L73">        fileSuffixToMime.put(&quot;jpg&quot;, &quot;image/jpeg&quot;);</span>
-<span class="fc" id="L74">        fileSuffixToMime.put(&quot;jpeg&quot;, &quot;image/jpeg&quot;);</span>
-<span class="fc" id="L75">        fileSuffixToMime.put(&quot;htm&quot;, &quot;text/html&quot;);</span>
-<span class="fc" id="L76">        fileSuffixToMime.put(&quot;html&quot;, &quot;text/html&quot;);</span>
-<span class="fc" id="L77">    }</span>
+<span class="fc" id="L68">        fileSuffixToMime.put(&quot;css&quot;, &quot;text/css&quot;);</span>
+<span class="fc" id="L69">        fileSuffixToMime.put(&quot;js&quot;, &quot;application/javascript&quot;);</span>
+<span class="fc" id="L70">        fileSuffixToMime.put(&quot;webp&quot;, &quot;image/webp&quot;);</span>
+<span class="fc" id="L71">        fileSuffixToMime.put(&quot;jpg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L72">        fileSuffixToMime.put(&quot;jpeg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L73">        fileSuffixToMime.put(&quot;htm&quot;, &quot;text/html&quot;);</span>
+<span class="fc" id="L74">        fileSuffixToMime.put(&quot;html&quot;, &quot;text/html&quot;);</span>
+<span class="fc" id="L75">    }</span>
 
     /**
      * Write a string to a path on disk.
@@ -84,20 +82,20 @@ public final class FileUtils {
      * &lt;/p&gt;
      */
     public void writeString(Path path, String content) {
-<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (path.toString().isEmpty()) {</span>
-<span class="fc" id="L88">            logger.logDebug(() -&gt; &quot;an empty path was provided to writeString&quot;);</span>
-<span class="fc" id="L89">            return;</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (path.toString().isEmpty()) {</span>
+<span class="fc" id="L86">            logger.logDebug(() -&gt; &quot;an empty path was provided to writeString&quot;);</span>
+<span class="fc" id="L87">            return;</span>
         }
-<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path.toString()).find()) {</span>
-<span class="fc" id="L92">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at writeString: %s&quot;, path));</span>
-<span class="fc" id="L93">            return;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path.toString()).find()) {</span>
+<span class="fc" id="L90">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at writeString: %s&quot;, path));</span>
+<span class="fc" id="L91">            return;</span>
         }
         try {
-<span class="fc" id="L96">            Files.writeString(path, content);</span>
-<span class="fc" id="L97">        } catch (IOException e) {</span>
-<span class="fc" id="L98">            throw new UtilsException(e);</span>
-<span class="fc" id="L99">        }</span>
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L94">            Files.writeString(path, content);</span>
+<span class="fc" id="L95">        } catch (IOException e) {</span>
+<span class="fc" id="L96">            throw new UtilsException(e);</span>
+<span class="fc" id="L97">        }</span>
+<span class="fc" id="L98">    }</span>
 
     /**
      * Deletes a directory, deleting everything inside it
@@ -109,31 +107,31 @@ public final class FileUtils {
      * &lt;/p&gt;
      */
     public void deleteDirectoryRecursivelyIfExists(Path myPath, ILogger logger) {
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(myPath.toString()).find()) {</span>
-<span class="fc" id="L113">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at deleteDirectoryRecursivelyIfExists: %s&quot;, myPath));</span>
-<span class="fc" id="L114">            return;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(myPath.toString()).find()) {</span>
+<span class="fc" id="L111">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at deleteDirectoryRecursivelyIfExists: %s&quot;, myPath));</span>
+<span class="fc" id="L112">            return;</span>
         }
-<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (!Files.exists(myPath)) {</span>
-<span class="fc" id="L117">            logger.logDebug(() -&gt; &quot;system was requested to delete directory: &quot;+myPath+&quot;, but it did not exist&quot;);</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (!Files.exists(myPath)) {</span>
+<span class="fc" id="L115">            logger.logDebug(() -&gt; &quot;system was requested to delete directory: &quot;+myPath+&quot;, but it did not exist&quot;);</span>
         } else {
-<span class="fc" id="L119">            walkPathDeleting(myPath, logger);</span>
+<span class="fc" id="L117">            walkPathDeleting(myPath, logger);</span>
         }
-<span class="fc" id="L121">    }</span>
+<span class="fc" id="L119">    }</span>
 
     static void walkPathDeleting(Path myPath, ILogger logger) {
-<span class="fc" id="L124">        try (Stream&lt;Path&gt; walk = Files.walk(myPath)) {</span>
+<span class="fc" id="L122">        try (Stream&lt;Path&gt; walk = Files.walk(myPath)) {</span>
 
-<span class="fc" id="L126">            final var files = walk.sorted(Comparator.reverseOrder())</span>
-<span class="fc" id="L127">                    .map(Path::toFile).toList();</span>
+<span class="fc" id="L124">            final var files = walk.sorted(Comparator.reverseOrder())</span>
+<span class="fc" id="L125">                    .map(Path::toFile).toList();</span>
 
-<span class="fc bfc" id="L129" title="All 2 branches covered.">            for(var file: files) {</span>
-<span class="fc" id="L130">                logger.logDebug(() -&gt; &quot;deleting &quot; + file);</span>
-<span class="fc" id="L131">                Files.delete(file.toPath());</span>
-<span class="fc" id="L132">            }</span>
-<span class="fc" id="L133">        } catch (IOException ex) {</span>
-<span class="fc" id="L134">            throw new UtilsException(&quot;Error during deleteDirectoryRecursivelyIfExists: &quot; + ex);</span>
-<span class="fc" id="L135">        }</span>
-<span class="fc" id="L136">    }</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">            for(var file: files) {</span>
+<span class="fc" id="L128">                logger.logDebug(() -&gt; &quot;deleting &quot; + file);</span>
+<span class="fc" id="L129">                Files.delete(file.toPath());</span>
+<span class="fc" id="L130">            }</span>
+<span class="fc" id="L131">        } catch (IOException ex) {</span>
+<span class="fc" id="L132">            throw new UtilsException(&quot;Error during deleteDirectoryRecursivelyIfExists: &quot; + ex);</span>
+<span class="fc" id="L133">        }</span>
+<span class="fc" id="L134">    }</span>
 
     /**
      * Creates a directory if it doesn't already exist.
@@ -147,27 +145,27 @@ public final class FileUtils {
      * &lt;/p&gt;
      */
     public void makeDirectory(Path directory) {
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(directory.toString()).find()) {</span>
-<span class="fc" id="L151">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at makeDirectory: %s&quot;, directory));</span>
-<span class="fc" id="L152">            return;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(directory.toString()).find()) {</span>
+<span class="fc" id="L149">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at makeDirectory: %s&quot;, directory));</span>
+<span class="fc" id="L150">            return;</span>
         }
-<span class="fc" id="L154">        logger.logDebug(() -&gt; &quot;Creating a directory &quot; + directory);</span>
-<span class="fc" id="L155">        boolean directoryExists = Files.exists(directory);</span>
-<span class="fc" id="L156">        logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot;. Already exists: &quot; + directory);</span>
-<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (!directoryExists) {</span>
-<span class="fc" id="L158">            logger.logDebug(() -&gt; &quot;Creating directory, since it does not already exist: &quot; + directory);</span>
-<span class="fc" id="L159">            innerCreateDirectory(directory);</span>
-<span class="fc" id="L160">            logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot; created&quot;);</span>
+<span class="fc" id="L152">        logger.logDebug(() -&gt; &quot;Creating a directory &quot; + directory);</span>
+<span class="fc" id="L153">        boolean directoryExists = Files.exists(directory);</span>
+<span class="fc" id="L154">        logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot;. Already exists: &quot; + directory);</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        if (!directoryExists) {</span>
+<span class="fc" id="L156">            logger.logDebug(() -&gt; &quot;Creating directory, since it does not already exist: &quot; + directory);</span>
+<span class="fc" id="L157">            innerCreateDirectory(directory);</span>
+<span class="fc" id="L158">            logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot; created&quot;);</span>
         }
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L160">    }</span>
 
     static void innerCreateDirectory(Path directory) {
         try {
-<span class="fc" id="L166">            Files.createDirectories(directory);</span>
-<span class="fc" id="L167">        } catch (Exception e) {</span>
-<span class="fc" id="L168">            throw new UtilsException(e);</span>
-<span class="fc" id="L169">        }</span>
-<span class="fc" id="L170">    }</span>
+<span class="fc" id="L164">            Files.createDirectories(directory);</span>
+<span class="fc" id="L165">        } catch (Exception e) {</span>
+<span class="fc" id="L166">            throw new UtilsException(e);</span>
+<span class="fc" id="L167">        }</span>
+<span class="fc" id="L168">    }</span>
 
     /**
      * Read a binary file, return as a byte array
@@ -177,10 +175,10 @@ public final class FileUtils {
      */
     public byte[] readBinaryFile(String path) {
         try {
-<span class="fc" id="L180">            return fileReader.readFile(path);</span>
-<span class="fc" id="L181">        } catch (IOException e) {</span>
-<span class="fc" id="L182">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty byte array. %s&quot;, path, e));</span>
-<span class="fc" id="L183">            return new byte[0];</span>
+<span class="fc" id="L178">            return fileReader.readFile(path);</span>
+<span class="fc" id="L179">        } catch (IOException e) {</span>
+<span class="fc" id="L180">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty byte array. %s&quot;, path, e));</span>
+<span class="fc" id="L181">            return new byte[0];</span>
         }
     }
 
@@ -199,10 +197,10 @@ public final class FileUtils {
      */
     public String readTextFile(String path) {
         try {
-<span class="fc" id="L202">            return new String(fileReader.readFile(path));</span>
-<span class="fc" id="L203">        } catch (IOException e) {</span>
-<span class="fc" id="L204">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty string. %s&quot;, path, e));</span>
-<span class="fc" id="L205">            return &quot;&quot;;</span>
+<span class="fc" id="L200">            return new String(fileReader.readFile(path));</span>
+<span class="fc" id="L201">        } catch (IOException e) {</span>
+<span class="fc" id="L202">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty string. %s&quot;, path, e));</span>
+<span class="fc" id="L203">            return &quot;&quot;;</span>
         }
     }
 
@@ -217,68 +215,68 @@ public final class FileUtils {
      *  if the path has invalid characters, we'll return a &quot;bad request&quot; response.
      */
     public Response readStaticFile(String path) {
-<span class="fc bfc" id="L220" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path).find()) {</span>
-<span class="fc" id="L221">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at readStaticFile: %s&quot;, path));</span>
-<span class="fc" id="L222">            return new Response(CODE_400_BAD_REQUEST);</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path).find()) {</span>
+<span class="fc" id="L219">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at readStaticFile: %s&quot;, path));</span>
+<span class="fc" id="L220">            return new Response(CODE_400_BAD_REQUEST);</span>
         }
-<span class="fc" id="L224">        String mimeType = null;</span>
+<span class="fc" id="L222">        String mimeType = null;</span>
 
         byte[] fileContents;
         try {
-<span class="fc" id="L228">            Path staticFilePath = Path.of(constants.staticFilesDirectory).resolve(path);</span>
-<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (!Files.isRegularFile(staticFilePath)) {</span>
-<span class="fc" id="L230">                logger.logDebug(() -&gt; String.format(&quot;No readable file found at %s&quot;, path));</span>
-<span class="fc" id="L231">                return new Response(CODE_404_NOT_FOUND);</span>
+<span class="fc" id="L226">            Path staticFilePath = Path.of(constants.staticFilesDirectory).resolve(path);</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">            if (!Files.isRegularFile(staticFilePath)) {</span>
+<span class="fc" id="L228">                logger.logDebug(() -&gt; String.format(&quot;No readable file found at %s&quot;, path));</span>
+<span class="fc" id="L229">                return new Response(CODE_404_NOT_FOUND);</span>
             }
-<span class="fc" id="L233">            fileContents = fileReader.readFile(staticFilePath.toString());</span>
-<span class="fc" id="L234">        } catch (IOException e) {</span>
-<span class="fc" id="L235">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
-<span class="fc" id="L236">            return new Response(CODE_400_BAD_REQUEST);</span>
-<span class="fc" id="L237">        }</span>
+<span class="fc" id="L231">            fileContents = fileReader.readFile(staticFilePath.toString());</span>
+<span class="fc" id="L232">        } catch (IOException e) {</span>
+<span class="fc" id="L233">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
+<span class="fc" id="L234">            return new Response(CODE_400_BAD_REQUEST);</span>
+<span class="fc" id="L235">        }</span>
 
         // if the provided path has a dot in it, use that
         // to obtain a suffix for determining file type
-<span class="fc" id="L241">        int suffixBeginIndex = path.lastIndexOf('.');</span>
-<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
-<span class="fc" id="L243">            String suffix = path.substring(suffixBeginIndex+1);</span>
-<span class="fc" id="L244">            mimeType = fileSuffixToMime.get(suffix);</span>
+<span class="fc" id="L239">        int suffixBeginIndex = path.lastIndexOf('.');</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
+<span class="fc" id="L241">            String suffix = path.substring(suffixBeginIndex+1);</span>
+<span class="fc" id="L242">            mimeType = fileSuffixToMime.get(suffix);</span>
         }
 
         // if we don't find any registered mime types for this
         // suffix, or if it doesn't have a suffix, set the mime type
         // to application/octet-stream
-<span class="fc bfc" id="L250" title="All 2 branches covered.">        if (mimeType == null) {</span>
-<span class="fc" id="L251">            mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        if (mimeType == null) {</span>
+<span class="fc" id="L249">            mimeType = &quot;application/octet-stream&quot;;</span>
         }
 
-<span class="fc" id="L254">        return createOkResponseForStaticFiles(fileContents, mimeType);</span>
+<span class="fc" id="L252">        return createOkResponseForStaticFiles(fileContents, mimeType);</span>
     }
 
     /**
      * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds
      */
     private Response createOkResponseForStaticFiles(byte[] fileContents, String mimeType) {
-<span class="fc" id="L261">        var headers = Map.of(</span>
+<span class="fc" id="L259">        var headers = Map.of(</span>
                 &quot;cache-control&quot;, &quot;max-age=&quot; + constants.staticFileCacheTime,
                 &quot;content-type&quot;, mimeType);
 
-<span class="fc" id="L265">        return new Response(</span>
+<span class="fc" id="L263">        return new Response(</span>
                 StatusLine.StatusCode.CODE_200_OK,
                 headers,
                 fileContents);
     }
 
     void readExtraMimeMappings(List&lt;String&gt; input) {
-<span class="fc bfc" id="L272" title="All 4 branches covered.">        if (input == null || input.isEmpty()) return;</span>
-<span class="fc bfc" id="L273" title="All 2 branches covered.">        mustBeTrue(input.size() % 2 == 0, &quot;input must be even (key + value = 2 items). Your input: &quot; + input);</span>
+<span class="fc bfc" id="L270" title="All 4 branches covered.">        if (input == null || input.isEmpty()) return;</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">        mustBeTrue(input.size() % 2 == 0, &quot;input must be even (key + value = 2 items). Your input: &quot; + input);</span>
 
-<span class="fc bfc" id="L275" title="All 2 branches covered.">        for (int i = 0; i &lt; input.size(); i += 2) {</span>
-<span class="fc" id="L276">            String fileSuffix = input.get(i);</span>
-<span class="fc" id="L277">            String mime = input.get(i+1);</span>
-<span class="fc" id="L278">            logger.logTrace(() -&gt; &quot;Adding mime mapping: &quot; + fileSuffix + &quot; -&gt; &quot; + mime);</span>
-<span class="fc" id="L279">            fileSuffixToMime.put(fileSuffix, mime);</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        for (int i = 0; i &lt; input.size(); i += 2) {</span>
+<span class="fc" id="L274">            String fileSuffix = input.get(i);</span>
+<span class="fc" id="L275">            String mime = input.get(i+1);</span>
+<span class="fc" id="L276">            logger.logTrace(() -&gt; &quot;Adding mime mapping: &quot; + fileSuffix + &quot; -&gt; &quot; + mime);</span>
+<span class="fc" id="L277">            fileSuffixToMime.put(fileSuffix, mime);</span>
         }
-<span class="fc" id="L281">    }</span>
+<span class="fc" id="L279">    }</span>
 
     /**
      * This getter allows users to add extra mappings
@@ -286,7 +284,7 @@ public final class FileUtils {
      * a user needs one that was not provided.
      */
     public Map&lt;String,String&gt; getSuffixToMime() {
-<span class="fc" id="L289">        return fileSuffixToMime;</span>
+<span class="fc" id="L287">        return fileSuffixToMime;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

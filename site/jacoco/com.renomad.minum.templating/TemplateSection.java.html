@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplateSection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.templating</a> &gt; <span class="el_source">TemplateSection.java</span></div><h1>TemplateSection.java</h1><pre class="source lang-java linenums">package com.renomad.minum.templating;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.renomad.minum.utils.Invariants.mustBeTrue;
+import static com.renomad.minum.utils.SerializationUtils.tokenizer;
 
 /**
  * Represents one item in the list that will eventually be cooked
@@ -11,18 +13,43 @@ import static com.renomad.minum.utils.Invariants.mustBeTrue;
  * then this object will be getting replaced during final string rendering.  If it has a substring,
  * then the substring gets concatenated unchanged when the final string
  * is rendered.
+ * @param indent the column number, measured from the left, of the first character of this template key.  This is used
+ *               to indent the subsequent lines of text when there are newlines in the replacement
+ *               text. For example, if the indent is 5, and the value is &quot;a&quot;, then it should indent like this:
+ *               &lt;br&gt;
+ *               &lt;pre&gt;{@code
+ *               12345
+ *                   a
+ *               }&lt;/pre&gt;
+ * @param key the name of the key, e.g. &quot;name&quot;, or &quot;color&quot;
+ * @param subString the template content around the keys.  For example, in the text
+ *                  of &quot;my favorite color is {{ color }} and I like it&quot;,
+ *                  it would generate three template sections - &quot;my favorite color is&quot; would be
+ *                  the first subString, then a key of &quot;color&quot;, then a third subString of &quot;and I like it&quot;
  */
-<span class="fc" id="L15">record TemplateSection(String key, String subString) {</span>
+<span class="fc" id="L30">record TemplateSection(String key, String subString, int indent) {</span>
 
     public String render(Map&lt;String, String&gt; myMap) {
-<span class="fc bfc" id="L18" title="All 4 branches covered.">        mustBeTrue(subString != null || key != null, &quot;Either the key or substring must exist&quot;);</span>
-<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (subString != null) {</span>
-<span class="fc bfc" id="L20" title="All 2 branches covered.">            mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
-<span class="fc" id="L21">            return subString;</span>
+<span class="fc bfc" id="L33" title="All 4 branches covered.">        mustBeTrue(subString != null || key != null, &quot;Either the key or substring must exist&quot;);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (subString != null) {</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
+<span class="fc" id="L36">            return subString;</span>
         } else {
-<span class="fc" id="L23">            var value = myMap.get(key);</span>
-<span class="fc bfc" id="L24" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
-<span class="fc" id="L25">            return value;</span>
+<span class="fc" id="L38">            String value = myMap.get(key);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
+<span class="fc" id="L40">            List&lt;String&gt; lines = tokenizer(value, '\n', 10_000);</span>
+
+            // if, after splitting on newlines, we have more than one line, we'll indent the remaining
+            // lines so that they end up at the same column as the first line.
+<span class="fc" id="L44">            var stringBuilder = new StringBuilder(lines.getFirst());</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
+<span class="fc" id="L47">                    stringBuilder.append('\n');</span>
+                } else {
+<span class="fc" id="L49">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
+                }
+            }
+<span class="fc" id="L52">            return stringBuilder.toString();</span>
         }
     }
 

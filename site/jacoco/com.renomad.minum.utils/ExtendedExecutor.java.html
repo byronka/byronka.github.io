@@ -20,49 +20,17 @@ public final class ExtendedExecutor extends ThreadPoolExecutor {
 <span class="fc" id="L20">        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);</span>
 <span class="fc" id="L21">    }</span>
 
-    @Override
-    protected void afterExecute(Runnable r, Throwable t) {
-<span class="fc" id="L25">        super.afterExecute(r, t);</span>
-<span class="fc" id="L26">        afterExecuteCode(r, t);</span>
-<span class="fc" id="L27">    }</span>
-
-    /**
-     * Extracting to a static method for easier testing
-     *
-     * @return the {@link Throwable} that may have been thrown
-     */
-    static Throwable afterExecuteCode(Runnable r, Throwable t) {
-<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (isDoneWithoutException(r, t)) {</span>
-            try {
-<span class="fc" id="L37">                ((Future&lt;?&gt;) r).get();</span>
-<span class="fc" id="L38">            } catch (CancellationException ce) {</span>
-<span class="fc" id="L39">                t = ce;</span>
-<span class="fc" id="L40">            } catch (ExecutionException ee) {</span>
-<span class="fc" id="L41">                t = ee.getCause();</span>
-<span class="fc" id="L42">            } catch (InterruptedException ie) {</span>
-                // ignore/reset
-<span class="fc" id="L44">                Thread.currentThread().interrupt();</span>
-<span class="fc" id="L45">            }</span>
-        }
-<span class="fc" id="L47">        return t;</span>
-
-    }
-
-    static boolean isDoneWithoutException(Runnable r, Throwable t) {
-<span class="fc bfc" id="L52" title="All 6 branches covered.">        return t == null &amp;&amp; r instanceof Future&lt;?&gt; &amp;&amp; ((Future&lt;?&gt;) r).isDone();</span>
-    }
-
     public static ExecutorService makeExecutorService(Constants constants) {
-<span class="fc" id="L56">        boolean useVirtualThreads = constants.useVirtual;</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (useVirtualThreads) {</span>
+<span class="fc" id="L24">        boolean useVirtualThreads = constants.useVirtual;</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (useVirtualThreads) {</span>
             // the following line is only usable with the virtual threads API, which
             // is available on JDK 19/20 in preview mode, or JDK 21 without preview.
-<span class="fc" id="L60">            return Executors.newVirtualThreadPerTaskExecutor();</span>
+<span class="fc" id="L28">            return Executors.newVirtualThreadPerTaskExecutor();</span>
         } else {
-<span class="fc" id="L62">            return new ExtendedExecutor(0, Integer.MAX_VALUE,</span>
+<span class="fc" id="L30">            return new ExtendedExecutor(0, Integer.MAX_VALUE,</span>
                     60L, TimeUnit.SECONDS,
                     new SynchronousQueue&lt;&gt;(),
-<span class="fc" id="L65">                    Executors.defaultThreadFactory());</span>
+<span class="fc" id="L33">                    Executors.defaultThreadFactory());</span>
         }
     }
 

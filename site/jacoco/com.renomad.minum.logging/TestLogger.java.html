@@ -197,14 +197,20 @@ private final Queue&lt;String&gt; recentLogLines;
      */
     public void test(String msg) {
         // put together some pretty-looking text graphics to show the suiteName of our test in log
-<span class="fc" id="L200">        final var baseLength = 11;</span>
-<span class="fc" id="L201">        final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
+<span class="fc" id="L200">        loggingLock.lock();</span>
+        try {
+<span class="fc" id="L202">            final var baseLength = 11;</span>
+<span class="fc" id="L203">            final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
 
-<span class="fc" id="L203">        loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
-<span class="fc" id="L204">            testCount += 1;</span>
-<span class="fc" id="L205">            System.out.printf(&quot;%n+%s+%n| TEST %d: %s |%n+%s+%n%n&quot;, dashes, testCount, msg, dashes);</span>
-<span class="fc" id="L206">        });</span>
-<span class="fc" id="L207">    }</span>
+<span class="fc" id="L205">            loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L206">                testCount += 1;</span>
+<span class="fc" id="L207">                System.out.printf(&quot;%n+%s+%n| TEST %d: %s |%n+%s+%n%n&quot;, dashes, testCount, msg, dashes);</span>
+<span class="fc" id="L208">                recentLogLines.add(msg);</span>
+<span class="fc" id="L209">            });</span>
+        } finally {
+<span class="fc" id="L211">            loggingLock.unlock();</span>
+        }
+<span class="fc" id="L213">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

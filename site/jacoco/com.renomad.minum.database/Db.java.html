@@ -275,7 +275,7 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
     void readAndDeserialize(Path p) throws IOException {
 <span class="fc" id="L276">        String filename = p.getFileName().toString();</span>
 <span class="fc" id="L277">        int startOfSuffixIndex = filename.indexOf('.');</span>
-<span class="fc bfc" id="L278" title="All 2 branches covered.">        if(startOfSuffixIndex &lt; 0) {</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">        if(startOfSuffixIndex == -1) {</span>
 <span class="fc" id="L279">            throw new DbException(&quot;the files must have a ddps suffix, like 1.ddps.  filename: &quot; + filename);</span>
         }
 <span class="fc" id="L281">        String fileContents = Files.readString(p);</span>
@@ -319,18 +319,18 @@ public final class Db&lt;T extends DbData&lt;?&gt;&gt; {
     private void loadData() {
 <span class="fc" id="L320">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
         try {
-<span class="fc" id="L322">            hasLoadedData = loadDataCore(hasLoadedData, this::loadDataFromDisk);</span>
+<span class="fc" id="L322">            loadDataCore(hasLoadedData, this::loadDataFromDisk);</span>
+<span class="fc" id="L323">            hasLoadedData = true;</span>
         } finally {
-<span class="fc" id="L324">            loadDataLock.unlock();</span>
+<span class="fc" id="L325">            loadDataLock.unlock();</span>
         }
-<span class="fc" id="L326">    }</span>
+<span class="fc" id="L327">    }</span>
 
-    static boolean loadDataCore(boolean hasLoadedData, Runnable loadDataFromDisk) {
-<span class="fc bfc" id="L329" title="All 2 branches covered.">        if (!hasLoadedData) {</span>
-<span class="fc" id="L330">            loadDataFromDisk.run();</span>
+    static void loadDataCore(boolean hasLoadedData, Runnable loadDataFromDisk) {
+<span class="fc bfc" id="L330" title="All 2 branches covered.">        if (!hasLoadedData) {</span>
+<span class="fc" id="L331">            loadDataFromDisk.run();</span>
         }
-<span class="fc" id="L332">        return true;</span>
-    }
+<span class="fc" id="L333">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
