@@ -29,27 +29,34 @@ import static com.renomad.minum.utils.SerializationUtils.tokenizer;
  */
 <span class="fc" id="L30">record TemplateSection(String key, String subString, int indent) {</span>
 
+    /**
+     * It would be absurd to send a million lines to a browser, much
+     * less ten million.  This is here to set an upper limit on
+     * the tokenizer loop, to prevent certain attacks.
+     */
+    static final int MAXIMUM_LINES_ALLOWED = 10_000_000;
+
     public String render(Map&lt;String, String&gt; myMap) {
-<span class="fc bfc" id="L33" title="All 4 branches covered.">        mustBeTrue(subString != null || key != null, &quot;Either the key or substring must exist&quot;);</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (subString != null) {</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">            mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
-<span class="fc" id="L36">            return subString;</span>
+<span class="fc bfc" id="L40" title="All 4 branches covered.">        mustBeTrue(subString != null || key != null, &quot;Either the key or substring must exist&quot;);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (subString != null) {</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            mustBeTrue(key == null, &quot;If this object has a substring, then it must not have a key&quot;);</span>
+<span class="fc" id="L43">            return subString;</span>
         } else {
-<span class="fc" id="L38">            String value = myMap.get(key);</span>
-<span class="fc bfc" id="L39" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
-<span class="fc" id="L40">            List&lt;String&gt; lines = tokenizer(value, '\n', 10_000);</span>
+<span class="fc" id="L45">            String value = myMap.get(key);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (value == null) throw new TemplateRenderException(&quot;Missing a value for key {&quot;+key+&quot;}&quot;);</span>
+<span class="fc" id="L47">            List&lt;String&gt; lines = tokenizer(value, '\n', MAXIMUM_LINES_ALLOWED);</span>
 
             // if, after splitting on newlines, we have more than one line, we'll indent the remaining
             // lines so that they end up at the same column as the first line.
-<span class="fc" id="L44">            var stringBuilder = new StringBuilder(lines.getFirst());</span>
-<span class="fc bfc" id="L45" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
-<span class="fc bfc" id="L46" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
-<span class="fc" id="L47">                    stringBuilder.append('\n');</span>
+<span class="fc" id="L51">            var stringBuilder = new StringBuilder(lines.getFirst());</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
+<span class="fc" id="L54">                    stringBuilder.append('\n');</span>
                 } else {
-<span class="fc" id="L49">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
+<span class="fc" id="L56">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
                 }
             }
-<span class="fc" id="L52">            return stringBuilder.toString();</span>
+<span class="fc" id="L59">            return stringBuilder.toString();</span>
         }
     }
 
