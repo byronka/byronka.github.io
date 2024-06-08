@@ -10,79 +10,41 @@
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.ILogger;
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.ConcurrentSet;
-<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.MyThread;
-<a class="jxr_linenumber" name="L6" href="#L6">6</a>   
-<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> java.io.IOException;
-<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> java.net.InetSocketAddress;
-<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> java.util.List;
-<a class="jxr_linenumber" name="L10" href="#L10">10</a>  
-<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_javadoccomment"> * This is a data structure of the live set of {@link ISocketWrapper}</em>
-<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_javadoccomment"> * in our system.  It exists so that we can keep tabs on how many</em>
-<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_javadoccomment"> * open sockets we have, and can then find them all in one place</em>
-<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_javadoccomment"> * when we need to kill them at server shutdown.</em>
-<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <em class="jxr_javadoccomment"> * @param nameOfSet This parameter is used to distinguish different servers'</em>
-<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <em class="jxr_javadoccomment"> *        list of sockets (e.g.</em>
-<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <em class="jxr_javadoccomment"> *        the server for 80 vs 443)</em>
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <em class="jxr_javadoccomment"> */</em>
-<a class="jxr_linenumber" name="L20" href="#L20">20</a>  record SetOfSws(
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>          ConcurrentSet&lt;ISocketWrapper&gt; socketWrappers,
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>          <a name="ILogger" href="../../../../com/renomad/minum/logging/ILogger.html#ILogger">ILogger</a> logger,
-<a class="jxr_linenumber" name="L23" href="#L23">23</a>          String nameOfSet) {
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>  
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>      <strong class="jxr_keyword">void</strong> add(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> sw) {
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>          socketWrappers().add(sw);
-<a class="jxr_linenumber" name="L27" href="#L27">27</a>          <strong class="jxr_keyword">int</strong> size = socketWrappers().size();
-<a class="jxr_linenumber" name="L28" href="#L28">28</a>          logger.logTrace(() -&gt; nameOfSet + <span class="jxr_string">" added "</span> + sw + <span class="jxr_string">" to SetOfSws. size: "</span> + size);
-<a class="jxr_linenumber" name="L29" href="#L29">29</a>      }
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>  
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>      <strong class="jxr_keyword">void</strong> remove(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> sw) {
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>          socketWrappers().remove(sw);
-<a class="jxr_linenumber" name="L33" href="#L33">33</a>          <strong class="jxr_keyword">int</strong> size = socketWrappers().size();
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>          logger.logTrace(() -&gt; nameOfSet +<span class="jxr_string">" removed "</span> + sw + <span class="jxr_string">" from SetOfSws. size: "</span> + size);
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>      }
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>  
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <em class="jxr_javadoccomment">     * This is a program used during testing so we can find the server</em>
-<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <em class="jxr_javadoccomment">     * socket that corresponds to a particular client socket.</em>
-<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <em class="jxr_javadoccomment">     * Due to the circumstances of the TCP handshake, there's a bit of</em>
-<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <em class="jxr_javadoccomment">     * time where the server might not have finished initialization,</em>
-<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <em class="jxr_javadoccomment">     * and been put into the list of current server sockets.</em>
-<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <em class="jxr_javadoccomment">     * For that reason, if we come in here and don't find it initially, we'll</em>
-<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <em class="jxr_javadoccomment">     * sleep and then try again, up to three times.</em>
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> getSocketWrapperByRemoteAddr(String address, <strong class="jxr_keyword">int</strong> port) {
-<a class="jxr_linenumber" name="L49" href="#L49">49</a>          <strong class="jxr_keyword">int</strong> maxLoops = 3;
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> loopCount = 0; loopCount &lt; maxLoops; loopCount++ ) {
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>              List&lt;ISocketWrapper&gt; servers = socketWrappers()
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>                      .asStream()
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>                      .filter(x -&gt; x.getRemoteAddrWithPort().equals(<strong class="jxr_keyword">new</strong> InetSocketAddress(address, port)))
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>                      .toList();
-<a class="jxr_linenumber" name="L55" href="#L55">55</a>              <strong class="jxr_keyword">if</strong> (servers.size() == 1) {
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>                  <strong class="jxr_keyword">return</strong> servers.getFirst();
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>              }
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>  
-<a class="jxr_linenumber" name="L59" href="#L59">59</a>              <em class="jxr_comment">// if we got here, we didn't find a server in the list - probably because the TCP</em>
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>              <em class="jxr_comment">// initialization has not completed.  Retry after a bit.  The TCP process is dependent on</em>
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>              <em class="jxr_comment">// a whole lot of variables outside our control - downed lines, slow routers, etc.</em>
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>              <em class="jxr_comment">//</em>
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>              <em class="jxr_comment">// on the other hand, this code should probably only be called in testing, so maybe fewer</em>
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>              <em class="jxr_comment">// out-of-bounds problems?</em>
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>              <strong class="jxr_keyword">int</strong> finalLoopCount = loopCount;
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>              logger.logDebug(() -&gt; String.format(<span class="jxr_string">"no server found, sleeping on it... (attempt %d)"</span>, finalLoopCount + 1));
-<a class="jxr_linenumber" name="L67" href="#L67">67</a>              MyThread.sleep(10);
-<a class="jxr_linenumber" name="L68" href="#L68">68</a>          }
-<a class="jxr_linenumber" name="L69" href="#L69">69</a>          <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="WebServerException" href="../../../../com/renomad/minum/web/WebServerException.html#WebServerException">WebServerException</a>(<span class="jxr_string">"No socket found with that address"</span>);
-<a class="jxr_linenumber" name="L70" href="#L70">70</a>      }
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>  
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <strong class="jxr_keyword">void</strong> stopAllServers() <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>          <strong class="jxr_keyword">for</strong>(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> s : socketWrappers()) {
-<a class="jxr_linenumber" name="L74" href="#L74">74</a>              s.close();
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>          }
-<a class="jxr_linenumber" name="L76" href="#L76">76</a>      }
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>  }
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_javadoccomment"> * This is a data structure of the live set of {@link ISocketWrapper}</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_javadoccomment"> * in our system.  It exists so that we can keep tabs on how many</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_javadoccomment"> * open sockets we have, and can then find them all in one place</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_javadoccomment"> * when we need to kill them at server shutdown.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_javadoccomment"> * @param nameOfSet This parameter is used to distinguish different servers'</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_javadoccomment"> *        list of sockets (e.g.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_javadoccomment"> *        the server for 80 vs 443)</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  record SetOfSws(
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>          ConcurrentSet&lt;ISocketWrapper&gt; socketWrappers,
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>          <a name="ILogger" href="../../../../com/renomad/minum/logging/ILogger.html#ILogger">ILogger</a> logger,
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>          String nameOfSet) {
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>      <strong class="jxr_keyword">void</strong> add(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> sw) {
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>          socketWrappers().add(sw);
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>          <strong class="jxr_keyword">int</strong> size = socketWrappers().size();
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>          logger.logTrace(() -&gt; nameOfSet + <span class="jxr_string">" added "</span> + sw + <span class="jxr_string">" to SetOfSws. size: "</span> + size);
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>      }
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>      <strong class="jxr_keyword">void</strong> remove(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> sw) {
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>          socketWrappers().remove(sw);
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>          <strong class="jxr_keyword">int</strong> size = socketWrappers().size();
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>          logger.logTrace(() -&gt; nameOfSet +<span class="jxr_string">" removed "</span> + sw + <span class="jxr_string">" from SetOfSws. size: "</span> + size);
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>      }
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>      <strong class="jxr_keyword">void</strong> stopAllServers() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>          <strong class="jxr_keyword">for</strong>(<a name="ISocketWrapper" href="../../../../com/renomad/minum/web/ISocketWrapper.html#ISocketWrapper">ISocketWrapper</a> s : socketWrappers()) {
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>              s.close();
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>          }
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>      }
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

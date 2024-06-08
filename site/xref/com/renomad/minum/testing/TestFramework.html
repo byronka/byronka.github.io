@@ -12,15 +12,15 @@
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.Context;
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.TestLogger;
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.ActionQueueKiller;
-<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.ExtendedExecutor;
-<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.FileUtils;
-<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.ThrowingRunnable;
-<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.web.FullSystem;
-<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.web.InputStreamUtils;
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  
-<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> java.util.Arrays;
-<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> java.util.List;
-<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> java.util.Properties;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.FileUtils;
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.ThrowingRunnable;
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.web.FullSystem;
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.web.InputStreamUtils;
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> java.util.Arrays;
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> java.util.Properties;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.Executors;
 <a class="jxr_linenumber" name="L16" href="#L16">16</a>  
 <a class="jxr_linenumber" name="L17" href="#L17">17</a>  <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L18" href="#L18">18</a>  <em class="jxr_javadoccomment"> * These are utility functions for basic automated</em>
@@ -262,7 +262,7 @@
 <a class="jxr_linenumber" name="L254" href="#L254">254</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L255" href="#L255">255</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a name="Context" href="../../../../com/renomad/minum/Context.html#Context">Context</a> buildTestingContext(String loggerName, Properties properties) {
 <a class="jxr_linenumber" name="L256" href="#L256">256</a>         <strong class="jxr_keyword">var</strong> constants = <strong class="jxr_keyword">new</strong> <a name="Constants" href="../../../../com/renomad/minum/Constants.html#Constants">Constants</a>(properties);
-<a class="jxr_linenumber" name="L257" href="#L257">257</a>         <strong class="jxr_keyword">var</strong> executorService = ExtendedExecutor.makeExecutorService(constants);
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>         <strong class="jxr_keyword">var</strong> executorService = Executors.newVirtualThreadPerTaskExecutor();
 <a class="jxr_linenumber" name="L258" href="#L258">258</a>         <strong class="jxr_keyword">var</strong> logger = <strong class="jxr_keyword">new</strong> <a name="TestLogger" href="../../../../com/renomad/minum/logging/TestLogger.html#TestLogger">TestLogger</a>(constants, executorService, loggerName);
 <a class="jxr_linenumber" name="L259" href="#L259">259</a>         <strong class="jxr_keyword">var</strong> fileUtils = <strong class="jxr_keyword">new</strong> <a name="FileUtils" href="../../../../com/renomad/minum/utils/FileUtils.html#FileUtils">FileUtils</a>(logger, constants);
 <a class="jxr_linenumber" name="L260" href="#L260">260</a>         <strong class="jxr_keyword">var</strong> inputStreamUtils = <strong class="jxr_keyword">new</strong> <a name="InputStreamUtils" href="../../../../com/renomad/minum/web/InputStreamUtils.html#InputStreamUtils">InputStreamUtils</a>(constants);

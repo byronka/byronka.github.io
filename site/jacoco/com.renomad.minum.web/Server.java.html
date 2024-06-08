@@ -2,16 +2,15 @@
 
 import com.renomad.minum.Constants;
 import com.renomad.minum.Context;
-import com.renomad.minum.exceptions.ForbiddenUseException;
 import com.renomad.minum.logging.ILogger;
 import com.renomad.minum.security.ITheBrig;
-import com.renomad.minum.security.UnderInvestigation;
 import com.renomad.minum.utils.ConcurrentSet;
 import com.renomad.minum.utils.StacktraceUtils;
 import com.renomad.minum.utils.ThrowingRunnable;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -28,11 +27,13 @@ import java.util.concurrent.Future;
 final class Server implements IServer {
     private final ServerSocket serverSocket;
     private final SetOfSws setOfSWs;
+    private final ExecutorService es;
+    private final HttpServerType serverType;
     private final ILogger logger;
     private final String serverName;
     private final ITheBrig theBrig;
     private final Constants constants;
-    private final UnderInvestigation underInvestigation;
+    private final WebFramework webFramework;
 
     /**
      * This is the future returned when we submitted the
@@ -40,33 +41,34 @@ final class Server implements IServer {
      */
     private Future&lt;?&gt; centralLoopFuture;
 
-<span class="fc" id="L43">    Server(ServerSocket ss, Context context, String serverName, ITheBrig theBrig) {</span>
-<span class="fc" id="L44">        this.serverSocket = ss;</span>
-<span class="fc" id="L45">        this.logger = context.getLogger();</span>
-<span class="fc" id="L46">        this.constants = context.getConstants();</span>
-<span class="fc" id="L47">        this.serverName = serverName;</span>
-<span class="fc" id="L48">        this.theBrig = theBrig;</span>
-<span class="fc" id="L49">        setOfSWs = new SetOfSws(new ConcurrentSet&lt;&gt;(), logger, serverName);</span>
-<span class="fc" id="L50">        this.underInvestigation = new UnderInvestigation(constants);</span>
-<span class="fc" id="L51">    }</span>
+<span class="fc" id="L44">    Server(ServerSocket ss, Context context, String serverName, ITheBrig theBrig, WebFramework webFramework, ExecutorService es, HttpServerType serverType) {</span>
+<span class="fc" id="L45">        this.serverSocket = ss;</span>
+<span class="fc" id="L46">        this.logger = context.getLogger();</span>
+<span class="fc" id="L47">        this.constants = context.getConstants();</span>
+<span class="fc" id="L48">        this.webFramework = webFramework;</span>
+<span class="fc" id="L49">        this.serverName = serverName;</span>
+<span class="fc" id="L50">        this.theBrig = theBrig;</span>
+<span class="fc" id="L51">        setOfSWs = new SetOfSws(new ConcurrentSet&lt;&gt;(), logger, serverName);</span>
+<span class="fc" id="L52">        this.es = es;</span>
+<span class="fc" id="L53">        this.serverType = serverType;</span>
+<span class="fc" id="L54">    }</span>
 
     @Override
-    public void start(ExecutorService es, ThrowingConsumer&lt;ISocketWrapper&gt; handler) {
-<span class="fc" id="L55">        ThrowingRunnable serverCode = buildMainServerLoop(es, handler);</span>
-<span class="fc" id="L56">        Runnable t = ThrowingRunnable.throwingRunnableWrapper(serverCode, logger);</span>
-<span class="fc" id="L57">        this.centralLoopFuture = es.submit(t);</span>
-<span class="fc" id="L58">    }</span>
+    public void start() {
+<span class="fc" id="L58">        ThrowingRunnable serverCode = buildMainServerLoop(es);</span>
+<span class="fc" id="L59">        Runnable t = ThrowingRunnable.throwingRunnableWrapper(serverCode, logger);</span>
+<span class="fc" id="L60">        this.centralLoopFuture = es.submit(t);</span>
+<span class="fc" id="L61">    }</span>
 
     /**
      * This code is the innermost loop of the server, waiting for incoming
      * connections and then delegating their handling off to a handler.
-     * @param es The ExecutorService helping us with the threads
-     * @param handler the handler that will take charge immediately after
-     *                a client makes a connection.
+     *
+     * @param es         The ExecutorService helping us with the threads
      */
-    private ThrowingRunnable buildMainServerLoop(ExecutorService es, ThrowingConsumer&lt;ISocketWrapper&gt; handler) {
-<span class="fc" id="L68">        return () -&gt; {</span>
-<span class="fc" id="L69">            Thread.currentThread().setName(&quot;Main Server&quot;);</span>
+    private ThrowingRunnable buildMainServerLoop(ExecutorService es) {
+<span class="fc" id="L70">        return () -&gt; {</span>
+<span class="fc" id="L71">            Thread.currentThread().setName(&quot;Main Server&quot;);</span>
             try {
                 // yes, this infinite loop can only exit by an exception.  But this is
                 // the beating heart of a server, and to the best of my current knowledge,
@@ -74,113 +76,49 @@ final class Server implements IServer {
                 // that's just part of its life cycle
                 //noinspection InfiniteLoopStatement
                 while (true) {
-<span class="fc" id="L77">                    logger.logTrace(() -&gt; serverName + &quot; waiting to accept connection&quot;);</span>
-<span class="fc" id="L78">                    Socket freshSocket = serverSocket.accept();</span>
-<span class="fc" id="L79">                    ISocketWrapper sw = new SocketWrapper(freshSocket, this, logger, constants.socketTimeoutMillis);</span>
-<span class="fc" id="L80">                    logger.logTrace(() -&gt; String.format(&quot;client connected from %s&quot;, sw.getRemoteAddrWithPort()));</span>
-<span class="fc" id="L81">                    setOfSWs.add(sw);</span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">                    if (handler != null) {</span>
-<span class="fc" id="L83">                        ThrowingRunnable innerServerCode = buildExceptionHandlingInnerCore(handler, sw);</span>
-<span class="fc" id="L84">                        es.submit(ThrowingRunnable.throwingRunnableWrapper(innerServerCode, logger));</span>
-                    }
-<span class="fc" id="L86">                }</span>
-<span class="fc" id="L87">            } catch (IOException ex) {</span>
-<span class="fc" id="L88">                handleServerException(ex, logger);</span>
+<span class="fc" id="L79">                    logger.logTrace(() -&gt; serverName + &quot; waiting to accept connection&quot;);</span>
+<span class="fc" id="L80">                    Socket freshSocket = serverSocket.accept();</span>
+<span class="fc" id="L81">                    ISocketWrapper sw = new SocketWrapper(freshSocket, this, logger, constants.socketTimeoutMillis, constants.hostName);</span>
+<span class="fc" id="L82">                    logger.logTrace(() -&gt; String.format(&quot;client connected from %s&quot;, sw.getRemoteAddrWithPort()));</span>
+<span class="fc" id="L83">                    setOfSWs.add(sw);</span>
+<span class="fc" id="L84">                    ThrowingRunnable innerServerCode = this.webFramework.makePrimaryHttpHandler(sw, theBrig);</span>
+<span class="fc" id="L85">                    Runnable task = ThrowingRunnable.throwingRunnableWrapper(innerServerCode, logger);</span>
+<span class="fc" id="L86">                    es.submit(task);</span>
+<span class="fc" id="L87">                }</span>
+<span class="fc" id="L88">            } catch (IOException ex) {</span>
+<span class="fc" id="L89">                handleServerException(ex, logger);</span>
             }
-<span class="fc" id="L90">        };</span>
+<span class="fc" id="L91">        };</span>
     }
 
     static void handleServerException(IOException ex, ILogger logger) {
-<span class="fc bfc" id="L94" title="All 4 branches covered.">        if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
-<span class="fc" id="L95">            logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="fc bfc" id="L95" title="All 4 branches covered.">        if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
+<span class="fc" id="L96">            logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
         }
-<span class="fc" id="L97">    }</span>
-
-    /**
-     * By volume of code, this method is primarily focused on handling the kinds
-     * of exceptional situations that can arise from handling the HTTP communication
-     * with a client.
-     * &lt;p&gt;
-     *     Note that this method *builds* a function but does not run it.
-     * &lt;/p&gt;
-     *
-     */
-    ThrowingRunnable buildExceptionHandlingInnerCore(ThrowingConsumer&lt;ISocketWrapper&gt; handler, ISocketWrapper sw) {
-<span class="fc" id="L109">        return () -&gt; {</span>
-<span class="fc" id="L110">            Thread.currentThread().setName(&quot;SocketWrapper thread for &quot; + sw.getRemoteAddr());</span>
-            // wrap socketwrapper in try-with-resources so leaving this block
-            // closes the socket.
-<span class="fc" id="L113">            try (sw) {</span>
-<span class="fc" id="L114">                handler.accept(sw);</span>
-<span class="fc" id="L115">            } catch (SocketException | SocketTimeoutException ex) {</span>
-<span class="fc" id="L116">                handleReadTimedOut(sw, ex, logger);</span>
-<span class="fc" id="L117">            } catch (ForbiddenUseException ex) {</span>
-<span class="fc" id="L118">                handleForbiddenUse(sw, ex, logger, theBrig, constants.vulnSeekingJailDuration);</span>
-<span class="fc" id="L119">            } catch (IOException ex) {</span>
-<span class="fc" id="L120">                handleIOException(sw, ex, logger, theBrig, underInvestigation, constants.vulnSeekingJailDuration);</span>
-<span class="fc" id="L121">            }</span>
-<span class="fc" id="L122">        };</span>
-    }
-
-    static void handleIOException(ISocketWrapper sw, IOException ex, ILogger logger, ITheBrig theBrig, UnderInvestigation underInvestigation, int vulnSeekingJailDuration ) {
-<span class="fc" id="L126">        logger.logDebug(() -&gt; ex.getMessage() + &quot; (at Server.start)&quot;);</span>
-<span class="fc" id="L127">        String suspiciousClues = underInvestigation.isClientLookingForVulnerabilities(ex.getMessage());</span>
-
-<span class="fc bfc" id="L129" title="All 4 branches covered.">        if (!suspiciousClues.isEmpty() &amp;&amp; theBrig != null) {</span>
-<span class="fc" id="L130">            logger.logDebug(() -&gt; sw.getRemoteAddr() + &quot; is looking for vulnerabilities, for this: &quot; + suspiciousClues);</span>
-<span class="fc" id="L131">            theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, vulnSeekingJailDuration);</span>
-        }
-<span class="fc" id="L133">    }</span>
-
-    static void handleForbiddenUse(ISocketWrapper sw, ForbiddenUseException ex, ILogger logger, ITheBrig theBrig, int vulnSeekingJailDuration) {
-<span class="fc" id="L136">        logger.logDebug(() -&gt; sw.getRemoteAddr() + &quot; is looking for vulnerabilities, for this: &quot; + ex.getMessage());</span>
-<span class="fc bfc" id="L137" title="All 2 branches covered.">        if (theBrig != null) {</span>
-<span class="fc" id="L138">            theBrig.sendToJail(sw.getRemoteAddr() + &quot;_vuln_seeking&quot;, vulnSeekingJailDuration);</span>
-        }
-<span class="fc" id="L140">    }</span>
-
-    static void handleReadTimedOut(ISocketWrapper sw, IOException ex, ILogger logger) {
-        /*
-        if we close the application on the server side, there's a good
-        likelihood a SocketException will come bubbling through here.
-        NOTE:
-          it seems that Socket closed is what we get when the client closes the connection in non-SSL, and conversely,
-          if we are operating in secure (i.e. SSL/TLS) mode, we get &quot;an established connection...&quot;
-        */
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (ex.getMessage().equals(&quot;Read timed out&quot;)) {</span>
-<span class="fc" id="L151">            logger.logTrace(() -&gt; &quot;Read timed out - remote address: &quot; + sw.getRemoteAddrWithPort());</span>
-        } else {
-<span class="fc" id="L153">            logger.logDebug(() -&gt; ex.getMessage() + &quot; - remote address: &quot; + sw.getRemoteAddrWithPort());</span>
-        }
-<span class="fc" id="L155">    }</span>
+<span class="fc" id="L98">    }</span>
 
     public void close() throws IOException {
         // close all the running sockets
-<span class="fc" id="L159">        setOfSWs.stopAllServers();</span>
-<span class="fc" id="L160">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L102">        setOfSWs.stopAllServers();</span>
+<span class="fc" id="L103">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
         // close the primary server socket
-<span class="fc" id="L162">        serverSocket.close();</span>
-<span class="fc" id="L163">    }</span>
+<span class="fc" id="L105">        serverSocket.close();</span>
+<span class="fc" id="L106">    }</span>
 
     @Override
     public String getHost() {
-<span class="fc" id="L167">        return serverSocket.getInetAddress().getHostAddress();</span>
+<span class="fc" id="L110">        return serverSocket.getInetAddress().getHostAddress();</span>
     }
 
     @Override
     public int getPort() {
-<span class="fc" id="L172">        return serverSocket.getLocalPort();</span>
-    }
-
-    @Override
-    public ISocketWrapper getServer(ISocketWrapper sw) {
-<span class="fc" id="L177">        return setOfSWs.getSocketWrapperByRemoteAddr(sw.getLocalAddr(), sw.getLocalPort());</span>
+<span class="fc" id="L115">        return serverSocket.getLocalPort();</span>
     }
 
     @Override
     public void removeMyRecord(ISocketWrapper socketWrapper) {
-<span class="fc" id="L182">        setOfSWs.remove(socketWrapper);</span>
-<span class="fc" id="L183">    }</span>
+<span class="fc" id="L120">        setOfSWs.remove(socketWrapper);</span>
+<span class="fc" id="L121">    }</span>
 
     /**
      * Returns the name of this server, which is set
@@ -188,12 +126,17 @@ final class Server implements IServer {
      */
     @Override
     public String toString() {
-<span class="fc" id="L191">        return this.serverName;</span>
+<span class="fc" id="L129">        return this.serverName;</span>
     }
 
     @Override
     public Future&lt;?&gt; getCentralLoopFuture() {
-<span class="fc" id="L196">        return centralLoopFuture;</span>
+<span class="fc" id="L134">        return centralLoopFuture;</span>
+    }
+
+    @Override
+    public HttpServerType getServerType() {
+<span class="fc" id="L139">        return serverType;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

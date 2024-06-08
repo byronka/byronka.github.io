@@ -3,8 +3,6 @@
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * This uses a [ConcurrentHashMap] as its base.  We store
@@ -17,42 +15,33 @@ public final class ConcurrentSet&lt;T&gt; implements Iterable&lt;T&gt; {
 
     private final ConcurrentHashMap&lt;T, NullEnum&gt; map;
 
-<span class="fc" id="L20">    public ConcurrentSet() {</span>
-<span class="fc" id="L21">        this.map = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="fc" id="L22">    }</span>
+<span class="fc" id="L18">    public ConcurrentSet() {</span>
+<span class="fc" id="L19">        this.map = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L20">    }</span>
 
     public void add(T element) {
-<span class="fc" id="L25">        map.putIfAbsent(element, NullEnum.NULL);</span>
-<span class="fc" id="L26">    }</span>
+<span class="fc" id="L23">        map.putIfAbsent(element, NullEnum.NULL);</span>
+<span class="fc" id="L24">    }</span>
 
     public void remove(T element) {
-<span class="fc" id="L29">        map.remove(element);</span>
-<span class="fc" id="L30">    }</span>
+<span class="fc" id="L27">        map.remove(element);</span>
+<span class="fc" id="L28">    }</span>
 
     public int size() {
-<span class="fc" id="L33">        return map.size();</span>
+<span class="fc" id="L31">        return map.size();</span>
     }
 
     @Override
     public Iterator&lt;T&gt; iterator() {
-<span class="fc" id="L38">        return Collections.unmodifiableSet(map.keySet(NullEnum.NULL)).iterator();</span>
+<span class="fc" id="L36">        return Collections.unmodifiableSet(map.keySet(NullEnum.NULL)).iterator();</span>
     }
 
-<span class="fc" id="L41">    private enum NullEnum {</span>
+<span class="fc" id="L39">    private enum NullEnum {</span>
         /**
          * This is just a token for the value in the ConcurrentHashMap, since
          * we are only using the keys, never the values.
          */
-<span class="fc" id="L46">        NULL</span>
-    }
-
-    public Stream&lt;T&gt; asStream() {
-<span class="fc" id="L50">        return asStream(false);</span>
-    }
-
-    public Stream&lt;T&gt; asStream(boolean parallel) {
-<span class="fc" id="L54">        Iterable&lt;T&gt; iterable = this;</span>
-<span class="fc" id="L55">        return StreamSupport.stream(iterable.spliterator(), parallel);</span>
+<span class="fc" id="L44">        NULL</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
