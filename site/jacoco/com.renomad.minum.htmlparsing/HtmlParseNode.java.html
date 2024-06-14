@@ -60,25 +60,31 @@ import java.util.Map;
 <span class="fc" id="L60">    }</span>
 
     /**
-     * Return the inner text
+     * Return the inner text of these nodes
      * &lt;p&gt;
-     * If this element has only one inner
-     * content item, and it's a {@link ParseNodeType#CHARACTERS} element, return its text content.
+     *      If this element has only one inner
+     *      content item, and it's a {@link ParseNodeType#CHARACTERS} element, return its text content.
      * &lt;/p&gt;
      * &lt;p&gt;
-     *     Otherwise, return an empty string.
+     *     If there is more than one node, run the {@link #print()} command on each, appending
+     *     to a single string.
      * &lt;/p&gt;
      */
     static String innerText(List&lt;HtmlParseNode&gt; innerContent) {
-<span class="fc bfc" id="L73" title="All 4 branches covered.">       if (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {</span>
-<span class="fc" id="L74">           return innerContent.getFirst().textContent;</span>
-       } else {
-<span class="fc" id="L76">           return &quot;&quot;;</span>
-       }
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (innerContent == null) return &quot;&quot;;</span>
+<span class="fc bfc" id="L75" title="All 4 branches covered.">        if (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {</span>
+<span class="fc" id="L76">            return innerContent.getFirst().textContent;</span>
+        } else {
+<span class="fc" id="L78">            StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            for (HtmlParseNode hpn : innerContent) {</span>
+<span class="fc" id="L80">                sb.append(hpn.print());</span>
+<span class="fc" id="L81">            }</span>
+<span class="fc" id="L82">            return sb.toString();</span>
+        }
     }
 
     public String innerText() {
-<span class="fc" id="L81">        return innerText(innerContent);</span>
+<span class="fc" id="L87">        return innerText(innerContent);</span>
     }
 
 }
