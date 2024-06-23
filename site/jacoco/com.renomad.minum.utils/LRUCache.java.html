@@ -8,7 +8,7 @@ import java.util.Map;
  * A simple Least-Recently Used Cache
  * See &lt;a href=&quot;https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)&quot;&gt;LRU&lt;/a&gt;
  */
-public final class LRUCache&lt;T&gt; extends LinkedHashMap&lt;String, T&gt; {
+public final class LRUCache&lt;K,V&gt; extends LinkedHashMap&lt;K, V&gt; {
 
     @Serial
     private static final long serialVersionUID = -8687744696157499778L;
@@ -18,7 +18,7 @@ public final class LRUCache&lt;T&gt; extends LinkedHashMap&lt;String, T&gt; {
     private final int maxSize;
 
     @Override
-    protected boolean removeEldestEntry(Map.Entry&lt;String, T&gt; eldest) {
+    protected boolean removeEldestEntry(Map.Entry&lt;K, V&gt; eldest) {
 <span class="fc bfc" id="L22" title="All 2 branches covered.">        return size() &gt; maxSize;</span>
     }
 
@@ -39,7 +39,7 @@ public final class LRUCache&lt;T&gt; extends LinkedHashMap&lt;String, T&gt; {
      * and the assignment is what enables Java to determine
      * what types to build.
      */
-    public static &lt;T&gt; Map&lt;String, T&gt; getLruCache() {
+    public static &lt;K,V&gt; Map&lt;K, V&gt; getLruCache() {
 <span class="fc" id="L43">        return getLruCache(DEFAULT_MAX_ENTRIES);</span>
     }
 
@@ -53,7 +53,7 @@ public final class LRUCache&lt;T&gt; extends LinkedHashMap&lt;String, T&gt; {
      * and the assignment is what enables Java to determine
      * what types to build.
      */
-    public static &lt;T&gt; Map&lt;String, T&gt; getLruCache(int maxSize) {
+    public static &lt;K,V&gt; Map&lt;K, V&gt; getLruCache(int maxSize) {
 <span class="fc" id="L57">        return new LRUCache&lt;&gt;(maxSize);</span>
     }
 }
