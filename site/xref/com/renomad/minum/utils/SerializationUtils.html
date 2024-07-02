@@ -8,7 +8,7 @@
 <div id="overview"><a href="../../../../../apidocs/com/renomad/minum/utils/SerializationUtils.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.utils;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.exceptions.ForbiddenUseException;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.security.ForbiddenUseException;
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.security.Inmate;
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> java.util.ArrayList;
@@ -65,8 +65,8 @@
 <a class="jxr_linenumber" name="L57" href="#L57">57</a>  <em class="jxr_comment">         * to have databases of type {@link com.renomad.minum.database.DbData} that</em>
 <a class="jxr_linenumber" name="L58" href="#L58">58</a>  <em class="jxr_comment">         * have this many fields.</em>
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>  <em class="jxr_comment">         */</em>
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>          <strong class="jxr_keyword">int</strong> MAXIMUM_DATABASE_PARTITIONS_ALLOWED = 200;
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>          <strong class="jxr_keyword">return</strong> tokenizer(serializedText, '|', MAXIMUM_DATABASE_PARTITIONS_ALLOWED).stream().map(StringUtils::decode).toList();
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>          <strong class="jxr_keyword">int</strong> maximumDatabasePartitionsAllowed = 200;
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>          <strong class="jxr_keyword">return</strong> tokenizer(serializedText, '|', maximumDatabasePartitionsAllowed).stream().map(StringUtils::decode).toList();
 <a class="jxr_linenumber" name="L62" href="#L62">62</a>      }
 <a class="jxr_linenumber" name="L63" href="#L63">63</a>  
 <a class="jxr_linenumber" name="L64" href="#L64">64</a>      <em class="jxr_javadoccomment">/**</em>
@@ -83,7 +83,7 @@
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>          <strong class="jxr_keyword">var</strong> currentPlace = 0;
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>          <strong class="jxr_keyword">for</strong>(<strong class="jxr_keyword">int</strong> i = 0; ; i++) {
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>              <strong class="jxr_keyword">if</strong> (i &gt;= maxTokens) {
-<a class="jxr_linenumber" name="L78" href="#L78">78</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"Asked to split content into too many partitions in the tokenizer.  Current max: "</span> + maxTokens);
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/security/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"Asked to split content into too many partitions in the tokenizer.  Current max: "</span> + maxTokens);
 <a class="jxr_linenumber" name="L79" href="#L79">79</a>              }
 <a class="jxr_linenumber" name="L80" href="#L80">80</a>              <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> nextDelimiterIndex = serializedText.indexOf(delimiter, currentPlace);
 <a class="jxr_linenumber" name="L81" href="#L81">81</a>              <strong class="jxr_keyword">if</strong> (nextDelimiterIndex == -1) {

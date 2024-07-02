@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BodyProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">BodyProcessor.java</span></div><h1>BodyProcessor.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
 
-import com.renomad.minum.Context;
-import com.renomad.minum.exceptions.ForbiddenUseException;
+import com.renomad.minum.security.ForbiddenUseException;
 import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.state.Context;
 import com.renomad.minum.utils.InvariantException;
 import com.renomad.minum.utils.StringUtils;
 
@@ -37,7 +37,7 @@ final class BodyProcessor {
 <span class="fc" id="L37">    BodyProcessor(Context context) {</span>
 <span class="fc" id="L38">        this.context = context;</span>
 <span class="fc" id="L39">        this.logger = context.getLogger();</span>
-<span class="fc" id="L40">        this.inputStreamUtils = context.getInputStreamUtils();</span>
+<span class="fc" id="L40">        this.inputStreamUtils = new InputStreamUtils(context.getConstants());</span>
 <span class="fc" id="L41">    }</span>
 
     /**
@@ -175,25 +175,26 @@ final class BodyProcessor {
 <span class="fc bfc" id="L175" title="All 2 branches covered.">        for (byte[] df : partitions) {</span>
 <span class="fc" id="L176">            final var is = new ByteArrayInputStream(df);</span>
 
-<span class="fc" id="L178">            Headers headers = Headers.make(context).extractHeaderInformation(is);</span>
+<span class="fc" id="L178">            List&lt;String&gt; allHeaders = Headers.getAllHeaders(is, context.getConstants().maxHeadersCount, inputStreamUtils);</span>
+<span class="fc" id="L179">            Headers headers = new Headers(allHeaders);</span>
 
-<span class="fc" id="L180">            List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">            String contentDisposition = String.join(&quot;;&quot;, cds == null ? List.of(&quot;&quot;) : cds);</span>
+<span class="fc" id="L181">            List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">            String contentDisposition = String.join(&quot;;&quot;, cds == null ? List.of(&quot;&quot;) : cds);</span>
 
-<span class="fc" id="L183">            Matcher matcher = multiformNameRegex.matcher(contentDisposition);</span>
+<span class="fc" id="L184">            Matcher matcher = multiformNameRegex.matcher(contentDisposition);</span>
 
-<span class="fc bfc" id="L185" title="All 2 branches covered.">            if (matcher.find()) {</span>
-<span class="fc" id="L186">                String name = matcher.group(&quot;namevalue&quot;);</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">            if (matcher.find()) {</span>
+<span class="fc" id="L187">                String name = matcher.group(&quot;namevalue&quot;);</span>
                 // at this point our inputstream pointer is at the beginning of the
                 // body data.  From here until the end it's pure data.
 
-<span class="fc" id="L190">                var data = inputStreamUtils.readUntilEOF(is);</span>
-<span class="fc" id="L191">                result.put(name, data);</span>
-<span class="fc" id="L192">                partitionHeaders.put(name, headers);</span>
+<span class="fc" id="L191">                var data = inputStreamUtils.readUntilEOF(is);</span>
+<span class="fc" id="L192">                result.put(name, data);</span>
+<span class="fc" id="L193">                partitionHeaders.put(name, headers);</span>
             }
 
-<span class="fc" id="L195">        }</span>
-<span class="fc" id="L196">        return new Body(result, body, partitionHeaders);</span>
+<span class="fc" id="L196">        }</span>
+<span class="fc" id="L197">        return new Body(result, body, partitionHeaders);</span>
     }
 
 
@@ -202,38 +203,38 @@ final class BodyProcessor {
      * between the boundary values
      */
     List&lt;byte[]&gt; split(byte[] body, String boundaryValue) {
-<span class="fc" id="L205">        List&lt;byte[]&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L206">        List&lt;Integer&gt; indexesOfEndsOfBoundaries = determineEndsOfBoundaries(body, boundaryValue);</span>
+<span class="fc" id="L206">        List&lt;byte[]&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L207">        List&lt;Integer&gt; indexesOfEndsOfBoundaries = determineEndsOfBoundaries(body, boundaryValue);</span>
         // now we know where the boundaries are in this hunk of data.  Partition time!
-<span class="fc" id="L208">        int indexInBody = 0;</span>
-<span class="fc bfc" id="L209" title="All 2 branches covered.">        for (int endOfBoundaryIndex : indexesOfEndsOfBoundaries) {</span>
+<span class="fc" id="L209">        int indexInBody = 0;</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">        for (int endOfBoundaryIndex : indexesOfEndsOfBoundaries) {</span>
             // the minus one plus two silliness is to make clear that we're calculating for two extra chars after the boundary
-<span class="fc bfc" id="L211" title="All 2 branches covered.">            if (indexInBody != endOfBoundaryIndex-(boundaryValue.length() + 2 - 1)) {</span>
-<span class="fc" id="L212">                result.add(Arrays.copyOfRange(body, indexInBody, endOfBoundaryIndex-(boundaryValue.length() + 2 -1)));</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            if (indexInBody != endOfBoundaryIndex-(boundaryValue.length() + 2 - 1)) {</span>
+<span class="fc" id="L213">                result.add(Arrays.copyOfRange(body, indexInBody, endOfBoundaryIndex-(boundaryValue.length() + 2 -1)));</span>
             }
-<span class="fc" id="L214">            indexInBody = endOfBoundaryIndex+1;</span>
-<span class="fc" id="L215">        }</span>
-<span class="fc" id="L216">        return result;</span>
+<span class="fc" id="L215">            indexInBody = endOfBoundaryIndex+1;</span>
+<span class="fc" id="L216">        }</span>
+<span class="fc" id="L217">        return result;</span>
     }
 
     private static List&lt;Integer&gt; determineEndsOfBoundaries(byte[] body, String boundaryValue) {
-<span class="fc" id="L220">        List&lt;Integer&gt; indexesOfEndsOfBoundaries = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L221">        byte[] boundaryValueBytes = boundaryValue.getBytes(StandardCharsets.UTF_8);</span>
-<span class="fc" id="L222">        int indexIntoBoundaryValue = 0;</span>
-<span class="fc bfc" id="L223" title="All 2 branches covered.">        for (int i = 0; i &lt; body.length; i++) {</span>
-<span class="fc bfc" id="L224" title="All 2 branches covered.">            if (body[i] == boundaryValueBytes[indexIntoBoundaryValue]) {</span>
-<span class="fc bfc" id="L225" title="All 2 branches covered.">                if (indexIntoBoundaryValue == boundaryValueBytes.length - 1) {</span>
+<span class="fc" id="L221">        List&lt;Integer&gt; indexesOfEndsOfBoundaries = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L222">        byte[] boundaryValueBytes = boundaryValue.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L223">        int indexIntoBoundaryValue = 0;</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        for (int i = 0; i &lt; body.length; i++) {</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">            if (body[i] == boundaryValueBytes[indexIntoBoundaryValue]) {</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">                if (indexIntoBoundaryValue == boundaryValueBytes.length - 1) {</span>
                     // have to add two to account for *either* CR+LF or two dashes.  Multipart
                     // form is so complicated!
-<span class="fc" id="L228">                    indexesOfEndsOfBoundaries.add(i + 2);</span>
-<span class="fc" id="L229">                    indexIntoBoundaryValue = 0;</span>
+<span class="fc" id="L229">                    indexesOfEndsOfBoundaries.add(i + 2);</span>
+<span class="fc" id="L230">                    indexIntoBoundaryValue = 0;</span>
                 }
-<span class="fc" id="L231">                indexIntoBoundaryValue += 1;</span>
+<span class="fc" id="L232">                indexIntoBoundaryValue += 1;</span>
             } else {
-<span class="fc" id="L233">                indexIntoBoundaryValue = 0;</span>
+<span class="fc" id="L234">                indexIntoBoundaryValue = 0;</span>
             }
         }
-<span class="fc" id="L236">        return indexesOfEndsOfBoundaries;</span>
+<span class="fc" id="L237">        return indexesOfEndsOfBoundaries;</span>
     }
 
 
@@ -245,24 +246,24 @@ final class BodyProcessor {
      * @return a list of strings.  If the delimiter is not found, we will just return the whole string
      */
     static List&lt;String&gt; tokenizer(String serializedText, char delimiter, int maxTokenizerPartitions) {
-<span class="fc" id="L248">        final var resultList = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L249">        var currentPlace = 0;</span>
+<span class="fc" id="L249">        final var resultList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L250">        var currentPlace = 0;</span>
         // when would we have a need to tokenize anything into more than MAX_TOKENIZER_PARTITIONS partitions?
-<span class="fc" id="L251">        for(int i = 0;; i++) {</span>
-<span class="fc bfc" id="L252" title="All 2 branches covered.">            if (i &gt;= maxTokenizerPartitions) {</span>
-<span class="fc" id="L253">                throw new ForbiddenUseException(&quot;Request made for too many partitions in the tokenizer.  Current max: &quot; + maxTokenizerPartitions);</span>
+<span class="fc" id="L252">        for(int i = 0;; i++) {</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">            if (i &gt;= maxTokenizerPartitions) {</span>
+<span class="fc" id="L254">                throw new ForbiddenUseException(&quot;Request made for too many partitions in the tokenizer.  Current max: &quot; + maxTokenizerPartitions);</span>
             }
-<span class="fc" id="L255">            final var nextDelimiterIndex = serializedText.indexOf(delimiter, currentPlace);</span>
-<span class="fc bfc" id="L256" title="All 2 branches covered.">            if (nextDelimiterIndex == -1) {</span>
+<span class="fc" id="L256">            final var nextDelimiterIndex = serializedText.indexOf(delimiter, currentPlace);</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">            if (nextDelimiterIndex == -1) {</span>
                 // if we don't see any delimiter symbols ahead, grab the rest of the text from our current place
-<span class="fc" id="L258">                resultList.add(serializedText.substring(currentPlace));</span>
-<span class="fc" id="L259">                break;</span>
+<span class="fc" id="L259">                resultList.add(serializedText.substring(currentPlace));</span>
+<span class="fc" id="L260">                break;</span>
             }
-<span class="fc" id="L261">            resultList.add(serializedText.substring(currentPlace, nextDelimiterIndex));</span>
-<span class="fc" id="L262">            currentPlace = nextDelimiterIndex + 1;</span>
+<span class="fc" id="L262">            resultList.add(serializedText.substring(currentPlace, nextDelimiterIndex));</span>
+<span class="fc" id="L263">            currentPlace = nextDelimiterIndex + 1;</span>
         }
 
-<span class="fc" id="L265">        return resultList;</span>
+<span class="fc" id="L266">        return resultList;</span>
     }
 
 }

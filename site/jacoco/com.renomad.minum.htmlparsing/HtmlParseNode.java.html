@@ -3,6 +3,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents the expected types of things we may encounter when parsing an HTML string, which
@@ -11,12 +12,25 @@ import java.util.Map;
  * See &lt;a href=&quot;https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements&quot;&gt;W3.org Elements&lt;/a&gt;
  * &lt;/p&gt;
  */
-<span class="fc" id="L14">public record HtmlParseNode(ParseNodeType type,</span>
-                            TagInfo tagInfo,
-                            List&lt;HtmlParseNode&gt; innerContent,
-                            String textContent) {
+public final class HtmlParseNode {
 
-<span class="fc" id="L19">    public static final HtmlParseNode EMPTY = new HtmlParseNode(ParseNodeType.ELEMENT, TagInfo.EMPTY, List.of(), &quot;EMPTY HTMLPARSENODE&quot;);</span>
+    private final ParseNodeType type;
+    private final TagInfo tagInfo;
+    private final List&lt;HtmlParseNode&gt; innerContent;
+    private final String textContent;
+
+    public HtmlParseNode(ParseNodeType type,
+                         TagInfo tagInfo,
+                         List&lt;HtmlParseNode&gt; innerContent,
+<span class="fc" id="L25">                         String textContent) {</span>
+
+<span class="fc" id="L27">        this.type = type;</span>
+<span class="fc" id="L28">        this.tagInfo = tagInfo;</span>
+<span class="fc" id="L29">        this.innerContent = new ArrayList&lt;&gt;(innerContent);</span>
+<span class="fc" id="L30">        this.textContent = textContent;</span>
+<span class="fc" id="L31">    }</span>
+
+<span class="fc" id="L33">    public static final HtmlParseNode EMPTY = new HtmlParseNode(ParseNodeType.ELEMENT, TagInfo.EMPTY, List.of(), &quot;EMPTY HTMLPARSENODE&quot;);</span>
 
     /**
      * Return a list of strings of the text content of the tree.
@@ -27,37 +41,37 @@ import java.util.Map;
      * &lt;/p&gt;
      */
     public List&lt;String&gt; print() {
-<span class="fc" id="L30">        var myList = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L31">        recursiveTreeWalk(myList, innerContent, textContent);</span>
-<span class="fc" id="L32">        return myList;</span>
+<span class="fc" id="L44">        var myList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L45">        recursiveTreeWalk(myList, innerContent, textContent);</span>
+<span class="fc" id="L46">        return myList;</span>
     }
 
-    static void recursiveTreeWalk(ArrayList&lt;String&gt; myList, List&lt;HtmlParseNode&gt; innerContent, String textContent) {
-<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (HtmlParseNode hpn : innerContent) {</span>
-<span class="fc" id="L37">            recursiveTreeWalk(myList, hpn.innerContent, hpn.textContent);</span>
-<span class="fc" id="L38">        }</span>
-<span class="fc bfc" id="L39" title="All 4 branches covered.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
-<span class="fc" id="L40">            myList.add(textContent);</span>
+    static void recursiveTreeWalk(List&lt;String&gt; myList, List&lt;HtmlParseNode&gt; innerContent, String textContent) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (HtmlParseNode hpn : innerContent) {</span>
+<span class="fc" id="L51">            recursiveTreeWalk(myList, hpn.innerContent, hpn.textContent);</span>
+<span class="fc" id="L52">        }</span>
+<span class="fc bfc" id="L53" title="All 4 branches covered.">        if (textContent != null &amp;&amp; ! textContent.isBlank()) {</span>
+<span class="fc" id="L54">            myList.add(textContent);</span>
         }
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L56">    }</span>
 
     /**
      * Return a list of {@link HtmlParseNode} nodes in the HTML that match provided attributes.
      */
     public List&lt;HtmlParseNode&gt; search(TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc" id="L48">        var myList = new ArrayList&lt;HtmlParseNode&gt;();</span>
-<span class="fc" id="L49">        recursiveTreeWalkSearch(myList, tagName, attributes);</span>
-<span class="fc" id="L50">        return myList;</span>
+<span class="fc" id="L62">        var myList = new ArrayList&lt;HtmlParseNode&gt;();</span>
+<span class="fc" id="L63">        recursiveTreeWalkSearch(myList, tagName, attributes);</span>
+<span class="fc" id="L64">        return myList;</span>
     }
 
-    private void recursiveTreeWalkSearch(ArrayList&lt;HtmlParseNode&gt; myList, TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc bfc" id="L54" title="All 4 branches covered.">        if (this.tagInfo().tagName().equals(tagName) &amp;&amp; this.tagInfo().attributes().entrySet().containsAll(attributes.entrySet())) {</span>
-<span class="fc" id="L55">            myList.add(this);</span>
+    private void recursiveTreeWalkSearch(List&lt;HtmlParseNode&gt; myList, TagName tagName, Map&lt;String, String&gt; attributes) {
+<span class="fc bfc" id="L68" title="All 4 branches covered.">        if (this.tagInfo.getTagName().equals(tagName) &amp;&amp; this.tagInfo.containsAllAttributes(attributes.entrySet())) {</span>
+<span class="fc" id="L69">            myList.add(this);</span>
         }
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (var htmlParseNode : innerContent) {</span>
-<span class="fc" id="L58">            htmlParseNode.recursiveTreeWalkSearch(myList, tagName, attributes);</span>
-<span class="fc" id="L59">        }</span>
-<span class="fc" id="L60">    }</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (var htmlParseNode : innerContent) {</span>
+<span class="fc" id="L72">            htmlParseNode.recursiveTreeWalkSearch(myList, tagName, attributes);</span>
+<span class="fc" id="L73">        }</span>
+<span class="fc" id="L74">    }</span>
 
     /**
      * Return the inner text of these nodes
@@ -71,20 +85,52 @@ import java.util.Map;
      * &lt;/p&gt;
      */
     static String innerText(List&lt;HtmlParseNode&gt; innerContent) {
-<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (innerContent == null) return &quot;&quot;;</span>
-<span class="fc bfc" id="L75" title="All 4 branches covered.">        if (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {</span>
-<span class="fc" id="L76">            return innerContent.getFirst().textContent;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (innerContent == null) return &quot;&quot;;</span>
+<span class="fc bfc" id="L89" title="All 4 branches covered.">        if (innerContent.size() == 1 &amp;&amp; innerContent.getFirst().type == ParseNodeType.CHARACTERS) {</span>
+<span class="fc" id="L90">            return innerContent.getFirst().textContent;</span>
         } else {
-<span class="fc" id="L78">            StringBuilder sb = new StringBuilder();</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">            for (HtmlParseNode hpn : innerContent) {</span>
-<span class="fc" id="L80">                sb.append(hpn.print());</span>
-<span class="fc" id="L81">            }</span>
-<span class="fc" id="L82">            return sb.toString();</span>
+<span class="fc" id="L92">            StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            for (HtmlParseNode hpn : innerContent) {</span>
+<span class="fc" id="L94">                sb.append(hpn.print());</span>
+<span class="fc" id="L95">            }</span>
+<span class="fc" id="L96">            return sb.toString();</span>
         }
     }
 
+    public ParseNodeType getType() {
+<span class="fc" id="L101">        return type;</span>
+    }
+
+    public TagInfo getTagInfo() {
+<span class="fc" id="L105">        return tagInfo;</span>
+    }
+
+    public List&lt;HtmlParseNode&gt; getInnerContent() {
+<span class="fc" id="L109">        return new ArrayList&lt;&gt;(innerContent);</span>
+    }
+
+    void addToInnerContent(HtmlParseNode htmlParseNode) {
+<span class="fc" id="L113">        innerContent.add(htmlParseNode);</span>
+<span class="fc" id="L114">    }</span>
+
+    public String getTextContent() {
+<span class="fc" id="L117">        return textContent;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (!(o instanceof HtmlParseNode that)) return false;</span>
+<span class="fc bfc" id="L124" title="All 8 branches covered.">        return type == that.type &amp;&amp; Objects.equals(tagInfo, that.tagInfo) &amp;&amp; Objects.equals(innerContent, that.innerContent) &amp;&amp; Objects.equals(textContent, that.textContent);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L129">        return Objects.hash(type, tagInfo, innerContent, textContent);</span>
+    }
+
     public String innerText() {
-<span class="fc" id="L87">        return innerText(innerContent);</span>
+<span class="fc" id="L133">        return innerText(innerContent);</span>
     }
 
 }

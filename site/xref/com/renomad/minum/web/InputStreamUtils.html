@@ -8,8 +8,8 @@
 <div id="overview"><a href="../../../../../apidocs/com/renomad/minum/web/InputStreamUtils.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.web;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.Constants;
-<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.exceptions.ForbiddenUseException;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Constants;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.security.ForbiddenUseException;
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.UtilsException;
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   
 <a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> java.io.ByteArrayOutputStream;
@@ -26,10 +26,10 @@
 <a class="jxr_linenumber" name="L18" href="#L18">18</a>  <em class="jxr_javadoccomment"> */</em>
 <a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a name="InputStreamUtils" href="../../../../com/renomad/minum/web/InputStreamUtils.html#InputStreamUtils">InputStreamUtils</a> <strong class="jxr_keyword">implements</strong> <a name="IInputStreamUtils" href="../../../../com/renomad/minum/web/IInputStreamUtils.html#IInputStreamUtils">IInputStreamUtils</a> {
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>  
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="Constants" href="../../../../com/renomad/minum/Constants.html#Constants">Constants</a> constants;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="Constants" href="../../../../com/renomad/minum/state/Constants.html#Constants">Constants</a> constants;
 <a class="jxr_linenumber" name="L22" href="#L22">22</a>  
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>  
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>      <strong class="jxr_keyword">public</strong> <a name="InputStreamUtils" href="../../../../com/renomad/minum/web/InputStreamUtils.html#InputStreamUtils">InputStreamUtils</a>(<a name="Constants" href="../../../../com/renomad/minum/Constants.html#Constants">Constants</a> constants) {
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>      <strong class="jxr_keyword">public</strong> <a name="InputStreamUtils" href="../../../../com/renomad/minum/web/InputStreamUtils.html#InputStreamUtils">InputStreamUtils</a>(<a name="Constants" href="../../../../com/renomad/minum/state/Constants.html#Constants">Constants</a> constants) {
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>          <strong class="jxr_keyword">this</strong>.constants = constants;
 <a class="jxr_linenumber" name="L26" href="#L26">26</a>      }
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>  
@@ -40,7 +40,7 @@
 <a class="jxr_linenumber" name="L32" href="#L32">32</a>              <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; ; i++) {
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>                  <strong class="jxr_keyword">if</strong> (i &gt;= constants.maxReadSizeBytes) {
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>                      inputStream.close();
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>                      <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client sent more bytes than allowed.  Current max: "</span> + constants.maxReadSizeBytes);
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>                      <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/security/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client sent more bytes than allowed.  Current max: "</span> + constants.maxReadSizeBytes);
 <a class="jxr_linenumber" name="L36" href="#L36">36</a>                  }
 <a class="jxr_linenumber" name="L37" href="#L37">37</a>                  <strong class="jxr_keyword">int</strong> a = inputStream.read();
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>                  <strong class="jxr_keyword">if</strong> (a == -1) {
@@ -90,7 +90,7 @@
 <a class="jxr_linenumber" name="L82" href="#L82">82</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0;; i++) {
 <a class="jxr_linenumber" name="L83" href="#L83">83</a>              <strong class="jxr_keyword">if</strong> (i &gt;= constants.maxReadLineSizeBytes) {
 <a class="jxr_linenumber" name="L84" href="#L84">84</a>                  inputStream.close();
-<a class="jxr_linenumber" name="L85" href="#L85">85</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client sent more bytes than allowed for a single line.  Current max: "</span> + constants.maxReadLineSizeBytes);
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/security/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client sent more bytes than allowed for a single line.  Current max: "</span> + constants.maxReadLineSizeBytes);
 <a class="jxr_linenumber" name="L86" href="#L86">86</a>              }
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>              <strong class="jxr_keyword">int</strong> a = inputStream.read();
 <a class="jxr_linenumber" name="L88" href="#L88">88</a>              <strong class="jxr_keyword">if</strong> (a == -1) <strong class="jxr_keyword">return</strong> result.toString(StandardCharsets.UTF_8);
@@ -104,7 +104,7 @@
 <a class="jxr_linenumber" name="L96" href="#L96">96</a>      @Override
 <a class="jxr_linenumber" name="L97" href="#L97">97</a>      <strong class="jxr_keyword">public</strong> byte[] read(<strong class="jxr_keyword">int</strong> lengthToRead, InputStream inputStream) {
 <a class="jxr_linenumber" name="L98" href="#L98">98</a>          <strong class="jxr_keyword">if</strong> (lengthToRead &gt;= constants.maxReadSizeBytes) {
-<a class="jxr_linenumber" name="L99" href="#L99">99</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client requested to send more bytes than allowed.  Current max: "</span> + constants.maxReadSizeBytes + <span class="jxr_string">" asked to receive: "</span> + lengthToRead);
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/security/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"client requested to send more bytes than allowed.  Current max: "</span> + constants.maxReadSizeBytes + <span class="jxr_string">" asked to receive: "</span> + lengthToRead);
 <a class="jxr_linenumber" name="L100" href="#L100">100</a>         }
 <a class="jxr_linenumber" name="L101" href="#L101">101</a>         <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> typicalBufferSize = 1024 * 8;
 <a class="jxr_linenumber" name="L102" href="#L102">102</a>         byte[] buf = <strong class="jxr_keyword">new</strong> byte[Math.min(lengthToRead, typicalBufferSize)]; <em class="jxr_comment">// 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</em>
@@ -130,7 +130,7 @@
 <a class="jxr_linenumber" name="L122" href="#L122">122</a> 
 <a class="jxr_linenumber" name="L123" href="#L123">123</a>         <strong class="jxr_keyword">if</strong> (data.length != lengthToRead) {
 <a class="jxr_linenumber" name="L124" href="#L124">124</a>             String message = String.format(<span class="jxr_string">"length of bytes read (%d) must be what we expected (%d)"</span>, data.length, lengthToRead);
-<a class="jxr_linenumber" name="L125" href="#L125">125</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(message);
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/security/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(message);
 <a class="jxr_linenumber" name="L126" href="#L126">126</a>         }
 <a class="jxr_linenumber" name="L127" href="#L127">127</a>         <strong class="jxr_keyword">return</strong> data;
 <a class="jxr_linenumber" name="L128" href="#L128">128</a>     }

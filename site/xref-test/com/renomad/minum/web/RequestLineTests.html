@@ -8,7 +8,7 @@
 <div id="overview"><a href="../../../../../testapidocs/com/renomad/minum/web/RequestLineTests.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.web;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.Context;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> org.junit.After;
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> org.junit.Before;
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> org.junit.Test;
@@ -36,11 +36,17 @@
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>  
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>      @Test
 <a class="jxr_linenumber" name="L30" href="#L30">30</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_GetRawValue() {
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>          <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(GET, <strong class="jxr_keyword">new</strong> RequestLine.PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()), ONE_DOT_ONE, <span class="jxr_string">"testing test"</span>, context);
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>          String rawValue = startLine.getRawValue();
-<a class="jxr_linenumber" name="L33" href="#L33">33</a>          assertEquals(rawValue, <span class="jxr_string">"testing test"</span>);
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>      }
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>  }
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>          <strong class="jxr_keyword">var</strong> startLine = <strong class="jxr_keyword">new</strong> RequestLine(
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>                  GET,
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>                  <strong class="jxr_keyword">new</strong> PathDetails(<span class="jxr_string">"mypath"</span>, <span class="jxr_string">""</span>, Map.of()),
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>                  ONE_DOT_ONE,
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>                  <span class="jxr_string">"testing test"</span>,
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>                  context.getLogger(),
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>                  context.getConstants().maxQueryStringKeysCount);
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>          String rawValue = startLine.getRawValue();
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>          assertEquals(rawValue, <span class="jxr_string">"testing test"</span>);
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>      }
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

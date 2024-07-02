@@ -8,7 +8,7 @@
 <div id="overview"><a href="../../../../../apidocs/com/renomad/minum/logging/TestLogger.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.logging;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.Constants;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Constants;
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.MyThread;
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> java.util.List;
@@ -31,7 +31,7 @@
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L24" href="#L24">24</a>  <em class="jxr_javadoccomment">     * See {@link TestLogger}</em>
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>      <strong class="jxr_keyword">public</strong> <a name="TestLogger" href="../../../../com/renomad/minum/logging/TestLogger.html#TestLogger">TestLogger</a>(<a name="Constants" href="../../../../com/renomad/minum/Constants.html#Constants">Constants</a> constants, ExecutorService executorService, String name) {
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>      <strong class="jxr_keyword">public</strong> <a name="TestLogger" href="../../../../com/renomad/minum/logging/TestLogger.html#TestLogger">TestLogger</a>(<a name="Constants" href="../../../../com/renomad/minum/state/Constants.html#Constants">Constants</a> constants, ExecutorService executorService, String name) {
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>          <strong class="jxr_keyword">super</strong>(constants, executorService, name);
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>          <strong class="jxr_keyword">this</strong>.recentLogLines = <strong class="jxr_keyword">new</strong> <a name="TestLoggerQueue" href="../../../../com/renomad/minum/logging/TestLoggerQueue.html#TestLoggerQueue">TestLoggerQueue</a>(MAX_CACHE_SIZE);
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>          <strong class="jxr_keyword">this</strong>.loggingLock = <strong class="jxr_keyword">new</strong> ReentrantLock();
@@ -224,7 +224,12 @@
 <a class="jxr_linenumber" name="L216" href="#L216">216</a>         <strong class="jxr_keyword">return</strong> testCount;
 <a class="jxr_linenumber" name="L217" href="#L217">217</a>     }
 <a class="jxr_linenumber" name="L218" href="#L218">218</a> 
-<a class="jxr_linenumber" name="L219" href="#L219">219</a> }
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>     @Override
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>     <strong class="jxr_keyword">public</strong> String toString() {
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>         <strong class="jxr_keyword">return</strong> <span class="jxr_string">"TestLogger using queue: "</span> + <strong class="jxr_keyword">super</strong>.loggingActionQueue.toString();
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>     }
+<a class="jxr_linenumber" name="L223" href="#L223">223</a> 
+<a class="jxr_linenumber" name="L224" href="#L224">224</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

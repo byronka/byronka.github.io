@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HtmlParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.htmlparsing</a> &gt; <span class="el_source">HtmlParser.java</span></div><h1>HtmlParser.java</h1><pre class="source lang-java linenums">package com.renomad.minum.htmlparsing;
 
-import com.renomad.minum.exceptions.ForbiddenUseException;
+import com.renomad.minum.security.ForbiddenUseException;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -235,7 +235,7 @@ import java.util.*;
 
             // This is where we add characters if we found any between tags.
 <span class="fc bfc" id="L237" title="All 4 branches covered.">            if (! state.parseStack.isEmpty() &amp;&amp; ! textContent.isBlank()) {</span>
-<span class="fc" id="L238">                state.parseStack.peek().innerContent().add(new HtmlParseNode(ParseNodeType.CHARACTERS, TagInfo.EMPTY, new ArrayList&lt;&gt;(), textContent));</span>
+<span class="fc" id="L238">                state.parseStack.peek().addToInnerContent(new HtmlParseNode(ParseNodeType.CHARACTERS, TagInfo.EMPTY, new ArrayList&lt;&gt;(), textContent));</span>
             }
         }
 <span class="fc" id="L241">    }</span>
@@ -486,7 +486,7 @@ import java.util.*;
 <span class="fc bfc" id="L486" title="All 2 branches covered.">            if (! state.parseStack.isEmpty()) {</span>
                 // if we're inside an html element,
                 // add this to the inner content
-<span class="fc" id="L489">                state.parseStack.peek().innerContent().add(newNode);</span>
+<span class="fc" id="L489">                state.parseStack.peek().addToInnerContent(newNode);</span>
             }
 
 <span class="fc bfc" id="L492" title="All 4 branches covered.">            if (state.parseStack.isEmpty() &amp;&amp; tagName.isVoidElement) {</span>
@@ -519,7 +519,7 @@ import java.util.*;
 <span class="fc bfc" id="L519" title="All 2 branches covered.">            if (state.parseStack.isEmpty()) {</span>
 <span class="fc" id="L520">                nodes.add(htmlParseNode);</span>
             }
-<span class="fc" id="L522">            TagName expectedTagName = htmlParseNode.tagInfo().tagName();</span>
+<span class="fc" id="L522">            TagName expectedTagName = htmlParseNode.getTagInfo().getTagName();</span>
 <span class="fc bfc" id="L523" title="All 2 branches covered.">            if (expectedTagName != tagName) {</span>
 <span class="fc" id="L524">                throw new ParsingException(&quot;Did not find expected closing-tag type. &quot; + &quot;Expected: &quot; + expectedTagName + &quot; at line &quot; + state.lineRow + &quot; and at the &quot; + state.lineColumn + &quot;th character. &quot; + state.charsRead + &quot; characters read in total.&quot;);</span>
             }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Response.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">Response.java</span></div><h1>Response.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -43,33 +44,47 @@ import java.util.*;
  * an optional message body.
  * &lt;/li&gt;
  *&lt;/ul&gt;
- * @param extraHeaders extra headers we want to return with the response.
+
  */
-<span class="fc" id="L48">public record Response(StatusLine.StatusCode statusCode, Map&lt;String, String&gt; extraHeaders,</span>
-                       byte[] body) {
+public final class Response {
+
+    private final StatusLine.StatusCode statusCode;
+    private final Map&lt;String, String&gt; extraHeaders;
+    private final byte[] body;
+
+    /**
+     * @param extraHeaders extra headers we want to return with the response.
+     */
+    public Response(StatusLine.StatusCode statusCode, Map&lt;String, String&gt; extraHeaders,
+<span class="fc" id="L59">                    byte[] body) {</span>
+<span class="fc" id="L60">        this.statusCode = statusCode;</span>
+<span class="fc" id="L61">        this.extraHeaders = new HashMap&lt;&gt;(extraHeaders);</span>
+<span class="fc" id="L62">        this.body = body.clone();</span>
+<span class="fc" id="L63">    }</span>
+
     public Response(StatusLine.StatusCode statusCode, byte[] body) {
-<span class="fc" id="L51">        this(statusCode, Map.of(), body);</span>
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L66">        this(statusCode, Map.of(), body);</span>
+<span class="fc" id="L67">    }</span>
 
     public Response(StatusLine.StatusCode statusCode, String body) {
-<span class="fc" id="L55">        this(statusCode, Map.of(), body.getBytes());</span>
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L70">        this(statusCode, Map.of(), body.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L71">    }</span>
 
     public Response(StatusLine.StatusCode statusCode, String body, Map&lt;String, String&gt; extraHeaders) {
-<span class="fc" id="L59">        this(statusCode, extraHeaders, body.getBytes());</span>
-<span class="fc" id="L60">    }</span>
+<span class="fc" id="L74">        this(statusCode, extraHeaders, body.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L75">    }</span>
 
     public Response(StatusLine.StatusCode statusCode, byte[] body, Map&lt;String, String&gt; extraHeaders) {
-<span class="fc" id="L63">        this(statusCode, extraHeaders, body);</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L78">        this(statusCode, extraHeaders, body);</span>
+<span class="fc" id="L79">    }</span>
 
     public Response(StatusLine.StatusCode statusCode, Map&lt;String, String&gt; extraHeaders) {
-<span class="fc" id="L67">        this(statusCode, extraHeaders, &quot;&quot;.getBytes());</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L82">        this(statusCode, extraHeaders, &quot;&quot;.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L83">    }</span>
 
     public Response(StatusLine.StatusCode statusCode) {
-<span class="fc" id="L71">        this(statusCode, Map.of(), &quot;&quot;.getBytes());</span>
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L86">        this(statusCode, Map.of(), &quot;&quot;.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L87">    }</span>
 
     /**
      * A helper method to create a response that returns a
@@ -77,7 +92,7 @@ import java.util.*;
      * be handed to the browser.  This url may be relative or absolute.
      */
     public static Response redirectTo(String locationUrl) {
-<span class="fc" id="L80">        return new Response(StatusLine.StatusCode.CODE_303_SEE_OTHER, Map.of(&quot;location&quot;, locationUrl));</span>
+<span class="fc" id="L95">        return new Response(StatusLine.StatusCode.CODE_303_SEE_OTHER, Map.of(&quot;location&quot;, locationUrl));</span>
     }
 
     /**
@@ -87,10 +102,10 @@ import java.util.*;
      * that are needed to specify this is HTML.
      */
     public static Response htmlOk(String body, Map&lt;String, String&gt; extraHeaders) {
-<span class="fc" id="L90">        var headers = new HashMap&lt;String, String&gt;();</span>
-<span class="fc" id="L91">        headers.put(&quot;Content-Type&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
-<span class="fc" id="L92">        headers.putAll(extraHeaders);</span>
-<span class="fc" id="L93">        return new Response(StatusLine.StatusCode.CODE_200_OK, body, headers);</span>
+<span class="fc" id="L105">        var headers = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L106">        headers.put(&quot;Content-Type&quot;, &quot;text/html; charset=UTF-8&quot;);</span>
+<span class="fc" id="L107">        headers.putAll(extraHeaders);</span>
+<span class="fc" id="L108">        return new Response(StatusLine.StatusCode.CODE_200_OK, body, headers);</span>
     }
 
     /**
@@ -98,35 +113,47 @@ import java.util.*;
      * lets you skip some of the boilerplate.
      */
     public static Response htmlOk(String body) {
-<span class="fc" id="L101">        return htmlOk(body, Map.of());</span>
+<span class="fc" id="L116">        return htmlOk(body, Map.of());</span>
+    }
+
+    public Map&lt;String, String&gt; getExtraHeaders() {
+<span class="fc" id="L120">        return new HashMap&lt;&gt;(extraHeaders);</span>
+    }
+
+    public StatusLine.StatusCode getStatusCode() {
+<span class="fc" id="L124">        return statusCode;</span>
+    }
+
+    public byte[] getBody() {
+<span class="fc" id="L128">        return body.clone();</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L107" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L108">        Response response = (Response) o;</span>
-<span class="fc bfc" id="L109" title="All 6 branches covered.">        return statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Arrays.equals(body, response.body);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L134" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L135">        Response response = (Response) o;</span>
+<span class="fc bfc" id="L136" title="All 6 branches covered.">        return statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Arrays.equals(body, response.body);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L114">        int result = Objects.hash(statusCode, extraHeaders);</span>
-<span class="fc" id="L115">        result = 31 * result + Arrays.hashCode(body);</span>
-<span class="fc" id="L116">        return result;</span>
+<span class="fc" id="L141">        int result = Objects.hash(statusCode, extraHeaders);</span>
+<span class="fc" id="L142">        result = 31 * result + Arrays.hashCode(body);</span>
+<span class="fc" id="L143">        return result;</span>
     }
 
     @Override
     public String toString() {
         String arrayString;
-<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (body.length &gt; 10) {</span>
-<span class="fc" id="L123">            byte[] newBytes = new byte[10];</span>
-<span class="fc" id="L124">            System.arraycopy(body, 0, newBytes, 0, 10);</span>
-<span class="fc" id="L125">            arrayString = Arrays.toString(newBytes) + &quot;...&quot;;</span>
-<span class="fc" id="L126">        } else {</span>
-<span class="fc" id="L127">            arrayString = Arrays.toString(body);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (body.length &gt; 10) {</span>
+<span class="fc" id="L150">            byte[] newBytes = new byte[10];</span>
+<span class="fc" id="L151">            System.arraycopy(body, 0, newBytes, 0, 10);</span>
+<span class="fc" id="L152">            arrayString = Arrays.toString(newBytes) + &quot;...&quot;;</span>
+<span class="fc" id="L153">        } else {</span>
+<span class="fc" id="L154">            arrayString = Arrays.toString(body);</span>
         }
-<span class="fc" id="L129">        return &quot;Response{&quot; +</span>
+<span class="fc" id="L156">        return &quot;Response{&quot; +</span>
                 &quot;statusCode=&quot; + statusCode +
                 &quot;, extraHeaders=&quot; + extraHeaders +
                 &quot;, body=&quot; + arrayString +

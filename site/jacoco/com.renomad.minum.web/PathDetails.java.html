@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PathDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">PathDetails.java</span></div><h1>PathDetails.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+/**
+ * Some essential characteristics of the path portion of the start line
+ */
+public final class PathDetails {
+
+<span class="fc" id="L13">    public static final PathDetails empty = new PathDetails(&quot;&quot;, &quot;&quot;, Map.of());</span>
+
+    private final String isolatedPath;
+    private final String rawQueryString;
+    private final Map&lt;String, String&gt; queryString;
+
+    /**
+     * Basic constructor
+     * @param isolatedPath the isolated path is found after removing the query string
+     * @param rawQueryString the raw query is the string after a question mark (if it exists - it's optional)
+     *                       if there is no query string, then we leave rawQuery as a null value
+     * @param queryString the query is a map of the keys -&gt; values found in the query string
+     */
+    public PathDetails (
+            String isolatedPath,
+            String rawQueryString,
+            Map&lt;String, String&gt; queryString
+<span class="fc" id="L30">    ) {</span>
+<span class="fc" id="L31">        this.isolatedPath = isolatedPath;</span>
+<span class="fc" id="L32">        this.rawQueryString = rawQueryString;</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        this.queryString = new HashMap&lt;&gt;(queryString == null ? Map.of() : queryString);</span>
+<span class="fc" id="L34">    }</span>
+
+    public String getIsolatedPath() {
+<span class="fc" id="L37">        return isolatedPath;</span>
+    }
+
+    public String getRawQueryString() {
+<span class="fc" id="L41">        return rawQueryString;</span>
+    }
+
+    public Map&lt;String, String&gt; getQueryString() {
+<span class="fc" id="L45">        return new HashMap&lt;&gt;(queryString);</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (!(o instanceof PathDetails that)) return false;</span>
+<span class="fc bfc" id="L52" title="All 6 branches covered.">        return Objects.equals(isolatedPath, that.isolatedPath) &amp;&amp; Objects.equals(rawQueryString, that.rawQueryString) &amp;&amp; Objects.equals(queryString, that.queryString);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L57">        return Objects.hash(isolatedPath, rawQueryString, queryString);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L62">        return &quot;PathDetails{&quot; +</span>
+                &quot;isolatedPath='&quot; + isolatedPath + '\'' +
+                &quot;, rawQueryString='&quot; + rawQueryString + '\'' +
+                &quot;, queryString=&quot; + queryString +
+                '}';
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

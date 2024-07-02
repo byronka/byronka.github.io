@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ActionQueue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.queue</a> &gt; <span class="el_source">ActionQueue.java</span></div><h1>ActionQueue.java</h1><pre class="source lang-java linenums">package com.renomad.minum.queue;
+
+import com.renomad.minum.state.Context;
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.utils.*;
+
+import java.util.concurrent.*;
+
+/**
+ * This class provides the ability to pop items into
+ * a queue thread-safely and know they'll happen later.
+ * &lt;p&gt;
+ * For example, this is helpful for minum.logging, or passing
+ * functions to a minum.database.  It lets us run a bit faster,
+ * since the I/O actions are happening on a separate
+ * thread and the only time required is passing the
+ * function of what we want to run later.
+ */
+public final class ActionQueue implements AbstractActionQueue {
+    private final String name;
+    private final ExecutorService queueExecutor;
+    private final LinkedBlockingQueue&lt;RunnableWithDescription&gt; queue;
+    private final ILogger logger;
+<span class="fc" id="L24">    private boolean stop = false;</span>
+    private Thread queueThread;
+    private boolean isStoppedStatus;
+
+    /**
+     * See the {@link ActionQueue} description for more detail. This
+     * constructor will build your new action queue and handle registering
+     * it with a list of other action queues in the {@link Context} object.
+     * @param name give this object a unique, explanatory name.
+     */
+<span class="fc" id="L34">    public ActionQueue(String name, Context context) {</span>
+<span class="fc" id="L35">        this.name = name;</span>
+<span class="fc" id="L36">        this.queueExecutor = context.getExecutorService();</span>
+<span class="fc" id="L37">        this.queue = new LinkedBlockingQueue&lt;&gt;();</span>
+<span class="fc" id="L38">        context.getActionQueueState().offerToQueue(this);</span>
+<span class="fc" id="L39">        this.logger = context.getLogger();</span>
+<span class="fc" id="L40">    }</span>
+
+    // Regarding the InfiniteLoopStatement - indeed, we expect that the while loop
+    // below is an infinite loop unless there's an exception thrown, that's what it is.
+    @SuppressWarnings(&quot;InfiniteLoopStatement&quot;)
+    @Override
+    public ActionQueue initialize() {
+<span class="fc" id="L47">        Runnable centralLoop = () -&gt; {</span>
+<span class="fc" id="L48">            Thread.currentThread().setName(name);</span>
+<span class="fc" id="L49">            this.queueThread = Thread.currentThread();</span>
+            try {
+                while (true) {
+<span class="fc" id="L52">                    runAction();</span>
+                }
+<span class="fc" id="L54">            } catch (InterruptedException ex) {</span>
+                /*
+                this is what we expect to happen.
+                once this happens, we just continue on.
+                this only gets called when we are trying to shut everything
+                down cleanly
+                 */
+<span class="fc" id="L61">                logger.logDebug(() -&gt; String.format(&quot;%s ActionQueue for %s is stopped.%n&quot;, TimeUtils.getTimestampIsoInstant(), name));</span>
+<span class="fc" id="L62">                Thread.currentThread().interrupt();</span>
+            }
+<span class="fc" id="L64">        };</span>
+<span class="fc" id="L65">        queueExecutor.submit(centralLoop);</span>
+<span class="fc" id="L66">        return this;</span>
+    }
+
+    private void runAction() throws InterruptedException {
+<span class="fc" id="L70">        RunnableWithDescription action = queue.take();</span>
+        try {
+<span class="fc" id="L72">            action.run();</span>
+<span class="fc" id="L73">        } catch (Exception e) {</span>
+<span class="fc" id="L74">            logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(e));</span>
+<span class="fc" id="L75">        }</span>
+<span class="fc" id="L76">    }</span>
+
+    /**
+     * Adds something to the queue to be processed.
+     * &lt;p&gt;
+     *     Here is an example use of .enqueue:
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     * &lt;pre&gt;
+     * {@code   actionQueue.enqueue(&quot;Write person file to disk at &quot; + filePath, () -&gt; {
+     *             Files.writeString(filePath, pf.serialize());
+     *         });}
+     * &lt;/pre&gt;
+     * &lt;/p&gt;
+     */
+    @Override
+    public void enqueue(String description, ThrowingRunnable action) {
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (! stop) {</span>
+<span class="fc" id="L94">            queue.add(new RunnableWithDescription(action, description));</span>
+        } else {
+<span class="fc" id="L96">            throw new UtilsException(String.format(&quot;failed to enqueue %s - ActionQueue \&quot;%s\&quot; is stopped&quot;, description, this.name));</span>
+        }
+<span class="fc" id="L98">    }</span>
+
+    /**
+     * Stops the action queue
+     * @param count how many loops to wait before we crash it closed
+     * @param sleepTime how long to wait in milliseconds between loops
+     */
+    @Override
+    public void stop(int count, int sleepTime) {
+<span class="fc" id="L107">        String timestamp = TimeUtils.getTimestampIsoInstant();</span>
+<span class="fc" id="L108">        logger.logDebug(() -&gt;  String.format(&quot;%s Stopping queue %s&quot;, timestamp, this));</span>
+<span class="fc" id="L109">        stop = true;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (int i = 0; i &lt; count; i++) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (queue.isEmpty()) return;</span>
+<span class="fc" id="L112">            logger.logDebug(() -&gt;  String.format(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;,timestamp, queue.size()));</span>
+<span class="fc" id="L113">            MyThread.sleep(sleepTime);</span>
+        }
+<span class="fc" id="L115">        isStoppedStatus = true;</span>
+<span class="fc" id="L116">        logger.logDebug(() -&gt; String.format(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, timestamp, this, queue.size(), queue));</span>
+<span class="fc" id="L117">    }</span>
+
+    /**
+     * This will prevent any new actions being
+     * queued (by setting the stop flag to true and thus
+     * causing an exception to be thrown
+     * when a call is made to [enqueue]) and will
+     * block until the queue is empty.
+     */
+    @Override
+    public void stop() {
+<span class="fc" id="L128">        stop(5, 20);</span>
+<span class="fc" id="L129">    }</span>
+
+    @Override
+    public String toString() {
+<span class="fc" id="L133">        return this.name;</span>
+    }
+
+    Thread getQueueThread() {
+<span class="fc" id="L137">        return queueThread;</span>
+    }
+
+    @Override
+    public LinkedBlockingQueue&lt;RunnableWithDescription&gt; getQueue() {
+<span class="fc" id="L142">        return new LinkedBlockingQueue&lt;&gt;(queue);</span>
+    }
+
+    @Override
+    public boolean isStopped() {
+<span class="fc" id="L147">        return isStoppedStatus;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -8,7 +8,7 @@
 <div id="overview"><a href="../../../../../apidocs/com/renomad/minum/htmlparsing/HtmlParser.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.htmlparsing;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.exceptions.ForbiddenUseException;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.security.ForbiddenUseException;
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> java.io.ByteArrayInputStream;
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> java.nio.charset.StandardCharsets;
@@ -66,7 +66,7 @@
 <a class="jxr_linenumber" name="L58" href="#L58">58</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>      <strong class="jxr_keyword">public</strong> List&lt;HtmlParseNode&gt; parse(String input) {
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>          <strong class="jxr_keyword">if</strong> (input.length() &gt; MAX_HTML_SIZE)
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/exceptions/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"Input exceeds max allowed HTML text size, "</span> + MAX_HTML_SIZE + <span class="jxr_string">" chars"</span>);
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/security/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"Input exceeds max allowed HTML text size, "</span> + MAX_HTML_SIZE + <span class="jxr_string">" chars"</span>);
 <a class="jxr_linenumber" name="L62" href="#L62">62</a>          <strong class="jxr_keyword">var</strong> is = <strong class="jxr_keyword">new</strong> ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
 <a class="jxr_linenumber" name="L63" href="#L63">63</a>  
 <a class="jxr_linenumber" name="L64" href="#L64">64</a>          List&lt;HtmlParseNode&gt; nodes = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;();
@@ -243,7 +243,7 @@
 <a class="jxr_linenumber" name="L235" href="#L235">235</a> 
 <a class="jxr_linenumber" name="L236" href="#L236">236</a>             <em class="jxr_comment">// This is where we add characters if we found any between tags.</em>
 <a class="jxr_linenumber" name="L237" href="#L237">237</a>             <strong class="jxr_keyword">if</strong> (! state.parseStack.isEmpty() &amp;&amp; ! textContent.isBlank()) {
-<a class="jxr_linenumber" name="L238" href="#L238">238</a>                 state.parseStack.peek().innerContent().add(<strong class="jxr_keyword">new</strong> HtmlParseNode(ParseNodeType.CHARACTERS, TagInfo.EMPTY, <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;(), textContent));
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>                 state.parseStack.peek().addToInnerContent(<strong class="jxr_keyword">new</strong> <a name="HtmlParseNode" href="../../../../com/renomad/minum/htmlparsing/HtmlParseNode.html#HtmlParseNode">HtmlParseNode</a>(ParseNodeType.CHARACTERS, TagInfo.EMPTY, <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;(), textContent));
 <a class="jxr_linenumber" name="L239" href="#L239">239</a>             }
 <a class="jxr_linenumber" name="L240" href="#L240">240</a>         }
 <a class="jxr_linenumber" name="L241" href="#L241">241</a>     }
@@ -487,14 +487,14 @@
 <a class="jxr_linenumber" name="L479" href="#L479">479</a> 
 <a class="jxr_linenumber" name="L480" href="#L480">480</a>         tagName = TagName.findMatchingTagname(tagNameString);
 <a class="jxr_linenumber" name="L481" href="#L481">481</a>         <strong class="jxr_keyword">if</strong> (tagName.equals(TagName.UNRECOGNIZED)) <strong class="jxr_keyword">return</strong>;
-<a class="jxr_linenumber" name="L482" href="#L482">482</a>         <strong class="jxr_keyword">var</strong> tagInfo = <strong class="jxr_keyword">new</strong> TagInfo(tagName, state.attributes);
+<a class="jxr_linenumber" name="L482" href="#L482">482</a>         <strong class="jxr_keyword">var</strong> tagInfo = <strong class="jxr_keyword">new</strong> <a name="TagInfo" href="../../../../com/renomad/minum/htmlparsing/TagInfo.html#TagInfo">TagInfo</a>(tagName, state.attributes);
 <a class="jxr_linenumber" name="L483" href="#L483">483</a>         <strong class="jxr_keyword">if</strong> (state.isStartTag) {
-<a class="jxr_linenumber" name="L484" href="#L484">484</a>             HtmlParseNode newNode = <strong class="jxr_keyword">new</strong> HtmlParseNode(ParseNodeType.ELEMENT, tagInfo, <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;(), <span class="jxr_string">""</span>);
+<a class="jxr_linenumber" name="L484" href="#L484">484</a>             <a name="HtmlParseNode" href="../../../../com/renomad/minum/htmlparsing/HtmlParseNode.html#HtmlParseNode">HtmlParseNode</a> newNode = <strong class="jxr_keyword">new</strong> <a name="HtmlParseNode" href="../../../../com/renomad/minum/htmlparsing/HtmlParseNode.html#HtmlParseNode">HtmlParseNode</a>(ParseNodeType.ELEMENT, tagInfo, <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;(), <span class="jxr_string">""</span>);
 <a class="jxr_linenumber" name="L485" href="#L485">485</a> 
 <a class="jxr_linenumber" name="L486" href="#L486">486</a>             <strong class="jxr_keyword">if</strong> (! state.parseStack.isEmpty()) {
 <a class="jxr_linenumber" name="L487" href="#L487">487</a>                 <em class="jxr_comment">// if we're inside an html element,</em>
 <a class="jxr_linenumber" name="L488" href="#L488">488</a>                 <em class="jxr_comment">// add this to the inner content</em>
-<a class="jxr_linenumber" name="L489" href="#L489">489</a>                 state.parseStack.peek().innerContent().add(newNode);
+<a class="jxr_linenumber" name="L489" href="#L489">489</a>                 state.parseStack.peek().addToInnerContent(newNode);
 <a class="jxr_linenumber" name="L490" href="#L490">490</a>             }
 <a class="jxr_linenumber" name="L491" href="#L491">491</a> 
 <a class="jxr_linenumber" name="L492" href="#L492">492</a>             <strong class="jxr_keyword">if</strong> (state.parseStack.isEmpty() &amp;&amp; tagName.isVoidElement) {
@@ -512,7 +512,7 @@
 <a class="jxr_linenumber" name="L504" href="#L504">504</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L505" href="#L505">505</a>             <em class="jxr_comment">// if we're leaving an end-tag, it means we have a</em>
 <a class="jxr_linenumber" name="L506" href="#L506">506</a>             <em class="jxr_comment">// full element with potentially inner content</em>
-<a class="jxr_linenumber" name="L507" href="#L507">507</a>             HtmlParseNode htmlParseNode;
+<a class="jxr_linenumber" name="L507" href="#L507">507</a>             <a name="HtmlParseNode" href="../../../../com/renomad/minum/htmlparsing/HtmlParseNode.html#HtmlParseNode">HtmlParseNode</a> htmlParseNode;
 <a class="jxr_linenumber" name="L508" href="#L508">508</a>             <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L509" href="#L509">509</a>                 htmlParseNode = state.parseStack.pop();
 <a class="jxr_linenumber" name="L510" href="#L510">510</a>             } <strong class="jxr_keyword">catch</strong> (NoSuchElementException ex) {
@@ -527,7 +527,7 @@
 <a class="jxr_linenumber" name="L519" href="#L519">519</a>             <strong class="jxr_keyword">if</strong> (state.parseStack.isEmpty()) {
 <a class="jxr_linenumber" name="L520" href="#L520">520</a>                 nodes.add(htmlParseNode);
 <a class="jxr_linenumber" name="L521" href="#L521">521</a>             }
-<a class="jxr_linenumber" name="L522" href="#L522">522</a>             <a name="TagName" href="../../../../com/renomad/minum/htmlparsing/TagName.html#TagName">TagName</a> expectedTagName = htmlParseNode.tagInfo().tagName();
+<a class="jxr_linenumber" name="L522" href="#L522">522</a>             <a name="TagName" href="../../../../com/renomad/minum/htmlparsing/TagName.html#TagName">TagName</a> expectedTagName = htmlParseNode.getTagInfo().getTagName();
 <a class="jxr_linenumber" name="L523" href="#L523">523</a>             <strong class="jxr_keyword">if</strong> (expectedTagName != tagName) {
 <a class="jxr_linenumber" name="L524" href="#L524">524</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ParsingException" href="../../../../com/renomad/minum/htmlparsing/ParsingException.html#ParsingException">ParsingException</a>(<span class="jxr_string">"Did not find expected closing-tag type. "</span> + <span class="jxr_string">"Expected: "</span> + expectedTagName + <span class="jxr_string">" at line "</span> + state.lineRow + <span class="jxr_string">" and at the "</span> + state.lineColumn + <span class="jxr_string">"th character. "</span> + state.charsRead + <span class="jxr_string">" characters read in total."</span>);
 <a class="jxr_linenumber" name="L525" href="#L525">525</a>             }

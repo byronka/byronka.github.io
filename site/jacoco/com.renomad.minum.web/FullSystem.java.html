@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FullSystem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">FullSystem.java</span></div><h1>FullSystem.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
 
-import com.renomad.minum.Constants;
-import com.renomad.minum.Context;
+import com.renomad.minum.queue.ActionQueueKiller;
+import com.renomad.minum.state.Constants;
 import com.renomad.minum.logging.ILogger;
 import com.renomad.minum.logging.Logger;
 import com.renomad.minum.security.ITheBrig;
 import com.renomad.minum.security.TheBrig;
+import com.renomad.minum.state.Context;
 import com.renomad.minum.utils.*;
 
 import java.io.File;
@@ -25,6 +26,7 @@ public final class FullSystem {
 
     final ILogger logger;
     private final Constants constants;
+    private final FileUtils fileUtils;
     private IServer server;
     private WebFramework webFramework;
     private IServer sslServer;
@@ -44,43 +46,37 @@ public final class FullSystem {
 
     private final Context context;
 
-<span class="fc" id="L47">    public FullSystem(Context context) {</span>
-<span class="fc" id="L48">        this.logger = context.getLogger();</span>
-<span class="fc" id="L49">        this.constants = context.getConstants();</span>
-<span class="fc" id="L50">        this.es = context.getExecutorService();</span>
-<span class="fc" id="L51">        this.context = context;</span>
-<span class="fc" id="L52">        context.setFullSystem(this);</span>
-<span class="fc" id="L53">    }</span>
+<span class="fc" id="L49">    public FullSystem(Context context) {</span>
+<span class="fc" id="L50">        this.logger = context.getLogger();</span>
+<span class="fc" id="L51">        this.constants = context.getConstants();</span>
+<span class="fc" id="L52">        this.fileUtils = new FileUtils(logger, constants);</span>
+<span class="fc" id="L53">        this.es = context.getExecutorService();</span>
+<span class="fc" id="L54">        this.context = context;</span>
+<span class="fc" id="L55">        context.setFullSystem(this);</span>
+<span class="fc" id="L56">    }</span>
 
     /**
      * Builds a context object that is appropriate as a
      * parameter to constructing a {@link FullSystem}
      */
     public static Context buildContext() {
-<span class="fc" id="L60">        var constants = new Constants();</span>
-<span class="fc" id="L61">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
-<span class="fc" id="L62">        var logger = new Logger(constants, executorService, &quot;primary logger&quot;);</span>
-<span class="fc" id="L63">        var fileUtils = new FileUtils(logger, constants);</span>
-<span class="fc" id="L64">        var inputStreamUtils = new InputStreamUtils(constants);</span>
+<span class="fc" id="L63">        var constants = new Constants();</span>
+<span class="fc" id="L64">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
+<span class="fc" id="L65">        var logger = new Logger(constants, executorService, &quot;primary logger&quot;);</span>
 
-<span class="fc" id="L66">        var context = new Context();</span>
+<span class="fc" id="L67">        var context = new Context(executorService, constants);</span>
+<span class="fc" id="L68">        context.setLogger(logger);</span>
 
-<span class="fc" id="L68">        context.setConstants(constants);</span>
-<span class="fc" id="L69">        context.setExecutorService(executorService);</span>
-<span class="fc" id="L70">        context.setLogger(logger);</span>
-<span class="fc" id="L71">        context.setFileUtils(fileUtils);</span>
-<span class="fc" id="L72">        context.setInputStreamUtils(inputStreamUtils);</span>
-
-<span class="fc" id="L74">        return context;</span>
+<span class="fc" id="L70">        return context;</span>
     }
 
     /**
      * Expected entry point for typical system instantiation
      */
     public static FullSystem initialize() {
-<span class="fc" id="L81">        var context = buildContext();</span>
-<span class="fc" id="L82">        var fullSystem = new FullSystem(context);</span>
-<span class="fc" id="L83">        return fullSystem.start();</span>
+<span class="fc" id="L77">        var context = buildContext();</span>
+<span class="fc" id="L78">        var fullSystem = new FullSystem(context);</span>
+<span class="fc" id="L79">        return fullSystem.start();</span>
     }
 
     /**
@@ -95,33 +91,33 @@ public final class FullSystem {
      */
     public FullSystem start() {
         // create a file in our current working directory to indicate we are running
-<span class="fc" id="L98">        createSystemRunningMarker();</span>
+<span class="fc" id="L94">        createSystemRunningMarker();</span>
 
         // set up an action to take place if the user shuts us down
-<span class="fc" id="L101">        addShutdownHook();</span>
+<span class="fc" id="L97">        addShutdownHook();</span>
         
         // Add useful startup info to the logs
-<span class="fc" id="L104">        String serverComment = &quot;at http://&quot; + constants.hostName + &quot;:&quot; + constants.serverPort + &quot; and https://&quot; + constants.hostName + &quot;:&quot; + constants.secureServerPort;</span>
-<span class="fc" id="L105">        logger.logDebug(() -&gt; &quot; *** Minum is starting &quot;+serverComment+&quot; ***&quot;);</span>
+<span class="fc" id="L100">        String serverComment = &quot;at http://&quot; + constants.hostName + &quot;:&quot; + constants.serverPort + &quot; and https://&quot; + constants.hostName + &quot;:&quot; + constants.secureServerPort;</span>
+<span class="fc" id="L101">        logger.logDebug(() -&gt; &quot; *** Minum is starting &quot;+serverComment+&quot; ***&quot;);</span>
         
         // instantiate our security code
-<span class="fc" id="L108">        theBrig = new TheBrig(context).initialize();</span>
+<span class="fc" id="L104">        theBrig = new TheBrig(context).initialize();</span>
         
         // the web framework handles the HTTP communications
-<span class="fc" id="L111">        webFramework = new WebFramework(context);</span>
+<span class="fc" id="L107">        webFramework = new WebFramework(context);</span>
 
         // kick off the servers - low level internet handlers
-<span class="fc" id="L114">        webEngine = new WebEngine(context, webFramework);</span>
-<span class="fc" id="L115">        server = webEngine.startServer();</span>
-<span class="fc" id="L116">        sslServer = webEngine.startSslServer();</span>
+<span class="fc" id="L110">        webEngine = new WebEngine(context, webFramework);</span>
+<span class="fc" id="L111">        server = webEngine.startServer();</span>
+<span class="fc" id="L112">        sslServer = webEngine.startSslServer();</span>
 
         // document how long to start up the system
-<span class="fc" id="L119">        var now = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;));</span>
-<span class="fc" id="L120">        var nowMillis = now.toInstant().toEpochMilli();</span>
-<span class="fc" id="L121">        var startupTime = nowMillis - constants.startTime;</span>
-<span class="fc" id="L122">        logger.logDebug(() -&gt; &quot; *** Minum has finished primary startup after &quot; + startupTime + &quot; milliseconds ***&quot;);</span>
+<span class="fc" id="L115">        var now = ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;));</span>
+<span class="fc" id="L116">        var nowMillis = now.toInstant().toEpochMilli();</span>
+<span class="fc" id="L117">        var startupTime = nowMillis - constants.startTime;</span>
+<span class="fc" id="L118">        logger.logDebug(() -&gt; &quot; *** Minum has finished primary startup after &quot; + startupTime + &quot; milliseconds ***&quot;);</span>
 
-<span class="fc" id="L124">        return this;</span>
+<span class="fc" id="L120">        return this;</span>
     }
 
     /**
@@ -131,51 +127,51 @@ public final class FullSystem {
      * will log
      */
     private void addShutdownHook() {
-<span class="fc" id="L134">        shutdownHook = new Thread(ThrowingRunnable.throwingRunnableWrapper(this::shutdown, logger));</span>
-<span class="fc" id="L135">        Runtime.getRuntime().addShutdownHook(shutdownHook);</span>
-<span class="fc" id="L136">    }</span>
+<span class="fc" id="L130">        shutdownHook = new Thread(ThrowingRunnable.throwingRunnableWrapper(this::shutdown, logger));</span>
+<span class="fc" id="L131">        Runtime.getRuntime().addShutdownHook(shutdownHook);</span>
+<span class="fc" id="L132">    }</span>
 
     /**
      * this saves a file to the home directory, SYSTEM_RUNNING,
      * that will indicate the system is active
      */
     private void createSystemRunningMarker() {
-<span class="fc" id="L143">        context.getFileUtils().writeString(Path.of(&quot;SYSTEM_RUNNING&quot;), &quot;This file serves as a marker to indicate the system is running.\n&quot;);</span>
-<span class="fc" id="L144">        new File(&quot;SYSTEM_RUNNING&quot;).deleteOnExit();</span>
-<span class="fc" id="L145">    }</span>
+<span class="fc" id="L139">        fileUtils.writeString(Path.of(&quot;SYSTEM_RUNNING&quot;), &quot;This file serves as a marker to indicate the system is running.\n&quot;);</span>
+<span class="fc" id="L140">        new File(&quot;SYSTEM_RUNNING&quot;).deleteOnExit();</span>
+<span class="fc" id="L141">    }</span>
 
     IServer getServer() {
-<span class="fc" id="L148">        return server;</span>
+<span class="fc" id="L144">        return server;</span>
     }
 
     IServer getSslServer() {
-<span class="fc" id="L152">        return sslServer;</span>
+<span class="fc" id="L148">        return sslServer;</span>
     }
 
     public WebFramework getWebFramework() {
-<span class="fc" id="L156">        return webFramework;</span>
+<span class="fc" id="L152">        return webFramework;</span>
     }
 
     public ITheBrig getTheBrig() {
-<span class="fc" id="L160">        return theBrig;</span>
+<span class="fc" id="L156">        return theBrig;</span>
     }
 
     public Context getContext() {
-<span class="fc" id="L164">        return context;</span>
+<span class="fc" id="L160">        return context;</span>
     }
 
     WebEngine getWebEngine() {
-<span class="fc" id="L168">        return webEngine;</span>
+<span class="fc" id="L164">        return webEngine;</span>
     }
 
     public void shutdown() {
 
-<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (!hasShutdown) {</span>
-<span class="fc" id="L174">            logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
-<span class="fc" id="L175">            closeCore(logger, context, server, sslServer, this.toString());</span>
-<span class="fc" id="L176">            hasShutdown = true;</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (!hasShutdown) {</span>
+<span class="fc" id="L170">            logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L171">            closeCore(logger, context, server, sslServer, this.toString());</span>
+<span class="fc" id="L172">            hasShutdown = true;</span>
         }
-<span class="fc" id="L178">    }</span>
+<span class="fc" id="L174">    }</span>
 
     /**
      * The core code for closing resources
@@ -183,19 +179,19 @@ public final class FullSystem {
      */
     static void closeCore(ILogger logger, Context context, IServer server, IServer sslServer, String fullSystemName) {
         try {
-<span class="fc" id="L186">            logger.logDebug(() -&gt; &quot;Received shutdown command&quot;);</span>
-<span class="fc" id="L187">            logger.logDebug(() -&gt; &quot; Stopping the server: &quot; + server);</span>
-<span class="fc" id="L188">            server.close();</span>
-<span class="fc" id="L189">            logger.logDebug(() -&gt; &quot; Stopping the SSL server: &quot; + server);</span>
-<span class="fc" id="L190">            sslServer.close();</span>
-<span class="fc" id="L191">            logger.logDebug(() -&gt; &quot;Killing all the action queues: &quot; + context.getAqQueue());</span>
-<span class="fc" id="L192">            new ActionQueueKiller(context).killAllQueues();</span>
-<span class="fc" id="L193">            logger.logDebug(() -&gt; String.format(</span>
-<span class="fc" id="L194">                    &quot;%s %s says: Goodbye world!%n&quot;, TimeUtils.getTimestampIsoInstant(), fullSystemName));</span>
-<span class="fc" id="L195">        } catch (Exception e) {</span>
-<span class="fc" id="L196">            throw new WebServerException(e);</span>
-<span class="fc" id="L197">        }</span>
-<span class="fc" id="L198">    }</span>
+<span class="fc" id="L182">            logger.logDebug(() -&gt; &quot;Received shutdown command&quot;);</span>
+<span class="fc" id="L183">            logger.logDebug(() -&gt; &quot; Stopping the server: &quot; + server);</span>
+<span class="fc" id="L184">            server.close();</span>
+<span class="fc" id="L185">            logger.logDebug(() -&gt; &quot; Stopping the SSL server: &quot; + server);</span>
+<span class="fc" id="L186">            sslServer.close();</span>
+<span class="fc" id="L187">            logger.logDebug(() -&gt; &quot;Killing all the action queues: &quot; + context.getActionQueueState().aqQueueAsString());</span>
+<span class="fc" id="L188">            new ActionQueueKiller(context).killAllQueues();</span>
+<span class="fc" id="L189">            logger.logDebug(() -&gt; String.format(</span>
+<span class="fc" id="L190">                    &quot;%s %s says: Goodbye world!%n&quot;, TimeUtils.getTimestampIsoInstant(), fullSystemName));</span>
+<span class="fc" id="L191">        } catch (Exception e) {</span>
+<span class="fc" id="L192">            throw new WebServerException(e);</span>
+<span class="fc" id="L193">        }</span>
+<span class="fc" id="L194">    }</span>
 
     /**
      * A blocking call for our multi-threaded application.
@@ -230,17 +226,26 @@ public final class FullSystem {
      * &lt;/p&gt;
      */
     public void block() {
-<span class="fc" id="L233">        blockCore(this.server, this.sslServer);</span>
-<span class="fc" id="L234">    }</span>
+<span class="fc" id="L229">        blockCore(this.server, this.sslServer);</span>
+<span class="fc" id="L230">    }</span>
 
     static void blockCore(IServer server, IServer sslServer) {
         try {
-<span class="fc" id="L238">            server.getCentralLoopFuture().get();</span>
-<span class="fc" id="L239">            sslServer.getCentralLoopFuture().get();</span>
-<span class="fc" id="L240">        } catch (InterruptedException | ExecutionException | CancellationException ex) {</span>
-<span class="fc" id="L241">            Thread.currentThread().interrupt();</span>
-<span class="fc" id="L242">            throw new WebServerException(ex);</span>
-<span class="fc" id="L243">        }</span>
-<span class="fc" id="L244">    }</span>
+<span class="fc" id="L234">            server.getCentralLoopFuture().get();</span>
+<span class="fc" id="L235">            sslServer.getCentralLoopFuture().get();</span>
+<span class="fc" id="L236">        } catch (InterruptedException | ExecutionException | CancellationException ex) {</span>
+<span class="fc" id="L237">            Thread.currentThread().interrupt();</span>
+<span class="fc" id="L238">            throw new WebServerException(ex);</span>
+<span class="fc" id="L239">        }</span>
+<span class="fc" id="L240">    }</span>
+
+    /**
+     * Intentionally return just the default object toString, this is only used
+     * to differentiate between multiple instances in memory.
+     */
+    @Override
+    public String toString() {
+<span class="fc" id="L248">        return super.toString();</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

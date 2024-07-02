@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TheBrig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.security</a> &gt; <span class="el_source">TheBrig.java</span></div><h1>TheBrig.java</h1><pre class="source lang-java linenums">package com.renomad.minum.security;
 
-import com.renomad.minum.Constants;
-import com.renomad.minum.Context;
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.state.Context;
 import com.renomad.minum.database.Db;
 import com.renomad.minum.logging.ILogger;
 import com.renomad.minum.utils.SearchUtils;
@@ -9,7 +9,7 @@ import com.renomad.minum.utils.ThrowingRunnable;
 import com.renomad.minum.utils.TimeUtils;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -125,7 +125,7 @@ public final class TheBrig implements ITheBrig {
 <span class="fc" id="L125">            myThread.interrupt();</span>
 <span class="fc" id="L126">            this.inmatesDb.stop();</span>
         } else {
-<span class="fc" id="L128">            throw new SecurityException(&quot;TheBrig was told to stop, but it was uninitialized&quot;);</span>
+<span class="fc" id="L128">            throw new MinumSecurityException(&quot;TheBrig was told to stop, but it was uninitialized&quot;);</span>
         }
 <span class="fc" id="L130">    }</span>
 

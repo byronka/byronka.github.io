@@ -8,8 +8,8 @@
 <div id="overview"><a href="../../../../../apidocs/com/renomad/minum/security/TheBrig.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.security;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.Constants;
-<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.Context;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Constants;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.database.Db;
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.ILogger;
 <a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.SearchUtils;
@@ -17,7 +17,7 @@
 <a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.TimeUtils;
 <a class="jxr_linenumber" name="L10" href="#L10">10</a>  
 <a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> java.util.*;
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.ExecutorService;
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.*;
 <a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.locks.ReentrantLock;
 <a class="jxr_linenumber" name="L14" href="#L14">14</a>  
 <a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_javadoccomment">/**</em>
@@ -27,7 +27,7 @@
 <a class="jxr_linenumber" name="L19" href="#L19">19</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> ExecutorService es;
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Db&lt;Inmate&gt; inmatesDb;
 <a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="ILogger" href="../../../../com/renomad/minum/logging/ILogger.html#ILogger">ILogger</a> logger;
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="Constants" href="../../../../com/renomad/minum/Constants.html#Constants">Constants</a> constants;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="Constants" href="../../../../com/renomad/minum/state/Constants.html#Constants">Constants</a> constants;
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> ReentrantLock lock = <strong class="jxr_keyword">new</strong> ReentrantLock();
 <a class="jxr_linenumber" name="L24" href="#L24">24</a>      <strong class="jxr_keyword">private</strong> Thread myThread;
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>  
@@ -37,7 +37,7 @@
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L30" href="#L30">30</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> sleepTime;
 <a class="jxr_linenumber" name="L31" href="#L31">31</a>  
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">public</strong> <a name="TheBrig" href="../../../../com/renomad/minum/security/TheBrig.html#TheBrig">TheBrig</a>(<strong class="jxr_keyword">int</strong> sleepTime, <a name="Context" href="../../../../com/renomad/minum/Context.html#Context">Context</a> context) {
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">public</strong> <a name="TheBrig" href="../../../../com/renomad/minum/security/TheBrig.html#TheBrig">TheBrig</a>(<strong class="jxr_keyword">int</strong> sleepTime, <a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context) {
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>          <strong class="jxr_keyword">this</strong>.es = context.getExecutorService();
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>          <strong class="jxr_keyword">this</strong>.constants = context.getConstants();
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>          <strong class="jxr_keyword">this</strong>.logger = context.getLogger();
@@ -50,7 +50,7 @@
 <a class="jxr_linenumber" name="L42" href="#L42">42</a>  <em class="jxr_javadoccomment">     * of the application, in an infinite loop removing keys from the list</em>
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>  <em class="jxr_javadoccomment">     * under consideration.</em>
 <a class="jxr_linenumber" name="L44" href="#L44">44</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>      <strong class="jxr_keyword">public</strong> <a name="TheBrig" href="../../../../com/renomad/minum/security/TheBrig.html#TheBrig">TheBrig</a>(<a name="Context" href="../../../../com/renomad/minum/Context.html#Context">Context</a> context) {
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>      <strong class="jxr_keyword">public</strong> <a name="TheBrig" href="../../../../com/renomad/minum/security/TheBrig.html#TheBrig">TheBrig</a>(<a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context) {
 <a class="jxr_linenumber" name="L46" href="#L46">46</a>          <strong class="jxr_keyword">this</strong>(10 * 1000, context);
 <a class="jxr_linenumber" name="L47" href="#L47">47</a>      }
 <a class="jxr_linenumber" name="L48" href="#L48">48</a>  
@@ -133,7 +133,7 @@
 <a class="jxr_linenumber" name="L125" href="#L125">125</a>             myThread.interrupt();
 <a class="jxr_linenumber" name="L126" href="#L126">126</a>             <strong class="jxr_keyword">this</strong>.inmatesDb.stop();
 <a class="jxr_linenumber" name="L127" href="#L127">127</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L128" href="#L128">128</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="SecurityException" href="../../../../com/renomad/minum/security/SecurityException.html#SecurityException">SecurityException</a>(<span class="jxr_string">"TheBrig was told to stop, but it was uninitialized"</span>);
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="MinumSecurityException" href="../../../../com/renomad/minum/security/MinumSecurityException.html#MinumSecurityException">MinumSecurityException</a>(<span class="jxr_string">"TheBrig was told to stop, but it was uninitialized"</span>);
 <a class="jxr_linenumber" name="L129" href="#L129">129</a>         }
 <a class="jxr_linenumber" name="L130" href="#L130">130</a>     }
 <a class="jxr_linenumber" name="L131" href="#L131">131</a> 

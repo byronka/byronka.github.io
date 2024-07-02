@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Server.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">Server.java</span></div><h1>Server.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
 
-import com.renomad.minum.Constants;
-import com.renomad.minum.Context;
+import com.renomad.minum.state.Constants;
 import com.renomad.minum.logging.ILogger;
 import com.renomad.minum.security.ITheBrig;
+import com.renomad.minum.state.Context;
 import com.renomad.minum.utils.ConcurrentSet;
 import com.renomad.minum.utils.StacktraceUtils;
 import com.renomad.minum.utils.ThrowingRunnable;
@@ -97,28 +97,29 @@ final class Server implements IServer {
         }
 <span class="fc" id="L98">    }</span>
 
+    @Override
     public void close() throws IOException {
         // close all the running sockets
-<span class="fc" id="L102">        setOfSWs.stopAllServers();</span>
-<span class="fc" id="L103">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L103">        setOfSWs.stopAllServers();</span>
+<span class="fc" id="L104">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
         // close the primary server socket
-<span class="fc" id="L105">        serverSocket.close();</span>
-<span class="fc" id="L106">    }</span>
+<span class="fc" id="L106">        serverSocket.close();</span>
+<span class="fc" id="L107">    }</span>
 
     @Override
     public String getHost() {
-<span class="fc" id="L110">        return serverSocket.getInetAddress().getHostAddress();</span>
+<span class="fc" id="L111">        return serverSocket.getInetAddress().getHostAddress();</span>
     }
 
     @Override
     public int getPort() {
-<span class="fc" id="L115">        return serverSocket.getLocalPort();</span>
+<span class="fc" id="L116">        return serverSocket.getLocalPort();</span>
     }
 
     @Override
     public void removeMyRecord(ISocketWrapper socketWrapper) {
-<span class="fc" id="L120">        setOfSWs.remove(socketWrapper);</span>
-<span class="fc" id="L121">    }</span>
+<span class="fc" id="L121">        setOfSWs.remove(socketWrapper);</span>
+<span class="fc" id="L122">    }</span>
 
     /**
      * Returns the name of this server, which is set
@@ -126,17 +127,17 @@ final class Server implements IServer {
      */
     @Override
     public String toString() {
-<span class="fc" id="L129">        return this.serverName;</span>
+<span class="fc" id="L130">        return this.serverName;</span>
     }
 
     @Override
     public Future&lt;?&gt; getCentralLoopFuture() {
-<span class="fc" id="L134">        return centralLoopFuture;</span>
+<span class="fc" id="L135">        return centralLoopFuture;</span>
     }
 
     @Override
     public HttpServerType getServerType() {
-<span class="fc" id="L139">        return serverType;</span>
+<span class="fc" id="L140">        return serverType;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
