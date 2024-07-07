@@ -15,7 +15,7 @@ public final class LRUCache&lt;K,V&gt; extends LinkedHashMap&lt;K, V&gt; {
 
     // max number of entries allowed in this cache
     private static final int DEFAULT_MAX_ENTRIES = 100;
-    private int maxSize;
+    private final int maxSize;
 
     @Override
     protected boolean removeEldestEntry(Map.Entry&lt;K, V&gt; eldest) {
@@ -27,10 +27,6 @@ public final class LRUCache&lt;K,V&gt; extends LinkedHashMap&lt;K, V&gt; {
 <span class="fc" id="L27">        super(maxSize + 1, 0.75f, true);</span>
 <span class="fc" id="L28">        this.maxSize = maxSize;</span>
 <span class="fc" id="L29">    }</span>
-
-    private LRUCache(Map&lt;? extends K, ? extends V&gt; m) {
-<span class="fc" id="L32">        super(m);</span>
-<span class="fc" id="L33">    }</span>
 
     /**
      * Builds a map that functions as a least-recently used cache.
@@ -44,7 +40,7 @@ public final class LRUCache&lt;K,V&gt; extends LinkedHashMap&lt;K, V&gt; {
      * what types to build.
      */
     public static &lt;K,V&gt; Map&lt;K, V&gt; getLruCache() {
-<span class="fc" id="L47">        return getLruCache(DEFAULT_MAX_ENTRIES);</span>
+<span class="fc" id="L43">        return getLruCache(DEFAULT_MAX_ENTRIES);</span>
     }
 
     /**
@@ -58,11 +54,7 @@ public final class LRUCache&lt;K,V&gt; extends LinkedHashMap&lt;K, V&gt; {
      * what types to build.
      */
     public static &lt;K,V&gt; Map&lt;K, V&gt; getLruCache(int maxSize) {
-<span class="fc" id="L61">        return new LRUCache&lt;&gt;(maxSize);</span>
-    }
-
-    public static &lt;K,V&gt; Map&lt;K, V&gt; getLruCache(Map&lt;K, V&gt; lruCache) {
-<span class="fc" id="L65">        return new LRUCache&lt;&gt;(lruCache);</span>
+<span class="fc" id="L57">        return new LRUCache&lt;&gt;(maxSize);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -23,7 +23,7 @@ public final class FileReader implements IFileReader {
     private final ILogger logger;
 
 <span class="fc" id="L25">    public FileReader(Map&lt;String, byte[]&gt; lruCache, boolean useCacheForStaticFiles, ILogger logger) {</span>
-<span class="fc" id="L26">        this.lruCache = LRUCache.getLruCache(lruCache);</span>
+<span class="fc" id="L26">        this.lruCache = lruCache;</span>
 <span class="fc" id="L27">        this.useCacheForStaticFiles = useCacheForStaticFiles;</span>
 <span class="fc" id="L28">        this.logger = logger;</span>
 <span class="fc" id="L29">    }</span>
@@ -51,7 +51,7 @@ public final class FileReader implements IFileReader {
 <span class="fc" id="L51">        try (RandomAccessFile reader = new RandomAccessFile(path, &quot;r&quot;);</span>
 <span class="fc" id="L52">             ByteArrayOutputStream out = new ByteArrayOutputStream()) {</span>
 <span class="fc" id="L53">            FileChannel channel = reader.getChannel();</span>
-<span class="fc" id="L54">            int bufferSize = 1024;</span>
+<span class="fc" id="L54">            int bufferSize = 8 * 1024;</span>
 <span class="fc bfc" id="L55" title="All 2 branches covered.">            if (bufferSize &gt; channel.size()) {</span>
 <span class="fc" id="L56">                bufferSize = (int) channel.size();</span>
             }
@@ -71,11 +71,12 @@ public final class FileReader implements IFileReader {
 <span class="fc" id="L71">                logger.logTrace(() -&gt; s);</span>
 
 <span class="fc bfc" id="L73" title="All 2 branches covered.">                if (useCacheForStaticFiles) {</span>
-<span class="fc" id="L74">                    lruCache.put(path, bytes);</span>
+<span class="fc" id="L74">                    logger.logDebug(() -&gt; &quot;Storing &quot; + path + &quot; in the cache&quot;);</span>
+<span class="fc" id="L75">                    lruCache.put(path, bytes);</span>
                 }
-<span class="fc" id="L76">                return bytes;</span>
+<span class="fc" id="L77">                return bytes;</span>
             }
-<span class="fc" id="L78">        }</span>
+<span class="fc" id="L79">        }</span>
     }
 
 }

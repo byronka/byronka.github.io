@@ -10,8 +10,8 @@
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Constants;
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
-<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.auth.AuthResult;
-<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.auth.AuthUtils;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.sampledomain.auth.AuthResult;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.sampledomain.auth.AuthUtils;
 <a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.database.Db;
 <a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.ILogger;
 <a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.sampledomain.photo.Photograph;
@@ -35,9 +35,9 @@
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Db&lt;Photograph&gt; db;
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> ILogger logger;
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Path dbDir;
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="AuthUtils" href="../../../../com/renomad/minum/auth/AuthUtils.html#AuthUtils">AuthUtils</a> auth;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="AuthUtils" href="../../../../com/renomad/minum/sampledomain/auth/AuthUtils.html#AuthUtils">AuthUtils</a> auth;
 <a class="jxr_linenumber" name="L31" href="#L31">31</a>  
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">public</strong> <a name="UploadPhoto" href="../../../../com/renomad/minum/sampledomain/UploadPhoto.html#UploadPhoto">UploadPhoto</a>(Db&lt;Photograph&gt; db, <a name="AuthUtils" href="../../../../com/renomad/minum/auth/AuthUtils.html#AuthUtils">AuthUtils</a> auth, Context context) {
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">public</strong> <a name="UploadPhoto" href="../../../../com/renomad/minum/sampledomain/UploadPhoto.html#UploadPhoto">UploadPhoto</a>(Db&lt;Photograph&gt; db, <a name="AuthUtils" href="../../../../com/renomad/minum/sampledomain/auth/AuthUtils.html#AuthUtils">AuthUtils</a> auth, Context context) {
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>          Constants constants = context.getConstants();
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>          <strong class="jxr_keyword">this</strong>.auth = auth;
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>          <strong class="jxr_keyword">this</strong>.logger = context.getLogger();
@@ -50,7 +50,7 @@
 <a class="jxr_linenumber" name="L42" href="#L42">42</a>      <strong class="jxr_keyword">public</strong> Response uploadPage(Request r) {
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>          AuthResult authResult = auth.processAuth(r);
 <a class="jxr_linenumber" name="L44" href="#L44">44</a>          <strong class="jxr_keyword">if</strong> (! authResult.isAuthenticated()) {
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>              <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> Response(CODE_401_UNAUTHORIZED);
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>              <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_401_UNAUTHORIZED);
 <a class="jxr_linenumber" name="L46" href="#L46">46</a>          }
 <a class="jxr_linenumber" name="L47" href="#L47">47</a>          <strong class="jxr_keyword">return</strong> Response.htmlOk(uploadPhotoTemplateHtml);
 <a class="jxr_linenumber" name="L48" href="#L48">48</a>      }
@@ -58,7 +58,7 @@
 <a class="jxr_linenumber" name="L50" href="#L50">50</a>      <strong class="jxr_keyword">public</strong> Response uploadPageReceivePost(Request request) {
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>          AuthResult authResult = auth.processAuth(request);
 <a class="jxr_linenumber" name="L52" href="#L52">52</a>          <strong class="jxr_keyword">if</strong> (! authResult.isAuthenticated()) {
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>              <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> Response(CODE_401_UNAUTHORIZED);
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>              <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_401_UNAUTHORIZED);
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>          }
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>          <strong class="jxr_keyword">var</strong> photoBytes = request.body().asBytes(<span class="jxr_string">"image_uploads"</span>);
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>          <strong class="jxr_keyword">var</strong> shortDescription = request.body().asString(<span class="jxr_string">"short_description"</span>);
@@ -81,7 +81,7 @@
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>              Files.write(photoPath, photoBytes);
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>          } <strong class="jxr_keyword">catch</strong> (IOException e) {
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>              logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(e));
-<a class="jxr_linenumber" name="L76" href="#L76">76</a>              <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> Response(CODE_500_INTERNAL_SERVER_ERROR, e.toString(), Map.of(<span class="jxr_string">"Content-Type"</span>, <span class="jxr_string">"text/plain;charset=UTF-8"</span>));
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>              <strong class="jxr_keyword">return</strong> Response.buildResponse(CODE_500_INTERNAL_SERVER_ERROR, Map.of(<span class="jxr_string">"Content-Type"</span>, <span class="jxr_string">"text/plain;charset=UTF-8"</span>), e.toString());
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>          }
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>          db.write(newPhotograph);
 <a class="jxr_linenumber" name="L79" href="#L79">79</a>          <strong class="jxr_keyword">return</strong> Response.redirectTo(<span class="jxr_string">"photos"</span>);

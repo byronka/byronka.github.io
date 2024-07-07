@@ -321,9 +321,9 @@
 <a class="jxr_linenumber" name="L313" href="#L313">313</a> 
 <a class="jxr_linenumber" name="L314" href="#L314">314</a>     @Test
 <a class="jxr_linenumber" name="L315" href="#L315">315</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_GettingCorrectContentType_MissingContentType() {
-<a class="jxr_linenumber" name="L316" href="#L316">316</a>         <strong class="jxr_keyword">var</strong> response = <strong class="jxr_keyword">new</strong> Response(CODE_200_OK, <span class="jxr_string">"foo foo"</span>);
-<a class="jxr_linenumber" name="L317" href="#L317">317</a>         <strong class="jxr_keyword">var</strong> ex = assertThrows(InvariantException.<strong class="jxr_keyword">class</strong>, () -&gt; WebFramework.confirmBodyHasContentType(<strong class="jxr_keyword">null</strong>, response));
-<a class="jxr_linenumber" name="L318" href="#L318">318</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"a Content-Type header must be specified in the Response object if it returns data. Response details: Response{statusCode=CODE_200_OK, extraHeaders={}, body=[102, 111, 111, 32, 102, 111, 111]} Request: null"</span>);
+<a class="jxr_linenumber" name="L316" href="#L316">316</a>         <strong class="jxr_keyword">var</strong> response = Response.buildResponse(CODE_200_OK, Map.of(), <span class="jxr_string">"foo foo"</span>);
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>         <strong class="jxr_keyword">var</strong> ex = assertThrows(InvariantException.<strong class="jxr_keyword">class</strong>, () -&gt; WebFramework.confirmBodyHasContentType(<strong class="jxr_keyword">null</strong>, response, <strong class="jxr_keyword">new</strong> StringBuilder()));
+<a class="jxr_linenumber" name="L318" href="#L318">318</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"a Content-Type header must be specified in the Response object if it returns data. Response details: Response{statusCode=CODE_200_OK, extraHeaders={}, body=[102, 111, 111, 32, 102, 111, 111], bodyLength=7} Request: null"</span>);
 <a class="jxr_linenumber" name="L319" href="#L319">319</a>     }
 <a class="jxr_linenumber" name="L320" href="#L320">320</a> 
 <a class="jxr_linenumber" name="L321" href="#L321">321</a>     @Test
@@ -333,55 +333,57 @@
 <a class="jxr_linenumber" name="L325" href="#L325">325</a>         Map&lt;String, String&gt; extraHeaders = Map.of(<span class="jxr_string">"content-type"</span>, <span class="jxr_string">"text/plain"</span>);
 <a class="jxr_linenumber" name="L326" href="#L326">326</a>         VaryHeader varyHeader = <strong class="jxr_keyword">new</strong> VaryHeader();
 <a class="jxr_linenumber" name="L327" href="#L327">327</a> 
-<a class="jxr_linenumber" name="L328" href="#L328">328</a>         byte[] bytes = WebFramework.potentiallyCompress(
-<a class="jxr_linenumber" name="L329" href="#L329">329</a>                 headers,
-<a class="jxr_linenumber" name="L330" href="#L330">330</a>                 <strong class="jxr_keyword">new</strong> Response(CODE_200_OK, <span class="jxr_string">"foo bar"</span>.repeat(1000), extraHeaders),
-<a class="jxr_linenumber" name="L331" href="#L331">331</a>                 headerStringBuilder,
-<a class="jxr_linenumber" name="L332" href="#L332">332</a>                 varyHeader);
-<a class="jxr_linenumber" name="L333" href="#L333">333</a> 
-<a class="jxr_linenumber" name="L334" href="#L334">334</a>         assertEquals(bytes.length, 55);
-<a class="jxr_linenumber" name="L335" href="#L335">335</a>     }
-<a class="jxr_linenumber" name="L336" href="#L336">336</a> 
-<a class="jxr_linenumber" name="L337" href="#L337">337</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L338" href="#L338">338</a> <em class="jxr_javadoccomment">     * If the content type does not include "text", we won't compress.</em>
-<a class="jxr_linenumber" name="L339" href="#L339">339</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L340" href="#L340">340</a>     @Test
-<a class="jxr_linenumber" name="L341" href="#L341">341</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_PotentiallyCompress_MissingContentType() {
-<a class="jxr_linenumber" name="L342" href="#L342">342</a>         StringBuilder headerStringBuilder = <strong class="jxr_keyword">new</strong> StringBuilder();
-<a class="jxr_linenumber" name="L343" href="#L343">343</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"accept-encoding: gzip"</span>));
-<a class="jxr_linenumber" name="L344" href="#L344">344</a>         Map&lt;String, String&gt; extraHeaders = Map.of(<span class="jxr_string">"content-type"</span>, <span class="jxr_string">""</span>);
-<a class="jxr_linenumber" name="L345" href="#L345">345</a>         VaryHeader varyHeader = <strong class="jxr_keyword">new</strong> VaryHeader();
-<a class="jxr_linenumber" name="L346" href="#L346">346</a> 
-<a class="jxr_linenumber" name="L347" href="#L347">347</a>         byte[] bytes = WebFramework.potentiallyCompress(
-<a class="jxr_linenumber" name="L348" href="#L348">348</a>                 headers,
-<a class="jxr_linenumber" name="L349" href="#L349">349</a>                 <strong class="jxr_keyword">new</strong> Response(CODE_200_OK, <span class="jxr_string">"foo bar"</span>.repeat(1000), extraHeaders),
-<a class="jxr_linenumber" name="L350" href="#L350">350</a>                 headerStringBuilder,
-<a class="jxr_linenumber" name="L351" href="#L351">351</a>                 varyHeader);
-<a class="jxr_linenumber" name="L352" href="#L352">352</a> 
-<a class="jxr_linenumber" name="L353" href="#L353">353</a>         assertEquals(bytes.length, 7000);
-<a class="jxr_linenumber" name="L354" href="#L354">354</a>     }
-<a class="jxr_linenumber" name="L355" href="#L355">355</a> 
-<a class="jxr_linenumber" name="L356" href="#L356">356</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L357" href="#L357">357</a> <em class="jxr_javadoccomment">     * If we receive data in url format, it will be in</em>
-<a class="jxr_linenumber" name="L358" href="#L358">358</a> <em class="jxr_javadoccomment">     * key-value format, like a = hello and b = 123.</em>
-<a class="jxr_linenumber" name="L359" href="#L359">359</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L360" href="#L360">360</a>     @Test
-<a class="jxr_linenumber" name="L361" href="#L361">361</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_DataByKey_HappyPath() {
-<a class="jxr_linenumber" name="L362" href="#L362">362</a>         String body = <span class="jxr_string">"a=hello&amp;b=123"</span>;
-<a class="jxr_linenumber" name="L363" href="#L363">363</a>         <strong class="jxr_keyword">var</strong> bodyProcessor = <strong class="jxr_keyword">new</strong> BodyProcessor(context);
-<a class="jxr_linenumber" name="L364" href="#L364">364</a> 
-<a class="jxr_linenumber" name="L365" href="#L365">365</a>         Body bodyResult = bodyProcessor.extractBodyFromBytes(
-<a class="jxr_linenumber" name="L366" href="#L366">366</a>                 body.length(),
-<a class="jxr_linenumber" name="L367" href="#L367">367</a>                 <span class="jxr_string">"content-type: application/x-www-form-urlencoded"</span>,
-<a class="jxr_linenumber" name="L368" href="#L368">368</a>                 body.getBytes(StandardCharsets.UTF_8)
-<a class="jxr_linenumber" name="L369" href="#L369">369</a>         );
-<a class="jxr_linenumber" name="L370" href="#L370">370</a> 
-<a class="jxr_linenumber" name="L371" href="#L371">371</a>         assertEquals(bodyResult.getKeys(), Set.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>));
-<a class="jxr_linenumber" name="L372" href="#L372">372</a>         assertEquals(bodyResult.asString(<span class="jxr_string">"a"</span>), <span class="jxr_string">"hello"</span>);
-<a class="jxr_linenumber" name="L373" href="#L373">373</a>         assertEquals(bodyResult.asString(<span class="jxr_string">"b"</span>), <span class="jxr_string">"123"</span>);
-<a class="jxr_linenumber" name="L374" href="#L374">374</a> 
-<a class="jxr_linenumber" name="L375" href="#L375">375</a>     }
-<a class="jxr_linenumber" name="L376" href="#L376">376</a> }
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>         Response response = Response.buildResponse(CODE_200_OK, extraHeaders, <span class="jxr_string">"foo bar"</span>.repeat(1000));
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>         <strong class="jxr_keyword">var</strong> response2 = WebFramework.potentiallyCompress(
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>                 headers,
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>                 response,
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>                 headerStringBuilder,
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>                 varyHeader);
+<a class="jxr_linenumber" name="L334" href="#L334">334</a> 
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>         assertEquals(response2.getBodyLength(), (<strong class="jxr_keyword">long</strong>) 55);
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>     }
+<a class="jxr_linenumber" name="L337" href="#L337">337</a> 
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L339" href="#L339">339</a> <em class="jxr_javadoccomment">     * If the content type does not include "text", we won't compress.</em>
+<a class="jxr_linenumber" name="L340" href="#L340">340</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>     @Test
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_PotentiallyCompress_MissingContentType() {
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>         StringBuilder headerStringBuilder = <strong class="jxr_keyword">new</strong> StringBuilder();
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"accept-encoding: gzip"</span>));
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>         Map&lt;String, String&gt; extraHeaders = Map.of(<span class="jxr_string">"content-type"</span>, <span class="jxr_string">""</span>);
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>         VaryHeader varyHeader = <strong class="jxr_keyword">new</strong> VaryHeader();
+<a class="jxr_linenumber" name="L347" href="#L347">347</a> 
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>         Response response = Response.buildResponse(CODE_200_OK, extraHeaders, <span class="jxr_string">"foo bar"</span>.repeat(1000));
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>         WebFramework.potentiallyCompress(
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>                 headers,
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>                 response,
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>                 headerStringBuilder,
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>                 varyHeader);
+<a class="jxr_linenumber" name="L354" href="#L354">354</a> 
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>         assertEquals(response.getBodyLength(),  (<strong class="jxr_keyword">long</strong>) 7000);
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>     }
+<a class="jxr_linenumber" name="L357" href="#L357">357</a> 
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L359" href="#L359">359</a> <em class="jxr_javadoccomment">     * If we receive data in url format, it will be in</em>
+<a class="jxr_linenumber" name="L360" href="#L360">360</a> <em class="jxr_javadoccomment">     * key-value format, like a = hello and b = 123.</em>
+<a class="jxr_linenumber" name="L361" href="#L361">361</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>     @Test
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_DataByKey_HappyPath() {
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>         String body = <span class="jxr_string">"a=hello&amp;b=123"</span>;
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>         <strong class="jxr_keyword">var</strong> bodyProcessor = <strong class="jxr_keyword">new</strong> BodyProcessor(context);
+<a class="jxr_linenumber" name="L366" href="#L366">366</a> 
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>         Body bodyResult = bodyProcessor.extractBodyFromBytes(
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>                 body.length(),
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>                 <span class="jxr_string">"content-type: application/x-www-form-urlencoded"</span>,
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>                 body.getBytes(StandardCharsets.UTF_8)
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>         );
+<a class="jxr_linenumber" name="L372" href="#L372">372</a> 
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>         assertEquals(bodyResult.getKeys(), Set.of(<span class="jxr_string">"a"</span>,<span class="jxr_string">"b"</span>));
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>         assertEquals(bodyResult.asString(<span class="jxr_string">"a"</span>), <span class="jxr_string">"hello"</span>);
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>         assertEquals(bodyResult.asString(<span class="jxr_string">"b"</span>), <span class="jxr_string">"123"</span>);
+<a class="jxr_linenumber" name="L376" href="#L376">376</a> 
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>     }
+<a class="jxr_linenumber" name="L378" href="#L378">378</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>
