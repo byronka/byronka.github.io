@@ -153,7 +153,7 @@
 <a class="jxr_linenumber" name="L145" href="#L145">145</a> 
 <a class="jxr_linenumber" name="L146" href="#L146">146</a>         logger.test(<span class="jxr_string">"visit the page for uploading photos, authenticated"</span>);
 <a class="jxr_linenumber" name="L147" href="#L147">147</a>         HtmlParseNode uploadNodeFound1 = ft.get(<span class="jxr_string">"upload"</span>, authHeader).searchOne(TagName.LABEL, Map.of(<span class="jxr_string">"for"</span>, <span class="jxr_string">"image_uploads"</span>));
-<a class="jxr_linenumber" name="L148" href="#L148">148</a>         assertEquals(uploadNodeFound1.innerText(), <span class="jxr_string">"Choose images to upload (PNG, JPG)"</span>);
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>         assertTrue(uploadNodeFound1.innerText().contains(<span class="jxr_string">"Choose images to upload (PNG, JPG)"</span>));
 <a class="jxr_linenumber" name="L149" href="#L149">149</a> 
 <a class="jxr_linenumber" name="L150" href="#L150">150</a>         logger.test(<span class="jxr_string">"upload some content, authenticated"</span>);
 <a class="jxr_linenumber" name="L151" href="#L151">151</a>         ft.post(<span class="jxr_string">"upload"</span>, <span class="jxr_string">"image_uploads=123&amp;short_description=bar&amp;long_description=foofoo"</span>, authHeader);
@@ -250,7 +250,7 @@
 <a class="jxr_linenumber" name="L242" href="#L242">242</a>         <em class="jxr_comment">// ******* IMPORTANT!!! This needs to be the last test, since it locks us out ************</em>
 <a class="jxr_linenumber" name="L243" href="#L243">243</a> 
 <a class="jxr_linenumber" name="L244" href="#L244">244</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L245" href="#L245">245</a>             ft.get(<span class="jxr_string">"a"</span>.repeat(context.getConstants().maxReadLineSizeBytes + 1));
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>             ft.get(<span class="jxr_string">"a"</span>.repeat(InputStreamUtils.MAX_READ_LINE_SIZE_BYTES + 1));
 <a class="jxr_linenumber" name="L246" href="#L246">246</a>         } <strong class="jxr_keyword">catch</strong> (Exception ex) {
 <a class="jxr_linenumber" name="L247" href="#L247">247</a>             <em class="jxr_comment">// this is kind of a weird case I'm looking into.</em>
 <a class="jxr_linenumber" name="L248" href="#L248">248</a>             <em class="jxr_comment">// On Windows, this runs right through without failing, but on Mac,</em>
@@ -266,24 +266,23 @@
 <a class="jxr_linenumber" name="L258" href="#L258">258</a>         <em class="jxr_comment">// remember, we're the client, we don't have immediate access to the server here.  So,</em>
 <a class="jxr_linenumber" name="L259" href="#L259">259</a>         <em class="jxr_comment">// we have to wait for it to get through some processing before we check.</em>
 <a class="jxr_linenumber" name="L260" href="#L260">260</a>         MyThread.sleep(70);
-<a class="jxr_linenumber" name="L261" href="#L261">261</a>         String failureMsg = logger.findFirstMessageThatContains(<span class="jxr_string">"client sent more bytes"</span>, 10);
-<a class="jxr_linenumber" name="L262" href="#L262">262</a>         assertTrue(failureMsg.contains(<span class="jxr_string">"is looking for vulnerabilities, for this: client sent more bytes than allowed for a single line.  Current max: 1024"</span>));
-<a class="jxr_linenumber" name="L263" href="#L263">263</a>     }
-<a class="jxr_linenumber" name="L264" href="#L264">264</a> 
-<a class="jxr_linenumber" name="L265" href="#L265">265</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L266" href="#L266">266</a> <em class="jxr_javadoccomment">     * This method asserts we see "from SetOfSws" in the logs.  The full</em>
-<a class="jxr_linenumber" name="L267" href="#L267">267</a> <em class="jxr_javadoccomment">     * context is to see messages like "http server removed (SocketWrapper for remote address: /127.0.0.1:53533) from SetOfSws. size: 0",</em>
-<a class="jxr_linenumber" name="L268" href="#L268">268</a> <em class="jxr_javadoccomment">     * which indicates the server is closing sockets as soon as they're finished.</em>
-<a class="jxr_linenumber" name="L269" href="#L269">269</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
-<a class="jxr_linenumber" name="L270" href="#L270">270</a> <em class="jxr_javadoccomment">     * This test was needed to guarantee the system will clean up its sockets, that is,</em>
-<a class="jxr_linenumber" name="L271" href="#L271">271</a> <em class="jxr_javadoccomment">     * it will not have a leak.</em>
-<a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L273" href="#L273">273</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> checkForClosedSocket() {
-<a class="jxr_linenumber" name="L274" href="#L274">274</a>         MyThread.sleep(15);
-<a class="jxr_linenumber" name="L275" href="#L275">275</a>         assertTrue(logger.doesMessageExist(<span class="jxr_string">"from SetOfSws"</span>, 15));
-<a class="jxr_linenumber" name="L276" href="#L276">276</a>     }
-<a class="jxr_linenumber" name="L277" href="#L277">277</a> 
-<a class="jxr_linenumber" name="L278" href="#L278">278</a> }
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>         assertTrue(logger.doesMessageExist(<span class="jxr_string">"127.0.0.1 is looking for vulnerabilities, for this: client sent more bytes than allowed for a single line.  max: 1024"</span>, 10));
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>     }
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> 
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a> <em class="jxr_javadoccomment">     * This method asserts we see "from SetOfSws" in the logs.  The full</em>
+<a class="jxr_linenumber" name="L266" href="#L266">266</a> <em class="jxr_javadoccomment">     * context is to see messages like "http server removed (SocketWrapper for remote address: /127.0.0.1:53533) from SetOfSws. size: 0",</em>
+<a class="jxr_linenumber" name="L267" href="#L267">267</a> <em class="jxr_javadoccomment">     * which indicates the server is closing sockets as soon as they're finished.</em>
+<a class="jxr_linenumber" name="L268" href="#L268">268</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
+<a class="jxr_linenumber" name="L269" href="#L269">269</a> <em class="jxr_javadoccomment">     * This test was needed to guarantee the system will clean up its sockets, that is,</em>
+<a class="jxr_linenumber" name="L270" href="#L270">270</a> <em class="jxr_javadoccomment">     * it will not have a leak.</em>
+<a class="jxr_linenumber" name="L271" href="#L271">271</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> checkForClosedSocket() {
+<a class="jxr_linenumber" name="L273" href="#L273">273</a>         MyThread.sleep(15);
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>         assertTrue(logger.doesMessageExist(<span class="jxr_string">"from SetOfSws"</span>, 15));
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>     }
+<a class="jxr_linenumber" name="L276" href="#L276">276</a> 
+<a class="jxr_linenumber" name="L277" href="#L277">277</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

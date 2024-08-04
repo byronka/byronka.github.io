@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UrlEncodedDataGetter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.web</a> &gt; <span class="el_source">UrlEncodedDataGetter.java</span></div><h1>UrlEncodedDataGetter.java</h1><pre class="source lang-java linenums">package com.renomad.minum.web;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * This class enables pulling key-value pairs one at a time
+ * from the Request body. This enables the developer to pull data
+ * incrementally, rather than reading it all into memory at once.
+ */
+public class UrlEncodedDataGetter extends InputStream {
+    private final InputStream inputStream;
+    private final CountBytesRead countBytesRead;
+    private final long contentLength;
+    /**
+     * After we hit the boundary, we will set this flag to true, and all
+     * subsequent reads will return -1.
+     */
+<span class="fc" id="L20">    private boolean isFinished = false;</span>
+
+<span class="fc" id="L22">    UrlEncodedDataGetter(InputStream inputStream, CountBytesRead countBytesRead, long contentLength) {</span>
+<span class="fc" id="L23">        this.inputStream = inputStream;</span>
+<span class="fc" id="L24">        this.countBytesRead = countBytesRead;</span>
+<span class="fc" id="L25">        this.contentLength = contentLength;</span>
+<span class="fc" id="L26">    }</span>
+
+    /**
+     * Mostly similar behavior to {@link InputStream#read()}
+     * @throws IOException if the inputstream is closed unexpectedly while reading.
+     */
+    @Override
+    public int read() throws IOException {
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (isFinished) {</span>
+<span class="fc" id="L35">            return -1;</span>
+        }
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (countBytesRead.getCount() == contentLength) {</span>
+<span class="fc" id="L38">            isFinished = true;</span>
+<span class="fc" id="L39">            return -1;</span>
+        }
+<span class="fc" id="L41">        int result = inputStream.read();</span>
+
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (result == -1) {</span>
+<span class="fc" id="L44">            isFinished = true;</span>
+            // I know this is surprising, however: Because we always have the content length while reading the body,
+            // we know exactly when we expect to read the last byte.  If we read and get a -1, it means
+            // the stream is closed - but that should not have happened, because we should have stopped reading when
+            // we hit the limit of bytes to read.  But in the real world, it will happen:  You can observe it by uploading a large
+            // file and using the browser's &quot;stop&quot; button during the upload.
+<span class="fc" id="L50">            throw new IOException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
+        }
+
+<span class="fc" id="L53">        countBytesRead.increment();</span>
+<span class="fc" id="L54">        char byteValue = (char) result;</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (byteValue == '&amp;') {</span>
+<span class="fc" id="L56">            isFinished = true;</span>
+<span class="fc" id="L57">            return -1;</span>
+        }
+<span class="fc" id="L59">        return result;</span>
+    }
+
+    @Override
+    public byte[] readAllBytes() throws IOException {
+<span class="fc" id="L64">        var baos = new ByteArrayOutputStream();</span>
+        while (true) {
+<span class="fc" id="L66">            int result = read();</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (result == -1) {</span>
+                // if our read function determines we are at the end of the value,
+                // because we encountered an ampersand, it will return a -1 value,
+                // and we return our value - but more keys and values expected.
+<span class="fc" id="L71">                return baos.toByteArray();</span>
+            }
+<span class="fc" id="L73">            baos.write((byte)result);</span>
+<span class="fc" id="L74">        }</span>
+    }
+
+    /**
+     * By &quot;close&quot;, we will read from the {@link InputStream} until we have finished the body,
+     * so that our InputStream has been read until the start of the next partition.
+     */
+    @Override
+    public void close() throws IOException {
+        while (true) {
+<span class="fc" id="L84">            int result = read();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L86">                return;</span>
+            }
+<span class="fc" id="L88">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
