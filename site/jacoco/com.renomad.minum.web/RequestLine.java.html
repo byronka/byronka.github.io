@@ -173,41 +173,52 @@ public final class RequestLine {
         }
     }
 
+    /**
+     * Return the method of this request-line.  For example, GET, PUT, POST...
+     */
     public Method getMethod() {
-<span class="fc" id="L177">        return method;</span>
+<span class="fc" id="L180">        return method;</span>
     }
 
     /**
-     * See {@link PathDetails}
+     * This returns an object which contains essential information about the path
+     * in the request line.  For example, if the request line is &quot;GET /sample?foo=bar HTTP/1.1&quot;,
+     * this would hold data for the path (&quot;sample&quot;) and the query string (&quot;foo=bar&quot;)
      */
     public PathDetails getPathDetails() {
-<span class="fc" id="L184">        return pathDetails;</span>
+<span class="fc" id="L189">        return pathDetails;</span>
     }
 
+    /**
+     * Gets the HTTP version, either 1.0 or 1.1
+     */
     public HttpVersion getVersion() {
-<span class="fc" id="L188">        return this.version;</span>
+<span class="fc" id="L196">        return this.version;</span>
     }
 
+    /**
+     * Get the string value of this request line, such as &quot;GET /sample.html HTTP/1.1&quot;
+     */
     public String getRawValue() {
-<span class="fc" id="L192">        return rawValue;</span>
+<span class="fc" id="L203">        return rawValue;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L197" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L198" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L199">        RequestLine that = (RequestLine) o;</span>
-<span class="fc bfc" id="L200" title="All 10 branches covered.">        return method == that.method &amp;&amp; Objects.equals(pathDetails, that.pathDetails) &amp;&amp; version == that.version &amp;&amp; Objects.equals(rawValue, that.rawValue) &amp;&amp; Objects.equals(logger, that.logger);</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L209" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L210">        RequestLine that = (RequestLine) o;</span>
+<span class="fc bfc" id="L211" title="All 10 branches covered.">        return method == that.method &amp;&amp; Objects.equals(pathDetails, that.pathDetails) &amp;&amp; version == that.version &amp;&amp; Objects.equals(rawValue, that.rawValue) &amp;&amp; Objects.equals(logger, that.logger);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L205">        return Objects.hash(method, pathDetails, version, rawValue, logger);</span>
+<span class="fc" id="L216">        return Objects.hash(method, pathDetails, version, rawValue, logger);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L210">        return &quot;RequestLine{&quot; +</span>
+<span class="fc" id="L221">        return &quot;RequestLine{&quot; +</span>
                 &quot;method=&quot; + method +
                 &quot;, pathDetails=&quot; + pathDetails +
                 &quot;, version=&quot; + version +

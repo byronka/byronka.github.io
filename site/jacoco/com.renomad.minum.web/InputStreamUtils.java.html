@@ -7,63 +7,81 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * Handy helpful utilities for working with input streams.
  */
-<span class="fc" id="L14">public final class InputStreamUtils implements IInputStreamUtils {</span>
+final class InputStreamUtils implements IInputStreamUtils {
 
-    public static final int MAX_READ_LINE_SIZE_BYTES = 1024;
+    private final int maxReadLineSizeBytes;
+
+<span class="fc" id="L19">    public InputStreamUtils(int maxReadLineSizeBytes) {</span>
+<span class="fc" id="L20">        this.maxReadLineSizeBytes = maxReadLineSizeBytes;</span>
+<span class="fc" id="L21">    }</span>
 
     @Override
     public String readLine(InputStream inputStream) throws IOException  {
-<span class="fc" id="L20">        final int NEWLINE_DECIMAL = 10;</span>
-<span class="fc" id="L21">        final int CARRIAGE_RETURN_DECIMAL = 13;</span>
+<span class="fc" id="L25">        final int NEWLINE_DECIMAL = 10;</span>
+<span class="fc" id="L26">        final int CARRIAGE_RETURN_DECIMAL = 13;</span>
 
-<span class="fc" id="L23">        final var result = new ByteArrayOutputStream(MAX_READ_LINE_SIZE_BYTES / 3);</span>
-<span class="fc" id="L24">        for (int i = 0;; i++) {</span>
-<span class="fc bfc" id="L25" title="All 2 branches covered.">            if (i &gt;= MAX_READ_LINE_SIZE_BYTES) {</span>
-<span class="fc" id="L26">                inputStream.close();</span>
-<span class="fc" id="L27">                throw new ForbiddenUseException(&quot;client sent more bytes than allowed for a single line.  max: &quot; + MAX_READ_LINE_SIZE_BYTES);</span>
+<span class="fc" id="L28">        final var result = new ByteArrayOutputStream(maxReadLineSizeBytes / 3);</span>
+<span class="fc" id="L29">        for (int i = 0;; i++) {</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">            if (i &gt;= maxReadLineSizeBytes) {</span>
+<span class="fc" id="L31">                inputStream.close();</span>
+<span class="fc" id="L32">                throw new ForbiddenUseException(&quot;client sent more bytes than allowed for a single line.  max: &quot; + maxReadLineSizeBytes);</span>
             }
-<span class="fc" id="L29">            int a = inputStream.read();</span>
-<span class="fc bfc" id="L30" title="All 2 branches covered.">            if (a == -1) return result.toString(StandardCharsets.UTF_8);</span>
-<span class="fc bfc" id="L31" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) continue;</span>
-<span class="fc bfc" id="L32" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
-<span class="fc" id="L33">            result.write(a);</span>
+<span class="fc" id="L34">            int a = inputStream.read();</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (a == -1) return result.toString(StandardCharsets.UTF_8);</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) continue;</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
+<span class="fc" id="L38">            result.write(a);</span>
         }
-<span class="fc" id="L35">        return result.toString(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L40">        return result.toString(StandardCharsets.UTF_8);</span>
     }
 
     @Override
     public byte[] read(int lengthToRead, InputStream inputStream) {
-<span class="fc" id="L40">        final int typicalBufferSize = 1024 * 8;</span>
-<span class="fc" id="L41">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
+<span class="fc" id="L45">        final int typicalBufferSize = 1024 * 8;</span>
+<span class="fc" id="L46">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
         byte[] data;
-<span class="fc" id="L43">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L48">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
         int read;
-<span class="fc" id="L45">        int totalRead = 0;</span>
+<span class="fc" id="L50">        int totalRead = 0;</span>
         try {
-<span class="fc bfc" id="L47" title="All 2 branches covered.">            while ((read = inputStream.read(buf)) &gt;= 0) {</span>
-<span class="fc" id="L48">                totalRead += read;</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">                if (totalRead &lt; lengthToRead) {</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            while ((read = inputStream.read(buf)) &gt;= 0) {</span>
+<span class="fc" id="L53">                totalRead += read;</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">                if (totalRead &lt; lengthToRead) {</span>
                     // if we haven't gotten everything we wanted, write this to the output and loop again
-<span class="fc" id="L51">                    baos.write(buf, 0, read);</span>
+<span class="fc" id="L56">                    baos.write(buf, 0, read);</span>
                 } else {
-<span class="fc" id="L53">                    baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
-<span class="fc" id="L54">                    break;</span>
+<span class="fc" id="L58">                    baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
+<span class="fc" id="L59">                    break;</span>
                 }
             }
-<span class="fc" id="L57">        } catch (IOException ex) {</span>
-<span class="fc" id="L58">            throw new UtilsException(ex);</span>
-<span class="fc" id="L59">        }</span>
-<span class="fc" id="L60">        data = baos.toByteArray();</span>
+<span class="fc" id="L62">        } catch (IOException ex) {</span>
+<span class="fc" id="L63">            throw new UtilsException(ex);</span>
+<span class="fc" id="L64">        }</span>
+<span class="fc" id="L65">        data = baos.toByteArray();</span>
 
-<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (data.length != lengthToRead) {</span>
-<span class="fc" id="L63">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
-<span class="fc" id="L64">            throw new ForbiddenUseException(message);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (data.length != lengthToRead) {</span>
+<span class="fc" id="L68">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
+<span class="fc" id="L69">            throw new ForbiddenUseException(message);</span>
         }
-<span class="fc" id="L66">        return data;</span>
+<span class="fc" id="L71">        return data;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L77" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L78">        InputStreamUtils that = (InputStreamUtils) o;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        return maxReadLineSizeBytes == that.maxReadLineSizeBytes;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L84">        return Objects.hash(maxReadLineSizeBytes);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

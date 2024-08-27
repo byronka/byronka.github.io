@@ -33,33 +33,55 @@ public final class PathDetails {
 <span class="fc bfc" id="L33" title="All 2 branches covered.">        this.queryString = new HashMap&lt;&gt;(queryString == null ? Map.of() : queryString);</span>
 <span class="fc" id="L34">    }</span>
 
+    /**
+     * Provides the path by itself, without the query string.  For examples,
+     * here are some request lines with their isolated paths:
+     * &lt;pre&gt;
+     * {@code
+     * request line                                isolated path
+     * -------------------                         -------------
+     * POST / HTTP/1.1                             &quot;&quot;
+     * GET /background.png HTTP/1.0                &quot;background.png&quot;
+     * HEAD /test.html?query=alibaba HTTP/1.1      &quot;test.html&quot;
+     * OPTIONS /anypage.html HTTP/1.0              &quot;anypage.html&quot;
+     * }
+     * &lt;/pre&gt;
+     */
     public String getIsolatedPath() {
-<span class="fc" id="L37">        return isolatedPath;</span>
+<span class="fc" id="L51">        return isolatedPath;</span>
     }
 
+    /**
+     * Returns the raw query string.  For example, in &quot;HEAD /test.html?query=alibaba HTTP/1.1&quot;,
+     * the raw query string is &quot;query=alibaba&quot;
+     */
     public String getRawQueryString() {
-<span class="fc" id="L41">        return rawQueryString;</span>
+<span class="fc" id="L59">        return rawQueryString;</span>
     }
 
+    /**
+     * This returns the query string portion of the request line as a map, with
+     * case-sensitive keys.
+     */
     public Map&lt;String, String&gt; getQueryString() {
-<span class="fc" id="L45">        return new HashMap&lt;&gt;(queryString);</span>
+<span class="fc" id="L67">        return new HashMap&lt;&gt;(queryString);</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (!(o instanceof PathDetails that)) return false;</span>
-<span class="fc bfc" id="L52" title="All 6 branches covered.">        return Objects.equals(isolatedPath, that.isolatedPath) &amp;&amp; Objects.equals(rawQueryString, that.rawQueryString) &amp;&amp; Objects.equals(queryString, that.queryString);</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (!(o instanceof PathDetails that)) return false;</span>
+<span class="fc bfc" id="L74" title="All 6 branches covered.">        return Objects.equals(isolatedPath, that.isolatedPath) &amp;&amp; Objects.equals(rawQueryString, that.rawQueryString) &amp;&amp; Objects.equals(queryString, that.queryString);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L57">        return Objects.hash(isolatedPath, rawQueryString, queryString);</span>
+<span class="fc" id="L79">        return Objects.hash(isolatedPath, rawQueryString, queryString);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L62">        return &quot;PathDetails{&quot; +</span>
+<span class="fc" id="L84">        return &quot;PathDetails{&quot; +</span>
                 &quot;isolatedPath='&quot; + isolatedPath + '\'' +
                 &quot;, rawQueryString='&quot; + rawQueryString + '\'' +
                 &quot;, queryString=&quot; + queryString +

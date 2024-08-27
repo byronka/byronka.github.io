@@ -11,54 +11,63 @@ import java.util.concurrent.ExecutorService;
 
 
 /**
- * Holds important system-wide data and methods.
+ * Holds important system-wide data and methods, such as the
+ * logger, constants, and the {@link FullSystem} instance.
  * &lt;p&gt;
- *     Creating an instance of this and passing it
- *     around lets us reduce some boilerplate code,
- *     but more importantly, it lets us lower the scope.
+ *     The common situations:
  * &lt;/p&gt;
+ * &lt;ul&gt;
+ *     &lt;li&gt;Building a Minum {@link Db} database&lt;/li&gt;
+ *     &lt;li&gt;Getting system constants like the database directory&lt;/li&gt;
+ *     &lt;li&gt;Getting the system {@link ExecutorService} for starting threads or an {@link com.renomad.minum.queue.ActionQueue}&lt;/li&gt;
+ *     &lt;li&gt;Getting a {@link FullSystem} object, which has&lt;/li&gt;
+ *     &lt;ul&gt;
+ *         &lt;li&gt;the {@link com.renomad.minum.web.WebFramework}, which registers endpoints&lt;/li&gt;
+ *         &lt;li&gt;the {@link com.renomad.minum.security.TheBrig}, which handles bad actors on the internet&lt;/li&gt;
+ *     &lt;/ul&gt;
+ * &lt;/ul&gt;
  */
 public final class Context {
 
-<span class="fc" id="L23">    public static final Context EMPTY = new Context(null, null);</span>
+<span class="fc" id="L32">    public static final Context EMPTY = new Context(null, null);</span>
     private ILogger logger;
     private final ExecutorService executorService;
     private final Constants constants;
     private FullSystem fullSystem;
     private final ActionQueueState actionQueueState;
 
-<span class="fc" id="L30">    public Context(ExecutorService executorService, Constants constants) {</span>
-<span class="fc" id="L31">        this.executorService = executorService;</span>
-<span class="fc" id="L32">        this.constants = constants;</span>
-<span class="fc" id="L33">        actionQueueState = new ActionQueueState();</span>
-<span class="fc" id="L34">    }</span>
+<span class="fc" id="L39">    public Context(ExecutorService executorService, Constants constants) {</span>
+<span class="fc" id="L40">        this.executorService = executorService;</span>
+<span class="fc" id="L41">        this.constants = constants;</span>
+<span class="fc" id="L42">        actionQueueState = new ActionQueueState();</span>
+<span class="fc" id="L43">    }</span>
 
     public void setLogger(ILogger logger) {
-<span class="fc" id="L37">        this.logger = logger;</span>
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L46">        this.logger = logger;</span>
+<span class="fc" id="L47">    }</span>
 
     public ILogger getLogger() {
-<span class="fc" id="L41">        return logger;</span>
+<span class="fc" id="L50">        return logger;</span>
     }
 
     public ExecutorService getExecutorService() {
-<span class="fc" id="L45">        return executorService;</span>
+<span class="fc" id="L54">        return executorService;</span>
     }
 
     public Constants getConstants() {
-<span class="fc" id="L49">        return constants;</span>
+<span class="fc" id="L58">        return constants;</span>
     }
 
     public void setFullSystem(FullSystem fullSystem) {
-<span class="fc" id="L53">        this.fullSystem = fullSystem;</span>
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L62">        this.fullSystem = fullSystem;</span>
+<span class="fc" id="L63">    }</span>
 
     public FullSystem getFullSystem() {
-<span class="fc" id="L57">        return fullSystem;</span>
+<span class="fc" id="L66">        return fullSystem;</span>
     }
 
     public ActionQueueState getActionQueueState() {
-<span class="fc" id="L61">        return actionQueueState;</span>
+<span class="fc" id="L70">        return actionQueueState;</span>
     }
 
     /**
@@ -67,20 +76,18 @@ public final class Context {
      * directory and the context.
      * &lt;p&gt;
      * Since this is a generic method, a bit of care is required when
-     * calling.  Try to use a pattern like this:
-     * &lt;pre&gt;
-     * {@code Db&lt;Photograph&gt; photoDb = context.getDb(&quot;photos&quot;);}
-     * &lt;/pre&gt;
+     * calling.  Try to use a pattern like the following pseudocode:
+     * {@snippet :
+     *  Db&lt;Photograph&gt; photoDb = context.getDb(&quot;photos&quot;, new Photograph());
+     * }
      * @param name the name of this data.  Note that this will be used
      *             as the directory for the data, so use characters your
      *             operating system would allow.
-     * @param instance an instance of the {@link DbData} data, preferably
-     *                 following a null-object pattern.  For example,
-     *                 Photograph.EMPTY.  This is used in the Db code
-     *                 to deserialize the data when reading.
+     * @param instance an instance of the {@link DbData} data. This is used in the
+     *                 Db code to deserialize the data when reading.
      */
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
-<span class="fc" id="L83">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
+<span class="fc" id="L90">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
