@@ -67,14 +67,27 @@ public final class Body {
      *     Otherwise, the value found will be converted
      *     to a string, and trimmed.
      * &lt;/p&gt;
+     * &lt;p&gt;
+     *     Note: if the request is a multipart/form-data, this
+     *     method will throw a helpful exception to indicate that.
+     * &lt;/p&gt;
      *
      */
     public String asString(String key) {
-<span class="fc" id="L73">        byte[] byteArray = bodyMap.get(key);</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (byteArray == null) {</span>
-<span class="fc" id="L75">            return &quot;&quot;;</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (this.equals(EMPTY)) {</span>
+<span class="fc" id="L78">            return &quot;&quot;;</span>
+        }
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.MULTIPART)) {</span>
+<span class="fc" id="L81">            throw new WebServerException(&quot;Request body is in multipart format.  Use .getPartitionByName instead&quot;);</span>
+        }
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.UNRECOGNIZED)) {</span>
+<span class="fc" id="L84">            throw new WebServerException(&quot;Request body is not in a recognized key-value encoding.  Use .asString() to obtain the body data&quot;);</span>
+        }
+<span class="fc" id="L86">        byte[] byteArray = bodyMap.get(key);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (byteArray == null) {</span>
+<span class="fc" id="L88">            return &quot;&quot;;</span>
         } else {
-<span class="fc" id="L77">            return StringUtils.byteArrayToString(byteArray).trim();</span>
+<span class="fc" id="L90">            return StringUtils.byteArrayToString(byteArray).trim();</span>
         }
 
     }
@@ -85,7 +98,10 @@ public final class Body {
      * than converting the bytes to a string.
      */
     public String asString() {
-<span class="fc" id="L88">        return StringUtils.byteArrayToString(raw).trim();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (this.equals(EMPTY)) {</span>
+<span class="fc" id="L102">            return &quot;&quot;;</span>
+        }
+<span class="fc" id="L104">        return StringUtils.byteArrayToString(raw).trim();</span>
     }
 
     /**
@@ -93,7 +109,16 @@ public final class Body {
      * presumes the data was sent URL-encoded.
      */
     public byte[] asBytes(String key) {
-<span class="fc" id="L96">        return bodyMap.get(key);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (this.equals(EMPTY)) {</span>
+<span class="fc" id="L113">            return new byte[0];</span>
+        }
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.MULTIPART)) {</span>
+<span class="fc" id="L116">            throw new WebServerException(&quot;Request body is in multipart format.  Use .getPartitionByName instead&quot;);</span>
+        }
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.UNRECOGNIZED)) {</span>
+<span class="fc" id="L119">            throw new WebServerException(&quot;Request body is not in a recognized key-value encoding.  Use .asBytes() to obtain the body data&quot;);</span>
+        }
+<span class="fc" id="L121">        return bodyMap.get(key);</span>
     }
 
     /**
@@ -101,7 +126,10 @@ public final class Body {
      * presumes the data was sent URL-encoded.
      */
     public byte[] asBytes() {
-<span class="fc" id="L104">        return this.raw.clone();</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (this.equals(EMPTY)) {</span>
+<span class="fc" id="L130">            return new byte[0];</span>
+        }
+<span class="fc" id="L132">        return this.raw.clone();</span>
     }
 
     /**
@@ -121,7 +149,16 @@ public final class Body {
      * &lt;/pre&gt;
      */
     public List&lt;Partition&gt; getPartitionHeaders() {
-<span class="fc" id="L124">        return new ArrayList&lt;&gt;(partitions);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (this.equals(EMPTY)) {</span>
+<span class="fc" id="L153">            return List.of();</span>
+        }
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.FORM_URL_ENCODED)) {</span>
+<span class="fc" id="L156">            throw new WebServerException(&quot;Request body encoded in form-urlencoded format. getPartitionHeaders is only used with multipart encoded data.&quot;);</span>
+        }
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.UNRECOGNIZED)) {</span>
+<span class="fc" id="L159">            throw new WebServerException(&quot;Request body encoded is not encoded in a recognized format. getPartitionHeaders is only used with multipart encoded data.&quot;);</span>
+        }
+<span class="fc" id="L161">        return new ArrayList&lt;&gt;(partitions);</span>
     }
 
     /**
@@ -132,7 +169,16 @@ public final class Body {
      * ability to select multiple files on the input with type=file)
      */
     public List&lt;Partition&gt; getPartitionByName(String name) {
-<span class="fc" id="L135">        return getPartitionHeaders().stream().filter(x -&gt; x.getContentDisposition().getName().equalsIgnoreCase(name)).toList();</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (this.equals(EMPTY)) {</span>
+<span class="fc" id="L173">            return List.of();</span>
+        }
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.FORM_URL_ENCODED)) {</span>
+<span class="fc" id="L176">            throw new WebServerException(&quot;Request body encoded in form-urlencoded format. use .asString(key) or asBytes(key)&quot;);</span>
+        }
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (this.bodyType.equals(BodyType.UNRECOGNIZED)) {</span>
+<span class="fc" id="L179">            throw new WebServerException(&quot;Request body encoded is not encoded in a recognized format. use .asString() or asBytes()&quot;);</span>
+        }
+<span class="fc" id="L181">        return getPartitionHeaders().stream().filter(x -&gt; x.getContentDisposition().getName().equalsIgnoreCase(name)).toList();</span>
     }
 
     /**
@@ -150,34 +196,37 @@ public final class Body {
      * using {@link Request#getSocketWrapper()}, but that needs to be done before running {@link Request#getBody()}
      */
     public BodyType getBodyType() {
-<span class="fc" id="L153">        return bodyType;</span>
+<span class="fc" id="L199">        return bodyType;</span>
     }
 
     /**
      * Get all the keys for the key-value pairs in the body
      */
     public Set&lt;String&gt; getKeys() {
-<span class="fc" id="L160">        return bodyMap.keySet();</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        if (this.equals(EMPTY)) {</span>
+<span class="fc" id="L207">            return Set.of();</span>
+        }
+<span class="fc" id="L209">        return bodyMap.keySet();</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L166" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L167">        Body body = (Body) o;</span>
-<span class="fc bfc" id="L168" title="All 8 branches covered.">        return Objects.equals(bodyMap, body.bodyMap) &amp;&amp; Arrays.equals(raw, body.raw) &amp;&amp; Objects.equals(partitions, body.partitions) &amp;&amp; bodyType == body.bodyType;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L215" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L216">        Body body = (Body) o;</span>
+<span class="fc bfc" id="L217" title="All 8 branches covered.">        return Objects.equals(bodyMap, body.bodyMap) &amp;&amp; Arrays.equals(raw, body.raw) &amp;&amp; Objects.equals(partitions, body.partitions) &amp;&amp; bodyType == body.bodyType;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L173">        int result = Objects.hash(bodyMap, partitions, bodyType);</span>
-<span class="fc" id="L174">        result = 31 * result + Arrays.hashCode(raw);</span>
-<span class="fc" id="L175">        return result;</span>
+<span class="fc" id="L222">        int result = Objects.hash(bodyMap, partitions, bodyType);</span>
+<span class="fc" id="L223">        result = 31 * result + Arrays.hashCode(raw);</span>
+<span class="fc" id="L224">        return result;</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L180">        return &quot;Body{&quot; +</span>
+<span class="fc" id="L229">        return &quot;Body{&quot; +</span>
                 &quot;bodyMap=&quot; + bodyMap +
                 &quot;, bodyType=&quot; + bodyType +
                 '}';
