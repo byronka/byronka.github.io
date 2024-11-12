@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>CryptoUtilsTests xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../testapidocs/com/renomad/minum/utils/CryptoUtilsTests.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.utils;
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> org.junit.Test;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> java.security.NoSuchAlgorithmException;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.testing.TestFramework.assertEquals;
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.testing.TestFramework.assertThrows;
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="CryptoUtilsTests" href="../../../../com/renomad/minum/utils/CryptoUtilsTests.html#CryptoUtilsTests">CryptoUtilsTests</a> {
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>      @Test
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testBytesToHex() {
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>          assertEquals(CryptoUtils.bytesToHex(<strong class="jxr_keyword">new</strong> byte[]{1, 2, 3}), <span class="jxr_string">"010203"</span>);
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>          assertEquals(CryptoUtils.bytesToHex(<strong class="jxr_keyword">new</strong> byte[0]), <span class="jxr_string">""</span>);
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>          assertEquals(CryptoUtils.bytesToHex(<strong class="jxr_keyword">new</strong> byte[]{0, (byte) 255,(byte) 255,(byte) 255}), <span class="jxr_string">"00ffffff"</span>);
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>      }
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>      @Test
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testCreatePasswordHash_BadAlgorithm() {
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>          <strong class="jxr_keyword">var</strong> ex = assertThrows(UtilsException.<strong class="jxr_keyword">class</strong>, () -&gt; CryptoUtils.createPasswordHash(<span class="jxr_string">"foo_password"</span>, <span class="jxr_string">"mysalt"</span>, <span class="jxr_string">"badalgorithm"</span>));
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>          assertEquals(ex.getMessage(), <span class="jxr_string">"java.security.NoSuchAlgorithmException: badalgorithm SecretKeyFactory not available"</span>);
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>      }
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>      @Test
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testCreatePasswordHash() {
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>          String passwordHash = CryptoUtils.createPasswordHash(<span class="jxr_string">"abc123"</span>, <span class="jxr_string">"saltysalt"</span>);
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>          assertEquals(passwordHash, <span class="jxr_string">"87f83512f4c18af25e82728cfdf96194"</span>);
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>      }
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2024. All rights reserved.</div>
+</body>
+</html>
