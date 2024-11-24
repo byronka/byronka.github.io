@@ -6,6 +6,7 @@ import com.renomad.minum.logging.ILogger;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -13,9 +14,6 @@ import java.util.stream.Stream;
 
 /**
  * Helper functions for working with files.
- * &lt;br&gt;
- * In all these functions, note that it is disallowed to request a path
- * having certain characters - see {@link #badFilePathPatterns}
  */
 public final class FileUtils {
 
@@ -24,95 +22,100 @@ public final class FileUtils {
      * the directory structure.  We disallow this, as a security precaution.
      * &lt;ul&gt;
      * &lt;li&gt;1st Alternative {@code //} - This prevents going to the root directory
+     * &lt;/li&gt;
      * &lt;li&gt;2nd Alternative {@code ..} - prevents going up a directory
+     * &lt;/li&gt;
      * &lt;li&gt;3rd Alternative {@code :} - prevents certain special paths, like &quot;C:&quot; or &quot;file://&quot;
+     * &lt;/li&gt;
+     * &lt;li&gt;4th Alternative {@code ^/} - prevents starting with a slash, meaning the root, but
+     *     allows intermediate slashes.
+     * &lt;/li&gt;
+     * &lt;li&gt;5th Alternative {@code :^\} - prevents starting with a backslash, meaning the root, but
+     *    allows intermediate backslashes.
+     * &lt;/li&gt;
      * &lt;/ul&gt;
      */
-<span class="fc" id="L31">    public static final Pattern badFilePathPatterns = Pattern.compile(&quot;//|\\.\\.|:&quot;);</span>
+<span class="fc" id="L38">    public static final Pattern badFilePathPatterns = Pattern.compile(&quot;//|\\.\\.|:|^/|^\\\\&quot;);</span>
+
     private final ILogger logger;
     private final IFileReader fileReader;
 
     public FileUtils(ILogger logger, Constants constants) {
-<span class="fc" id="L36">        this(</span>
+<span class="fc" id="L44">        this(</span>
                 logger,
                 new FileReader(
-<span class="fc" id="L39">                        LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles),</span>
+<span class="fc" id="L47">                        LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles),</span>
                         constants.useCacheForStaticFiles,
                         logger));
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L50">    }</span>
 
     /**
      * This version of the constructor is mainly for testing
      */
-<span class="fc" id="L47">    FileUtils(ILogger logger, IFileReader fileReader) {</span>
-<span class="fc" id="L48">        this.logger = logger;</span>
-<span class="fc" id="L49">        this.fileReader = fileReader;</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L55">    FileUtils(ILogger logger, IFileReader fileReader) {</span>
+<span class="fc" id="L56">        this.logger = logger;</span>
+<span class="fc" id="L57">        this.fileReader = fileReader;</span>
+<span class="fc" id="L58">    }</span>
 
     /**
      * Write a string to a path on disk.
+     * &lt;br&gt;
      * &lt;p&gt;
-     *     Parent directories are made unavailable by searching the path for
-     *     bad characters.  See {@link #badFilePathPatterns}
+     *  &lt;em&gt;Note: This does *not* protect against untrusted data on its own.  Call {@link #safeResolve(String, String)} first against
+     *  the path to ensure it uses valid characters and prevent it escaping the expected directory.&lt;/em&gt;
      * &lt;/p&gt;
      */
     public void writeString(Path path, String content) {
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (path.toString().isEmpty()) {</span>
-<span class="fc" id="L61">            logger.logDebug(() -&gt; &quot;an empty path was provided to writeString&quot;);</span>
-<span class="fc" id="L62">            return;</span>
-        }
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path.toString()).find()) {</span>
-<span class="fc" id="L65">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at writeString: %s&quot;, path));</span>
-<span class="fc" id="L66">            return;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (path.toString().isEmpty()) {</span>
+<span class="fc" id="L70">            logger.logDebug(() -&gt; &quot;an empty path was provided to writeString&quot;);</span>
+<span class="fc" id="L71">            return;</span>
         }
         try {
-<span class="fc" id="L69">            Files.writeString(path, content);</span>
-<span class="fc" id="L70">        } catch (IOException e) {</span>
-<span class="fc" id="L71">            throw new UtilsException(e);</span>
-<span class="fc" id="L72">        }</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L74">            Files.writeString(path, content);</span>
+<span class="fc" id="L75">        } catch (IOException e) {</span>
+<span class="fc" id="L76">            throw new UtilsException(e);</span>
+<span class="fc" id="L77">        }</span>
+<span class="fc" id="L78">    }</span>
 
     /**
      * Deletes a directory, deleting everything inside it
      * recursively afterwards.  A more dangerous method than
      * many others, take care.
+     * &lt;br&gt;
      * &lt;p&gt;
-     *     Parent directories are made unavailable by searching the path for
-     *     bad characters.  See {@link #badFilePathPatterns}
+     *  &lt;em&gt;Note: This does *not* protect against untrusted data on its own.  Call {@link #safeResolve(String, String)} first against
+     *  the path to ensure it uses valid characters and prevent it escaping the expected directory.&lt;/em&gt;
      * &lt;/p&gt;
      */
     public void deleteDirectoryRecursivelyIfExists(Path myPath) {
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(myPath.toString()).find()) {</span>
-<span class="fc" id="L86">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at deleteDirectoryRecursivelyIfExists: %s&quot;, myPath));</span>
-<span class="fc" id="L87">            return;</span>
-        }
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (!Files.exists(myPath)) {</span>
-<span class="fc" id="L90">            logger.logDebug(() -&gt; &quot;system was requested to delete directory: &quot;+myPath+&quot;, but it did not exist&quot;);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (!Files.exists(myPath)) {</span>
+<span class="fc" id="L92">            logger.logDebug(() -&gt; &quot;system was requested to delete directory: &quot;+myPath+&quot;, but it did not exist&quot;);</span>
         } else {
-<span class="fc" id="L92">            walkPathDeleting(myPath);</span>
+<span class="fc" id="L94">            walkPathDeleting(myPath);</span>
         }
-<span class="fc" id="L94">    }</span>
+<span class="fc" id="L96">    }</span>
 
     void walkPathDeleting(Path myPath) {
-<span class="fc" id="L97">        try (Stream&lt;Path&gt; walk = Files.walk(myPath)) {</span>
+<span class="fc" id="L99">        try (Stream&lt;Path&gt; walk = Files.walk(myPath)) {</span>
 
-<span class="fc" id="L99">            final var files = walk.sorted(Comparator.reverseOrder())</span>
-<span class="fc" id="L100">                    .map(Path::toFile).toList();</span>
+<span class="fc" id="L101">            final var files = walk.sorted(Comparator.reverseOrder())</span>
+<span class="fc" id="L102">                    .map(Path::toFile).toList();</span>
 
-<span class="fc bfc" id="L102" title="All 2 branches covered.">            for(var file: files) {</span>
-<span class="fc" id="L103">                logger.logDebug(() -&gt; &quot;deleting &quot; + file);</span>
-<span class="fc" id="L104">                Files.delete(file.toPath());</span>
-<span class="fc" id="L105">            }</span>
-<span class="fc" id="L106">        } catch (IOException ex) {</span>
-<span class="fc" id="L107">            throw new UtilsException(&quot;Error during deleteDirectoryRecursivelyIfExists: &quot; + ex);</span>
-<span class="fc" id="L108">        }</span>
-<span class="fc" id="L109">    }</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            for(var file: files) {</span>
+<span class="fc" id="L105">                logger.logDebug(() -&gt; &quot;deleting &quot; + file);</span>
+<span class="fc" id="L106">                Files.delete(file.toPath());</span>
+<span class="fc" id="L107">            }</span>
+<span class="fc" id="L108">        } catch (IOException ex) {</span>
+<span class="fc" id="L109">            throw new UtilsException(&quot;Error during deleteDirectoryRecursivelyIfExists: &quot; + ex);</span>
+<span class="fc" id="L110">        }</span>
+<span class="fc" id="L111">    }</span>
 
     /**
      * Creates a directory if it doesn't already exist.
+     * &lt;br&gt;
      * &lt;p&gt;
-     *     Parent directories are made unavailable by searching the path for
-     *     bad characters.  See {@link #badFilePathPatterns}
+     *  &lt;em&gt;Note: This does *not* protect against untrusted data on its own.  Call {@link #safeResolve(String, String)} first against
+     *  the path to ensure it uses valid characters and prevent it escaping the expected directory.&lt;/em&gt;
      * &lt;/p&gt;
      * &lt;p&gt;
      * If the directory does exist, the program will simply skip
@@ -120,51 +123,50 @@ public final class FileUtils {
      * &lt;/p&gt;
      */
     public void makeDirectory(Path directory) {
-<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(directory.toString()).find()) {</span>
-<span class="fc" id="L124">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at makeDirectory: %s&quot;, directory));</span>
-<span class="fc" id="L125">            return;</span>
+<span class="fc" id="L126">        logger.logDebug(() -&gt; &quot;Creating a directory &quot; + directory);</span>
+<span class="fc" id="L127">        boolean directoryExists = Files.exists(directory);</span>
+<span class="fc" id="L128">        logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot;. Already exists: &quot; + directory);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (!directoryExists) {</span>
+<span class="fc" id="L130">            logger.logDebug(() -&gt; &quot;Creating directory, since it does not already exist: &quot; + directory);</span>
+<span class="fc" id="L131">            innerCreateDirectory(directory);</span>
+<span class="fc" id="L132">            logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot; created&quot;);</span>
         }
-<span class="fc" id="L127">        logger.logDebug(() -&gt; &quot;Creating a directory &quot; + directory);</span>
-<span class="fc" id="L128">        boolean directoryExists = Files.exists(directory);</span>
-<span class="fc" id="L129">        logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot;. Already exists: &quot; + directory);</span>
-<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (!directoryExists) {</span>
-<span class="fc" id="L131">            logger.logDebug(() -&gt; &quot;Creating directory, since it does not already exist: &quot; + directory);</span>
-<span class="fc" id="L132">            innerCreateDirectory(directory);</span>
-<span class="fc" id="L133">            logger.logDebug(() -&gt; &quot;Directory: &quot; + directory + &quot; created&quot;);</span>
-        }
-<span class="fc" id="L135">    }</span>
+<span class="fc" id="L134">    }</span>
 
     static void innerCreateDirectory(Path directory) {
         try {
-<span class="fc" id="L139">            Files.createDirectories(directory);</span>
-<span class="fc" id="L140">        } catch (Exception e) {</span>
-<span class="fc" id="L141">            throw new UtilsException(e);</span>
-<span class="fc" id="L142">        }</span>
-<span class="fc" id="L143">    }</span>
+<span class="fc" id="L138">            Files.createDirectories(directory);</span>
+<span class="fc" id="L139">        } catch (Exception e) {</span>
+<span class="fc" id="L140">            throw new UtilsException(e);</span>
+<span class="fc" id="L141">        }</span>
+<span class="fc" id="L142">    }</span>
 
     /**
      * Read a binary file, return as a byte array
+     * &lt;br&gt;
+     * &lt;p&gt;
+     *  &lt;em&gt;Note: This does *not* protect against untrusted data on its own.  Call {@link #safeResolve(String, String)} first against
+     *  the path to ensure it uses valid characters and prevent it escaping the expected directory.&lt;/em&gt;
+     * &lt;/p&gt;
      * &lt;p&gt;
      *     If there is an error, this will return an empty byte array.
      * &lt;/p&gt;
      */
     public byte[] readBinaryFile(String path) {
         try {
-<span class="fc" id="L153">            return fileReader.readFile(path);</span>
-<span class="fc" id="L154">        } catch (IOException e) {</span>
-<span class="fc" id="L155">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty byte array. %s&quot;, path, e));</span>
-<span class="fc" id="L156">            return new byte[0];</span>
+<span class="fc" id="L157">            return fileReader.readFile(path);</span>
+<span class="fc" id="L158">        } catch (IOException e) {</span>
+<span class="fc" id="L159">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty byte array. %s&quot;, path, e));</span>
+<span class="fc" id="L160">            return new byte[0];</span>
         }
     }
 
     /**
      * Read a text file from the given path, return as a string.
-     *
+     * &lt;br&gt;
      * &lt;p&gt;
-     *     Access is prevented to data in parent directories or using alternate
-     *     drives.  If the data is read, it will be added to a cache, if
-     *     the property {@link Constants#useCacheForStaticFiles} is set to true. The maximum
-     *     size of the cache is controlled by
+     *  &lt;em&gt;Note: This does *not* protect against untrusted data on its own.  Call {@link #safeResolve(String, String)} first against
+     *  the path to ensure it uses valid characters and prevent it escaping the expected directory.&lt;/em&gt;
      * &lt;/p&gt;
      * &lt;p&gt;
      *     If there is an error, this will return an empty string.
@@ -172,11 +174,65 @@ public final class FileUtils {
      */
     public String readTextFile(String path) {
         try {
-<span class="fc" id="L175">            return new String(fileReader.readFile(path), StandardCharsets.UTF_8);</span>
-<span class="fc" id="L176">        } catch (IOException e) {</span>
-<span class="fc" id="L177">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty string. %s&quot;, path, e));</span>
-<span class="fc" id="L178">            return &quot;&quot;;</span>
+<span class="fc" id="L177">            return new String(fileReader.readFile(path), StandardCharsets.UTF_8);</span>
+<span class="fc" id="L178">        } catch (IOException e) {</span>
+<span class="fc" id="L179">            logger.logDebug(() -&gt; String.format(&quot;Error while reading file %s, returning empty string. %s&quot;, path, e));</span>
+<span class="fc" id="L180">            return &quot;&quot;;</span>
         }
+    }
+
+    /**
+     * This method is to provide assurance that the file specified by the path
+     * parameter is within the directory specified by directoryPath.  Use this
+     * for any code that reads from files where the user provides untrusted input.
+     * @throws InvariantException if the file is not within the directory
+     */
+    public static void checkFileIsWithinDirectory(String path, String directoryPath) {
+        Path directoryRealPath;
+        Path fullRealPath;
+        try {
+<span class="fc" id="L194">            directoryRealPath = Path.of(directoryPath).toRealPath(LinkOption.NOFOLLOW_LINKS);</span>
+<span class="fc" id="L195">            fullRealPath = directoryRealPath.resolve(path).toRealPath(LinkOption.NOFOLLOW_LINKS);</span>
+<span class="fc" id="L196">        } catch (IOException ex) {</span>
+<span class="fc" id="L197">            throw new InvariantException(ex.toString());</span>
+<span class="fc" id="L198">        }</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (! fullRealPath.startsWith(directoryRealPath)) {</span>
+<span class="fc" id="L200">            throw new InvariantException(String.format(&quot;path (%s) was not within directory (%s)&quot;, path, directoryPath));</span>
+        }
+<span class="fc" id="L202">    }</span>
+
+    /**
+     * Checks that the path string avoids bad patterns and meets our
+     * whitelist for acceptable characters.
+     * @throws InvariantException if there are any issues with the path string, such
+     *                            as being an empty string, containing known bad patterns from {@link #badFilePathPatterns},
+     *                            or including characters other than the set of characters we will allow for filenames.
+     *                            It is a simple set of ascii characters - alphanumerics, underscore, dash, period,
+     *                            forward and backward slash.
+     */
+    public static void checkForBadFilePatterns(String path) {
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (path.isBlank()) {</span>
+<span class="fc" id="L215">            throw new InvariantException(&quot;filename was empty&quot;);</span>
+        }
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (badFilePathPatterns.matcher(path).find()) {</span>
+<span class="fc" id="L218">            throw new InvariantException(&quot;filename (&quot;+path+&quot;) contained invalid characters&quot;);</span>
+        }
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        for (char c : path.toCharArray()) {</span>
+<span class="fc bfc" id="L221" title="All 22 branches covered.">            boolean isWhitelistedChar = c &gt;= 'A' &amp;&amp; c &lt;= 'Z' || c &gt;= 'a' &amp;&amp; c&lt;= 'z' || c &gt;= '0' &amp;&amp; c &lt;= '9' || c == '-' || c == '_' || c == '.' || c == '\\' || c == '/';</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">            if (! isWhitelistedChar) {</span>
+<span class="fc" id="L223">                throw new InvariantException(&quot;filename (&quot;+path+&quot;) contained invalid characters (&quot;+c+&quot;).  Allowable characters are alpha-numeric ascii both cases, underscore, forward and backward-slash, period, and dash&quot;);</span>
+            }
+        }
+<span class="fc" id="L226">    }</span>
+
+    /**
+     * This helper method will ensure that the requested path is
+     * within the parent directory and using safe characters
+     */
+    public static Path safeResolve(String parentDirectory, String path) {
+<span class="fc" id="L233">        checkForBadFilePatterns(path);</span>
+<span class="fc" id="L234">        checkFileIsWithinDirectory(path, parentDirectory);</span>
+<span class="fc" id="L235">        return Path.of(parentDirectory).resolve(path);</span>
     }
 
 }

@@ -27,7 +27,7 @@
 <a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> java.util.*;
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> java.util.stream.Collectors;
 <a class="jxr_linenumber" name="L21" href="#L21">21</a>  
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.utils.FileUtils.badFilePathPatterns;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.utils.FileUtils.*;
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.utils.Invariants.mustBeTrue;
 <a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.StatusLine.StatusCode.*;
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.web.WebEngine.HTTP_CRLF;
@@ -535,321 +535,330 @@
 <a class="jxr_linenumber" name="L527" href="#L527">527</a> <em class="jxr_javadoccomment">     *  if the path has invalid characters, we'll return a "bad request" response.</em>
 <a class="jxr_linenumber" name="L528" href="#L528">528</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L529" href="#L529">529</a>     <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> readStaticFile(String path, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> requestHeaders) {
-<a class="jxr_linenumber" name="L530" href="#L530">530</a>         <strong class="jxr_keyword">if</strong> (badFilePathPatterns.matcher(path).find()) {
-<a class="jxr_linenumber" name="L531" href="#L531">531</a>             logger.logDebug(() -&gt; String.format(<span class="jxr_string">"Bad path requested at readStaticFile: %s"</span>, path));
-<a class="jxr_linenumber" name="L532" href="#L532">532</a>             <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_400_BAD_REQUEST);
-<a class="jxr_linenumber" name="L533" href="#L533">533</a>         }
-<a class="jxr_linenumber" name="L534" href="#L534">534</a>         String mimeType = <strong class="jxr_keyword">null</strong>;
-<a class="jxr_linenumber" name="L535" href="#L535">535</a> 
-<a class="jxr_linenumber" name="L536" href="#L536">536</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L537" href="#L537">537</a>             Path staticFilePath = Path.of(constants.staticFilesDirectory).resolve(path);
-<a class="jxr_linenumber" name="L538" href="#L538">538</a>             <strong class="jxr_keyword">if</strong> (!Files.isRegularFile(staticFilePath)) {
-<a class="jxr_linenumber" name="L539" href="#L539">539</a>                 logger.logDebug(() -&gt; String.format(<span class="jxr_string">"No readable file found at %s"</span>, path));
-<a class="jxr_linenumber" name="L540" href="#L540">540</a>                 <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_404_NOT_FOUND);
-<a class="jxr_linenumber" name="L541" href="#L541">541</a>             }
-<a class="jxr_linenumber" name="L542" href="#L542">542</a> 
-<a class="jxr_linenumber" name="L543" href="#L543">543</a>             <em class="jxr_comment">// if the provided path has a dot in it, use that</em>
-<a class="jxr_linenumber" name="L544" href="#L544">544</a>             <em class="jxr_comment">// to obtain a suffix for determining file type</em>
-<a class="jxr_linenumber" name="L545" href="#L545">545</a>             <strong class="jxr_keyword">int</strong> suffixBeginIndex = path.lastIndexOf('.');
-<a class="jxr_linenumber" name="L546" href="#L546">546</a>             <strong class="jxr_keyword">if</strong> (suffixBeginIndex &gt; 0) {
-<a class="jxr_linenumber" name="L547" href="#L547">547</a>                 String suffix = path.substring(suffixBeginIndex+1);
-<a class="jxr_linenumber" name="L548" href="#L548">548</a>                 mimeType = fileSuffixToMime.get(suffix);
-<a class="jxr_linenumber" name="L549" href="#L549">549</a>             }
-<a class="jxr_linenumber" name="L550" href="#L550">550</a> 
-<a class="jxr_linenumber" name="L551" href="#L551">551</a>             <em class="jxr_comment">// if we don't find any registered mime types for this</em>
-<a class="jxr_linenumber" name="L552" href="#L552">552</a>             <em class="jxr_comment">// suffix, or if it doesn't have a suffix, set the mime type</em>
-<a class="jxr_linenumber" name="L553" href="#L553">553</a>             <em class="jxr_comment">// to application/octet-stream</em>
-<a class="jxr_linenumber" name="L554" href="#L554">554</a>             <strong class="jxr_keyword">if</strong> (mimeType == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L555" href="#L555">555</a>                 mimeType = <span class="jxr_string">"application/octet-stream"</span>;
-<a class="jxr_linenumber" name="L556" href="#L556">556</a>             }
-<a class="jxr_linenumber" name="L557" href="#L557">557</a> 
-<a class="jxr_linenumber" name="L558" href="#L558">558</a>             <strong class="jxr_keyword">if</strong> (Files.size(staticFilePath) &lt; 100_000) {
-<a class="jxr_linenumber" name="L559" href="#L559">559</a>                 <strong class="jxr_keyword">var</strong> fileContents = fileReader.readFile(staticFilePath.toString());
-<a class="jxr_linenumber" name="L560" href="#L560">560</a>                 <strong class="jxr_keyword">return</strong> createOkResponseForStaticFiles(fileContents, mimeType);
-<a class="jxr_linenumber" name="L561" href="#L561">561</a>             } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L562" href="#L562">562</a>                 <strong class="jxr_keyword">return</strong> createOkResponseForLargeStaticFiles(mimeType, staticFilePath, requestHeaders);
-<a class="jxr_linenumber" name="L563" href="#L563">563</a>             }
-<a class="jxr_linenumber" name="L564" href="#L564">564</a> 
-<a class="jxr_linenumber" name="L565" href="#L565">565</a>         } <strong class="jxr_keyword">catch</strong> (IOException e) {
-<a class="jxr_linenumber" name="L566" href="#L566">566</a>             logger.logAsyncError(() -&gt; String.format(<span class="jxr_string">"Error while reading file: %s. %s"</span>, path, StacktraceUtils.stackTraceToString(e)));
-<a class="jxr_linenumber" name="L567" href="#L567">567</a>             <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_400_BAD_REQUEST);
-<a class="jxr_linenumber" name="L568" href="#L568">568</a>         }
-<a class="jxr_linenumber" name="L569" href="#L569">569</a>     }
-<a class="jxr_linenumber" name="L570" href="#L570">570</a> 
-<a class="jxr_linenumber" name="L571" href="#L571">571</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L572" href="#L572">572</a> <em class="jxr_javadoccomment">     * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds</em>
-<a class="jxr_linenumber" name="L573" href="#L573">573</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L574" href="#L574">574</a>     <strong class="jxr_keyword">private</strong> <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> createOkResponseForStaticFiles(byte[] fileContents, String mimeType) {
-<a class="jxr_linenumber" name="L575" href="#L575">575</a>         <strong class="jxr_keyword">var</strong> headers = Map.of(
-<a class="jxr_linenumber" name="L576" href="#L576">576</a>                 <span class="jxr_string">"cache-control"</span>, <span class="jxr_string">"max-age="</span> + constants.staticFileCacheTime,
-<a class="jxr_linenumber" name="L577" href="#L577">577</a>                 <span class="jxr_string">"content-type"</span>, mimeType);
-<a class="jxr_linenumber" name="L578" href="#L578">578</a> 
-<a class="jxr_linenumber" name="L579" href="#L579">579</a>         <strong class="jxr_keyword">return</strong> Response.buildResponse(
-<a class="jxr_linenumber" name="L580" href="#L580">580</a>                 CODE_200_OK,
-<a class="jxr_linenumber" name="L581" href="#L581">581</a>                 headers,
-<a class="jxr_linenumber" name="L582" href="#L582">582</a>                 fileContents);
-<a class="jxr_linenumber" name="L583" href="#L583">583</a>     }
-<a class="jxr_linenumber" name="L584" href="#L584">584</a> 
-<a class="jxr_linenumber" name="L585" href="#L585">585</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L586" href="#L586">586</a> <em class="jxr_javadoccomment">     * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds</em>
-<a class="jxr_linenumber" name="L587" href="#L587">587</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L588" href="#L588">588</a>     <strong class="jxr_keyword">private</strong> <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> createOkResponseForLargeStaticFiles(String mimeType, Path filePath, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> requestHeaders) <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L589" href="#L589">589</a>         <strong class="jxr_keyword">var</strong> headers = Map.of(
-<a class="jxr_linenumber" name="L590" href="#L590">590</a>                 <span class="jxr_string">"cache-control"</span>, <span class="jxr_string">"max-age="</span> + constants.staticFileCacheTime,
-<a class="jxr_linenumber" name="L591" href="#L591">591</a>                 <span class="jxr_string">"content-type"</span>, mimeType,
-<a class="jxr_linenumber" name="L592" href="#L592">592</a>                 <span class="jxr_string">"Accept-Ranges"</span>, <span class="jxr_string">"bytes"</span>
-<a class="jxr_linenumber" name="L593" href="#L593">593</a>                 );
-<a class="jxr_linenumber" name="L594" href="#L594">594</a> 
-<a class="jxr_linenumber" name="L595" href="#L595">595</a>         <strong class="jxr_keyword">return</strong> Response.buildLargeFileResponse(
-<a class="jxr_linenumber" name="L596" href="#L596">596</a>                 headers,
-<a class="jxr_linenumber" name="L597" href="#L597">597</a>                 filePath.toString(),
-<a class="jxr_linenumber" name="L598" href="#L598">598</a>                 requestHeaders
-<a class="jxr_linenumber" name="L599" href="#L599">599</a>                 );
-<a class="jxr_linenumber" name="L600" href="#L600">600</a>     }
-<a class="jxr_linenumber" name="L601" href="#L601">601</a> 
-<a class="jxr_linenumber" name="L602" href="#L602">602</a> 
-<a class="jxr_linenumber" name="L603" href="#L603">603</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L604" href="#L604">604</a> <em class="jxr_javadoccomment">     * These are the default starting values for mappings</em>
-<a class="jxr_linenumber" name="L605" href="#L605">605</a> <em class="jxr_javadoccomment">     * between file suffixes and appropriate mime types</em>
-<a class="jxr_linenumber" name="L606" href="#L606">606</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L607" href="#L607">607</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> addDefaultValuesForMimeMap() {
-<a class="jxr_linenumber" name="L608" href="#L608">608</a>         fileSuffixToMime.put(<span class="jxr_string">"css"</span>, <span class="jxr_string">"text/css"</span>);
-<a class="jxr_linenumber" name="L609" href="#L609">609</a>         fileSuffixToMime.put(<span class="jxr_string">"js"</span>, <span class="jxr_string">"application/javascript"</span>);
-<a class="jxr_linenumber" name="L610" href="#L610">610</a>         fileSuffixToMime.put(<span class="jxr_string">"webp"</span>, <span class="jxr_string">"image/webp"</span>);
-<a class="jxr_linenumber" name="L611" href="#L611">611</a>         fileSuffixToMime.put(<span class="jxr_string">"jpg"</span>, <span class="jxr_string">"image/jpeg"</span>);
-<a class="jxr_linenumber" name="L612" href="#L612">612</a>         fileSuffixToMime.put(<span class="jxr_string">"jpeg"</span>, <span class="jxr_string">"image/jpeg"</span>);
-<a class="jxr_linenumber" name="L613" href="#L613">613</a>         fileSuffixToMime.put(<span class="jxr_string">"htm"</span>, <span class="jxr_string">"text/html"</span>);
-<a class="jxr_linenumber" name="L614" href="#L614">614</a>         fileSuffixToMime.put(<span class="jxr_string">"html"</span>, <span class="jxr_string">"text/html"</span>);
-<a class="jxr_linenumber" name="L615" href="#L615">615</a>     }
-<a class="jxr_linenumber" name="L616" href="#L616">616</a> 
-<a class="jxr_linenumber" name="L617" href="#L617">617</a> 
-<a class="jxr_linenumber" name="L618" href="#L618">618</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L619" href="#L619">619</a> <em class="jxr_javadoccomment">     * let's see if we can match the registered paths against a **portion** of the startline</em>
-<a class="jxr_linenumber" name="L620" href="#L620">620</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L621" href="#L621">621</a>     ThrowingFunction&lt;IRequest, IResponse&gt; findHandlerByPartialMatch(<a name="RequestLine" href="../../../../com/renomad/minum/web/RequestLine.html#RequestLine">RequestLine</a> sl) {
-<a class="jxr_linenumber" name="L622" href="#L622">622</a>         String requestedPath = sl.getPathDetails().getIsolatedPath();
-<a class="jxr_linenumber" name="L623" href="#L623">623</a>         <strong class="jxr_keyword">var</strong> methodPathFunctionEntry = registeredPartialPaths.entrySet().stream()
-<a class="jxr_linenumber" name="L624" href="#L624">624</a>                 .filter(x -&gt; requestedPath.startsWith(x.getKey().path()) &amp;&amp;
-<a class="jxr_linenumber" name="L625" href="#L625">625</a>                         x.getKey().method().equals(sl.getMethod()))
-<a class="jxr_linenumber" name="L626" href="#L626">626</a>                 .findFirst().orElse(<strong class="jxr_keyword">null</strong>);
-<a class="jxr_linenumber" name="L627" href="#L627">627</a>         <strong class="jxr_keyword">if</strong> (methodPathFunctionEntry != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L628" href="#L628">628</a>             <strong class="jxr_keyword">return</strong> methodPathFunctionEntry.getValue();
-<a class="jxr_linenumber" name="L629" href="#L629">629</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L630" href="#L630">630</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
-<a class="jxr_linenumber" name="L631" href="#L631">631</a>         }
-<a class="jxr_linenumber" name="L632" href="#L632">632</a>     }
-<a class="jxr_linenumber" name="L633" href="#L633">633</a> 
-<a class="jxr_linenumber" name="L634" href="#L634">634</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L635" href="#L635">635</a> <em class="jxr_javadoccomment">     * This constructor is used for the real production system</em>
-<a class="jxr_linenumber" name="L636" href="#L636">636</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L637" href="#L637">637</a>     <a name="WebFramework" href="../../../../com/renomad/minum/web/WebFramework.html#WebFramework">WebFramework</a>(<a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context) {
-<a class="jxr_linenumber" name="L638" href="#L638">638</a>         <strong class="jxr_keyword">this</strong>(context, <strong class="jxr_keyword">null</strong>, <strong class="jxr_keyword">null</strong>);
-<a class="jxr_linenumber" name="L639" href="#L639">639</a>     }
-<a class="jxr_linenumber" name="L640" href="#L640">640</a> 
-<a class="jxr_linenumber" name="L641" href="#L641">641</a>     <a name="WebFramework" href="../../../../com/renomad/minum/web/WebFramework.html#WebFramework">WebFramework</a>(<a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context, ZonedDateTime overrideForDateTime) {
-<a class="jxr_linenumber" name="L642" href="#L642">642</a>         <strong class="jxr_keyword">this</strong>(context, overrideForDateTime, <strong class="jxr_keyword">null</strong>);
-<a class="jxr_linenumber" name="L643" href="#L643">643</a>     }
-<a class="jxr_linenumber" name="L644" href="#L644">644</a> 
-<a class="jxr_linenumber" name="L645" href="#L645">645</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L646" href="#L646">646</a> <em class="jxr_javadoccomment">     * This provides the ZonedDateTime as a parameter so we</em>
-<a class="jxr_linenumber" name="L647" href="#L647">647</a> <em class="jxr_javadoccomment">     * can set the current date (for testing purposes)</em>
-<a class="jxr_linenumber" name="L648" href="#L648">648</a> <em class="jxr_javadoccomment">     * @param overrideForDateTime for those test cases where we need to control the time</em>
-<a class="jxr_linenumber" name="L649" href="#L649">649</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L650" href="#L650">650</a>     <a name="WebFramework" href="../../../../com/renomad/minum/web/WebFramework.html#WebFramework">WebFramework</a>(<a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context, ZonedDateTime overrideForDateTime, <a name="IFileReader" href="../../../../com/renomad/minum/utils/IFileReader.html#IFileReader">IFileReader</a> fileReader) {
-<a class="jxr_linenumber" name="L651" href="#L651">651</a>         <strong class="jxr_keyword">this</strong>.fs = context.getFullSystem();
-<a class="jxr_linenumber" name="L652" href="#L652">652</a>         <strong class="jxr_keyword">this</strong>.logger = context.getLogger();
-<a class="jxr_linenumber" name="L653" href="#L653">653</a>         <strong class="jxr_keyword">this</strong>.constants = context.getConstants();
-<a class="jxr_linenumber" name="L654" href="#L654">654</a>         <strong class="jxr_keyword">this</strong>.overrideForDateTime = overrideForDateTime;
-<a class="jxr_linenumber" name="L655" href="#L655">655</a>         <strong class="jxr_keyword">this</strong>.registeredDynamicPaths = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
-<a class="jxr_linenumber" name="L656" href="#L656">656</a>         <strong class="jxr_keyword">this</strong>.registeredPartialPaths = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
-<a class="jxr_linenumber" name="L657" href="#L657">657</a>         <strong class="jxr_keyword">this</strong>.underInvestigation = <strong class="jxr_keyword">new</strong> <a name="UnderInvestigation" href="../../../../com/renomad/minum/security/UnderInvestigation.html#UnderInvestigation">UnderInvestigation</a>(constants);
-<a class="jxr_linenumber" name="L658" href="#L658">658</a>         <strong class="jxr_keyword">this</strong>.inputStreamUtils = <strong class="jxr_keyword">new</strong> <a name="InputStreamUtils" href="../../../../com/renomad/minum/web/InputStreamUtils.html#InputStreamUtils">InputStreamUtils</a>(constants.maxReadLineSizeBytes);
-<a class="jxr_linenumber" name="L659" href="#L659">659</a>         <strong class="jxr_keyword">this</strong>.bodyProcessor = <strong class="jxr_keyword">new</strong> <a name="BodyProcessor" href="../../../../com/renomad/minum/web/BodyProcessor.html#BodyProcessor">BodyProcessor</a>(context);
-<a class="jxr_linenumber" name="L660" href="#L660">660</a> 
-<a class="jxr_linenumber" name="L661" href="#L661">661</a>         <em class="jxr_comment">// This random value is purely to help provide correlation between</em>
-<a class="jxr_linenumber" name="L662" href="#L662">662</a>         <em class="jxr_comment">// error messages in the UI and error logs.  There are no security concerns.</em>
-<a class="jxr_linenumber" name="L663" href="#L663">663</a>         <strong class="jxr_keyword">this</strong>.randomErrorCorrelationId = <strong class="jxr_keyword">new</strong> Random();
-<a class="jxr_linenumber" name="L664" href="#L664">664</a>         <strong class="jxr_keyword">this</strong>.emptyRequestLine = RequestLine.EMPTY;
-<a class="jxr_linenumber" name="L665" href="#L665">665</a> 
-<a class="jxr_linenumber" name="L666" href="#L666">666</a>         <em class="jxr_comment">// this allows us to inject a IFileReader for deeper testing</em>
-<a class="jxr_linenumber" name="L667" href="#L667">667</a>         <strong class="jxr_keyword">if</strong> (fileReader != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L668" href="#L668">668</a>             <strong class="jxr_keyword">this</strong>.fileReader = fileReader;
-<a class="jxr_linenumber" name="L669" href="#L669">669</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L670" href="#L670">670</a>             <strong class="jxr_keyword">this</strong>.fileReader = <strong class="jxr_keyword">new</strong> <a name="FileReader" href="../../../../com/renomad/minum/utils/FileReader.html#FileReader">FileReader</a>(
-<a class="jxr_linenumber" name="L671" href="#L671">671</a>                     LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles),
-<a class="jxr_linenumber" name="L672" href="#L672">672</a>                     constants.useCacheForStaticFiles,
-<a class="jxr_linenumber" name="L673" href="#L673">673</a>                     logger);
-<a class="jxr_linenumber" name="L674" href="#L674">674</a>         }
-<a class="jxr_linenumber" name="L675" href="#L675">675</a>         <strong class="jxr_keyword">this</strong>.fileSuffixToMime = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
-<a class="jxr_linenumber" name="L676" href="#L676">676</a>         addDefaultValuesForMimeMap();
-<a class="jxr_linenumber" name="L677" href="#L677">677</a>         readExtraMimeMappings(constants.extraMimeMappings);
-<a class="jxr_linenumber" name="L678" href="#L678">678</a>     }
-<a class="jxr_linenumber" name="L679" href="#L679">679</a> 
-<a class="jxr_linenumber" name="L680" href="#L680">680</a>     <strong class="jxr_keyword">void</strong> readExtraMimeMappings(List&lt;String&gt; input) {
-<a class="jxr_linenumber" name="L681" href="#L681">681</a>         <strong class="jxr_keyword">if</strong> (input == <strong class="jxr_keyword">null</strong> || input.isEmpty()) <strong class="jxr_keyword">return</strong>;
-<a class="jxr_linenumber" name="L682" href="#L682">682</a>         mustBeTrue(input.size() % 2 == 0, <span class="jxr_string">"input must be even (key + value = 2 items). Your input: "</span> + input);
-<a class="jxr_linenumber" name="L683" href="#L683">683</a> 
-<a class="jxr_linenumber" name="L684" href="#L684">684</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; input.size(); i += 2) {
-<a class="jxr_linenumber" name="L685" href="#L685">685</a>             String fileSuffix = input.get(i);
-<a class="jxr_linenumber" name="L686" href="#L686">686</a>             String mime = input.get(i+1);
-<a class="jxr_linenumber" name="L687" href="#L687">687</a>             logger.logTrace(() -&gt; <span class="jxr_string">"Adding mime mapping: "</span> + fileSuffix + <span class="jxr_string">" -&gt; "</span> + mime);
-<a class="jxr_linenumber" name="L688" href="#L688">688</a>             fileSuffixToMime.put(fileSuffix, mime);
-<a class="jxr_linenumber" name="L689" href="#L689">689</a>         }
-<a class="jxr_linenumber" name="L690" href="#L690">690</a>     }
-<a class="jxr_linenumber" name="L691" href="#L691">691</a> 
-<a class="jxr_linenumber" name="L692" href="#L692">692</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L693" href="#L693">693</a> <em class="jxr_javadoccomment">     * Add a new handler in the web application for a combination</em>
-<a class="jxr_linenumber" name="L694" href="#L694">694</a> <em class="jxr_javadoccomment">     * of a {@link RequestLine.Method}, a path, and then provide</em>
-<a class="jxr_linenumber" name="L695" href="#L695">695</a> <em class="jxr_javadoccomment">     * the code to handle a request.</em>
-<a class="jxr_linenumber" name="L696" href="#L696">696</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
-<a class="jxr_linenumber" name="L697" href="#L697">697</a> <em class="jxr_javadoccomment">     * Note that the path text expected is *after* the first forward slash,</em>
-<a class="jxr_linenumber" name="L698" href="#L698">698</a> <em class="jxr_javadoccomment">     * so for example with {@code <a href="http://foo.com/mypath" target="alexandria_uri">http://foo.com/mypath</a>}, provide "mypath" as the path.</em>
-<a class="jxr_linenumber" name="L699" href="#L699">699</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L700" href="#L700">700</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPath(RequestLine.Method method, String pathName, ThrowingFunction&lt;IRequest, IResponse&gt; webHandler) {
-<a class="jxr_linenumber" name="L701" href="#L701">701</a>         registeredDynamicPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
-<a class="jxr_linenumber" name="L702" href="#L702">702</a>     }
-<a class="jxr_linenumber" name="L703" href="#L703">703</a> 
-<a class="jxr_linenumber" name="L704" href="#L704">704</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L705" href="#L705">705</a> <em class="jxr_javadoccomment">     * Similar to {@link WebFramework#registerPath(RequestLine.Method, String, ThrowingFunction)} except that the paths</em>
-<a class="jxr_linenumber" name="L706" href="#L706">706</a> <em class="jxr_javadoccomment">     * registered here may be partially matched.</em>
-<a class="jxr_linenumber" name="L707" href="#L707">707</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L708" href="#L708">708</a> <em class="jxr_javadoccomment">     *     For example, if you register {@code .well-known/acme-challenge} then it</em>
-<a class="jxr_linenumber" name="L709" href="#L709">709</a> <em class="jxr_javadoccomment">     *     can match a client request for {@code .well-known/acme-challenge/HGr8U1IeTW4kY_Z6UIyaakzOkyQgPr_7ArlLgtZE8SX}</em>
-<a class="jxr_linenumber" name="L710" href="#L710">710</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L711" href="#L711">711</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L712" href="#L712">712</a> <em class="jxr_javadoccomment">     *     Be careful here, be thoughtful - partial paths will match a lot, and may</em>
-<a class="jxr_linenumber" name="L713" href="#L713">713</a> <em class="jxr_javadoccomment">     *     overlap with other URL's for your app, such as endpoints and static files.</em>
-<a class="jxr_linenumber" name="L714" href="#L714">714</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L715" href="#L715">715</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L716" href="#L716">716</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPartialPath(RequestLine.Method method, String pathName, ThrowingFunction&lt;IRequest, IResponse&gt; webHandler) {
-<a class="jxr_linenumber" name="L717" href="#L717">717</a>         registeredPartialPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
-<a class="jxr_linenumber" name="L718" href="#L718">718</a>     }
-<a class="jxr_linenumber" name="L719" href="#L719">719</a> 
-<a class="jxr_linenumber" name="L720" href="#L720">720</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L721" href="#L721">721</a> <em class="jxr_javadoccomment">     * Sets a handler to process all requests across the board.</em>
-<a class="jxr_linenumber" name="L722" href="#L722">722</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
-<a class="jxr_linenumber" name="L723" href="#L723">723</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L724" href="#L724">724</a> <em class="jxr_javadoccomment">     *     This is an &lt;b&gt;unusual&lt;/b&gt; method.  Setting a handler here allows the user to run code of his</em>
-<a class="jxr_linenumber" name="L725" href="#L725">725</a> <em class="jxr_javadoccomment">     * choosing before the regular business code is run.  Note that by defining this value, the ordinary</em>
-<a class="jxr_linenumber" name="L726" href="#L726">726</a> <em class="jxr_javadoccomment">     * call to endpoint.apply(request) will not be run.</em>
-<a class="jxr_linenumber" name="L727" href="#L727">727</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L728" href="#L728">728</a> <em class="jxr_javadoccomment">     * &lt;p&gt;Here is an example&lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L729" href="#L729">729</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;{@code</em>
-<a class="jxr_linenumber" name="L730" href="#L730">730</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L731" href="#L731">731</a> <em class="jxr_javadoccomment">     *      webFramework.registerPreHandler(preHandlerInputs -&gt; preHandlerCode(preHandlerInputs, auth, context));</em>
-<a class="jxr_linenumber" name="L732" href="#L732">732</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L733" href="#L733">733</a> <em class="jxr_javadoccomment">     *      ...</em>
-<a class="jxr_linenumber" name="L734" href="#L734">734</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L735" href="#L735">735</a> <em class="jxr_javadoccomment">     *      private IResponse preHandlerCode(PreHandlerInputs preHandlerInputs, AuthUtils auth, Context context) throws Exception {</em>
-<a class="jxr_linenumber" name="L736" href="#L736">736</a> <em class="jxr_javadoccomment">     *          int secureServerPort = context.getConstants().secureServerPort;</em>
-<a class="jxr_linenumber" name="L737" href="#L737">737</a> <em class="jxr_javadoccomment">     *          Request request = preHandlerInputs.clientRequest();</em>
-<a class="jxr_linenumber" name="L738" href="#L738">738</a> <em class="jxr_javadoccomment">     *          ThrowingFunction&lt;IRequest, IResponse&gt; endpoint = preHandlerInputs.endpoint();</em>
-<a class="jxr_linenumber" name="L739" href="#L739">739</a> <em class="jxr_javadoccomment">     *          ISocketWrapper sw = preHandlerInputs.sw();</em>
-<a class="jxr_linenumber" name="L740" href="#L740">740</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L741" href="#L741">741</a> <em class="jxr_javadoccomment">     *          // log all requests</em>
-<a class="jxr_linenumber" name="L742" href="#L742">742</a> <em class="jxr_javadoccomment">     *          logger.logTrace(() -&gt; String.format("Request: %s by %s",</em>
-<a class="jxr_linenumber" name="L743" href="#L743">743</a> <em class="jxr_javadoccomment">     *              request.requestLine().getRawValue(),</em>
-<a class="jxr_linenumber" name="L744" href="#L744">744</a> <em class="jxr_javadoccomment">     *              request.remoteRequester())</em>
-<a class="jxr_linenumber" name="L745" href="#L745">745</a> <em class="jxr_javadoccomment">     *          );</em>
-<a class="jxr_linenumber" name="L746" href="#L746">746</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L747" href="#L747">747</a> <em class="jxr_javadoccomment">     *          // redirect to https if they are on the plain-text connection and the path is "login"</em>
-<a class="jxr_linenumber" name="L748" href="#L748">748</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L749" href="#L749">749</a> <em class="jxr_javadoccomment">     *          // get the path from the request line</em>
-<a class="jxr_linenumber" name="L750" href="#L750">750</a> <em class="jxr_javadoccomment">     *          String path = request.getRequestLine().getPathDetails().getIsolatedPath();</em>
-<a class="jxr_linenumber" name="L751" href="#L751">751</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L752" href="#L752">752</a> <em class="jxr_javadoccomment">     *          // redirect to https on the configured secure port if they are on the plain-text connection and the path contains "login"</em>
-<a class="jxr_linenumber" name="L753" href="#L753">753</a> <em class="jxr_javadoccomment">     *          if (path.contains("login") &amp;&amp;</em>
-<a class="jxr_linenumber" name="L754" href="#L754">754</a> <em class="jxr_javadoccomment">     *              sw.getServerType().equals(HttpServerType.PLAIN_TEXT_HTTP)) {</em>
-<a class="jxr_linenumber" name="L755" href="#L755">755</a> <em class="jxr_javadoccomment">     *              return Response.redirectTo("<a href="https://%s:%d/%s" target="alexandria_uri">https://%s:%d/%s</a>".formatted(sw.getHostName(), secureServerPort, path));</em>
-<a class="jxr_linenumber" name="L756" href="#L756">756</a> <em class="jxr_javadoccomment">     *          }</em>
+<a class="jxr_linenumber" name="L530" href="#L530">530</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L531" href="#L531">531</a>             checkForBadFilePatterns(path);
+<a class="jxr_linenumber" name="L532" href="#L532">532</a>         } <strong class="jxr_keyword">catch</strong> (Exception ex) {
+<a class="jxr_linenumber" name="L533" href="#L533">533</a>             logger.logDebug(() -&gt; String.format(<span class="jxr_string">"Bad path requested at readStaticFile: %s.  Exception: %s"</span>, path, ex.getMessage()));
+<a class="jxr_linenumber" name="L534" href="#L534">534</a>             <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_400_BAD_REQUEST);
+<a class="jxr_linenumber" name="L535" href="#L535">535</a>         }
+<a class="jxr_linenumber" name="L536" href="#L536">536</a>         String mimeType = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L537" href="#L537">537</a> 
+<a class="jxr_linenumber" name="L538" href="#L538">538</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L539" href="#L539">539</a>             checkFileIsWithinDirectory(path, constants.staticFilesDirectory);
+<a class="jxr_linenumber" name="L540" href="#L540">540</a>         } <strong class="jxr_keyword">catch</strong> (Exception ex) {
+<a class="jxr_linenumber" name="L541" href="#L541">541</a>             logger.logDebug(() -&gt; String.format(<span class="jxr_string">"Unable to find %s in allowed directories"</span>, path));
+<a class="jxr_linenumber" name="L542" href="#L542">542</a>             <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_404_NOT_FOUND);
+<a class="jxr_linenumber" name="L543" href="#L543">543</a>         }
+<a class="jxr_linenumber" name="L544" href="#L544">544</a> 
+<a class="jxr_linenumber" name="L545" href="#L545">545</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L546" href="#L546">546</a>             Path staticFilePath = Path.of(constants.staticFilesDirectory).resolve(path);
+<a class="jxr_linenumber" name="L547" href="#L547">547</a>             <strong class="jxr_keyword">if</strong> (!Files.isRegularFile(staticFilePath)) {
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>                 logger.logDebug(() -&gt; String.format(<span class="jxr_string">"No readable regular file found at %s"</span>, path));
+<a class="jxr_linenumber" name="L549" href="#L549">549</a>                 <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_404_NOT_FOUND);
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>             }
+<a class="jxr_linenumber" name="L551" href="#L551">551</a> 
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>             <em class="jxr_comment">// if the provided path has a dot in it, use that</em>
+<a class="jxr_linenumber" name="L553" href="#L553">553</a>             <em class="jxr_comment">// to obtain a suffix for determining file type</em>
+<a class="jxr_linenumber" name="L554" href="#L554">554</a>             <strong class="jxr_keyword">int</strong> suffixBeginIndex = path.lastIndexOf('.');
+<a class="jxr_linenumber" name="L555" href="#L555">555</a>             <strong class="jxr_keyword">if</strong> (suffixBeginIndex &gt; 0) {
+<a class="jxr_linenumber" name="L556" href="#L556">556</a>                 String suffix = path.substring(suffixBeginIndex+1);
+<a class="jxr_linenumber" name="L557" href="#L557">557</a>                 mimeType = fileSuffixToMime.get(suffix);
+<a class="jxr_linenumber" name="L558" href="#L558">558</a>             }
+<a class="jxr_linenumber" name="L559" href="#L559">559</a> 
+<a class="jxr_linenumber" name="L560" href="#L560">560</a>             <em class="jxr_comment">// if we don't find any registered mime types for this</em>
+<a class="jxr_linenumber" name="L561" href="#L561">561</a>             <em class="jxr_comment">// suffix, or if it doesn't have a suffix, set the mime type</em>
+<a class="jxr_linenumber" name="L562" href="#L562">562</a>             <em class="jxr_comment">// to application/octet-stream</em>
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>             <strong class="jxr_keyword">if</strong> (mimeType == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L564" href="#L564">564</a>                 mimeType = <span class="jxr_string">"application/octet-stream"</span>;
+<a class="jxr_linenumber" name="L565" href="#L565">565</a>             }
+<a class="jxr_linenumber" name="L566" href="#L566">566</a> 
+<a class="jxr_linenumber" name="L567" href="#L567">567</a>             <strong class="jxr_keyword">if</strong> (Files.size(staticFilePath) &lt; 100_000) {
+<a class="jxr_linenumber" name="L568" href="#L568">568</a>                 <strong class="jxr_keyword">var</strong> fileContents = fileReader.readFile(staticFilePath.toString());
+<a class="jxr_linenumber" name="L569" href="#L569">569</a>                 <strong class="jxr_keyword">return</strong> createOkResponseForStaticFiles(fileContents, mimeType);
+<a class="jxr_linenumber" name="L570" href="#L570">570</a>             } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L571" href="#L571">571</a>                 <strong class="jxr_keyword">return</strong> createOkResponseForLargeStaticFiles(mimeType, staticFilePath, requestHeaders);
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>             }
+<a class="jxr_linenumber" name="L573" href="#L573">573</a> 
+<a class="jxr_linenumber" name="L574" href="#L574">574</a>         } <strong class="jxr_keyword">catch</strong> (IOException e) {
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>             logger.logAsyncError(() -&gt; String.format(<span class="jxr_string">"Error while reading file: %s. %s"</span>, path, StacktraceUtils.stackTraceToString(e)));
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>             <strong class="jxr_keyword">return</strong> Response.buildLeanResponse(CODE_400_BAD_REQUEST);
+<a class="jxr_linenumber" name="L577" href="#L577">577</a>         }
+<a class="jxr_linenumber" name="L578" href="#L578">578</a>     }
+<a class="jxr_linenumber" name="L579" href="#L579">579</a> 
+<a class="jxr_linenumber" name="L580" href="#L580">580</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L581" href="#L581">581</a> <em class="jxr_javadoccomment">     * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds</em>
+<a class="jxr_linenumber" name="L582" href="#L582">582</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>     <strong class="jxr_keyword">private</strong> <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> createOkResponseForStaticFiles(byte[] fileContents, String mimeType) {
+<a class="jxr_linenumber" name="L584" href="#L584">584</a>         <strong class="jxr_keyword">var</strong> headers = Map.of(
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>                 <span class="jxr_string">"cache-control"</span>, <span class="jxr_string">"max-age="</span> + constants.staticFileCacheTime,
+<a class="jxr_linenumber" name="L586" href="#L586">586</a>                 <span class="jxr_string">"content-type"</span>, mimeType);
+<a class="jxr_linenumber" name="L587" href="#L587">587</a> 
+<a class="jxr_linenumber" name="L588" href="#L588">588</a>         <strong class="jxr_keyword">return</strong> Response.buildResponse(
+<a class="jxr_linenumber" name="L589" href="#L589">589</a>                 CODE_200_OK,
+<a class="jxr_linenumber" name="L590" href="#L590">590</a>                 headers,
+<a class="jxr_linenumber" name="L591" href="#L591">591</a>                 fileContents);
+<a class="jxr_linenumber" name="L592" href="#L592">592</a>     }
+<a class="jxr_linenumber" name="L593" href="#L593">593</a> 
+<a class="jxr_linenumber" name="L594" href="#L594">594</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L595" href="#L595">595</a> <em class="jxr_javadoccomment">     * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds</em>
+<a class="jxr_linenumber" name="L596" href="#L596">596</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L597" href="#L597">597</a>     <strong class="jxr_keyword">private</strong> <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> createOkResponseForLargeStaticFiles(String mimeType, Path filePath, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> requestHeaders) <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L598" href="#L598">598</a>         <strong class="jxr_keyword">var</strong> headers = Map.of(
+<a class="jxr_linenumber" name="L599" href="#L599">599</a>                 <span class="jxr_string">"cache-control"</span>, <span class="jxr_string">"max-age="</span> + constants.staticFileCacheTime,
+<a class="jxr_linenumber" name="L600" href="#L600">600</a>                 <span class="jxr_string">"content-type"</span>, mimeType,
+<a class="jxr_linenumber" name="L601" href="#L601">601</a>                 <span class="jxr_string">"Accept-Ranges"</span>, <span class="jxr_string">"bytes"</span>
+<a class="jxr_linenumber" name="L602" href="#L602">602</a>                 );
+<a class="jxr_linenumber" name="L603" href="#L603">603</a> 
+<a class="jxr_linenumber" name="L604" href="#L604">604</a>         <strong class="jxr_keyword">return</strong> Response.buildLargeFileResponse(
+<a class="jxr_linenumber" name="L605" href="#L605">605</a>                 headers,
+<a class="jxr_linenumber" name="L606" href="#L606">606</a>                 filePath.toString(),
+<a class="jxr_linenumber" name="L607" href="#L607">607</a>                 requestHeaders
+<a class="jxr_linenumber" name="L608" href="#L608">608</a>                 );
+<a class="jxr_linenumber" name="L609" href="#L609">609</a>     }
+<a class="jxr_linenumber" name="L610" href="#L610">610</a> 
+<a class="jxr_linenumber" name="L611" href="#L611">611</a> 
+<a class="jxr_linenumber" name="L612" href="#L612">612</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L613" href="#L613">613</a> <em class="jxr_javadoccomment">     * These are the default starting values for mappings</em>
+<a class="jxr_linenumber" name="L614" href="#L614">614</a> <em class="jxr_javadoccomment">     * between file suffixes and appropriate mime types</em>
+<a class="jxr_linenumber" name="L615" href="#L615">615</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L616" href="#L616">616</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> addDefaultValuesForMimeMap() {
+<a class="jxr_linenumber" name="L617" href="#L617">617</a>         fileSuffixToMime.put(<span class="jxr_string">"css"</span>, <span class="jxr_string">"text/css"</span>);
+<a class="jxr_linenumber" name="L618" href="#L618">618</a>         fileSuffixToMime.put(<span class="jxr_string">"js"</span>, <span class="jxr_string">"application/javascript"</span>);
+<a class="jxr_linenumber" name="L619" href="#L619">619</a>         fileSuffixToMime.put(<span class="jxr_string">"webp"</span>, <span class="jxr_string">"image/webp"</span>);
+<a class="jxr_linenumber" name="L620" href="#L620">620</a>         fileSuffixToMime.put(<span class="jxr_string">"jpg"</span>, <span class="jxr_string">"image/jpeg"</span>);
+<a class="jxr_linenumber" name="L621" href="#L621">621</a>         fileSuffixToMime.put(<span class="jxr_string">"jpeg"</span>, <span class="jxr_string">"image/jpeg"</span>);
+<a class="jxr_linenumber" name="L622" href="#L622">622</a>         fileSuffixToMime.put(<span class="jxr_string">"htm"</span>, <span class="jxr_string">"text/html"</span>);
+<a class="jxr_linenumber" name="L623" href="#L623">623</a>         fileSuffixToMime.put(<span class="jxr_string">"html"</span>, <span class="jxr_string">"text/html"</span>);
+<a class="jxr_linenumber" name="L624" href="#L624">624</a>     }
+<a class="jxr_linenumber" name="L625" href="#L625">625</a> 
+<a class="jxr_linenumber" name="L626" href="#L626">626</a> 
+<a class="jxr_linenumber" name="L627" href="#L627">627</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L628" href="#L628">628</a> <em class="jxr_javadoccomment">     * let's see if we can match the registered paths against a **portion** of the startline</em>
+<a class="jxr_linenumber" name="L629" href="#L629">629</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L630" href="#L630">630</a>     ThrowingFunction&lt;IRequest, IResponse&gt; findHandlerByPartialMatch(<a name="RequestLine" href="../../../../com/renomad/minum/web/RequestLine.html#RequestLine">RequestLine</a> sl) {
+<a class="jxr_linenumber" name="L631" href="#L631">631</a>         String requestedPath = sl.getPathDetails().getIsolatedPath();
+<a class="jxr_linenumber" name="L632" href="#L632">632</a>         <strong class="jxr_keyword">var</strong> methodPathFunctionEntry = registeredPartialPaths.entrySet().stream()
+<a class="jxr_linenumber" name="L633" href="#L633">633</a>                 .filter(x -&gt; requestedPath.startsWith(x.getKey().path()) &amp;&amp;
+<a class="jxr_linenumber" name="L634" href="#L634">634</a>                         x.getKey().method().equals(sl.getMethod()))
+<a class="jxr_linenumber" name="L635" href="#L635">635</a>                 .findFirst().orElse(<strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L636" href="#L636">636</a>         <strong class="jxr_keyword">if</strong> (methodPathFunctionEntry != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L637" href="#L637">637</a>             <strong class="jxr_keyword">return</strong> methodPathFunctionEntry.getValue();
+<a class="jxr_linenumber" name="L638" href="#L638">638</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L639" href="#L639">639</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L640" href="#L640">640</a>         }
+<a class="jxr_linenumber" name="L641" href="#L641">641</a>     }
+<a class="jxr_linenumber" name="L642" href="#L642">642</a> 
+<a class="jxr_linenumber" name="L643" href="#L643">643</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L644" href="#L644">644</a> <em class="jxr_javadoccomment">     * This constructor is used for the real production system</em>
+<a class="jxr_linenumber" name="L645" href="#L645">645</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L646" href="#L646">646</a>     <a name="WebFramework" href="../../../../com/renomad/minum/web/WebFramework.html#WebFramework">WebFramework</a>(<a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context) {
+<a class="jxr_linenumber" name="L647" href="#L647">647</a>         <strong class="jxr_keyword">this</strong>(context, <strong class="jxr_keyword">null</strong>, <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L648" href="#L648">648</a>     }
+<a class="jxr_linenumber" name="L649" href="#L649">649</a> 
+<a class="jxr_linenumber" name="L650" href="#L650">650</a>     <a name="WebFramework" href="../../../../com/renomad/minum/web/WebFramework.html#WebFramework">WebFramework</a>(<a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context, ZonedDateTime overrideForDateTime) {
+<a class="jxr_linenumber" name="L651" href="#L651">651</a>         <strong class="jxr_keyword">this</strong>(context, overrideForDateTime, <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L652" href="#L652">652</a>     }
+<a class="jxr_linenumber" name="L653" href="#L653">653</a> 
+<a class="jxr_linenumber" name="L654" href="#L654">654</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L655" href="#L655">655</a> <em class="jxr_javadoccomment">     * This provides the ZonedDateTime as a parameter so we</em>
+<a class="jxr_linenumber" name="L656" href="#L656">656</a> <em class="jxr_javadoccomment">     * can set the current date (for testing purposes)</em>
+<a class="jxr_linenumber" name="L657" href="#L657">657</a> <em class="jxr_javadoccomment">     * @param overrideForDateTime for those test cases where we need to control the time</em>
+<a class="jxr_linenumber" name="L658" href="#L658">658</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L659" href="#L659">659</a>     <a name="WebFramework" href="../../../../com/renomad/minum/web/WebFramework.html#WebFramework">WebFramework</a>(<a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context, ZonedDateTime overrideForDateTime, <a name="IFileReader" href="../../../../com/renomad/minum/utils/IFileReader.html#IFileReader">IFileReader</a> fileReader) {
+<a class="jxr_linenumber" name="L660" href="#L660">660</a>         <strong class="jxr_keyword">this</strong>.fs = context.getFullSystem();
+<a class="jxr_linenumber" name="L661" href="#L661">661</a>         <strong class="jxr_keyword">this</strong>.logger = context.getLogger();
+<a class="jxr_linenumber" name="L662" href="#L662">662</a>         <strong class="jxr_keyword">this</strong>.constants = context.getConstants();
+<a class="jxr_linenumber" name="L663" href="#L663">663</a>         <strong class="jxr_keyword">this</strong>.overrideForDateTime = overrideForDateTime;
+<a class="jxr_linenumber" name="L664" href="#L664">664</a>         <strong class="jxr_keyword">this</strong>.registeredDynamicPaths = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
+<a class="jxr_linenumber" name="L665" href="#L665">665</a>         <strong class="jxr_keyword">this</strong>.registeredPartialPaths = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
+<a class="jxr_linenumber" name="L666" href="#L666">666</a>         <strong class="jxr_keyword">this</strong>.underInvestigation = <strong class="jxr_keyword">new</strong> <a name="UnderInvestigation" href="../../../../com/renomad/minum/security/UnderInvestigation.html#UnderInvestigation">UnderInvestigation</a>(constants);
+<a class="jxr_linenumber" name="L667" href="#L667">667</a>         <strong class="jxr_keyword">this</strong>.inputStreamUtils = <strong class="jxr_keyword">new</strong> <a name="InputStreamUtils" href="../../../../com/renomad/minum/web/InputStreamUtils.html#InputStreamUtils">InputStreamUtils</a>(constants.maxReadLineSizeBytes);
+<a class="jxr_linenumber" name="L668" href="#L668">668</a>         <strong class="jxr_keyword">this</strong>.bodyProcessor = <strong class="jxr_keyword">new</strong> <a name="BodyProcessor" href="../../../../com/renomad/minum/web/BodyProcessor.html#BodyProcessor">BodyProcessor</a>(context);
+<a class="jxr_linenumber" name="L669" href="#L669">669</a> 
+<a class="jxr_linenumber" name="L670" href="#L670">670</a>         <em class="jxr_comment">// This random value is purely to help provide correlation between</em>
+<a class="jxr_linenumber" name="L671" href="#L671">671</a>         <em class="jxr_comment">// error messages in the UI and error logs.  There are no security concerns.</em>
+<a class="jxr_linenumber" name="L672" href="#L672">672</a>         <strong class="jxr_keyword">this</strong>.randomErrorCorrelationId = <strong class="jxr_keyword">new</strong> Random();
+<a class="jxr_linenumber" name="L673" href="#L673">673</a>         <strong class="jxr_keyword">this</strong>.emptyRequestLine = RequestLine.EMPTY;
+<a class="jxr_linenumber" name="L674" href="#L674">674</a> 
+<a class="jxr_linenumber" name="L675" href="#L675">675</a>         <em class="jxr_comment">// this allows us to inject a IFileReader for deeper testing</em>
+<a class="jxr_linenumber" name="L676" href="#L676">676</a>         <strong class="jxr_keyword">if</strong> (fileReader != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L677" href="#L677">677</a>             <strong class="jxr_keyword">this</strong>.fileReader = fileReader;
+<a class="jxr_linenumber" name="L678" href="#L678">678</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L679" href="#L679">679</a>             <strong class="jxr_keyword">this</strong>.fileReader = <strong class="jxr_keyword">new</strong> <a name="FileReader" href="../../../../com/renomad/minum/utils/FileReader.html#FileReader">FileReader</a>(
+<a class="jxr_linenumber" name="L680" href="#L680">680</a>                     LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles),
+<a class="jxr_linenumber" name="L681" href="#L681">681</a>                     constants.useCacheForStaticFiles,
+<a class="jxr_linenumber" name="L682" href="#L682">682</a>                     logger);
+<a class="jxr_linenumber" name="L683" href="#L683">683</a>         }
+<a class="jxr_linenumber" name="L684" href="#L684">684</a>         <strong class="jxr_keyword">this</strong>.fileSuffixToMime = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
+<a class="jxr_linenumber" name="L685" href="#L685">685</a>         addDefaultValuesForMimeMap();
+<a class="jxr_linenumber" name="L686" href="#L686">686</a>         readExtraMimeMappings(constants.extraMimeMappings);
+<a class="jxr_linenumber" name="L687" href="#L687">687</a>     }
+<a class="jxr_linenumber" name="L688" href="#L688">688</a> 
+<a class="jxr_linenumber" name="L689" href="#L689">689</a>     <strong class="jxr_keyword">void</strong> readExtraMimeMappings(List&lt;String&gt; input) {
+<a class="jxr_linenumber" name="L690" href="#L690">690</a>         <strong class="jxr_keyword">if</strong> (input == <strong class="jxr_keyword">null</strong> || input.isEmpty()) <strong class="jxr_keyword">return</strong>;
+<a class="jxr_linenumber" name="L691" href="#L691">691</a>         mustBeTrue(input.size() % 2 == 0, <span class="jxr_string">"input must be even (key + value = 2 items). Your input: "</span> + input);
+<a class="jxr_linenumber" name="L692" href="#L692">692</a> 
+<a class="jxr_linenumber" name="L693" href="#L693">693</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; input.size(); i += 2) {
+<a class="jxr_linenumber" name="L694" href="#L694">694</a>             String fileSuffix = input.get(i);
+<a class="jxr_linenumber" name="L695" href="#L695">695</a>             String mime = input.get(i+1);
+<a class="jxr_linenumber" name="L696" href="#L696">696</a>             logger.logTrace(() -&gt; <span class="jxr_string">"Adding mime mapping: "</span> + fileSuffix + <span class="jxr_string">" -&gt; "</span> + mime);
+<a class="jxr_linenumber" name="L697" href="#L697">697</a>             fileSuffixToMime.put(fileSuffix, mime);
+<a class="jxr_linenumber" name="L698" href="#L698">698</a>         }
+<a class="jxr_linenumber" name="L699" href="#L699">699</a>     }
+<a class="jxr_linenumber" name="L700" href="#L700">700</a> 
+<a class="jxr_linenumber" name="L701" href="#L701">701</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L702" href="#L702">702</a> <em class="jxr_javadoccomment">     * Add a new handler in the web application for a combination</em>
+<a class="jxr_linenumber" name="L703" href="#L703">703</a> <em class="jxr_javadoccomment">     * of a {@link RequestLine.Method}, a path, and then provide</em>
+<a class="jxr_linenumber" name="L704" href="#L704">704</a> <em class="jxr_javadoccomment">     * the code to handle a request.</em>
+<a class="jxr_linenumber" name="L705" href="#L705">705</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
+<a class="jxr_linenumber" name="L706" href="#L706">706</a> <em class="jxr_javadoccomment">     * Note that the path text expected is *after* the first forward slash,</em>
+<a class="jxr_linenumber" name="L707" href="#L707">707</a> <em class="jxr_javadoccomment">     * so for example with {@code <a href="http://foo.com/mypath" target="alexandria_uri">http://foo.com/mypath</a>}, provide "mypath" as the path.</em>
+<a class="jxr_linenumber" name="L708" href="#L708">708</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L709" href="#L709">709</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPath(RequestLine.Method method, String pathName, ThrowingFunction&lt;IRequest, IResponse&gt; webHandler) {
+<a class="jxr_linenumber" name="L710" href="#L710">710</a>         registeredDynamicPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
+<a class="jxr_linenumber" name="L711" href="#L711">711</a>     }
+<a class="jxr_linenumber" name="L712" href="#L712">712</a> 
+<a class="jxr_linenumber" name="L713" href="#L713">713</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L714" href="#L714">714</a> <em class="jxr_javadoccomment">     * Similar to {@link WebFramework#registerPath(RequestLine.Method, String, ThrowingFunction)} except that the paths</em>
+<a class="jxr_linenumber" name="L715" href="#L715">715</a> <em class="jxr_javadoccomment">     * registered here may be partially matched.</em>
+<a class="jxr_linenumber" name="L716" href="#L716">716</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L717" href="#L717">717</a> <em class="jxr_javadoccomment">     *     For example, if you register {@code .well-known/acme-challenge} then it</em>
+<a class="jxr_linenumber" name="L718" href="#L718">718</a> <em class="jxr_javadoccomment">     *     can match a client request for {@code .well-known/acme-challenge/HGr8U1IeTW4kY_Z6UIyaakzOkyQgPr_7ArlLgtZE8SX}</em>
+<a class="jxr_linenumber" name="L719" href="#L719">719</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L720" href="#L720">720</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L721" href="#L721">721</a> <em class="jxr_javadoccomment">     *     Be careful here, be thoughtful - partial paths will match a lot, and may</em>
+<a class="jxr_linenumber" name="L722" href="#L722">722</a> <em class="jxr_javadoccomment">     *     overlap with other URL's for your app, such as endpoints and static files.</em>
+<a class="jxr_linenumber" name="L723" href="#L723">723</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L724" href="#L724">724</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L725" href="#L725">725</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPartialPath(RequestLine.Method method, String pathName, ThrowingFunction&lt;IRequest, IResponse&gt; webHandler) {
+<a class="jxr_linenumber" name="L726" href="#L726">726</a>         registeredPartialPaths.put(<strong class="jxr_keyword">new</strong> MethodPath(method, pathName), webHandler);
+<a class="jxr_linenumber" name="L727" href="#L727">727</a>     }
+<a class="jxr_linenumber" name="L728" href="#L728">728</a> 
+<a class="jxr_linenumber" name="L729" href="#L729">729</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L730" href="#L730">730</a> <em class="jxr_javadoccomment">     * Sets a handler to process all requests across the board.</em>
+<a class="jxr_linenumber" name="L731" href="#L731">731</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
+<a class="jxr_linenumber" name="L732" href="#L732">732</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L733" href="#L733">733</a> <em class="jxr_javadoccomment">     *     This is an &lt;b&gt;unusual&lt;/b&gt; method.  Setting a handler here allows the user to run code of his</em>
+<a class="jxr_linenumber" name="L734" href="#L734">734</a> <em class="jxr_javadoccomment">     * choosing before the regular business code is run.  Note that by defining this value, the ordinary</em>
+<a class="jxr_linenumber" name="L735" href="#L735">735</a> <em class="jxr_javadoccomment">     * call to endpoint.apply(request) will not be run.</em>
+<a class="jxr_linenumber" name="L736" href="#L736">736</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L737" href="#L737">737</a> <em class="jxr_javadoccomment">     * &lt;p&gt;Here is an example&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L738" href="#L738">738</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;{@code</em>
+<a class="jxr_linenumber" name="L739" href="#L739">739</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L740" href="#L740">740</a> <em class="jxr_javadoccomment">     *      webFramework.registerPreHandler(preHandlerInputs -&gt; preHandlerCode(preHandlerInputs, auth, context));</em>
+<a class="jxr_linenumber" name="L741" href="#L741">741</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L742" href="#L742">742</a> <em class="jxr_javadoccomment">     *      ...</em>
+<a class="jxr_linenumber" name="L743" href="#L743">743</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L744" href="#L744">744</a> <em class="jxr_javadoccomment">     *      private IResponse preHandlerCode(PreHandlerInputs preHandlerInputs, AuthUtils auth, Context context) throws Exception {</em>
+<a class="jxr_linenumber" name="L745" href="#L745">745</a> <em class="jxr_javadoccomment">     *          int secureServerPort = context.getConstants().secureServerPort;</em>
+<a class="jxr_linenumber" name="L746" href="#L746">746</a> <em class="jxr_javadoccomment">     *          Request request = preHandlerInputs.clientRequest();</em>
+<a class="jxr_linenumber" name="L747" href="#L747">747</a> <em class="jxr_javadoccomment">     *          ThrowingFunction&lt;IRequest, IResponse&gt; endpoint = preHandlerInputs.endpoint();</em>
+<a class="jxr_linenumber" name="L748" href="#L748">748</a> <em class="jxr_javadoccomment">     *          ISocketWrapper sw = preHandlerInputs.sw();</em>
+<a class="jxr_linenumber" name="L749" href="#L749">749</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L750" href="#L750">750</a> <em class="jxr_javadoccomment">     *          // log all requests</em>
+<a class="jxr_linenumber" name="L751" href="#L751">751</a> <em class="jxr_javadoccomment">     *          logger.logTrace(() -&gt; String.format("Request: %s by %s",</em>
+<a class="jxr_linenumber" name="L752" href="#L752">752</a> <em class="jxr_javadoccomment">     *              request.requestLine().getRawValue(),</em>
+<a class="jxr_linenumber" name="L753" href="#L753">753</a> <em class="jxr_javadoccomment">     *              request.remoteRequester())</em>
+<a class="jxr_linenumber" name="L754" href="#L754">754</a> <em class="jxr_javadoccomment">     *          );</em>
+<a class="jxr_linenumber" name="L755" href="#L755">755</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L756" href="#L756">756</a> <em class="jxr_javadoccomment">     *          // redirect to https if they are on the plain-text connection and the path is "login"</em>
 <a class="jxr_linenumber" name="L757" href="#L757">757</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L758" href="#L758">758</a> <em class="jxr_javadoccomment">     *          // adjust behavior if non-authenticated and path includes "secure/"</em>
-<a class="jxr_linenumber" name="L759" href="#L759">759</a> <em class="jxr_javadoccomment">     *          if (path.contains("secure/")) {</em>
-<a class="jxr_linenumber" name="L760" href="#L760">760</a> <em class="jxr_javadoccomment">     *              AuthResult authResult = auth.processAuth(request);</em>
-<a class="jxr_linenumber" name="L761" href="#L761">761</a> <em class="jxr_javadoccomment">     *              if (authResult.isAuthenticated()) {</em>
-<a class="jxr_linenumber" name="L762" href="#L762">762</a> <em class="jxr_javadoccomment">     *                  return endpoint.apply(request);</em>
-<a class="jxr_linenumber" name="L763" href="#L763">763</a> <em class="jxr_javadoccomment">     *              } else {</em>
-<a class="jxr_linenumber" name="L764" href="#L764">764</a> <em class="jxr_javadoccomment">     *                  return Response.buildLeanResponse(CODE_403_FORBIDDEN);</em>
-<a class="jxr_linenumber" name="L765" href="#L765">765</a> <em class="jxr_javadoccomment">     *              }</em>
-<a class="jxr_linenumber" name="L766" href="#L766">766</a> <em class="jxr_javadoccomment">     *          }</em>
-<a class="jxr_linenumber" name="L767" href="#L767">767</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L768" href="#L768">768</a> <em class="jxr_javadoccomment">     *          // if the path does not include /secure, just move the request along unchanged.</em>
-<a class="jxr_linenumber" name="L769" href="#L769">769</a> <em class="jxr_javadoccomment">     *          return endpoint.apply(request);</em>
-<a class="jxr_linenumber" name="L770" href="#L770">770</a> <em class="jxr_javadoccomment">     *      }</em>
-<a class="jxr_linenumber" name="L771" href="#L771">771</a> <em class="jxr_javadoccomment">     * }&lt;/pre&gt;</em>
-<a class="jxr_linenumber" name="L772" href="#L772">772</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L773" href="#L773">773</a>         <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPreHandler(ThrowingFunction&lt;PreHandlerInputs, IResponse&gt; preHandler) {
-<a class="jxr_linenumber" name="L774" href="#L774">774</a>         <strong class="jxr_keyword">this</strong>.preHandler = preHandler;
-<a class="jxr_linenumber" name="L775" href="#L775">775</a>     }
-<a class="jxr_linenumber" name="L776" href="#L776">776</a> 
-<a class="jxr_linenumber" name="L777" href="#L777">777</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L778" href="#L778">778</a> <em class="jxr_javadoccomment">     * Sets a handler to be executed after running the ordinary handler, just</em>
-<a class="jxr_linenumber" name="L779" href="#L779">779</a> <em class="jxr_javadoccomment">     * before sending the response.</em>
-<a class="jxr_linenumber" name="L780" href="#L780">780</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L781" href="#L781">781</a> <em class="jxr_javadoccomment">     *     This is an &lt;b&gt;unusual&lt;/b&gt; method, so please be aware of its proper use. Its</em>
-<a class="jxr_linenumber" name="L782" href="#L782">782</a> <em class="jxr_javadoccomment">     *     purpose is to allow the user to inject code to run after ordinary code, across</em>
-<a class="jxr_linenumber" name="L783" href="#L783">783</a> <em class="jxr_javadoccomment">     *     all requests.</em>
-<a class="jxr_linenumber" name="L784" href="#L784">784</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L785" href="#L785">785</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L786" href="#L786">786</a> <em class="jxr_javadoccomment">     *     For example, if the system would have returned a 404 NOT FOUND response,</em>
-<a class="jxr_linenumber" name="L787" href="#L787">787</a> <em class="jxr_javadoccomment">     *     code can handle that situation in a switch case and adjust the response according</em>
-<a class="jxr_linenumber" name="L788" href="#L788">788</a> <em class="jxr_javadoccomment">     *     to your programming.</em>
-<a class="jxr_linenumber" name="L789" href="#L789">789</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L790" href="#L790">790</a> <em class="jxr_javadoccomment">     * &lt;p&gt;Here is an example&lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L791" href="#L791">791</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;{@code</em>
-<a class="jxr_linenumber" name="L792" href="#L792">792</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L793" href="#L793">793</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L794" href="#L794">794</a> <em class="jxr_javadoccomment">     *      webFramework.registerLastMinuteHandler(TheRegister::lastMinuteHandlerCode);</em>
-<a class="jxr_linenumber" name="L795" href="#L795">795</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L796" href="#L796">796</a> <em class="jxr_javadoccomment">     * ...</em>
-<a class="jxr_linenumber" name="L797" href="#L797">797</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L798" href="#L798">798</a> <em class="jxr_javadoccomment">     *     private static IResponse lastMinuteHandlerCode(LastMinuteHandlerInputs inputs) {</em>
-<a class="jxr_linenumber" name="L799" href="#L799">799</a> <em class="jxr_javadoccomment">     *         switch (inputs.response().statusCode()) {</em>
-<a class="jxr_linenumber" name="L800" href="#L800">800</a> <em class="jxr_javadoccomment">     *             case CODE_404_NOT_FOUND -&gt; {</em>
-<a class="jxr_linenumber" name="L801" href="#L801">801</a> <em class="jxr_javadoccomment">     *                 return Response.buildResponse(</em>
-<a class="jxr_linenumber" name="L802" href="#L802">802</a> <em class="jxr_javadoccomment">     *                         CODE_404_NOT_FOUND,</em>
-<a class="jxr_linenumber" name="L803" href="#L803">803</a> <em class="jxr_javadoccomment">     *                         Map.of("Content-Type", "text/html; charset=UTF-8"),</em>
-<a class="jxr_linenumber" name="L804" href="#L804">804</a> <em class="jxr_javadoccomment">     *                         "&lt;p&gt;No document was found&lt;/p&gt;"));</em>
-<a class="jxr_linenumber" name="L805" href="#L805">805</a> <em class="jxr_javadoccomment">     *             }</em>
-<a class="jxr_linenumber" name="L806" href="#L806">806</a> <em class="jxr_javadoccomment">     *             case CODE_500_INTERNAL_SERVER_ERROR -&gt; {</em>
-<a class="jxr_linenumber" name="L807" href="#L807">807</a> <em class="jxr_javadoccomment">     *                 return Response.buildResponse(</em>
-<a class="jxr_linenumber" name="L808" href="#L808">808</a> <em class="jxr_javadoccomment">     *                         CODE_500_INTERNAL_SERVER_ERROR,</em>
-<a class="jxr_linenumber" name="L809" href="#L809">809</a> <em class="jxr_javadoccomment">     *                         Map.of("Content-Type", "text/html; charset=UTF-8"),</em>
-<a class="jxr_linenumber" name="L810" href="#L810">810</a> <em class="jxr_javadoccomment">     *                         "&lt;p&gt;Server error occurred.&lt;/p&gt;" ));</em>
-<a class="jxr_linenumber" name="L811" href="#L811">811</a> <em class="jxr_javadoccomment">     *             }</em>
-<a class="jxr_linenumber" name="L812" href="#L812">812</a> <em class="jxr_javadoccomment">     *             default -&gt; {</em>
-<a class="jxr_linenumber" name="L813" href="#L813">813</a> <em class="jxr_javadoccomment">     *                 return inputs.response();</em>
+<a class="jxr_linenumber" name="L758" href="#L758">758</a> <em class="jxr_javadoccomment">     *          // get the path from the request line</em>
+<a class="jxr_linenumber" name="L759" href="#L759">759</a> <em class="jxr_javadoccomment">     *          String path = request.getRequestLine().getPathDetails().getIsolatedPath();</em>
+<a class="jxr_linenumber" name="L760" href="#L760">760</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L761" href="#L761">761</a> <em class="jxr_javadoccomment">     *          // redirect to https on the configured secure port if they are on the plain-text connection and the path contains "login"</em>
+<a class="jxr_linenumber" name="L762" href="#L762">762</a> <em class="jxr_javadoccomment">     *          if (path.contains("login") &amp;&amp;</em>
+<a class="jxr_linenumber" name="L763" href="#L763">763</a> <em class="jxr_javadoccomment">     *              sw.getServerType().equals(HttpServerType.PLAIN_TEXT_HTTP)) {</em>
+<a class="jxr_linenumber" name="L764" href="#L764">764</a> <em class="jxr_javadoccomment">     *              return Response.redirectTo("<a href="https://%s:%d/%s" target="alexandria_uri">https://%s:%d/%s</a>".formatted(sw.getHostName(), secureServerPort, path));</em>
+<a class="jxr_linenumber" name="L765" href="#L765">765</a> <em class="jxr_javadoccomment">     *          }</em>
+<a class="jxr_linenumber" name="L766" href="#L766">766</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L767" href="#L767">767</a> <em class="jxr_javadoccomment">     *          // adjust behavior if non-authenticated and path includes "secure/"</em>
+<a class="jxr_linenumber" name="L768" href="#L768">768</a> <em class="jxr_javadoccomment">     *          if (path.contains("secure/")) {</em>
+<a class="jxr_linenumber" name="L769" href="#L769">769</a> <em class="jxr_javadoccomment">     *              AuthResult authResult = auth.processAuth(request);</em>
+<a class="jxr_linenumber" name="L770" href="#L770">770</a> <em class="jxr_javadoccomment">     *              if (authResult.isAuthenticated()) {</em>
+<a class="jxr_linenumber" name="L771" href="#L771">771</a> <em class="jxr_javadoccomment">     *                  return endpoint.apply(request);</em>
+<a class="jxr_linenumber" name="L772" href="#L772">772</a> <em class="jxr_javadoccomment">     *              } else {</em>
+<a class="jxr_linenumber" name="L773" href="#L773">773</a> <em class="jxr_javadoccomment">     *                  return Response.buildLeanResponse(CODE_403_FORBIDDEN);</em>
+<a class="jxr_linenumber" name="L774" href="#L774">774</a> <em class="jxr_javadoccomment">     *              }</em>
+<a class="jxr_linenumber" name="L775" href="#L775">775</a> <em class="jxr_javadoccomment">     *          }</em>
+<a class="jxr_linenumber" name="L776" href="#L776">776</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L777" href="#L777">777</a> <em class="jxr_javadoccomment">     *          // if the path does not include /secure, just move the request along unchanged.</em>
+<a class="jxr_linenumber" name="L778" href="#L778">778</a> <em class="jxr_javadoccomment">     *          return endpoint.apply(request);</em>
+<a class="jxr_linenumber" name="L779" href="#L779">779</a> <em class="jxr_javadoccomment">     *      }</em>
+<a class="jxr_linenumber" name="L780" href="#L780">780</a> <em class="jxr_javadoccomment">     * }&lt;/pre&gt;</em>
+<a class="jxr_linenumber" name="L781" href="#L781">781</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L782" href="#L782">782</a>         <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerPreHandler(ThrowingFunction&lt;PreHandlerInputs, IResponse&gt; preHandler) {
+<a class="jxr_linenumber" name="L783" href="#L783">783</a>         <strong class="jxr_keyword">this</strong>.preHandler = preHandler;
+<a class="jxr_linenumber" name="L784" href="#L784">784</a>     }
+<a class="jxr_linenumber" name="L785" href="#L785">785</a> 
+<a class="jxr_linenumber" name="L786" href="#L786">786</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L787" href="#L787">787</a> <em class="jxr_javadoccomment">     * Sets a handler to be executed after running the ordinary handler, just</em>
+<a class="jxr_linenumber" name="L788" href="#L788">788</a> <em class="jxr_javadoccomment">     * before sending the response.</em>
+<a class="jxr_linenumber" name="L789" href="#L789">789</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L790" href="#L790">790</a> <em class="jxr_javadoccomment">     *     This is an &lt;b&gt;unusual&lt;/b&gt; method, so please be aware of its proper use. Its</em>
+<a class="jxr_linenumber" name="L791" href="#L791">791</a> <em class="jxr_javadoccomment">     *     purpose is to allow the user to inject code to run after ordinary code, across</em>
+<a class="jxr_linenumber" name="L792" href="#L792">792</a> <em class="jxr_javadoccomment">     *     all requests.</em>
+<a class="jxr_linenumber" name="L793" href="#L793">793</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L794" href="#L794">794</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L795" href="#L795">795</a> <em class="jxr_javadoccomment">     *     For example, if the system would have returned a 404 NOT FOUND response,</em>
+<a class="jxr_linenumber" name="L796" href="#L796">796</a> <em class="jxr_javadoccomment">     *     code can handle that situation in a switch case and adjust the response according</em>
+<a class="jxr_linenumber" name="L797" href="#L797">797</a> <em class="jxr_javadoccomment">     *     to your programming.</em>
+<a class="jxr_linenumber" name="L798" href="#L798">798</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L799" href="#L799">799</a> <em class="jxr_javadoccomment">     * &lt;p&gt;Here is an example&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L800" href="#L800">800</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;{@code</em>
+<a class="jxr_linenumber" name="L801" href="#L801">801</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L802" href="#L802">802</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L803" href="#L803">803</a> <em class="jxr_javadoccomment">     *      webFramework.registerLastMinuteHandler(TheRegister::lastMinuteHandlerCode);</em>
+<a class="jxr_linenumber" name="L804" href="#L804">804</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L805" href="#L805">805</a> <em class="jxr_javadoccomment">     * ...</em>
+<a class="jxr_linenumber" name="L806" href="#L806">806</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L807" href="#L807">807</a> <em class="jxr_javadoccomment">     *     private static IResponse lastMinuteHandlerCode(LastMinuteHandlerInputs inputs) {</em>
+<a class="jxr_linenumber" name="L808" href="#L808">808</a> <em class="jxr_javadoccomment">     *         switch (inputs.response().statusCode()) {</em>
+<a class="jxr_linenumber" name="L809" href="#L809">809</a> <em class="jxr_javadoccomment">     *             case CODE_404_NOT_FOUND -&gt; {</em>
+<a class="jxr_linenumber" name="L810" href="#L810">810</a> <em class="jxr_javadoccomment">     *                 return Response.buildResponse(</em>
+<a class="jxr_linenumber" name="L811" href="#L811">811</a> <em class="jxr_javadoccomment">     *                         CODE_404_NOT_FOUND,</em>
+<a class="jxr_linenumber" name="L812" href="#L812">812</a> <em class="jxr_javadoccomment">     *                         Map.of("Content-Type", "text/html; charset=UTF-8"),</em>
+<a class="jxr_linenumber" name="L813" href="#L813">813</a> <em class="jxr_javadoccomment">     *                         "&lt;p&gt;No document was found&lt;/p&gt;"));</em>
 <a class="jxr_linenumber" name="L814" href="#L814">814</a> <em class="jxr_javadoccomment">     *             }</em>
-<a class="jxr_linenumber" name="L815" href="#L815">815</a> <em class="jxr_javadoccomment">     *         }</em>
-<a class="jxr_linenumber" name="L816" href="#L816">816</a> <em class="jxr_javadoccomment">     *     }</em>
-<a class="jxr_linenumber" name="L817" href="#L817">817</a> <em class="jxr_javadoccomment">     * }</em>
-<a class="jxr_linenumber" name="L818" href="#L818">818</a> <em class="jxr_javadoccomment">     * &lt;/pre&gt;</em>
-<a class="jxr_linenumber" name="L819" href="#L819">819</a> <em class="jxr_javadoccomment">     * @param lastMinuteHandler a function that will take a request and return a response, exactly like</em>
-<a class="jxr_linenumber" name="L820" href="#L820">820</a> <em class="jxr_javadoccomment">     *                   we use in the other registration methods for this class.</em>
-<a class="jxr_linenumber" name="L821" href="#L821">821</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L822" href="#L822">822</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerLastMinuteHandler(ThrowingFunction&lt;LastMinuteHandlerInputs, IResponse&gt; lastMinuteHandler) {
-<a class="jxr_linenumber" name="L823" href="#L823">823</a>         <strong class="jxr_keyword">this</strong>.lastMinuteHandler = lastMinuteHandler;
-<a class="jxr_linenumber" name="L824" href="#L824">824</a>     }
-<a class="jxr_linenumber" name="L825" href="#L825">825</a> 
-<a class="jxr_linenumber" name="L826" href="#L826">826</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L827" href="#L827">827</a> <em class="jxr_javadoccomment">     * This allows users to add extra mappings</em>
-<a class="jxr_linenumber" name="L828" href="#L828">828</a> <em class="jxr_javadoccomment">     * between file suffixes and mime types, in case</em>
-<a class="jxr_linenumber" name="L829" href="#L829">829</a> <em class="jxr_javadoccomment">     * a user needs one that was not provided.</em>
-<a class="jxr_linenumber" name="L830" href="#L830">830</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L831" href="#L831">831</a> <em class="jxr_javadoccomment">     *     This is made available through the</em>
-<a class="jxr_linenumber" name="L832" href="#L832">832</a> <em class="jxr_javadoccomment">     *     web framework.</em>
-<a class="jxr_linenumber" name="L833" href="#L833">833</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L834" href="#L834">834</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L835" href="#L835">835</a> <em class="jxr_javadoccomment">     *     Example:</em>
-<a class="jxr_linenumber" name="L836" href="#L836">836</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L837" href="#L837">837</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;</em>
-<a class="jxr_linenumber" name="L838" href="#L838">838</a> <em class="jxr_javadoccomment">     * {@code webFramework.addMimeForSuffix().put("foo","text/foo")}</em>
-<a class="jxr_linenumber" name="L839" href="#L839">839</a> <em class="jxr_javadoccomment">     * &lt;/pre&gt;</em>
-<a class="jxr_linenumber" name="L840" href="#L840">840</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L841" href="#L841">841</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> addMimeForSuffix(String suffix, String mimeType) {
-<a class="jxr_linenumber" name="L842" href="#L842">842</a>         fileSuffixToMime.put(suffix, mimeType);
-<a class="jxr_linenumber" name="L843" href="#L843">843</a>     }
-<a class="jxr_linenumber" name="L844" href="#L844">844</a> }
+<a class="jxr_linenumber" name="L815" href="#L815">815</a> <em class="jxr_javadoccomment">     *             case CODE_500_INTERNAL_SERVER_ERROR -&gt; {</em>
+<a class="jxr_linenumber" name="L816" href="#L816">816</a> <em class="jxr_javadoccomment">     *                 return Response.buildResponse(</em>
+<a class="jxr_linenumber" name="L817" href="#L817">817</a> <em class="jxr_javadoccomment">     *                         CODE_500_INTERNAL_SERVER_ERROR,</em>
+<a class="jxr_linenumber" name="L818" href="#L818">818</a> <em class="jxr_javadoccomment">     *                         Map.of("Content-Type", "text/html; charset=UTF-8"),</em>
+<a class="jxr_linenumber" name="L819" href="#L819">819</a> <em class="jxr_javadoccomment">     *                         "&lt;p&gt;Server error occurred.&lt;/p&gt;" ));</em>
+<a class="jxr_linenumber" name="L820" href="#L820">820</a> <em class="jxr_javadoccomment">     *             }</em>
+<a class="jxr_linenumber" name="L821" href="#L821">821</a> <em class="jxr_javadoccomment">     *             default -&gt; {</em>
+<a class="jxr_linenumber" name="L822" href="#L822">822</a> <em class="jxr_javadoccomment">     *                 return inputs.response();</em>
+<a class="jxr_linenumber" name="L823" href="#L823">823</a> <em class="jxr_javadoccomment">     *             }</em>
+<a class="jxr_linenumber" name="L824" href="#L824">824</a> <em class="jxr_javadoccomment">     *         }</em>
+<a class="jxr_linenumber" name="L825" href="#L825">825</a> <em class="jxr_javadoccomment">     *     }</em>
+<a class="jxr_linenumber" name="L826" href="#L826">826</a> <em class="jxr_javadoccomment">     * }</em>
+<a class="jxr_linenumber" name="L827" href="#L827">827</a> <em class="jxr_javadoccomment">     * &lt;/pre&gt;</em>
+<a class="jxr_linenumber" name="L828" href="#L828">828</a> <em class="jxr_javadoccomment">     * @param lastMinuteHandler a function that will take a request and return a response, exactly like</em>
+<a class="jxr_linenumber" name="L829" href="#L829">829</a> <em class="jxr_javadoccomment">     *                   we use in the other registration methods for this class.</em>
+<a class="jxr_linenumber" name="L830" href="#L830">830</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L831" href="#L831">831</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> registerLastMinuteHandler(ThrowingFunction&lt;LastMinuteHandlerInputs, IResponse&gt; lastMinuteHandler) {
+<a class="jxr_linenumber" name="L832" href="#L832">832</a>         <strong class="jxr_keyword">this</strong>.lastMinuteHandler = lastMinuteHandler;
+<a class="jxr_linenumber" name="L833" href="#L833">833</a>     }
+<a class="jxr_linenumber" name="L834" href="#L834">834</a> 
+<a class="jxr_linenumber" name="L835" href="#L835">835</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L836" href="#L836">836</a> <em class="jxr_javadoccomment">     * This allows users to add extra mappings</em>
+<a class="jxr_linenumber" name="L837" href="#L837">837</a> <em class="jxr_javadoccomment">     * between file suffixes and mime types, in case</em>
+<a class="jxr_linenumber" name="L838" href="#L838">838</a> <em class="jxr_javadoccomment">     * a user needs one that was not provided.</em>
+<a class="jxr_linenumber" name="L839" href="#L839">839</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L840" href="#L840">840</a> <em class="jxr_javadoccomment">     *     This is made available through the</em>
+<a class="jxr_linenumber" name="L841" href="#L841">841</a> <em class="jxr_javadoccomment">     *     web framework.</em>
+<a class="jxr_linenumber" name="L842" href="#L842">842</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L843" href="#L843">843</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L844" href="#L844">844</a> <em class="jxr_javadoccomment">     *     Example:</em>
+<a class="jxr_linenumber" name="L845" href="#L845">845</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L846" href="#L846">846</a> <em class="jxr_javadoccomment">     * &lt;pre&gt;</em>
+<a class="jxr_linenumber" name="L847" href="#L847">847</a> <em class="jxr_javadoccomment">     * {@code webFramework.addMimeForSuffix().put("foo","text/foo")}</em>
+<a class="jxr_linenumber" name="L848" href="#L848">848</a> <em class="jxr_javadoccomment">     * &lt;/pre&gt;</em>
+<a class="jxr_linenumber" name="L849" href="#L849">849</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L850" href="#L850">850</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> addMimeForSuffix(String suffix, String mimeType) {
+<a class="jxr_linenumber" name="L851" href="#L851">851</a>         fileSuffixToMime.put(suffix, mimeType);
+<a class="jxr_linenumber" name="L852" href="#L852">852</a>     }
+<a class="jxr_linenumber" name="L853" href="#L853">853</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>
