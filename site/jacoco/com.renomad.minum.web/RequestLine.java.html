@@ -156,20 +156,25 @@ public final class RequestLine {
 <span class="fc" id="L156">            int equalSignLocation = currentKeyValue.indexOf(&quot;=&quot;);</span>
 <span class="fc bfc" id="L157" title="All 2 branches covered.">            if (equalSignLocation &lt;= 0) return Map.of();</span>
 <span class="fc" id="L158">            String key = currentKeyValue.substring(0, equalSignLocation);</span>
-<span class="fc" id="L159">            String value = StringUtils.decode(currentKeyValue.substring(equalSignLocation + 1));</span>
-<span class="fc" id="L160">            queryStrings.put(key, value);</span>
+<span class="fc" id="L159">            String rawValue = currentKeyValue.substring(equalSignLocation + 1);</span>
+            try {
+<span class="fc" id="L161">                String value = StringUtils.decode(rawValue);</span>
+<span class="fc" id="L162">                queryStrings.put(key, value);</span>
+<span class="fc" id="L163">            } catch (IllegalArgumentException ex) {</span>
+<span class="fc" id="L164">                logger.logDebug(() -&gt; &quot;Query string parsing failed for key: (%s) value: (%s).  Skipping to next key-value pair. error message: %s&quot;.formatted(key, rawValue, ex.getMessage()));</span>
+<span class="fc" id="L165">            }</span>
         }
-<span class="fc" id="L162">        return queryStrings;</span>
+<span class="fc" id="L167">        return queryStrings;</span>
     }
 
     /**
      * Extract the HTTP version from the start line
      */
     private HttpVersion getHttpVersion(String version) {
-<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (version.equals(&quot;1.1&quot;)) {</span>
-<span class="fc" id="L170">            return HttpVersion.ONE_DOT_ONE;</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (version.equals(&quot;1.1&quot;)) {</span>
+<span class="fc" id="L175">            return HttpVersion.ONE_DOT_ONE;</span>
         } else {
-<span class="fc" id="L172">            return HttpVersion.ONE_DOT_ZERO;</span>
+<span class="fc" id="L177">            return HttpVersion.ONE_DOT_ZERO;</span>
         }
     }
 
@@ -177,7 +182,7 @@ public final class RequestLine {
      * Return the method of this request-line.  For example, GET, PUT, POST...
      */
     public Method getMethod() {
-<span class="fc" id="L180">        return method;</span>
+<span class="fc" id="L185">        return method;</span>
     }
 
     /**
@@ -186,39 +191,39 @@ public final class RequestLine {
      * this would hold data for the path (&quot;sample&quot;) and the query string (&quot;foo=bar&quot;)
      */
     public PathDetails getPathDetails() {
-<span class="fc" id="L189">        return pathDetails;</span>
+<span class="fc" id="L194">        return pathDetails;</span>
     }
 
     /**
      * Gets the HTTP version, either 1.0 or 1.1
      */
     public HttpVersion getVersion() {
-<span class="fc" id="L196">        return this.version;</span>
+<span class="fc" id="L201">        return this.version;</span>
     }
 
     /**
      * Get the string value of this request line, such as &quot;GET /sample.html HTTP/1.1&quot;
      */
     public String getRawValue() {
-<span class="fc" id="L203">        return rawValue;</span>
+<span class="fc" id="L208">        return rawValue;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L208" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L209" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L210">        RequestLine that = (RequestLine) o;</span>
-<span class="fc bfc" id="L211" title="All 10 branches covered.">        return method == that.method &amp;&amp; Objects.equals(pathDetails, that.pathDetails) &amp;&amp; version == that.version &amp;&amp; Objects.equals(rawValue, that.rawValue) &amp;&amp; Objects.equals(logger, that.logger);</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L214" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L215">        RequestLine that = (RequestLine) o;</span>
+<span class="fc bfc" id="L216" title="All 10 branches covered.">        return method == that.method &amp;&amp; Objects.equals(pathDetails, that.pathDetails) &amp;&amp; version == that.version &amp;&amp; Objects.equals(rawValue, that.rawValue) &amp;&amp; Objects.equals(logger, that.logger);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L216">        return Objects.hash(method, pathDetails, version, rawValue, logger);</span>
+<span class="fc" id="L221">        return Objects.hash(method, pathDetails, version, rawValue, logger);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L221">        return &quot;RequestLine{&quot; +</span>
+<span class="fc" id="L226">        return &quot;RequestLine{&quot; +</span>
                 &quot;method=&quot; + method +
                 &quot;, pathDetails=&quot; + pathDetails +
                 &quot;, version=&quot; + version +
