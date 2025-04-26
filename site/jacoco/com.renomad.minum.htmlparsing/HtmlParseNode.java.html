@@ -97,67 +97,97 @@ public final class HtmlParseNode {
         }
     }
 
+    /**
+     * Gets the type of this node - either it's an element, with opening and
+     * closing tags and attributes and an inner content, or it's just plain text.
+     */
     public ParseNodeType getType() {
-<span class="fc" id="L101">        return type;</span>
+<span class="fc" id="L105">        return type;</span>
     }
 
+    /**
+     * Returns the {@link TagInfo}, which contains valuable information
+     * like the type of element (p, a, div, and so on) and attributes
+     * like class, id, etc.
+     */
     public TagInfo getTagInfo() {
-<span class="fc" id="L105">        return tagInfo;</span>
+<span class="fc" id="L114">        return tagInfo;</span>
     }
 
+    /**
+     * The inner content is the data between the opening and closing
+     * tags of this element, comprised of potentially other complex
+     * elements and/or characters or a mix (or nothing at all, which
+     * will return an empty list).
+     */
     public List&lt;HtmlParseNode&gt; getInnerContent() {
-<span class="fc" id="L109">        return new ArrayList&lt;&gt;(innerContent);</span>
+<span class="fc" id="L124">        return new ArrayList&lt;&gt;(innerContent);</span>
     }
 
     void addToInnerContent(HtmlParseNode htmlParseNode) {
-<span class="fc" id="L113">        innerContent.add(htmlParseNode);</span>
-<span class="fc" id="L114">    }</span>
+<span class="fc" id="L128">        innerContent.add(htmlParseNode);</span>
+<span class="fc" id="L129">    }</span>
 
+    /**
+     * If the {@link ParseNodeType} is {@link ParseNodeType#CHARACTERS}, then this
+     * will have text content.  Otherwise, it returns an empty string.
+     */
     public String getTextContent() {
-<span class="fc" id="L117">        return textContent;</span>
+<span class="fc" id="L136">        return textContent;</span>
     }
 
+    /**
+     * Return the inner text of a node
+     * &lt;p&gt;
+     *      If this element has only one inner
+     *      content item, and it's a {@link ParseNodeType#CHARACTERS} element, return its text content.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     If there is more than one node, concatenates them to a single string, with each section wrapped
+     *     in square brackets.
+     * &lt;/p&gt;
+     */
     public String innerText() {
-<span class="fc" id="L121">        return innerText(innerContent);</span>
+<span class="fc" id="L151">        return innerText(innerContent);</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (!(o instanceof HtmlParseNode that)) return false;</span>
-<span class="fc bfc" id="L128" title="All 8 branches covered.">        return type == that.type &amp;&amp; Objects.equals(tagInfo, that.tagInfo) &amp;&amp; Objects.equals(innerContent, that.innerContent) &amp;&amp; Objects.equals(textContent, that.textContent);</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (!(o instanceof HtmlParseNode that)) return false;</span>
+<span class="fc bfc" id="L158" title="All 8 branches covered.">        return type == that.type &amp;&amp; Objects.equals(tagInfo, that.tagInfo) &amp;&amp; Objects.equals(innerContent, that.innerContent) &amp;&amp; Objects.equals(textContent, that.textContent);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L133">        return Objects.hash(type, tagInfo, innerContent, textContent);</span>
+<span class="fc" id="L163">        return Objects.hash(type, tagInfo, innerContent, textContent);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (this.getType().equals(ParseNodeType.ELEMENT)) {</span>
-<span class="fc" id="L139">            var sb = new StringBuilder();</span>
-<span class="fc" id="L140">            sb.append(&quot;&lt;&quot;);</span>
-<span class="fc" id="L141">            String lowercaseElement = this.tagInfo.getTagName().toString().toLowerCase();</span>
-<span class="fc" id="L142">            sb.append(lowercaseElement);</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (this.getType().equals(ParseNodeType.ELEMENT)) {</span>
+<span class="fc" id="L169">            var sb = new StringBuilder();</span>
+<span class="fc" id="L170">            sb.append(&quot;&lt;&quot;);</span>
+<span class="fc" id="L171">            String lowercaseElement = this.tagInfo.getTagName().toString().toLowerCase();</span>
+<span class="fc" id="L172">            sb.append(lowercaseElement);</span>
 
-<span class="fc bfc" id="L144" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; entry : this.tagInfo.getAttributes().entrySet()) {</span>
-<span class="fc" id="L145">                sb.append(&quot; &quot;);</span>
-<span class="fc" id="L146">                sb.append(entry.getKey());</span>
-<span class="fc" id="L147">                sb.append(&quot;=&quot;);</span>
-<span class="fc" id="L148">                sb.append(&quot;\&quot;&quot;).append(entry.getValue()).append(&quot;\&quot;&quot;);</span>
-<span class="fc" id="L149">            }</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; entry : this.tagInfo.getAttributes().entrySet()) {</span>
+<span class="fc" id="L175">                sb.append(&quot; &quot;);</span>
+<span class="fc" id="L176">                sb.append(entry.getKey());</span>
+<span class="fc" id="L177">                sb.append(&quot;=&quot;);</span>
+<span class="fc" id="L178">                sb.append(&quot;\&quot;&quot;).append(entry.getValue()).append(&quot;\&quot;&quot;);</span>
+<span class="fc" id="L179">            }</span>
 
-<span class="fc" id="L151">            sb.append(&quot;&gt;&quot;);</span>
+<span class="fc" id="L181">            sb.append(&quot;&gt;&quot;);</span>
 
-<span class="fc bfc" id="L153" title="All 2 branches covered.">            for (HtmlParseNode hpn : this.innerContent) {</span>
-<span class="fc" id="L154">                sb.append(hpn);</span>
-<span class="fc" id="L155">            }</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">            for (HtmlParseNode hpn : this.innerContent) {</span>
+<span class="fc" id="L184">                sb.append(hpn);</span>
+<span class="fc" id="L185">            }</span>
 
-<span class="fc" id="L157">            sb.append(&quot;&lt;/&quot;).append(lowercaseElement).append(&quot;&gt;&quot;);</span>
-<span class="fc" id="L158">            return sb.toString();</span>
+<span class="fc" id="L187">            sb.append(&quot;&lt;/&quot;).append(lowercaseElement).append(&quot;&gt;&quot;);</span>
+<span class="fc" id="L188">            return sb.toString();</span>
         } else {
-<span class="fc" id="L160">            return textContent;</span>
+<span class="fc" id="L190">            return textContent;</span>
         }
 
 
