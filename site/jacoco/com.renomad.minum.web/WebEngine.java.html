@@ -53,7 +53,7 @@ final class WebEngine {
       try {
 <span class="fc" id="L54">          ss = new ServerSocket(port);</span>
 <span class="fc" id="L55">      } catch (Exception e) {</span>
-<span class="fc" id="L56">          throw new WebServerException(e);</span>
+<span class="fc" id="L56">          throw new WebServerException(&quot;Error starting server on port &quot; + port, e);</span>
 <span class="fc" id="L57">      }</span>
 <span class="fc" id="L58">      logger.logDebug(() -&gt; String.format(&quot;Just created a new ServerSocket: %s&quot;, ss));</span>
 <span class="fc" id="L59">    IServer server = new Server(ss, context, &quot;http server&quot;, theBrig, webFramework, executorService, PLAIN_TEXT_HTTP);</span>
@@ -166,7 +166,7 @@ final class WebEngine {
 <span class="fc" id="L166">      return socketFactory.createServerSocket(sslPort);</span>
 <span class="fc" id="L167">    } catch (Exception ex) {</span>
 <span class="fc" id="L168">      logger.logDebug(ex::getMessage);</span>
-<span class="fc" id="L169">      throw new WebServerException(ex);</span>
+<span class="fc" id="L169">      throw new WebServerException(&quot;Error starting SSL socket server on port &quot; + sslPort, ex);</span>
     }
   }
 

@@ -49,10 +49,10 @@
 <a class="jxr_linenumber" name="L41" href="#L41">41</a>          <strong class="jxr_keyword">var</strong> ex = assertThrows(WebServerException.<strong class="jxr_keyword">class</strong>, () -&gt; {
 <a class="jxr_linenumber" name="L42" href="#L42">42</a>                  webEngine.createSslSocketWithSpecificKeystore(
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>                          1234,
-<a class="jxr_linenumber" name="L44" href="#L44">44</a>                          <strong class="jxr_keyword">new</strong> URI(<span class="jxr_string">"http://example.com/"</span>).toURL(),
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>                          <strong class="jxr_keyword">new</strong> URI(<span class="jxr_string">"file:///does/not/exist"</span>).toURL(),
 <a class="jxr_linenumber" name="L45" href="#L45">45</a>                          <span class="jxr_string">"badpass"</span>);
 <a class="jxr_linenumber" name="L46" href="#L46">46</a>          });
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>          assertEquals(ex.getMessage(), <span class="jxr_string">"java.io.IOException: toDerInputStream rejects tag type 60"</span>);
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>          assertTrue(ex.getCause().getMessage().contains(<span class="jxr_string">"(The system cannot find the path specified)"</span>));
 <a class="jxr_linenumber" name="L48" href="#L48">48</a>      }
 <a class="jxr_linenumber" name="L49" href="#L49">49</a>  
 <a class="jxr_linenumber" name="L50" href="#L50">50</a>      @Test

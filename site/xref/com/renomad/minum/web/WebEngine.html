@@ -61,7 +61,7 @@
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>        <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>            ss = <strong class="jxr_keyword">new</strong> ServerSocket(port);
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>        } <strong class="jxr_keyword">catch</strong> (Exception e) {
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>            <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="WebServerException" href="../../../../com/renomad/minum/web/WebServerException.html#WebServerException">WebServerException</a>(e);
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>            <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="WebServerException" href="../../../../com/renomad/minum/web/WebServerException.html#WebServerException">WebServerException</a>(<span class="jxr_string">"Error starting server on port "</span> + port, e);
 <a class="jxr_linenumber" name="L57" href="#L57">57</a>        }
 <a class="jxr_linenumber" name="L58" href="#L58">58</a>        logger.logDebug(() -&gt; String.format(<span class="jxr_string">"Just created a new ServerSocket: %s"</span>, ss));
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>      <a name="IServer" href="../../../../com/renomad/minum/web/IServer.html#IServer">IServer</a> server = <strong class="jxr_keyword">new</strong> <a name="Server" href="../../../../com/renomad/minum/web/Server.html#Server">Server</a>(ss, context, <span class="jxr_string">"http server"</span>, theBrig, webFramework, executorService, PLAIN_TEXT_HTTP);
@@ -174,7 +174,7 @@
 <a class="jxr_linenumber" name="L166" href="#L166">166</a>       <strong class="jxr_keyword">return</strong> socketFactory.createServerSocket(sslPort);
 <a class="jxr_linenumber" name="L167" href="#L167">167</a>     } <strong class="jxr_keyword">catch</strong> (Exception ex) {
 <a class="jxr_linenumber" name="L168" href="#L168">168</a>       logger.logDebug(ex::getMessage);
-<a class="jxr_linenumber" name="L169" href="#L169">169</a>       <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="WebServerException" href="../../../../com/renomad/minum/web/WebServerException.html#WebServerException">WebServerException</a>(ex);
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>       <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="WebServerException" href="../../../../com/renomad/minum/web/WebServerException.html#WebServerException">WebServerException</a>(<span class="jxr_string">"Error starting SSL socket server on port "</span> + sslPort, ex);
 <a class="jxr_linenumber" name="L170" href="#L170">170</a>     }
 <a class="jxr_linenumber" name="L171" href="#L171">171</a>   }
 <a class="jxr_linenumber" name="L172" href="#L172">172</a> 

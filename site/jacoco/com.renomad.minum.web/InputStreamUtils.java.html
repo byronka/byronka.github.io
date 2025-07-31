@@ -26,62 +26,77 @@ final class InputStreamUtils implements IInputStreamUtils {
 <span class="fc" id="L26">        final int CARRIAGE_RETURN_DECIMAL = 13;</span>
 
 <span class="fc" id="L28">        final var result = new ByteArrayOutputStream(maxReadLineSizeBytes / 3);</span>
-<span class="fc" id="L29">        for (int i = 0;; i++) {</span>
-<span class="fc bfc" id="L30" title="All 2 branches covered.">            if (i &gt;= maxReadLineSizeBytes) {</span>
-<span class="fc" id="L31">                inputStream.close();</span>
-<span class="fc" id="L32">                throw new ForbiddenUseException(&quot;client sent more bytes than allowed for a single line.  max: &quot; + maxReadLineSizeBytes);</span>
+<span class="fc" id="L29">        int bytesRead = 0;</span>
+<span class="fc" id="L30">        for (int i = 0;; i++) {</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">            if (i &gt;= maxReadLineSizeBytes) {</span>
+<span class="fc" id="L32">                inputStream.close();</span>
+<span class="fc" id="L33">                throw new ForbiddenUseException(&quot;client sent more bytes than allowed for a single line.  max: &quot; + maxReadLineSizeBytes);</span>
             }
-<span class="fc" id="L34">            int a = inputStream.read();</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (a == -1) return result.toString(StandardCharsets.UTF_8);</span>
-<span class="fc bfc" id="L36" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) continue;</span>
-<span class="fc bfc" id="L37" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
-<span class="fc" id="L38">            result.write(a);</span>
+<span class="fc" id="L35">            int a = inputStream.read();</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            if (a == -1) {</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">                if (bytesRead &gt; 0) {</span>
+<span class="fc" id="L38">                    return result.toString(StandardCharsets.UTF_8);</span>
+                } else {
+                    /*
+                    it could be unclear whether we read a line that's an empty string, or we
+                    reached the end of stream.  With this code, if we get an empty string,
+                    that means the line we read is just an empty string, and if we get a null,
+                    that means we didn't have any characters read into our ByteArrayOutputStream,
+                    and tried reading at the end of stream.
+                    */
+<span class="fc" id="L47">                    return null;</span>
+                }
+            }
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (a == CARRIAGE_RETURN_DECIMAL) continue;</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            if (a == NEWLINE_DECIMAL) break;</span>
+<span class="fc" id="L52">            result.write(a);</span>
+<span class="fc" id="L53">            bytesRead += 1;</span>
         }
-<span class="fc" id="L40">        return result.toString(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L55">        return result.toString(StandardCharsets.UTF_8);</span>
     }
 
     @Override
     public byte[] read(int lengthToRead, InputStream inputStream) {
-<span class="fc" id="L45">        final int typicalBufferSize = 1024 * 8;</span>
-<span class="fc" id="L46">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
+<span class="fc" id="L60">        final int typicalBufferSize = 1024 * 8;</span>
+<span class="fc" id="L61">        byte[] buf = new byte[Math.min(lengthToRead, typicalBufferSize)]; // 8k buffer is my understanding of a decent size.  Fast, doesn't waste too much space.</span>
         byte[] data;
-<span class="fc" id="L48">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L63">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
         int read;
-<span class="fc" id="L50">        int totalRead = 0;</span>
+<span class="fc" id="L65">        int totalRead = 0;</span>
         try {
-<span class="fc bfc" id="L52" title="All 2 branches covered.">            while ((read = inputStream.read(buf)) &gt;= 0) {</span>
-<span class="fc" id="L53">                totalRead += read;</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">                if (totalRead &lt; lengthToRead) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            while ((read = inputStream.read(buf)) &gt;= 0) {</span>
+<span class="fc" id="L68">                totalRead += read;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                if (totalRead &lt; lengthToRead) {</span>
                     // if we haven't gotten everything we wanted, write this to the output and loop again
-<span class="fc" id="L56">                    baos.write(buf, 0, read);</span>
+<span class="fc" id="L71">                    baos.write(buf, 0, read);</span>
                 } else {
-<span class="fc" id="L58">                    baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
-<span class="fc" id="L59">                    break;</span>
+<span class="fc" id="L73">                    baos.write(buf, 0, read - (totalRead - lengthToRead));</span>
+<span class="fc" id="L74">                    break;</span>
                 }
             }
-<span class="fc" id="L62">        } catch (IOException ex) {</span>
-<span class="fc" id="L63">            throw new UtilsException(ex);</span>
-<span class="fc" id="L64">        }</span>
-<span class="fc" id="L65">        data = baos.toByteArray();</span>
+<span class="fc" id="L77">        } catch (IOException ex) {</span>
+<span class="fc" id="L78">            throw new UtilsException(ex);</span>
+<span class="fc" id="L79">        }</span>
+<span class="fc" id="L80">        data = baos.toByteArray();</span>
 
-<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (data.length != lengthToRead) {</span>
-<span class="fc" id="L68">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
-<span class="fc" id="L69">            throw new ForbiddenUseException(message);</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (data.length != lengthToRead) {</span>
+<span class="fc" id="L83">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
+<span class="fc" id="L84">            throw new ForbiddenUseException(message);</span>
         }
-<span class="fc" id="L71">        return data;</span>
+<span class="fc" id="L86">        return data;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L77" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L78">        InputStreamUtils that = (InputStreamUtils) o;</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">        return maxReadLineSizeBytes == that.maxReadLineSizeBytes;</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L92" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L93">        InputStreamUtils that = (InputStreamUtils) o;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        return maxReadLineSizeBytes == that.maxReadLineSizeBytes;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L84">        return Objects.hash(maxReadLineSizeBytes);</span>
+<span class="fc" id="L99">        return Objects.hash(maxReadLineSizeBytes);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

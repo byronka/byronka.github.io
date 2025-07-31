@@ -15,8 +15,11 @@ import java.util.concurrent.Executors;
 /**
  * These are utility functions for basic automated
  * testing.  It turns out you don't really need fancy tools
- * to do excellent testing.  Just a committment to
+ * to do excellent testing.  Just a commitment to
  * quality.  Don't let anyone tell you differently.
+ * &lt;br&gt;
+ * Hint: A common pattern you will use before testing is to initialize the {@link Context} object
+ * using {@link #buildTestingContext}.
  */
 public final class TestFramework {
 
@@ -37,7 +40,7 @@ public final class TestFramework {
      * &lt;/pre&gt;
      */
     public static &lt;T&gt; T assertThrows(Class&lt;T&gt; myEx, ThrowingRunnable r) {
-<span class="fc" id="L40">        return assertThrows(myEx, null, r);</span>
+<span class="fc" id="L43">        return assertThrows(myEx, null, r);</span>
     }
 
     // quick note about the warning suppression - we already checked that the
@@ -45,18 +48,18 @@ public final class TestFramework {
     @SuppressWarnings(&quot;unchecked&quot;)
     public static &lt;T&gt; T assertThrows(Class&lt;T&gt; myEx, String expectedMsg, ThrowingRunnable r) {
         try {
-<span class="fc" id="L48">            r.run();</span>
-<span class="fc" id="L49">            throw new TestFailureException(&quot;Failed to throw exception&quot;);</span>
-<span class="fc" id="L50">        } catch (Exception ex) {</span>
-<span class="fc bfc" id="L51" title="All 2 branches covered.">            if (!myEx.getTypeName().equals(ex.getClass().getTypeName())) {</span>
-<span class="fc" id="L52">                String msg = String.format(&quot;This did not throw the expected exception type (%s).  Instead, (%s) was thrown&quot;, myEx, ex);</span>
-<span class="fc" id="L53">                throw new TestFailureException(msg);</span>
+<span class="fc" id="L51">            r.run();</span>
+<span class="fc" id="L52">            throw new TestFailureException(&quot;Failed to throw exception&quot;);</span>
+<span class="fc" id="L53">        } catch (Exception ex) {</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (!myEx.getTypeName().equals(ex.getClass().getTypeName())) {</span>
+<span class="fc" id="L55">                String msg = String.format(&quot;This did not throw the expected exception type (%s).  Instead, (%s) was thrown&quot;, myEx, ex);</span>
+<span class="fc" id="L56">                throw new TestFailureException(msg);</span>
             }
-<span class="fc bfc" id="L55" title="All 4 branches covered.">            if (expectedMsg != null &amp;&amp; !ex.getMessage().equals(expectedMsg)) {</span>
-<span class="fc" id="L56">                String msg = String.format(&quot;Did not get expected message (%s). Instead, got: %s&quot;, expectedMsg, ex.getMessage());</span>
-<span class="fc" id="L57">                throw new TestFailureException(msg);</span>
+<span class="fc bfc" id="L58" title="All 4 branches covered.">            if (expectedMsg != null &amp;&amp; !ex.getMessage().equals(expectedMsg)) {</span>
+<span class="fc" id="L59">                String msg = String.format(&quot;Did not get expected message (%s). Instead, got: %s&quot;, expectedMsg, ex.getMessage());</span>
+<span class="fc" id="L60">                throw new TestFailureException(msg);</span>
             }
-<span class="fc" id="L59">            return (T) ex;</span>
+<span class="fc" id="L62">            return (T) ex;</span>
         }
 
     }
@@ -66,29 +69,29 @@ public final class TestFramework {
      * need to compare two byte arrays, see {@link #assertEqualByteArray(byte[], byte[])}
      */
     public static &lt;T&gt; void assertEquals(T left, T right) {
-<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (! left.equals(right)) {</span>
-<span class="fc" id="L70">            throw new TestFailureException(&quot;Not equal! %nleft:  %s %nright: %s&quot;.formatted(showWhiteSpace(left.toString()), showWhiteSpace(right.toString())));</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (! left.equals(right)) {</span>
+<span class="fc" id="L73">            throw new TestFailureException(&quot;Not equal! %nleft:  %s %nright: %s&quot;.formatted(showWhiteSpace(left.toString()), showWhiteSpace(right.toString())));</span>
         }
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L75">    }</span>
 
     /**
      * Compares two byte arrays for equality
      */
     public static void assertEqualByteArray(byte[] left, byte[] right) {
-<span class="fc bfc" id="L78" title="All 4 branches covered.">        if (left == null || right == null) throw new TestFailureException(&quot;at least one of the inputs was null: left: %s right: %s&quot;.formatted(Arrays.toString(left), Arrays.toString(right)));</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (left.length != right.length) throw new TestFailureException(&quot;Not equal! left length: %d right length: %d&quot;.formatted(left.length, right.length));</span>
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        for (int i = 0; i &lt; left.length; i++) {</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (left[i] != right[i]) throw new TestFailureException(&quot;Not equal! at index %d left was: %d right was: %d&quot;.formatted(i, left[i], right[i]));</span>
+<span class="fc bfc" id="L81" title="All 4 branches covered.">        if (left == null || right == null) throw new TestFailureException(&quot;at least one of the inputs was null: left: %s right: %s&quot;.formatted(Arrays.toString(left), Arrays.toString(right)));</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (left.length != right.length) throw new TestFailureException(&quot;Not equal! left length: %d right length: %d&quot;.formatted(left.length, right.length));</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        for (int i = 0; i &lt; left.length; i++) {</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">            if (left[i] != right[i]) throw new TestFailureException(&quot;Not equal! at index %d left was: %d right was: %d&quot;.formatted(i, left[i], right[i]));</span>
         }
-<span class="fc" id="L83">    }</span>
+<span class="fc" id="L86">    }</span>
 
     public static void assertEqualByteArray(byte[] left, byte[] right, String failureMessage) {
         try {
-<span class="fc" id="L87">            assertEqualByteArray(left, right);</span>
-<span class="fc" id="L88">        } catch (TestFailureException ex) {</span>
-<span class="fc" id="L89">            throw new TestFailureException(ex.getMessage() + &quot;. &quot; + failureMessage);</span>
-<span class="fc" id="L90">        }</span>
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L90">            assertEqualByteArray(left, right);</span>
+<span class="fc" id="L91">        } catch (TestFailureException ex) {</span>
+<span class="fc" id="L92">            throw new TestFailureException(ex.getMessage() + &quot;. &quot; + failureMessage);</span>
+<span class="fc" id="L93">        }</span>
+<span class="fc" id="L94">    }</span>
 
     /**
      * asserts two lists are equal, ignoring the order.
@@ -98,32 +101,32 @@ public final class TestFramework {
      * a ClassCastException will be thrown
      */
     public static void assertEqualsDisregardOrder(List&lt;? extends CharSequence&gt; left, List&lt;? extends CharSequence&gt; right) {
-<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
-<span class="fc" id="L102">            throw new TestFailureException(String.format(&quot;different sizes: left was %d, right was %d%n&quot;, left.size(), right.size()));</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
+<span class="fc" id="L105">            throw new TestFailureException(String.format(&quot;different sizes: left was %d, right was %d%n&quot;, left.size(), right.size()));</span>
         }
-<span class="fc" id="L104">        List&lt;? extends CharSequence&gt; orderedLeft = left.stream().sorted().toList();</span>
-<span class="fc" id="L105">        List&lt;? extends CharSequence&gt; orderedRight = right.stream().sorted().toList();</span>
+<span class="fc" id="L107">        List&lt;? extends CharSequence&gt; orderedLeft = left.stream().sorted().toList();</span>
+<span class="fc" id="L108">        List&lt;? extends CharSequence&gt; orderedRight = right.stream().sorted().toList();</span>
 
-<span class="fc bfc" id="L107" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (!orderedLeft.get(i).toString().contentEquals(orderedRight.get(i))) {</span>
-<span class="fc" id="L109">                throw new TestFailureException(</span>
-<span class="fc" id="L110">                        String.format(</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (!orderedLeft.get(i).toString().contentEquals(orderedRight.get(i))) {</span>
+<span class="fc" id="L112">                throw new TestFailureException(</span>
+<span class="fc" id="L113">                        String.format(</span>
                                 &quot;%n%ndifferent values:%n%nleft:  %s%nright: %s%n%nfull left:%n-----------%n%s%n%nfull right:%n-----------%n%s%n&quot;,
-<span class="fc" id="L112">                                orderedLeft.get(i),</span>
-<span class="fc" id="L113">                                orderedRight.get(i),</span>
-<span class="fc" id="L114">                                String.join(&quot;\n&quot;, showWhiteSpace(left.toString())),</span>
-<span class="fc" id="L115">                                String.join(&quot;\n&quot;, showWhiteSpace(right.toString()))));</span>
+<span class="fc" id="L115">                                orderedLeft.get(i),</span>
+<span class="fc" id="L116">                                orderedRight.get(i),</span>
+<span class="fc" id="L117">                                String.join(&quot;\n&quot;, showWhiteSpace(left.toString())),</span>
+<span class="fc" id="L118">                                String.join(&quot;\n&quot;, showWhiteSpace(right.toString()))));</span>
             }
         }
-<span class="fc" id="L118">    }</span>
+<span class="fc" id="L121">    }</span>
 
     public static void assertEqualsDisregardOrder(List&lt;? extends CharSequence&gt; left, List&lt;? extends CharSequence&gt; right, String failureMessage) {
         try {
-<span class="fc" id="L122">            assertEqualsDisregardOrder(left, right);</span>
-<span class="fc" id="L123">        } catch (TestFailureException ex) {</span>
-<span class="fc" id="L124">            throw new TestFailureException(ex.getMessage() + &quot;. &quot; + failureMessage);</span>
-<span class="fc" id="L125">        }</span>
-<span class="fc" id="L126">    }</span>
+<span class="fc" id="L125">            assertEqualsDisregardOrder(left, right);</span>
+<span class="fc" id="L126">        } catch (TestFailureException ex) {</span>
+<span class="fc" id="L127">            throw new TestFailureException(ex.getMessage() + &quot;. &quot; + failureMessage);</span>
+<span class="fc" id="L128">        }</span>
+<span class="fc" id="L129">    }</span>
 
     /**
      * asserts that two lists are equal in value and order.
@@ -133,8 +136,8 @@ public final class TestFramework {
      * Two empty lists are considered equal.
      */
     public static &lt;T&gt; void assertEquals(List&lt;T&gt; left, List&lt;T&gt; right) {
-<span class="fc" id="L136">       assertEquals(left, right, &quot;&quot;);</span>
-<span class="fc" id="L137">    }</span>
+<span class="fc" id="L139">       assertEquals(left, right, &quot;&quot;);</span>
+<span class="fc" id="L140">    }</span>
 
     /**
      * asserts that two lists are equal in value and order.
@@ -146,21 +149,21 @@ public final class TestFramework {
      * @param failureMessage a failureMessage that should be shown if this assertion fails
      */
     public static &lt;T&gt; void assertEquals(List&lt;T&gt; left, List&lt;T&gt; right, String failureMessage) {
-<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
-<span class="fc" id="L150">            throw new TestFailureException(</span>
-<span class="fc" id="L151">                    String.format(&quot;different sizes: left was %d, right was %d. %s&quot;, left.size(), right.size(), failureMessage));</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (left.size() != right.size()) {</span>
+<span class="fc" id="L153">            throw new TestFailureException(</span>
+<span class="fc" id="L154">                    String.format(&quot;different sizes: left was %d, right was %d. %s&quot;, left.size(), right.size(), failureMessage));</span>
         }
-<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (!left.get(i).equals(right.get(i))) {</span>
-<span class="fc" id="L155">                throw new TestFailureException(</span>
-<span class="fc" id="L156">                        String.format(&quot;different values - left: \&quot;%s\&quot; right: \&quot;%s\&quot;. %s&quot;, showWhiteSpace(left.get(i).toString()), showWhiteSpace(right.get(i).toString()), failureMessage));</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        for (int i = 0; i &lt; left.size(); i++) {</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            if (!left.get(i).equals(right.get(i))) {</span>
+<span class="fc" id="L158">                throw new TestFailureException(</span>
+<span class="fc" id="L159">                        String.format(&quot;different values - left: \&quot;%s\&quot; right: \&quot;%s\&quot;. %s&quot;, showWhiteSpace(left.get(i).toString()), showWhiteSpace(right.get(i).toString()), failureMessage));</span>
             }
         }
-<span class="fc" id="L159">    }</span>
+<span class="fc" id="L162">    }</span>
 
     public static void assertTrue(boolean value) {
-<span class="fc" id="L162">      assertTrue(value, &quot;&quot;);</span>
-<span class="fc" id="L163">    }</span>
+<span class="fc" id="L165">      assertTrue(value, &quot;&quot;);</span>
+<span class="fc" id="L166">    }</span>
 
     /**
      * Assert that something is true, and show a message if it fails. This
@@ -188,22 +191,22 @@ public final class TestFramework {
      * &lt;/p&gt;
      */
     public static void assertTrue(boolean value, String failureMessage) {
-<span class="fc bfc" id="L191" title="All 2 branches covered.">        if (!value) {</span>
-<span class="fc" id="L192">            throw new TestFailureException(failureMessage);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (!value) {</span>
+<span class="fc" id="L195">            throw new TestFailureException(failureMessage);</span>
         }
-<span class="fc" id="L194">    }</span>
+<span class="fc" id="L197">    }</span>
 
     public static void assertFalse(boolean value) {
-<span class="fc bfc" id="L197" title="All 2 branches covered.">        if (value) {</span>
-<span class="fc" id="L198">            throw new TestFailureException(&quot;value was unexpectedly true&quot;);</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (value) {</span>
+<span class="fc" id="L201">            throw new TestFailureException(&quot;value was unexpectedly true&quot;);</span>
         }
-<span class="fc" id="L200">    }</span>
+<span class="fc" id="L203">    }</span>
 
     public static void assertFalse(boolean value, String failureMessage) {
-<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (value) {</span>
-<span class="fc" id="L204">            throw new TestFailureException(failureMessage);</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        if (value) {</span>
+<span class="fc" id="L207">            throw new TestFailureException(failureMessage);</span>
         }
-<span class="fc" id="L206">    }</span>
+<span class="fc" id="L209">    }</span>
 
     /**
      * Given a string that may have whitespace chars,
@@ -223,21 +226,17 @@ public final class TestFramework {
      * &lt;/p&gt;
      */
     static String showWhiteSpace(String msg) {
-<span class="fc bfc" id="L226" title="All 2 branches covered.">        if (msg == null) return &quot;(NULL)&quot;;</span>
-<span class="fc bfc" id="L227" title="All 2 branches covered.">        if (msg.isEmpty()) return &quot;(EMPTY)&quot;;</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">        if (msg == null) return &quot;(NULL)&quot;;</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (msg.isEmpty()) return &quot;(EMPTY)&quot;;</span>
 
         // if we have tabs, returns, newlines in the text, show them
-<span class="fc" id="L230">        String text = msg</span>
-<span class="fc" id="L231">                .replace(&quot;\t&quot;, &quot;\\t&quot;)</span>
-<span class="fc" id="L232">                .replace(&quot;\r&quot;, &quot;\\r&quot;)</span>
-<span class="fc" id="L233">                .replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
+<span class="fc" id="L233">        String text = msg</span>
+<span class="fc" id="L234">                .replace(&quot;\t&quot;, &quot;\\t&quot;)</span>
+<span class="fc" id="L235">                .replace(&quot;\r&quot;, &quot;\\r&quot;)</span>
+<span class="fc" id="L236">                .replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
 
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        if (text.isBlank()) return &quot;(BLANK)&quot;;</span>
-<span class="fc" id="L236">        return text;</span>
-    }
-
-    public static Context buildTestingContext(String loggerName) {
-<span class="fc" id="L240">        return buildTestingContext(loggerName, null);</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">        if (text.isBlank()) return &quot;(BLANK)&quot;;</span>
+<span class="fc" id="L239">        return text;</span>
     }
 
     /**
@@ -246,27 +245,45 @@ public final class TestFramework {
      * @param loggerName this will assign a human-readable name to the logger's
      *                   LoggingActionQueue so we can distinguish it
      *                   when reviewing the threads
+     * @see #buildTestingContext(String, Properties)
+     * @see #shutdownTestingContext(Context)
+     */
+    public static Context buildTestingContext(String loggerName) {
+<span class="fc" id="L252">        return buildTestingContext(loggerName, null);</span>
+    }
+
+    /**
+     * This builds a context very similarly to {@link FullSystem#buildContext()},
+     * except that it uses {@link TestLogger} instead of {@link com.renomad.minum.logging.Logger}.
+     * @param loggerName this will assign a human-readable name to the logger's
+     *                   LoggingActionQueue so we can distinguish it
+     *                   when reviewing the threads
      * @param properties If you want, you can inject a properties object here, to have
      *                   greater control over your test.  Using a parameter of null here
      *                   will cause the system to obtain properties from the minum.config file
+     * @see #shutdownTestingContext(Context)
      */
     public static Context buildTestingContext(String loggerName, Properties properties) {
-<span class="fc" id="L254">        var constants = new Constants(properties);</span>
-<span class="fc" id="L255">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
-<span class="fc" id="L256">        var logger = new TestLogger(constants, executorService, loggerName);</span>
+<span class="fc" id="L267">        var constants = new Constants(properties);</span>
+<span class="fc" id="L268">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
+<span class="fc" id="L269">        var logger = new TestLogger(constants, executorService, loggerName);</span>
 
-<span class="fc" id="L258">        var context = new Context(executorService, constants);</span>
+<span class="fc" id="L271">        var context = new Context(executorService, constants);</span>
 
-<span class="fc" id="L260">        context.setLogger(logger);</span>
+<span class="fc" id="L273">        context.setLogger(logger);</span>
 
-<span class="fc" id="L262">        return context;</span>
+<span class="fc" id="L275">        return context;</span>
     }
 
+    /**
+     * A helper to close down resources that are opened up by running
+     * the {@link #buildTestingContext} methods.
+     */
     public static void shutdownTestingContext(Context context) {
-<span class="fc" id="L266">            new ActionQueueKiller(context).killAllQueues();</span>
-<span class="fc" id="L267">            context.getLogger().stop();</span>
-<span class="fc" id="L268">            context.getExecutorService().shutdownNow();</span>
-<span class="fc" id="L269">    }</span>
+<span class="fc" id="L283">            new ActionQueueKiller(context).killAllQueues();</span>
+<span class="fc" id="L284">            context.getLogger().stop();</span>
+<span class="fc" id="L285">            context.getExecutorService().shutdownNow();</span>
+<span class="fc" id="L286">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

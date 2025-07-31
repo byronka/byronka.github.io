@@ -279,47 +279,51 @@ final class BodyProcessor implements IBodyProcessor {
                     String s;
                     try {
 <span class="fc" id="L281">                        s = inputStreamUtils.readLine(inputStream);</span>
-<span class="fc" id="L282">                        countBytesRead.incrementBy(s.length() + 2);</span>
-<span class="fc" id="L283">                        hasReadFirstPartition = true;</span>
-<span class="fc bfc" id="L284" title="All 2 branches covered.">                        if (!s.contains(boundaryValue)) {</span>
-<span class="fc" id="L285">                            throw new IOException(&quot;Error: First line must contain the expected boundary value. Expected to find: &quot;+ boundaryValue + &quot; in: &quot; + s);</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">                        if (s == null) {</span>
+<span class="fc" id="L283">                            throw new IOException(&quot;Unexpectedly encountered end of stream while reading in BodyProcessor.next()&quot;);</span>
                         }
-<span class="fc" id="L287">                    } catch (IOException e) {</span>
-<span class="fc" id="L288">                        throw new WebServerException(e);</span>
-<span class="fc" id="L289">                    }</span>
+<span class="fc" id="L285">                        countBytesRead.incrementBy(s.length() + 2);</span>
+<span class="fc" id="L286">                        hasReadFirstPartition = true;</span>
+
+<span class="fc bfc" id="L288" title="All 2 branches covered.">                        if (!s.contains(boundaryValue)) {</span>
+<span class="fc" id="L289">                            throw new IOException(&quot;Error: First line must contain the expected boundary value. Expected to find: &quot;+ boundaryValue + &quot; in: &quot; + s);</span>
+                        }
+<span class="fc" id="L291">                    } catch (IOException e) {</span>
+<span class="fc" id="L292">                        throw new WebServerException(e);</span>
+<span class="fc" id="L293">                    }</span>
                 }
-<span class="fc" id="L291">                List&lt;String&gt; allHeaders = Headers.getAllHeaders(inputStream, inputStreamUtils);</span>
-<span class="fc" id="L292">                int lengthOfHeaders = allHeaders.stream().map(String::length).reduce(0, Integer::sum);</span>
+<span class="fc" id="L295">                List&lt;String&gt; allHeaders = Headers.getAllHeaders(inputStream, inputStreamUtils);</span>
+<span class="fc" id="L296">                int lengthOfHeaders = allHeaders.stream().map(String::length).reduce(0, Integer::sum);</span>
                 // each line has a CR + LF (that's two bytes) and the headers end with a second pair of CR+LF.
-<span class="fc" id="L294">                int extraCrLfs = (2 * allHeaders.size()) + 2;</span>
-<span class="fc" id="L295">                countBytesRead.incrementBy(lengthOfHeaders + extraCrLfs);</span>
+<span class="fc" id="L298">                int extraCrLfs = (2 * allHeaders.size()) + 2;</span>
+<span class="fc" id="L299">                countBytesRead.incrementBy(lengthOfHeaders + extraCrLfs);</span>
 
-<span class="fc" id="L297">                Headers headers = new Headers(allHeaders);</span>
+<span class="fc" id="L301">                Headers headers = new Headers(allHeaders);</span>
 
-<span class="fc" id="L299">                List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
-<span class="fc bfc" id="L300" title="All 2 branches covered.">                if (cds == null) {</span>
-<span class="fc" id="L301">                    throw new WebServerException(&quot;Error: no Content-Disposition header on partition in Multipart/form data&quot;);</span>
+<span class="fc" id="L303">                List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">                if (cds == null) {</span>
+<span class="fc" id="L305">                    throw new WebServerException(&quot;Error: no Content-Disposition header on partition in Multipart/form data&quot;);</span>
                 }
-<span class="fc" id="L303">                String contentDisposition = String.join(&quot;;&quot;, cds);</span>
+<span class="fc" id="L307">                String contentDisposition = String.join(&quot;;&quot;, cds);</span>
 
-<span class="fc" id="L305">                Matcher nameMatcher = multiformNameRegex.matcher(contentDisposition);</span>
-<span class="fc" id="L306">                Matcher filenameMatcher = multiformFilenameRegex.matcher(contentDisposition);</span>
+<span class="fc" id="L309">                Matcher nameMatcher = multiformNameRegex.matcher(contentDisposition);</span>
+<span class="fc" id="L310">                Matcher filenameMatcher = multiformFilenameRegex.matcher(contentDisposition);</span>
 
-<span class="fc" id="L308">                String name = &quot;&quot;;</span>
-<span class="fc bfc" id="L309" title="All 2 branches covered.">                if (nameMatcher.find()) {</span>
-<span class="fc" id="L310">                    name = nameMatcher.group(&quot;namevalue&quot;);</span>
+<span class="fc" id="L312">                String name = &quot;&quot;;</span>
+<span class="fc bfc" id="L313" title="All 2 branches covered.">                if (nameMatcher.find()) {</span>
+<span class="fc" id="L314">                    name = nameMatcher.group(&quot;namevalue&quot;);</span>
                 } else {
-<span class="fc" id="L312">                    throw new WebServerException(&quot;Error: No name value set on multipart partition&quot;);</span>
+<span class="fc" id="L316">                    throw new WebServerException(&quot;Error: No name value set on multipart partition&quot;);</span>
                 }
-<span class="fc" id="L314">                String filename = &quot;&quot;;</span>
-<span class="fc bfc" id="L315" title="All 2 branches covered.">                if (filenameMatcher.find()) {</span>
-<span class="fc" id="L316">                    filename = filenameMatcher.group(&quot;namevalue&quot;);</span>
+<span class="fc" id="L318">                String filename = &quot;&quot;;</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">                if (filenameMatcher.find()) {</span>
+<span class="fc" id="L320">                    filename = filenameMatcher.group(&quot;namevalue&quot;);</span>
                 }
 
                 // at this point our inputstream pointer is at the beginning of the
                 // body data.  From here until the end it's pure data.
 
-<span class="fc" id="L322">                return new StreamingMultipartPartition(headers, inputStream, new ContentDisposition(name, filename), boundaryValue, countBytesRead, contentLength);</span>
+<span class="fc" id="L326">                return new StreamingMultipartPartition(headers, inputStream, new ContentDisposition(name, filename), boundaryValue, countBytesRead, contentLength);</span>
             }
 
 

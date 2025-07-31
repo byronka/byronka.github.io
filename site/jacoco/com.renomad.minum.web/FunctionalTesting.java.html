@@ -15,6 +15,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.renomad.minum.utils.Invariants.mustBeTrue;
 
 /**
  * Tools to enable system-wide integration testing
@@ -32,22 +36,22 @@ public final class FunctionalTesting {
      * Allows the user to set the host and port to target
      * for testing.
      */
-<span class="fc" id="L35">    public FunctionalTesting(Context context, String host, int port) {</span>
-<span class="fc" id="L36">        this.constants = context.getConstants();</span>
-<span class="fc" id="L37">        this.host = host;</span>
-<span class="fc" id="L38">        this.port = port;</span>
+<span class="fc" id="L39">    public FunctionalTesting(Context context, String host, int port) {</span>
+<span class="fc" id="L40">        this.constants = context.getConstants();</span>
+<span class="fc" id="L41">        this.host = host;</span>
+<span class="fc" id="L42">        this.port = port;</span>
 
-<span class="fc" id="L40">        this.inputStreamUtils = new InputStreamUtils(constants.maxReadLineSizeBytes);</span>
-<span class="fc" id="L41">        this.logger = context.getLogger();</span>
-<span class="fc" id="L42">        bodyProcessor = new BodyProcessor(context);</span>
-<span class="fc" id="L43">    }</span>
+<span class="fc" id="L44">        this.inputStreamUtils = new InputStreamUtils(constants.maxReadLineSizeBytes);</span>
+<span class="fc" id="L45">        this.logger = context.getLogger();</span>
+<span class="fc" id="L46">        bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L47">    }</span>
 
     /**
      * A {@link Response} designed to work with {@link FunctionalTesting}
      */
-<span class="fc" id="L48">    public record TestResponse(StatusLine statusLine, Headers headers, Body body) {</span>
+<span class="fc" id="L52">    public record TestResponse(StatusLine statusLine, Headers headers, Body body) {</span>
 
-<span class="fc" id="L50">        public static final TestResponse EMPTY = new TestResponse(StatusLine.EMPTY, Headers.EMPTY, Body.EMPTY);</span>
+<span class="fc" id="L54">        public static final TestResponse EMPTY = new TestResponse(StatusLine.EMPTY, Headers.EMPTY, Body.EMPTY);</span>
 
         /**
          * Presuming the response body is HTML, search for a single
@@ -57,16 +61,16 @@ public final class FunctionalTesting {
          * and an exception thrown if more than one found.
          */
         public HtmlParseNode searchOne(TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc" id="L60">            var htmlParser = new HtmlParser();</span>
-<span class="fc" id="L61">            var nodes = htmlParser.parse(body.asString());</span>
-<span class="fc" id="L62">            var searchResults = htmlParser.search(nodes, tagName, attributes);</span>
-<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (searchResults.size() &gt; 1) {</span>
-<span class="fc" id="L64">                throw new InvariantException(&quot;More than 1 node found.  Here they are:&quot; + searchResults);</span>
+<span class="fc" id="L64">            var htmlParser = new HtmlParser();</span>
+<span class="fc" id="L65">            var nodes = htmlParser.parse(body.asString());</span>
+<span class="fc" id="L66">            var searchResults = htmlParser.search(nodes, tagName, attributes);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (searchResults.size() &gt; 1) {</span>
+<span class="fc" id="L68">                throw new InvariantException(&quot;More than 1 node found.  Here they are:&quot; + searchResults);</span>
             }
-<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (searchResults.isEmpty()) {</span>
-<span class="fc" id="L67">                return HtmlParseNode.EMPTY;</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if (searchResults.isEmpty()) {</span>
+<span class="fc" id="L71">                return HtmlParseNode.EMPTY;</span>
             } else {
-<span class="fc" id="L69">                return searchResults.getFirst();</span>
+<span class="fc" id="L73">                return searchResults.getFirst();</span>
             }
         }
 
@@ -77,9 +81,9 @@ public final class FunctionalTesting {
          * @return a list of however many elements matched
          */
         public List&lt;HtmlParseNode&gt; search(TagName tagName, Map&lt;String, String&gt; attributes) {
-<span class="fc" id="L80">            var htmlParser = new HtmlParser();</span>
-<span class="fc" id="L81">            var nodes = htmlParser.parse(body.asString());</span>
-<span class="fc" id="L82">            return htmlParser.search(nodes, tagName, attributes);</span>
+<span class="fc" id="L84">            var htmlParser = new HtmlParser();</span>
+<span class="fc" id="L85">            var nodes = htmlParser.parse(body.asString());</span>
+<span class="fc" id="L86">            return htmlParser.search(nodes, tagName, attributes);</span>
         }
     }
 
@@ -90,8 +94,8 @@ public final class FunctionalTesting {
      *             for pathname
      */
     public TestResponse get(String path) {
-<span class="fc" id="L93">        ArrayList&lt;String&gt; headers = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L94">        return send(RequestLine.Method.GET, path, new byte[0], headers);</span>
+<span class="fc" id="L97">        ArrayList&lt;String&gt; headers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L98">        return send(RequestLine.Method.GET, path, new byte[0], headers);</span>
     }
 
     /**
@@ -103,7 +107,7 @@ public final class FunctionalTesting {
      *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
      */
     public TestResponse get(String path, List&lt;String&gt; extraHeaders) {
-<span class="fc" id="L106">        return send(RequestLine.Method.GET, path, new byte[0], extraHeaders);</span>
+<span class="fc" id="L110">        return send(RequestLine.Method.GET, path, new byte[0], extraHeaders);</span>
     }
 
     /**
@@ -114,8 +118,8 @@ public final class FunctionalTesting {
      * @param payload a body payload in string form
      */
     public TestResponse post(String path, String payload) {
-<span class="fc" id="L117">        ArrayList&lt;String&gt; headers = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L118">        return post(path, payload, headers);</span>
+<span class="fc" id="L121">        ArrayList&lt;String&gt; headers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L122">        return post(path, payload, headers);</span>
     }
 
     /**
@@ -128,10 +132,10 @@ public final class FunctionalTesting {
      *                     example, &lt;pre&gt;{@code List.of(&quot;cookie: id=foo&quot;)}&lt;/pre&gt;
      */
     public TestResponse post(String path, String payload, List&lt;String&gt; extraHeaders) {
-<span class="fc" id="L131">        var headers = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L132">        headers.add(&quot;Content-Type: application/x-www-form-urlencoded&quot;);</span>
-<span class="fc" id="L133">        headers.addAll(extraHeaders);</span>
-<span class="fc" id="L134">        return send(RequestLine.Method.POST, path, payload.getBytes(StandardCharsets.UTF_8), headers);</span>
+<span class="fc" id="L135">        var headers = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L136">        headers.add(&quot;Content-Type: application/x-www-form-urlencoded&quot;);</span>
+<span class="fc" id="L137">        headers.addAll(extraHeaders);</span>
+<span class="fc" id="L138">        return send(RequestLine.Method.POST, path, payload.getBytes(StandardCharsets.UTF_8), headers);</span>
     }
 
     /**
@@ -146,7 +150,7 @@ public final class FunctionalTesting {
      *             for pathname
      */
     public TestResponse send(RequestLine.Method method, String path) {
-<span class="fc" id="L149">        return send(method, path, new byte[0], List.of());</span>
+<span class="fc" id="L153">        return send(method, path, new byte[0], List.of());</span>
     }
 
     /**
@@ -160,13 +164,13 @@ public final class FunctionalTesting {
      * @return a properly-built client, or null if exceptions occur
      */
     public TestResponse send(RequestLine.Method method, String path, byte[] payload, List&lt;String&gt; extraHeaders) {
-<span class="fc" id="L163">        try (Socket socket = new Socket(host, port)) {</span>
-<span class="fc" id="L164">            try (ISocketWrapper client = startClient(socket)) {</span>
-<span class="fc" id="L165">                return innerClientSend(client, method, path, payload, extraHeaders);</span>
+<span class="fc" id="L167">        try (Socket socket = new Socket(host, port)) {</span>
+<span class="fc" id="L168">            try (ISocketWrapper client = startClient(socket)) {</span>
+<span class="fc" id="L169">                return innerClientSend(client, method, path, payload, extraHeaders);</span>
             }
-<span class="fc" id="L167">        } catch (Exception e) {</span>
-<span class="fc" id="L168">            logger.logDebug(() -&gt; &quot;Error during client send: &quot; + StacktraceUtils.stackTraceToString(e));</span>
-<span class="fc" id="L169">            return TestResponse.EMPTY;</span>
+<span class="fc" id="L171">        } catch (Exception e) {</span>
+<span class="fc" id="L172">            logger.logDebug(() -&gt; &quot;Error during client send: &quot; + StacktraceUtils.stackTraceToString(e));</span>
+<span class="fc" id="L173">            return TestResponse.EMPTY;</span>
         }
     }
 
@@ -174,8 +178,8 @@ public final class FunctionalTesting {
      * Create a client {@link ISocketWrapper} connected to the running host server
      */
     ISocketWrapper startClient(Socket socket) throws IOException {
-<span class="fc" id="L177">        logger.logDebug(() -&gt; String.format(&quot;Just created new client socket: %s&quot;, socket));</span>
-<span class="fc" id="L178">        return new SocketWrapper(socket, null, logger, constants.socketTimeoutMillis, constants.hostName);</span>
+<span class="fc" id="L181">        logger.logDebug(() -&gt; String.format(&quot;Just created new client socket: %s&quot;, socket));</span>
+<span class="fc" id="L182">        return new SocketWrapper(socket, null, logger, constants.socketTimeoutMillis, constants.hostName);</span>
     }
 
     public TestResponse innerClientSend(
@@ -184,31 +188,59 @@ public final class FunctionalTesting {
             String path,
             byte[] payload,
             List&lt;String&gt; extraHeaders) throws IOException {
-<span class="fc" id="L187">        Body body = Body.EMPTY;</span>
+<span class="fc" id="L191">        Body body = Body.EMPTY;</span>
 
-<span class="fc" id="L189">        InputStream is = client.getInputStream();</span>
+<span class="fc" id="L193">        InputStream is = client.getInputStream();</span>
 
-<span class="fc" id="L191">        client.sendHttpLine(method + &quot; /&quot; + path + &quot; HTTP/1.1&quot;);</span>
-<span class="fc" id="L192">        client.sendHttpLine(String.format(&quot;Host: %s:%d&quot;, host, port));</span>
-<span class="fc" id="L193">        client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
-<span class="fc bfc" id="L194" title="All 2 branches covered.">        for (String header : extraHeaders) {</span>
-<span class="fc" id="L195">            client.sendHttpLine(header);</span>
-<span class="fc" id="L196">        }</span>
-<span class="fc" id="L197">        client.sendHttpLine(&quot;&quot;);</span>
-<span class="fc" id="L198">        client.send(payload);</span>
+<span class="fc" id="L195">        client.sendHttpLine(method + &quot; /&quot; + path + &quot; HTTP/1.1&quot;);</span>
+<span class="fc" id="L196">        client.sendHttpLine(String.format(&quot;Host: %s:%d&quot;, host, port));</span>
+<span class="fc" id="L197">        client.sendHttpLine(&quot;Content-Length: &quot; + payload.length);</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        for (String header : extraHeaders) {</span>
+<span class="fc" id="L199">            client.sendHttpLine(header);</span>
+<span class="fc" id="L200">        }</span>
+<span class="fc" id="L201">        client.sendHttpLine(&quot;&quot;);</span>
+<span class="fc" id="L202">        client.send(payload);</span>
 
-<span class="fc" id="L200">        StatusLine statusLine = StatusLine.extractStatusLine(inputStreamUtils.readLine(is));</span>
-<span class="fc" id="L201">        List&lt;String&gt; allHeaders = Headers.getAllHeaders(is, inputStreamUtils);</span>
-<span class="fc" id="L202">        Headers headers = new Headers(allHeaders);</span>
+<span class="fc" id="L204">        StatusLine statusLine = extractStatusLine(inputStreamUtils.readLine(is));</span>
+<span class="fc" id="L205">        List&lt;String&gt; allHeaders = Headers.getAllHeaders(is, inputStreamUtils);</span>
+<span class="fc" id="L206">        Headers headers = new Headers(allHeaders);</span>
 
 
-<span class="fc bfc" id="L205" title="All 4 branches covered.">        if (WebFramework.isThereIsABody(headers) &amp;&amp; method != RequestLine.Method.HEAD) {</span>
-<span class="fc" id="L206">            logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + headers.contentType());</span>
-<span class="fc" id="L207">            body = bodyProcessor.extractData(is, headers);</span>
+<span class="fc bfc" id="L209" title="All 4 branches covered.">        if (WebFramework.isThereIsABody(headers) &amp;&amp; method != RequestLine.Method.HEAD) {</span>
+<span class="fc" id="L210">            logger.logTrace(() -&gt; &quot;There is a body. Content-type is &quot; + headers.contentType());</span>
+<span class="fc" id="L211">            body = bodyProcessor.extractData(is, headers);</span>
         }
-<span class="fc" id="L209">        return new TestResponse(statusLine, headers, body);</span>
+<span class="fc" id="L213">        return new TestResponse(statusLine, headers, body);</span>
     }
 
+    /**
+     * This is the regex used to analyze a status line sent by the server and
+     * read by the client.  Servers will send messages like: &quot;HTTP/1.1 200 OK&quot; or &quot;HTTP/1.1 500 Internal Server Error&quot;
+     */
+    static final String statusLinePattern = &quot;^HTTP/(...) (\\d{3}) (.*)$&quot;;
+<span class="fc" id="L221">    static final Pattern statusLineRegex = Pattern.compile(statusLinePattern);</span>
+
+    /**
+     * Parses a string value of a status line from an HTTP
+     * server.  If the input value is null or empty, we'll
+     * return a {@link StatusLine} with null-object values
+     */
+    public static StatusLine extractStatusLine(String value) {
+<span class="fc bfc" id="L229" title="All 4 branches covered.">        if (value == null || value.isBlank()) {</span>
+<span class="fc" id="L230">            return StatusLine.EMPTY;</span>
+        }
+<span class="fc" id="L232">        Matcher mr = statusLineRegex.matcher(value);</span>
+<span class="fc" id="L233">        mustBeTrue(mr.matches(), String.format(&quot;%s must match the statusLinePattern: %s&quot;, value, statusLinePattern));</span>
+<span class="fc" id="L234">        String version = mr.group(1);</span>
+<span class="fc bfc" id="L235" title="All 3 branches covered.">        HttpVersion httpVersion = switch (version) {</span>
+<span class="fc" id="L236">            case &quot;1.1&quot; -&gt; HttpVersion.ONE_DOT_ONE;</span>
+<span class="fc" id="L237">            case &quot;1.0&quot; -&gt; HttpVersion.ONE_DOT_ZERO;</span>
+<span class="fc" id="L238">            default -&gt; throw new WebServerException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
+        };
+<span class="fc" id="L240">        StatusLine.StatusCode status = StatusLine.StatusCode.findByCode(Integer.parseInt(mr.group(2)));</span>
+
+<span class="fc" id="L242">        return new StatusLine(status, httpVersion, value);</span>
+    }
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
