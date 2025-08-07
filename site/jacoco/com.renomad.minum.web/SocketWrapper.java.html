@@ -2,9 +2,7 @@
 
 import com.renomad.minum.logging.ILogger;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.charset.Charset;
@@ -16,10 +14,10 @@ final class SocketWrapper implements ISocketWrapper {
 
     private final Socket socket;
     private final String hostName;
-    private final InputStream inputStream;
-    private final OutputStream writer;
+    private final BufferedOutputStream writer;
     private final ILogger logger;
     private final IServer server;
+    private final BufferedInputStream bufferedInputStream;
 
     /**
      * Constructor
@@ -27,73 +25,73 @@ final class SocketWrapper implements ISocketWrapper {
      * @param logger not much more to say on this param
      * @param timeoutMillis we'll configure the socket to timeout after this many milliseconds.
      */
-<span class="fc" id="L30">    SocketWrapper(Socket socket, IServer server, ILogger logger, int timeoutMillis, String hostName) throws IOException {</span>
-<span class="fc" id="L31">        this.socket = socket;</span>
-<span class="fc" id="L32">        this.hostName = hostName;</span>
-<span class="fc" id="L33">        logger.logTrace(() -&gt; String.format(&quot;Setting timeout of %d milliseconds on socket %s&quot;, timeoutMillis, socket));</span>
-<span class="fc" id="L34">        this.socket.setSoTimeout(timeoutMillis);</span>
-<span class="fc" id="L35">        this.inputStream = socket.getInputStream();</span>
-<span class="fc" id="L36">        writer = socket.getOutputStream();</span>
-<span class="fc" id="L37">        this.logger = logger;</span>
-<span class="fc" id="L38">        this.server = server;</span>
-<span class="fc" id="L39">    }</span>
+<span class="fc" id="L28">    SocketWrapper(Socket socket, IServer server, ILogger logger, int timeoutMillis, String hostName) throws IOException {</span>
+<span class="fc" id="L29">        this.socket = socket;</span>
+<span class="fc" id="L30">        this.hostName = hostName;</span>
+<span class="fc" id="L31">        logger.logTrace(() -&gt; String.format(&quot;Setting timeout of %d milliseconds on socket %s&quot;, timeoutMillis, socket));</span>
+<span class="fc" id="L32">        this.socket.setSoTimeout(timeoutMillis);</span>
+<span class="fc" id="L33">        this.bufferedInputStream = new BufferedInputStream(socket.getInputStream());</span>
+<span class="fc" id="L34">        writer = new BufferedOutputStream(socket.getOutputStream());</span>
+<span class="fc" id="L35">        this.logger = logger;</span>
+<span class="fc" id="L36">        this.server = server;</span>
+<span class="fc" id="L37">    }</span>
 
     @Override
     public void send(String msg) throws IOException {
-<span class="fc" id="L43">        writer.write(msg.getBytes(Charset.defaultCharset()));</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L41">        writer.write(msg.getBytes(Charset.defaultCharset()));</span>
+<span class="fc" id="L42">    }</span>
 
     @Override
     public void send(byte[] bodyContents) throws IOException {
-<span class="fc" id="L48">        writer.write(bodyContents);</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L46">        writer.write(bodyContents);</span>
+<span class="fc" id="L47">    }</span>
 
     @Override
     public void send(byte[] bodyContents, int off, int len) throws IOException {
-<span class="fc" id="L53">        writer.write(bodyContents, off, len);</span>
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L51">        writer.write(bodyContents, off, len);</span>
+<span class="fc" id="L52">    }</span>
 
     @Override
     public void send(int b) throws IOException {
-<span class="fc" id="L58">        writer.write(b);</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L56">        writer.write(b);</span>
+<span class="fc" id="L57">    }</span>
 
     @Override
     public void sendHttpLine(String msg) throws IOException {
-<span class="fc" id="L63">        logger.logTrace(() -&gt; String.format(&quot;%s sending: \&quot;%s\&quot;&quot;, this, msg));</span>
-<span class="fc" id="L64">        send(msg + WebEngine.HTTP_CRLF);</span>
-<span class="fc" id="L65">    }</span>
+<span class="fc" id="L61">        logger.logTrace(() -&gt; String.format(&quot;%s sending: \&quot;%s\&quot;&quot;, this, msg));</span>
+<span class="fc" id="L62">        send(msg + WebEngine.HTTP_CRLF);</span>
+<span class="fc" id="L63">    }</span>
 
     @Override
     public int getLocalPort() {
-<span class="fc" id="L69">        return socket.getLocalPort();</span>
+<span class="fc" id="L67">        return socket.getLocalPort();</span>
     }
 
     @Override
     public SocketAddress getRemoteAddrWithPort() {
-<span class="fc" id="L74">        return socket.getRemoteSocketAddress();</span>
+<span class="fc" id="L72">        return socket.getRemoteSocketAddress();</span>
     }
 
     @Override
     public String getRemoteAddr() {
-<span class="fc" id="L79">        return socket.getInetAddress().getHostAddress();</span>
+<span class="fc" id="L77">        return socket.getInetAddress().getHostAddress();</span>
     }
 
     @Override
     public HttpServerType getServerType() {
-<span class="fc" id="L84">        return server.getServerType();</span>
+<span class="fc" id="L82">        return server.getServerType();</span>
     }
 
     @Override
     public void close() throws IOException {
-<span class="fc" id="L89">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
-<span class="fc" id="L90">        socket.close();</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (server != null) server.removeMyRecord(this);</span>
-<span class="fc" id="L92">    }</span>
+<span class="fc" id="L87">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L88">        socket.close();</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (server != null) server.removeMyRecord(this);</span>
+<span class="fc" id="L90">    }</span>
 
     @Override
     public InputStream getInputStream() {
-<span class="fc" id="L96">        return this.inputStream;</span>
+<span class="fc" id="L94">        return bufferedInputStream;</span>
     }
 
     /**
@@ -103,12 +101,17 @@ final class SocketWrapper implements ISocketWrapper {
      */
     @Override
     public String toString() {
-<span class="fc" id="L106">        return &quot;(SocketWrapper for remote address: &quot; + this.getRemoteAddrWithPort().toString() + &quot;)&quot;;</span>
+<span class="fc" id="L104">        return &quot;(SocketWrapper for remote address: &quot; + this.getRemoteAddrWithPort().toString() + &quot;)&quot;;</span>
     }
 
     @Override
     public String getHostName() {
-<span class="fc" id="L111">        return hostName;</span>
+<span class="fc" id="L109">        return hostName;</span>
     }
+
+    @Override
+    public void flush() throws IOException {
+<span class="fc" id="L114">        this.writer.flush();</span>
+<span class="fc" id="L115">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

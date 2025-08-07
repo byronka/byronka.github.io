@@ -50,20 +50,24 @@ public class StreamingMultipartPartition extends InputStream {
     private final List&lt;Byte&gt; boundaryValueList;
     private boolean hasFilledBuffer;
 
+    /**
+     * @param contentLength the length specified by the Content-Length header, it is
+     *                      the overall length of the body
+     */
     StreamingMultipartPartition(Headers headers,
                                        InputStream inputStream,
                                        ContentDisposition contentDisposition,
                                        String boundaryValue,
                                        CountBytesRead countBytesRead,
-<span class="fc" id="L58">                                       int contentLength) {</span>
+<span class="fc" id="L62">                                       int contentLength) {</span>
 
-<span class="fc" id="L60">        this.headers = headers;</span>
-<span class="fc" id="L61">        this.inputStream = inputStream;</span>
-<span class="fc" id="L62">        this.contentDisposition = contentDisposition;</span>
-<span class="fc" id="L63">        this.contentLength = contentLength;</span>
-<span class="fc" id="L64">        String boundaryValue1 = &quot;\r\n--&quot; + boundaryValue;</span>
-<span class="fc" id="L65">        byte[] bytes = boundaryValue1.getBytes(StandardCharsets.US_ASCII);</span>
-<span class="fc" id="L66">        boundaryValueList = IntStream.range(0, bytes.length).mapToObj(i -&gt; bytes[i]).toList();</span>
+<span class="fc" id="L64">        this.headers = headers;</span>
+<span class="fc" id="L65">        this.inputStream = inputStream;</span>
+<span class="fc" id="L66">        this.contentDisposition = contentDisposition;</span>
+<span class="fc" id="L67">        this.contentLength = contentLength;</span>
+<span class="fc" id="L68">        String boundaryValue1 = &quot;\r\n--&quot; + boundaryValue;</span>
+<span class="fc" id="L69">        byte[] bytes = boundaryValue1.getBytes(StandardCharsets.US_ASCII);</span>
+<span class="fc" id="L70">        boundaryValueList = IntStream.range(0, bytes.length).mapToObj(i -&gt; bytes[i]).toList();</span>
 
         /*
          * To explain the numbers here: we add one at the beginning to represent
@@ -72,16 +76,16 @@ public class StreamingMultipartPartition extends InputStream {
          * at the end represents the extra characters of the boundary - dashes,
          * carriage return, newline.
          */
-<span class="fc" id="L75">        recentBytesBuffer = new RingBuffer&lt;&gt;(boundaryValue1.length(), Byte.class);</span>
-<span class="fc" id="L76">        this.countBytesRead = countBytesRead;</span>
-<span class="fc" id="L77">    }</span>
+<span class="fc" id="L79">        recentBytesBuffer = new RingBuffer&lt;&gt;(boundaryValue1.length(), Byte.class);</span>
+<span class="fc" id="L80">        this.countBytesRead = countBytesRead;</span>
+<span class="fc" id="L81">    }</span>
 
     public Headers getHeaders() {
-<span class="fc" id="L80">        return headers;</span>
+<span class="fc" id="L84">        return headers;</span>
     }
 
     public ContentDisposition getContentDisposition() {
-<span class="fc" id="L84">        return contentDisposition;</span>
+<span class="fc" id="L88">        return contentDisposition;</span>
     }
 
 
@@ -93,71 +97,71 @@ public class StreamingMultipartPartition extends InputStream {
      */
     @Override
     public int read() throws IOException {
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (isFinished) {</span>
-<span class="fc" id="L97">            return -1;</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (isFinished) {</span>
+<span class="fc" id="L101">            return -1;</span>
         }
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (!hasFilledBuffer) {</span>
-<span class="fc" id="L100">            fillBuffer();</span>
-<span class="fc" id="L101">            boolean atTheEnd = recentBytesBuffer.containsAt(boundaryValueList, 0);</span>
-<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (atTheEnd) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (!hasFilledBuffer) {</span>
+<span class="fc" id="L104">            fillBuffer();</span>
+<span class="fc" id="L105">            boolean atTheEnd = recentBytesBuffer.containsAt(boundaryValueList, 0);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (atTheEnd) {</span>
                 // don't really do anything with this, it's just to collect the
                 // last characters to have a clean finish.
-<span class="fc" id="L105">                byte[] unused = inputStream.readNBytes(2);</span>
-<span class="fc" id="L106">                isFinished = true;</span>
-<span class="fc" id="L107">                return -1;</span>
+<span class="fc" id="L109">                byte[] unused = inputStream.readNBytes(2);</span>
+<span class="fc" id="L110">                isFinished = true;</span>
+<span class="fc" id="L111">                return -1;</span>
             }
-<span class="fc" id="L109">        } else {</span>
-<span class="fc" id="L110">            int result = inputStream.read();</span>
-<span class="fc" id="L111">            countBytesRead.increment();</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (countBytesRead.getCount() &gt;= contentLength) {</span>
-<span class="fc" id="L113">                isFinished = true;</span>
-<span class="fc" id="L114">                return -1;</span>
+<span class="fc" id="L113">        } else {</span>
+<span class="fc" id="L114">            int result = inputStream.read();</span>
+<span class="fc" id="L115">            countBytesRead.increment();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (countBytesRead.getCount() &gt;= contentLength) {</span>
+<span class="fc" id="L117">                isFinished = true;</span>
+<span class="fc" id="L118">                return -1;</span>
             }
-<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (result == -1) {</span>
-<span class="fc" id="L117">                throw new IOException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L121">                throw new IOException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
             }
-<span class="fc" id="L119">            byte byteValue = (byte) result;</span>
-<span class="fc" id="L120">            boolean isAtEndOfPartition = updateRecentBytesBufferAndCheck(byteValue);</span>
-<span class="fc bfc" id="L121" title="All 2 branches covered.">            if (isAtEndOfPartition) {</span>
+<span class="fc" id="L123">            byte byteValue = (byte) result;</span>
+<span class="fc" id="L124">            boolean isAtEndOfPartition = updateRecentBytesBufferAndCheck(byteValue);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">            if (isAtEndOfPartition) {</span>
                 // don't really do anything with this, it's just to collect the
                 // last characters to have a clean finish.
-<span class="fc" id="L124">                byte[] unused = inputStream.readNBytes(2);</span>
-<span class="fc" id="L125">                isFinished = true;</span>
-<span class="fc" id="L126">                return -1;</span>
+<span class="fc" id="L128">                byte[] unused = inputStream.readNBytes(2);</span>
+<span class="fc" id="L129">                isFinished = true;</span>
+<span class="fc" id="L130">                return -1;</span>
             }
 
         }
-<span class="fc" id="L130">        return ((int)recentBytesBuffer.atNextIndex()) &amp; 0xff;</span>
+<span class="fc" id="L134">        return ((int)recentBytesBuffer.atNextIndex()) &amp; 0xff;</span>
     }
 
     private void fillBuffer() throws IOException {
-<span class="fc bfc" id="L134" title="All 2 branches covered.">        for (int i = 0; i &lt; recentBytesBuffer.getLimit(); i++) {</span>
-<span class="fc" id="L135">            int result = inputStream.read();</span>
-<span class="fc" id="L136">            countBytesRead.increment();</span>
-<span class="fc bfc" id="L137" title="All 2 branches covered.">            if (result == -1) {</span>
-<span class="fc" id="L138">                throw new IOException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (int i = 0; i &lt; recentBytesBuffer.getLimit(); i++) {</span>
+<span class="fc" id="L139">            int result = inputStream.read();</span>
+<span class="fc" id="L140">            countBytesRead.increment();</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L142">                throw new IOException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
             }
-<span class="fc" id="L140">            byte byteValue = (byte) result;</span>
-<span class="fc" id="L141">            updateRecentBytesBufferAndCheck(byteValue);</span>
+<span class="fc" id="L144">            byte byteValue = (byte) result;</span>
+<span class="fc" id="L145">            updateRecentBytesBufferAndCheck(byteValue);</span>
         }
-<span class="fc" id="L143">        hasFilledBuffer = true;</span>
-<span class="fc" id="L144">    }</span>
+<span class="fc" id="L147">        hasFilledBuffer = true;</span>
+<span class="fc" id="L148">    }</span>
 
     @Override
     public byte[] readAllBytes()  {
-<span class="fc" id="L148">        var baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L152">        var baos = new ByteArrayOutputStream();</span>
         while (true) {
-<span class="fc" id="L150">            int result = 0;</span>
+<span class="fc" id="L154">            int result = 0;</span>
             try {
-<span class="fc" id="L152">                result = read();</span>
-<span class="fc" id="L153">            } catch (IOException e) {</span>
-<span class="fc" id="L154">                throw new WebServerException(e);</span>
-<span class="fc" id="L155">            }</span>
-<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (result == -1) {</span>
-<span class="fc" id="L157">                return baos.toByteArray();</span>
+<span class="fc" id="L156">                result = read();</span>
+<span class="fc" id="L157">            } catch (IOException e) {</span>
+<span class="fc" id="L158">                throw new WebServerException(e);</span>
+<span class="fc" id="L159">            }</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L161">                return baos.toByteArray();</span>
             }
-<span class="fc" id="L159">            baos.write((byte)result);</span>
-<span class="fc" id="L160">        }</span>
+<span class="fc" id="L163">            baos.write((byte)result);</span>
+<span class="fc" id="L164">        }</span>
     }
 
     /**
@@ -165,8 +169,8 @@ public class StreamingMultipartPartition extends InputStream {
      * true if we have encountered the end of this partition.
      */
     private boolean updateRecentBytesBufferAndCheck(byte newByte) {
-<span class="fc" id="L168">        recentBytesBuffer.add(newByte);</span>
-<span class="fc" id="L169">        return recentBytesBuffer.containsAt(boundaryValueList, 0);</span>
+<span class="fc" id="L172">        recentBytesBuffer.add(newByte);</span>
+<span class="fc" id="L173">        return recentBytesBuffer.containsAt(boundaryValueList, 0);</span>
     }
 
     /**
@@ -176,11 +180,11 @@ public class StreamingMultipartPartition extends InputStream {
     @Override
     public void close() throws IOException {
         while (true) {
-<span class="fc" id="L179">            int result = read();</span>
-<span class="fc bfc" id="L180" title="All 2 branches covered.">            if (result == -1) {</span>
-<span class="fc" id="L181">                return;</span>
+<span class="fc" id="L183">            int result = read();</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L185">                return;</span>
             }
-<span class="fc" id="L183">        }</span>
+<span class="fc" id="L187">        }</span>
     }
 
 }

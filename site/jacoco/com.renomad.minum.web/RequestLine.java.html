@@ -5,8 +5,6 @@ import com.renomad.minum.security.ForbiddenUseException;
 import com.renomad.minum.utils.StringUtils;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.renomad.minum.utils.Invariants.mustNotBeNull;
 
@@ -36,30 +34,17 @@ public final class RequestLine {
             HttpVersion version,
             String rawValue,
             ILogger logger
-<span class="fc" id="L39">    ) {</span>
-<span class="fc" id="L40">        this.method = method;</span>
-<span class="fc" id="L41">        this.pathDetails = pathDetails;</span>
-<span class="fc" id="L42">        this.version = version;</span>
-<span class="fc" id="L43">        this.rawValue = rawValue;</span>
-<span class="fc" id="L44">        this.logger = logger;</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L37">    ) {</span>
+<span class="fc" id="L38">        this.method = method;</span>
+<span class="fc" id="L39">        this.pathDetails = pathDetails;</span>
+<span class="fc" id="L40">        this.version = version;</span>
+<span class="fc" id="L41">        this.rawValue = rawValue;</span>
+<span class="fc" id="L42">        this.logger = logger;</span>
+<span class="fc" id="L43">    }</span>
 
-    /**
-     * This is our regex for looking at a client's request
-     * and determining what to send them.  For example,
-     * if they send GET /sample.html HTTP/1.1, we send them sample.html
-     * &lt;p&gt;
-     * On the other hand if it's not a well-formed request, or
-     * if we don't have that file, we reply with an error page
-     * &lt;/p&gt;
-     */
-    static final String REQUEST_LINE_PATTERN = &quot;^([A-Z]{3,8})&quot; + // an HTTP method, like GET, HEAD, POST, or OPTIONS
-            &quot; /?(.*)&quot; + // the request target - may or may not start with a slash.
-            &quot; HTTP/(1.1|1.0)$&quot;; // the HTTP version, defining structure of the remaining message
 
-<span class="fc" id="L60">    static final Pattern startLineRegex = Pattern.compile(REQUEST_LINE_PATTERN);</span>
 
-<span class="fc" id="L62">    public static final RequestLine EMPTY = new RequestLine(Method.NONE, PathDetails.empty, HttpVersion.NONE, &quot;&quot;, null);</span>
+<span class="fc" id="L47">    public static final RequestLine EMPTY = new RequestLine(Method.NONE, PathDetails.empty, HttpVersion.NONE, &quot;&quot;, null);</span>
 
     /**
      * Returns a map of the key-value pairs in the URL,
@@ -67,32 +52,31 @@ public final class RequestLine {
      * have a key of name and a value of alice.
      */
     public Map&lt;String, String&gt; queryString() {
-<span class="fc bfc" id="L70" title="All 4 branches covered.">        if (pathDetails == null || pathDetails.getQueryString().isEmpty()) {</span>
-<span class="fc" id="L71">            return new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L55" title="All 4 branches covered.">        if (pathDetails == null || pathDetails.getQueryString().isEmpty()) {</span>
+<span class="fc" id="L56">            return Map.of();</span>
         } else {
-<span class="fc" id="L73">            return new HashMap&lt;&gt;(pathDetails.getQueryString());</span>
+<span class="fc" id="L58">            return new HashMap&lt;&gt;(pathDetails.getQueryString());</span>
         }
 
     }
 
     /**
      * These are the HTTP methods we handle.
-     * @see #REQUEST_LINE_PATTERN
      */
-<span class="fc" id="L82">    public enum Method {</span>
-<span class="fc" id="L83">        GET,</span>
-<span class="fc" id="L84">        POST,</span>
-<span class="fc" id="L85">        PUT,</span>
-<span class="fc" id="L86">        DELETE,</span>
-<span class="fc" id="L87">        TRACE,</span>
-<span class="fc" id="L88">        PATCH,</span>
-<span class="fc" id="L89">        OPTIONS,</span>
-<span class="fc" id="L90">        HEAD,</span>
+<span class="fc" id="L66">    public enum Method {</span>
+<span class="fc" id="L67">        GET,</span>
+<span class="fc" id="L68">        POST,</span>
+<span class="fc" id="L69">        PUT,</span>
+<span class="fc" id="L70">        DELETE,</span>
+<span class="fc" id="L71">        TRACE,</span>
+<span class="fc" id="L72">        PATCH,</span>
+<span class="fc" id="L73">        OPTIONS,</span>
+<span class="fc" id="L74">        HEAD,</span>
 
         /**
          * Represents the null value of Method
          */
-<span class="fc" id="L95">        NONE</span>
+<span class="fc" id="L79">        NONE</span>
     }
 
     /**
@@ -100,43 +84,83 @@ public final class RequestLine {
      * validate and extract the values for our use.
      */
     public RequestLine extractRequestLine(String value) {
-<span class="fc" id="L103">        mustNotBeNull(value);</span>
-<span class="fc" id="L104">        Matcher m = RequestLine.startLineRegex.matcher(value);</span>
-        // run the regex
-<span class="fc" id="L106">        var doesMatch = m.matches();</span>
-<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (!doesMatch) {</span>
-<span class="fc" id="L108">            return RequestLine.EMPTY;</span>
+<span class="fc" id="L87">        mustNotBeNull(value);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (value.isEmpty()) {</span>
+<span class="fc" id="L89">            return RequestLine.EMPTY;</span>
         }
-<span class="fc" id="L110">        Method myMethod = extractMethod(m.group(1));</span>
-<span class="fc" id="L111">        PathDetails pd = extractPathDetails(m.group(2));</span>
-<span class="fc" id="L112">        HttpVersion httpVersion = getHttpVersion(m.group(3));</span>
+<span class="fc" id="L91">        RequestLineRawValues rawValues = requestLineTokenizer(value);</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (rawValues == null) {</span>
+<span class="fc" id="L93">            return RequestLine.EMPTY;</span>
+        }
+<span class="fc" id="L95">        Method myMethod = extractMethod(rawValues.method());</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (myMethod.equals(Method.NONE)) {</span>
+<span class="fc" id="L97">            return RequestLine.EMPTY;</span>
+        }
+<span class="fc" id="L99">        PathDetails pd = extractPathDetails(rawValues.path());</span>
+<span class="fc" id="L100">        HttpVersion httpVersion = getHttpVersion(rawValues.protocol());</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (httpVersion.equals(HttpVersion.NONE)) {</span>
+<span class="fc" id="L102">            return RequestLine.EMPTY;</span>
+        }
 
-<span class="fc" id="L114">        return new RequestLine(myMethod, pd, httpVersion, value, logger);</span>
+<span class="fc" id="L105">        return new RequestLine(myMethod, pd, httpVersion, value, logger);</span>
+    }
+
+    /**
+     * Split the request line into three parts - a method (e.g. GET), a
+     * path (e.g. &quot;/&quot; or &quot;/helloworld/hi/foo?name=hello&quot;) and a protocol,
+     * which is typically &quot;HTTP/1.1&quot; but might be &quot;HTTP/1.0&quot; in some cases
+     * &lt;br&gt;
+     * If we don't find exactly three parts, we will return null, which
+     * is interpreted by the calling method to mean we didn't receive a
+     * valid request line.
+     * @param rawRequestLine the full string of the first line received
+     *                       after the socket is connected to the client.
+     */
+    private RequestLineRawValues requestLineTokenizer(String rawRequestLine) {
+<span class="fc" id="L120">        int firstSpace = rawRequestLine.indexOf(' ');</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (firstSpace == -1) {</span>
+<span class="fc" id="L122">            return null;</span>
+        }
+<span class="fc" id="L124">        int secondSpace = rawRequestLine.indexOf(' ', firstSpace + 1);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (secondSpace == -1) {</span>
+<span class="fc" id="L126">            return null;</span>
+        }
+<span class="fc" id="L128">        int thirdSpace = rawRequestLine.indexOf(' ', secondSpace + 1);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (thirdSpace != -1) {</span>
+<span class="fc" id="L130">            return null;</span>
+        }
+<span class="fc" id="L132">        String method = rawRequestLine.substring(0, firstSpace);</span>
+<span class="fc" id="L133">        String path = rawRequestLine.substring(firstSpace + 1, secondSpace);</span>
+<span class="fc" id="L134">        String protocol = rawRequestLine.substring(secondSpace + 1);</span>
+<span class="fc" id="L135">        return new RequestLineRawValues(method, path, protocol);</span>
     }
 
     private Method extractMethod(String methodString) {
         try {
-<span class="fc" id="L119">            return Method.valueOf(methodString.toUpperCase(Locale.ROOT));</span>
-<span class="fc" id="L120">        } catch (Exception ex) {</span>
-<span class="fc" id="L121">            logger.logDebug(() -&gt; &quot;Unable to convert method to enum: &quot; + methodString);</span>
-<span class="fc" id="L122">            return Method.NONE;</span>
+<span class="fc" id="L140">            return Method.valueOf(methodString.toUpperCase(Locale.ROOT));</span>
+<span class="fc" id="L141">        } catch (Exception ex) {</span>
+<span class="fc" id="L142">            logger.logDebug(() -&gt; &quot;Unable to convert method to enum: &quot; + methodString);</span>
+<span class="fc" id="L143">            return Method.NONE;</span>
         }
     }
 
     private PathDetails extractPathDetails(String path) {
         PathDetails pd;
-<span class="fc" id="L128">        int locationOfQueryBegin = path.indexOf(&quot;?&quot;);</span>
-<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (locationOfQueryBegin &gt; 0) {</span>
+        // the request line will have a forward slash at the beginning of
+        // the path.  Remove that here.
+<span class="fc" id="L151">        String adjustedPath = path.substring(1);</span>
+<span class="fc" id="L152">        int locationOfQueryBegin = adjustedPath.indexOf(&quot;?&quot;);</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (locationOfQueryBegin &gt; 0) {</span>
             // in this case, we found a question mark, suggesting that a query string exists
-<span class="fc" id="L131">            String rawQueryString = path.substring(locationOfQueryBegin + 1);</span>
-<span class="fc" id="L132">            String isolatedPath = path.substring(0, locationOfQueryBegin);</span>
-<span class="fc" id="L133">            Map&lt;String, String&gt; queryString = extractMapFromQueryString(rawQueryString);</span>
-<span class="fc" id="L134">            pd = new PathDetails(isolatedPath, rawQueryString, queryString);</span>
-<span class="fc" id="L135">        } else {</span>
+<span class="fc" id="L155">            String rawQueryString = adjustedPath.substring(locationOfQueryBegin + 1);</span>
+<span class="fc" id="L156">            String isolatedPath = adjustedPath.substring(0, locationOfQueryBegin);</span>
+<span class="fc" id="L157">            Map&lt;String, String&gt; queryString = extractMapFromQueryString(rawQueryString);</span>
+<span class="fc" id="L158">            pd = new PathDetails(isolatedPath, rawQueryString, queryString);</span>
+<span class="fc" id="L159">        } else {</span>
             // in this case, no question mark was found, thus no query string
-<span class="fc" id="L137">            pd = new PathDetails(path, null, null);</span>
+<span class="fc" id="L161">            pd = new PathDetails(adjustedPath, null, null);</span>
         }
-<span class="fc" id="L139">        return pd;</span>
+<span class="fc" id="L163">        return pd;</span>
     }
 
 
@@ -146,35 +170,37 @@ public final class RequestLine {
      * into a map of the key to value (e.g. foo to bar, and name to alice)
      */
     Map&lt;String, String&gt; extractMapFromQueryString(String rawQueryString) {
-<span class="fc" id="L149">        Map&lt;String, String&gt; queryStrings = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L150">        StringTokenizer tokenizer = new StringTokenizer(rawQueryString, &quot;&amp;&quot;);</span>
+<span class="fc" id="L173">        Map&lt;String, String&gt; queryStrings = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L174">        StringTokenizer tokenizer = new StringTokenizer(rawQueryString, &quot;&amp;&quot;);</span>
         // we'll only take less than MAX_QUERY_STRING_KEYS_COUNT
-<span class="fc bfc" id="L152" title="All 2 branches covered.">        for (int i = 0; tokenizer.hasMoreTokens(); i++) {</span>
-<span class="fc bfc" id="L153" title="All 2 branches covered.">            if (i &gt;= MAX_QUERY_STRING_KEYS_COUNT) throw new ForbiddenUseException(&quot;User tried providing too many query string keys.  max: &quot; + MAX_QUERY_STRING_KEYS_COUNT);</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        for (int i = 0; tokenizer.hasMoreTokens(); i++) {</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">            if (i &gt;= MAX_QUERY_STRING_KEYS_COUNT) throw new ForbiddenUseException(&quot;User tried providing too many query string keys.  max: &quot; + MAX_QUERY_STRING_KEYS_COUNT);</span>
             // this should give us a key and value joined with an equal sign, e.g. foo=bar
-<span class="fc" id="L155">            String currentKeyValue = tokenizer.nextToken();</span>
-<span class="fc" id="L156">            int equalSignLocation = currentKeyValue.indexOf(&quot;=&quot;);</span>
-<span class="fc bfc" id="L157" title="All 2 branches covered.">            if (equalSignLocation &lt;= 0) return Map.of();</span>
-<span class="fc" id="L158">            String key = currentKeyValue.substring(0, equalSignLocation);</span>
-<span class="fc" id="L159">            String rawValue = currentKeyValue.substring(equalSignLocation + 1);</span>
+<span class="fc" id="L179">            String currentKeyValue = tokenizer.nextToken();</span>
+<span class="fc" id="L180">            int equalSignLocation = currentKeyValue.indexOf(&quot;=&quot;);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            if (equalSignLocation &lt;= 0) return Map.of();</span>
+<span class="fc" id="L182">            String key = currentKeyValue.substring(0, equalSignLocation);</span>
+<span class="fc" id="L183">            String rawValue = currentKeyValue.substring(equalSignLocation + 1);</span>
             try {
-<span class="fc" id="L161">                String value = StringUtils.decode(rawValue);</span>
-<span class="fc" id="L162">                queryStrings.put(key, value);</span>
-<span class="fc" id="L163">            } catch (IllegalArgumentException ex) {</span>
-<span class="fc" id="L164">                logger.logDebug(() -&gt; &quot;Query string parsing failed for key: (%s) value: (%s).  Skipping to next key-value pair. error message: %s&quot;.formatted(key, rawValue, ex.getMessage()));</span>
-<span class="fc" id="L165">            }</span>
+<span class="fc" id="L185">                String value = StringUtils.decode(rawValue);</span>
+<span class="fc" id="L186">                queryStrings.put(key, value);</span>
+<span class="fc" id="L187">            } catch (IllegalArgumentException ex) {</span>
+<span class="fc" id="L188">                logger.logDebug(() -&gt; &quot;Query string parsing failed for key: (%s) value: (%s).  Skipping to next key-value pair. error message: %s&quot;.formatted(key, rawValue, ex.getMessage()));</span>
+<span class="fc" id="L189">            }</span>
         }
-<span class="fc" id="L167">        return queryStrings;</span>
+<span class="fc" id="L191">        return queryStrings;</span>
     }
 
     /**
      * Extract the HTTP version from the start line
      */
     private HttpVersion getHttpVersion(String version) {
-<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (version.equals(&quot;1.1&quot;)) {</span>
-<span class="fc" id="L175">            return HttpVersion.ONE_DOT_ONE;</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        if (version.equals(&quot;HTTP/1.1&quot;)) {</span>
+<span class="fc" id="L199">            return HttpVersion.ONE_DOT_ONE;</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        } else if (version.equals(&quot;HTTP/1.0&quot;)) {</span>
+<span class="fc" id="L201">            return HttpVersion.ONE_DOT_ZERO;</span>
         } else {
-<span class="fc" id="L177">            return HttpVersion.ONE_DOT_ZERO;</span>
+<span class="fc" id="L203">            return HttpVersion.NONE;</span>
         }
     }
 
@@ -182,7 +208,7 @@ public final class RequestLine {
      * Return the method of this request-line.  For example, GET, PUT, POST...
      */
     public Method getMethod() {
-<span class="fc" id="L185">        return method;</span>
+<span class="fc" id="L211">        return method;</span>
     }
 
     /**
@@ -191,39 +217,39 @@ public final class RequestLine {
      * this would hold data for the path (&quot;sample&quot;) and the query string (&quot;foo=bar&quot;)
      */
     public PathDetails getPathDetails() {
-<span class="fc" id="L194">        return pathDetails;</span>
+<span class="fc" id="L220">        return pathDetails;</span>
     }
 
     /**
      * Gets the HTTP version, either 1.0 or 1.1
      */
     public HttpVersion getVersion() {
-<span class="fc" id="L201">        return this.version;</span>
+<span class="fc" id="L227">        return this.version;</span>
     }
 
     /**
      * Get the string value of this request line, such as &quot;GET /sample.html HTTP/1.1&quot;
      */
     public String getRawValue() {
-<span class="fc" id="L208">        return rawValue;</span>
+<span class="fc" id="L234">        return rawValue;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L214" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L215">        RequestLine that = (RequestLine) o;</span>
-<span class="fc bfc" id="L216" title="All 10 branches covered.">        return method == that.method &amp;&amp; Objects.equals(pathDetails, that.pathDetails) &amp;&amp; version == that.version &amp;&amp; Objects.equals(rawValue, that.rawValue) &amp;&amp; Objects.equals(logger, that.logger);</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L240" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L241">        RequestLine that = (RequestLine) o;</span>
+<span class="fc bfc" id="L242" title="All 10 branches covered.">        return method == that.method &amp;&amp; Objects.equals(pathDetails, that.pathDetails) &amp;&amp; version == that.version &amp;&amp; Objects.equals(rawValue, that.rawValue) &amp;&amp; Objects.equals(logger, that.logger);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L221">        return Objects.hash(method, pathDetails, version, rawValue, logger);</span>
+<span class="fc" id="L247">        return Objects.hash(method, pathDetails, version, rawValue, logger);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L226">        return &quot;RequestLine{&quot; +</span>
+<span class="fc" id="L252">        return &quot;RequestLine{&quot; +</span>
                 &quot;method=&quot; + method +
                 &quot;, pathDetails=&quot; + pathDetails +
                 &quot;, version=&quot; + version +

@@ -2,7 +2,6 @@
 
 import com.renomad.minum.state.Constants;
 import com.renomad.minum.logging.ILogger;
-import com.renomad.minum.security.ITheBrig;
 import com.renomad.minum.state.Context;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -28,35 +27,36 @@ import static com.renomad.minum.web.HttpServerType.PLAIN_TEXT_HTTP;
  */
 final class WebEngine {
 
-  private final ITheBrig theBrig;
   private final Constants constants;
   private final Context context;
   private final ExecutorService executorService;
   private final WebFramework webFramework;
 
-<span class="fc" id="L37">  WebEngine(Context context, WebFramework webFramework) {</span>
-<span class="fc" id="L38">    this.logger = context.getLogger();</span>
-<span class="fc" id="L39">    this.logger.logDebug(() -&gt; &quot;Using a supplied logger in WebEngine&quot;);</span>
-<span class="fc bfc" id="L40" title="All 2 branches covered.">    this.theBrig = context.getFullSystem() != null ? context.getFullSystem().getTheBrig() : null;</span>
-<span class="fc" id="L41">    this.constants = context.getConstants();</span>
-<span class="fc" id="L42">    this.context = context;</span>
-<span class="fc" id="L43">    this.executorService = context.getExecutorService();</span>
-<span class="fc" id="L44">    this.webFramework = webFramework;</span>
-<span class="fc" id="L45">  }</span>
+<span class="fc" id="L35">  WebEngine(Context context, WebFramework webFramework) {</span>
+<span class="fc" id="L36">    this.logger = context.getLogger();</span>
+<span class="fc" id="L37">    this.logger.logDebug(() -&gt; &quot;Using a supplied logger in WebEngine&quot;);</span>
+<span class="fc" id="L38">    this.constants = context.getConstants();</span>
+<span class="fc" id="L39">    this.context = context;</span>
+<span class="fc" id="L40">    this.executorService = context.getExecutorService();</span>
+<span class="fc" id="L41">    this.webFramework = webFramework;</span>
+<span class="fc" id="L42">  }</span>
 
   private final ILogger logger;
   static final String HTTP_CRLF = &quot;\r\n&quot;;
 
+  /**
+   * Start a plain-text unencrypted server, listening on the port specified by the user
+   */
   IServer startServer() {
 <span class="fc" id="L51">    int port = constants.serverPort;</span>
       ServerSocket ss;
       try {
 <span class="fc" id="L54">          ss = new ServerSocket(port);</span>
 <span class="fc" id="L55">      } catch (Exception e) {</span>
-<span class="fc" id="L56">          throw new WebServerException(&quot;Error starting server on port &quot; + port, e);</span>
+<span class="fc" id="L56">          throw new WebServerException(&quot;Failed to create serversocket on port &quot; + port, e);</span>
 <span class="fc" id="L57">      }</span>
 <span class="fc" id="L58">      logger.logDebug(() -&gt; String.format(&quot;Just created a new ServerSocket: %s&quot;, ss));</span>
-<span class="fc" id="L59">    IServer server = new Server(ss, context, &quot;http server&quot;, theBrig, webFramework, executorService, PLAIN_TEXT_HTTP);</span>
+<span class="fc" id="L59">    IServer server = new Server(ss, context, &quot;http server&quot;, webFramework, executorService, PLAIN_TEXT_HTTP);</span>
 <span class="fc" id="L60">    logger.logDebug(() -&gt; String.format(&quot;Just created a new Server: %s&quot;, server));</span>
 <span class="fc" id="L61">    server.start();</span>
 <span class="fc" id="L62">    String hostname = constants.hostName;</span>
@@ -64,23 +64,26 @@ final class WebEngine {
 <span class="fc" id="L64">    return server;</span>
   }
 
+  /**
+   * Start an encrypted server, using TLS 1.3
+   */
   IServer startSslServer() {
 
     /*
-     * If we find the keystore and pass in the system properties
+     * If we are provided details for a keystore (its location and password), use it
      */
-<span class="fc" id="L72">    final var useExternalKeystore = isProvidedKeystoreProperties(constants.keystorePath, constants.keystorePassword, logger);</span>
-<span class="fc" id="L73">    KeyStoreResult keystoreResult = getKeyStoreResult(useExternalKeystore, constants.keystorePath, constants.keystorePassword, logger);</span>
+<span class="fc" id="L75">    final var useExternalKeystore = isProvidedKeystoreProperties(constants.keystorePath, constants.keystorePassword, logger);</span>
+<span class="fc" id="L76">    KeyStoreResult keystoreResult = getKeyStoreResult(useExternalKeystore, constants.keystorePath, constants.keystorePassword, logger);</span>
 
-<span class="fc" id="L75">    int port = constants.secureServerPort;</span>
-<span class="fc" id="L76">    ServerSocket ss = createSslSocketWithSpecificKeystore(port, keystoreResult.keystoreUrl(), keystoreResult.keystorePassword());</span>
-<span class="fc" id="L77">    logger.logDebug(() -&gt; String.format(&quot;Just created a new ServerSocket: %s&quot;, ss));</span>
-<span class="fc" id="L78">    IServer server = new Server(ss, context, &quot;https server&quot;, theBrig, webFramework, executorService, ENCRYPTED_HTTP);</span>
-<span class="fc" id="L79">    logger.logDebug(() -&gt; String.format(&quot;Just created a new SSL Server: %s&quot;, server));</span>
-<span class="fc" id="L80">    server.start();</span>
-<span class="fc" id="L81">    String hostname = constants.hostName;</span>
-<span class="fc" id="L82">    logger.logDebug(() -&gt; String.format(&quot;%s started at https://%s:%s&quot;, server, hostname, port));</span>
-<span class="fc" id="L83">    return server;</span>
+<span class="fc" id="L78">    int port = constants.secureServerPort;</span>
+<span class="fc" id="L79">    ServerSocket ss = createSslSocketWithSpecificKeystore(port, keystoreResult.keystoreUrl(), keystoreResult.keystorePassword());</span>
+<span class="fc" id="L80">    logger.logDebug(() -&gt; String.format(&quot;Just created a new ServerSocket: %s&quot;, ss));</span>
+<span class="fc" id="L81">    IServer server = new Server(ss, context, &quot;https server&quot;, webFramework, executorService, ENCRYPTED_HTTP);</span>
+<span class="fc" id="L82">    logger.logDebug(() -&gt; String.format(&quot;Just created a new SSL Server: %s&quot;, server));</span>
+<span class="fc" id="L83">    server.start();</span>
+<span class="fc" id="L84">    String hostname = constants.hostName;</span>
+<span class="fc" id="L85">    logger.logDebug(() -&gt; String.format(&quot;%s started at https://%s:%s&quot;, server, hostname, port));</span>
+<span class="fc" id="L86">    return server;</span>
   }
 
   static KeyStoreResult getKeyStoreResult(
@@ -88,27 +91,27 @@ final class WebEngine {
           String keystorePath,
           String keystorePassword,
           ILogger logger) {
-<span class="fc bfc" id="L91" title="All 2 branches covered.">    if (useExternalKeystore) {</span>
-<span class="fc" id="L92">      logger.logDebug(() -&gt; &quot;Using keystore and password referenced in minum.config&quot;);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">    if (useExternalKeystore) {</span>
+<span class="fc" id="L95">      logger.logDebug(() -&gt; &quot;Using keystore and password referenced in minum.config&quot;);</span>
     } else {
-<span class="fc" id="L94">      logger.logDebug(() -&gt; &quot;Using the default (self-signed / testing-only) certificate&quot;);</span>
+<span class="fc" id="L97">      logger.logDebug(() -&gt; &quot;Using the default (self-signed / testing-only) certificate&quot;);</span>
     }
 
     final URL keystoreUrl;
     try {
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        keystoreUrl = useExternalKeystore ?</span>
-<span class="fc" id="L100">                Path.of(keystorePath).toUri().toURL() :</span>
-<span class="fc" id="L101">                WebEngine.class.getResource(&quot;/certs/keystore&quot;);</span>
-<span class="fc" id="L102">    } catch (Exception e) {</span>
-<span class="fc" id="L103">        throw new WebServerException(&quot;Error while building keystoreUrl: &quot; + e);</span>
-<span class="fc" id="L104">    }</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">    final String keystorePasswordFinal = useExternalKeystore ?</span>
-<span class="fc" id="L106">          keystorePassword :</span>
-<span class="fc" id="L107">          &quot;passphrase&quot;;</span>
-<span class="fc" id="L108">    return new KeyStoreResult(keystoreUrl, keystorePasswordFinal);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        keystoreUrl = useExternalKeystore ?</span>
+<span class="fc" id="L103">                Path.of(keystorePath).toUri().toURL() :</span>
+<span class="fc" id="L104">                WebEngine.class.getResource(&quot;/certs/keystore&quot;);</span>
+<span class="fc" id="L105">    } catch (Exception e) {</span>
+<span class="fc" id="L106">        throw new WebServerException(&quot;Error while building keystoreUrl: &quot; + e);</span>
+<span class="fc" id="L107">    }</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">    final String keystorePasswordFinal = useExternalKeystore ?</span>
+<span class="fc" id="L109">          keystorePassword :</span>
+<span class="fc" id="L110">          &quot;passphrase&quot;;</span>
+<span class="fc" id="L111">    return new KeyStoreResult(keystoreUrl, keystorePasswordFinal);</span>
   }
 
-<span class="fc" id="L111">  record KeyStoreResult(URL keystoreUrl, String keystorePassword) { }</span>
+<span class="fc" id="L114">  record KeyStoreResult(URL keystoreUrl, String keystorePassword) { }</span>
 
 
   /**
@@ -130,18 +133,18 @@ final class WebEngine {
   static Boolean isProvidedKeystoreProperties(String keystorePath, String keystorePassword, ILogger logger) {
 
     // get the directory to the keystore from a system property
-<span class="fc bfc" id="L133" title="All 4 branches covered.">    boolean hasKeystore = ! (keystorePath == null || keystorePath.isBlank());</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">    if (! hasKeystore) {</span>
-<span class="fc" id="L135">      logger.logDebug(() -&gt; &quot;Keystore system property was not set&quot;);</span>
+<span class="fc bfc" id="L136" title="All 4 branches covered.">    boolean hasKeystore = ! (keystorePath == null || keystorePath.isBlank());</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">    if (! hasKeystore) {</span>
+<span class="fc" id="L138">      logger.logDebug(() -&gt; &quot;Keystore system property was not set&quot;);</span>
     }
 
     // get the password to that keystore from a system property
-<span class="fc bfc" id="L139" title="All 4 branches covered.">    boolean hasKeystorePassword = ! (keystorePassword == null || keystorePassword.isBlank());</span>
-<span class="fc bfc" id="L140" title="All 2 branches covered.">    if (! hasKeystorePassword) {</span>
-<span class="fc" id="L141">      logger.logDebug(() -&gt; &quot;keystorePassword system property was not set&quot;);</span>
+<span class="fc bfc" id="L142" title="All 4 branches covered.">    boolean hasKeystorePassword = ! (keystorePassword == null || keystorePassword.isBlank());</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">    if (! hasKeystorePassword) {</span>
+<span class="fc" id="L144">      logger.logDebug(() -&gt; &quot;keystorePassword system property was not set&quot;);</span>
     }
 
-<span class="fc bfc" id="L144" title="All 4 branches covered.">    return hasKeystore &amp;&amp; hasKeystorePassword;</span>
+<span class="fc bfc" id="L147" title="All 4 branches covered.">    return hasKeystore &amp;&amp; hasKeystorePassword;</span>
   }
 
 
@@ -149,24 +152,24 @@ final class WebEngine {
    * Create an SSL Socket using a specified keystore
    */
   ServerSocket createSslSocketWithSpecificKeystore(int sslPort, URL keystoreUrl, String keystorePassword) {
-<span class="fc" id="L152">    try (InputStream keystoreInputStream = keystoreUrl.openStream()) {</span>
-<span class="fc" id="L153">      final var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());</span>
-<span class="fc" id="L154">      char[] passwordCharArray = keystorePassword.toCharArray();</span>
-<span class="fc" id="L155">      keyStore.load(keystoreInputStream, passwordCharArray);</span>
+<span class="fc" id="L155">    try (InputStream keystoreInputStream = keystoreUrl.openStream()) {</span>
+<span class="fc" id="L156">      final var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());</span>
+<span class="fc" id="L157">      char[] passwordCharArray = keystorePassword.toCharArray();</span>
+<span class="fc" id="L158">      keyStore.load(keystoreInputStream, passwordCharArray);</span>
 
-<span class="fc" id="L157">      final var keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());</span>
-<span class="fc" id="L158">      keyManagerFactory.init(keyStore, passwordCharArray);</span>
+<span class="fc" id="L160">      final var keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());</span>
+<span class="fc" id="L161">      keyManagerFactory.init(keyStore, passwordCharArray);</span>
 
-<span class="fc" id="L160">      final var keyManagers = keyManagerFactory.getKeyManagers();</span>
+<span class="fc" id="L163">      final var keyManagers = keyManagerFactory.getKeyManagers();</span>
 
-<span class="fc" id="L162">      final var sslContext = SSLContext.getInstance(&quot;TLSv1.3&quot;);</span>
-<span class="fc" id="L163">      sslContext.init(keyManagers, null, new SecureRandom());</span>
+<span class="fc" id="L165">      final var sslContext = SSLContext.getInstance(&quot;TLSv1.3&quot;);</span>
+<span class="fc" id="L166">      sslContext.init(keyManagers, null, new SecureRandom());</span>
 
-<span class="fc" id="L165">      final var socketFactory = sslContext.getServerSocketFactory();</span>
-<span class="fc" id="L166">      return socketFactory.createServerSocket(sslPort);</span>
-<span class="fc" id="L167">    } catch (Exception ex) {</span>
-<span class="fc" id="L168">      logger.logDebug(ex::getMessage);</span>
-<span class="fc" id="L169">      throw new WebServerException(&quot;Error starting SSL socket server on port &quot; + sslPort, ex);</span>
+<span class="fc" id="L168">      final var socketFactory = sslContext.getServerSocketFactory();</span>
+<span class="fc" id="L169">      return socketFactory.createServerSocket(sslPort);</span>
+<span class="fc" id="L170">    } catch (Exception ex) {</span>
+<span class="fc" id="L171">      logger.logDebug(ex::getMessage);</span>
+<span class="fc" id="L172">      throw new WebServerException(ex);</span>
     }
   }
 
@@ -174,17 +177,8 @@ final class WebEngine {
    * Create a client {@link ISocketWrapper} connected to the running host server
    */
   ISocketWrapper startClient(Socket socket) throws IOException {
-<span class="fc" id="L177">    logger.logDebug(() -&gt; String.format(&quot;Just created new client socket: %s&quot;, socket));</span>
-<span class="fc" id="L178">    return new SocketWrapper(socket, null, logger, constants.socketTimeoutMillis, constants.hostName);</span>
-  }
-
-  /**
-   * Intentionally return just the default object toString, this is only used
-   * to differentiate between multiple instances in memory.
-   */
-  @Override
-  public String toString() {
-<span class="fc" id="L187">    return super.toString();</span>
+<span class="fc" id="L180">    logger.logDebug(() -&gt; String.format(&quot;Just created new client socket: %s&quot;, socket));</span>
+<span class="fc" id="L181">    return new SocketWrapper(socket, null, logger, constants.socketTimeoutMillis, constants.hostName);</span>
   }
 
 }

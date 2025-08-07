@@ -6,8 +6,6 @@ import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static com.renomad.minum.utils.Invariants.mustBeTrue;
-
 /**
  * Utilities for searching collections of data
  */
@@ -27,7 +25,7 @@ public final class SearchUtils {
      * @throws InvariantException if there are two or more results found
      */
     public static &lt;T&gt; T findExactlyOne(Stream&lt;T&gt; streamOfSomething, Predicate&lt;? super T&gt; searchPredicate) {
-<span class="fc" id="L30">        return findExactlyOne(streamOfSomething, searchPredicate, () -&gt; null);</span>
+<span class="fc" id="L28">        return findExactlyOne(streamOfSomething, searchPredicate, () -&gt; null);</span>
     }
 
     /**
@@ -42,8 +40,10 @@ public final class SearchUtils {
      * @throws InvariantException if there are two or more results found
      */
     public static &lt;T&gt; T findExactlyOne(Stream&lt;T&gt; streamOfSomething, Predicate&lt;? super T&gt; searchPredicate, Callable&lt;T&gt; alternate) {
-<span class="fc" id="L45">        List&lt;T&gt; listOfThings = streamOfSomething.filter(Objects::nonNull).filter(searchPredicate).toList();</span>
-<span class="fc bfc" id="L46" title="All 4 branches covered.">        mustBeTrue(listOfThings.isEmpty() || listOfThings.size() == 1, &quot;Must be zero or one of this thing, or it's a bug.  We found a size of &quot; + listOfThings.size());</span>
+<span class="fc" id="L43">        List&lt;T&gt; listOfThings = streamOfSomething.filter(Objects::nonNull).filter(searchPredicate).toList();</span>
+<span class="fc bfc" id="L44" title="All 4 branches covered.">        if (! (listOfThings.isEmpty() || listOfThings.size() == 1)) {</span>
+<span class="fc" id="L45">            throw new UtilsException(&quot;Must be zero or one of this thing, or it's a bug.  We found a size of &quot; + listOfThings.size());</span>
+        }
 <span class="fc bfc" id="L47" title="All 2 branches covered.">        if (listOfThings.isEmpty()) {</span>
             T returnValue;
             try {

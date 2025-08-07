@@ -101,7 +101,7 @@
 <a class="jxr_linenumber" name="L93" href="#L93">93</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentType_HappyPath() {
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>          Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-type: foo"</span>));
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>          String contentType = headers.contentType();
-<a class="jxr_linenumber" name="L96" href="#L96">96</a>          assertEquals(contentType, <span class="jxr_string">"content-type: foo"</span>);
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>          assertEquals(contentType, <span class="jxr_string">"foo"</span>);
 <a class="jxr_linenumber" name="L97" href="#L97">97</a>      }
 <a class="jxr_linenumber" name="L98" href="#L98">98</a>  
 <a class="jxr_linenumber" name="L99" href="#L99">99</a>      <em class="jxr_javadoccomment">/**</em>
@@ -111,7 +111,7 @@
 <a class="jxr_linenumber" name="L103" href="#L103">103</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentType_TooMany() {
 <a class="jxr_linenumber" name="L104" href="#L104">104</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-type: foo"</span>, <span class="jxr_string">"content-type: bar"</span>));
 <a class="jxr_linenumber" name="L105" href="#L105">105</a>         <strong class="jxr_keyword">var</strong> ex = assertThrows(WebServerException.<strong class="jxr_keyword">class</strong>, headers::contentType);
-<a class="jxr_linenumber" name="L106" href="#L106">106</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"The number of content-type headers must be exactly zero or one.  Received: [content-type: foo, content-type: bar]"</span>);
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"The number of content-type headers must be exactly zero or one.  Received: [bar, foo]"</span>);
 <a class="jxr_linenumber" name="L107" href="#L107">107</a>     }
 <a class="jxr_linenumber" name="L108" href="#L108">108</a> 
 <a class="jxr_linenumber" name="L109" href="#L109">109</a>     <em class="jxr_javadoccomment">/**</em>
@@ -121,7 +121,7 @@
 <a class="jxr_linenumber" name="L113" href="#L113">113</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentLength_TooMany() {
 <a class="jxr_linenumber" name="L114" href="#L114">114</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-length: 12"</span>, <span class="jxr_string">"content-length: 44"</span>));
 <a class="jxr_linenumber" name="L115" href="#L115">115</a>         <strong class="jxr_keyword">var</strong> ex = assertThrows(WebServerException.<strong class="jxr_keyword">class</strong>, headers::contentLength);
-<a class="jxr_linenumber" name="L116" href="#L116">116</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"The number of content-length headers must be exactly zero or one.  Received: [content-length: 12, content-length: 44]"</span>);
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"The number of content-length headers must be exactly zero or one.  Received: [12, 44]"</span>);
 <a class="jxr_linenumber" name="L117" href="#L117">117</a>     }
 <a class="jxr_linenumber" name="L118" href="#L118">118</a> 
 <a class="jxr_linenumber" name="L119" href="#L119">119</a>     @Test
