@@ -137,10 +137,10 @@
 <a class="jxr_linenumber" name="L129" href="#L129">129</a>         <strong class="jxr_keyword">if</strong> (thirdSpace != -1) {
 <a class="jxr_linenumber" name="L130" href="#L130">130</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
 <a class="jxr_linenumber" name="L131" href="#L131">131</a>         }
-<a class="jxr_linenumber" name="L132" href="#L132">132</a>         String method = rawRequestLine.substring(0, firstSpace);
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>         String myMethod = rawRequestLine.substring(0, firstSpace);
 <a class="jxr_linenumber" name="L133" href="#L133">133</a>         String path = rawRequestLine.substring(firstSpace + 1, secondSpace);
 <a class="jxr_linenumber" name="L134" href="#L134">134</a>         String protocol = rawRequestLine.substring(secondSpace + 1);
-<a class="jxr_linenumber" name="L135" href="#L135">135</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> RequestLineRawValues(method, path, protocol);
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> RequestLineRawValues(myMethod, path, protocol);
 <a class="jxr_linenumber" name="L136" href="#L136">136</a>     }
 <a class="jxr_linenumber" name="L137" href="#L137">137</a> 
 <a class="jxr_linenumber" name="L138" href="#L138">138</a>     <strong class="jxr_keyword">private</strong> Method extractMethod(String methodString) {
@@ -188,12 +188,12 @@
 <a class="jxr_linenumber" name="L180" href="#L180">180</a>             <strong class="jxr_keyword">int</strong> equalSignLocation = currentKeyValue.indexOf(<span class="jxr_string">"="</span>);
 <a class="jxr_linenumber" name="L181" href="#L181">181</a>             <strong class="jxr_keyword">if</strong> (equalSignLocation &lt;= 0) <strong class="jxr_keyword">return</strong> Map.of();
 <a class="jxr_linenumber" name="L182" href="#L182">182</a>             String key = currentKeyValue.substring(0, equalSignLocation);
-<a class="jxr_linenumber" name="L183" href="#L183">183</a>             String rawValue = currentKeyValue.substring(equalSignLocation + 1);
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>             String myRawValue = currentKeyValue.substring(equalSignLocation + 1);
 <a class="jxr_linenumber" name="L184" href="#L184">184</a>             <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L185" href="#L185">185</a>                 String value = StringUtils.decode(rawValue);
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>                 String value = StringUtils.decode(myRawValue);
 <a class="jxr_linenumber" name="L186" href="#L186">186</a>                 queryStrings.put(key, value);
 <a class="jxr_linenumber" name="L187" href="#L187">187</a>             } <strong class="jxr_keyword">catch</strong> (IllegalArgumentException ex) {
-<a class="jxr_linenumber" name="L188" href="#L188">188</a>                 logger.logDebug(() -&gt; <span class="jxr_string">"Query string parsing failed for key: (%s) value: (%s).  Skipping to next key-value pair. error message: %s"</span>.formatted(key, rawValue, ex.getMessage()));
+<a class="jxr_linenumber" name="L188" href="#L188">188</a>                 logger.logDebug(() -&gt; <span class="jxr_string">"Query string parsing failed for key: (%s) value: (%s).  Skipping to next key-value pair. error message: %s"</span>.formatted(key, myRawValue, ex.getMessage()));
 <a class="jxr_linenumber" name="L189" href="#L189">189</a>             }
 <a class="jxr_linenumber" name="L190" href="#L190">190</a>         }
 <a class="jxr_linenumber" name="L191" href="#L191">191</a>         <strong class="jxr_keyword">return</strong> queryStrings;

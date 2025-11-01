@@ -129,10 +129,10 @@ public final class RequestLine {
 <span class="fc bfc" id="L129" title="All 2 branches covered.">        if (thirdSpace != -1) {</span>
 <span class="fc" id="L130">            return null;</span>
         }
-<span class="fc" id="L132">        String method = rawRequestLine.substring(0, firstSpace);</span>
+<span class="fc" id="L132">        String myMethod = rawRequestLine.substring(0, firstSpace);</span>
 <span class="fc" id="L133">        String path = rawRequestLine.substring(firstSpace + 1, secondSpace);</span>
 <span class="fc" id="L134">        String protocol = rawRequestLine.substring(secondSpace + 1);</span>
-<span class="fc" id="L135">        return new RequestLineRawValues(method, path, protocol);</span>
+<span class="fc" id="L135">        return new RequestLineRawValues(myMethod, path, protocol);</span>
     }
 
     private Method extractMethod(String methodString) {
@@ -180,12 +180,12 @@ public final class RequestLine {
 <span class="fc" id="L180">            int equalSignLocation = currentKeyValue.indexOf(&quot;=&quot;);</span>
 <span class="fc bfc" id="L181" title="All 2 branches covered.">            if (equalSignLocation &lt;= 0) return Map.of();</span>
 <span class="fc" id="L182">            String key = currentKeyValue.substring(0, equalSignLocation);</span>
-<span class="fc" id="L183">            String rawValue = currentKeyValue.substring(equalSignLocation + 1);</span>
+<span class="fc" id="L183">            String myRawValue = currentKeyValue.substring(equalSignLocation + 1);</span>
             try {
-<span class="fc" id="L185">                String value = StringUtils.decode(rawValue);</span>
+<span class="fc" id="L185">                String value = StringUtils.decode(myRawValue);</span>
 <span class="fc" id="L186">                queryStrings.put(key, value);</span>
 <span class="fc" id="L187">            } catch (IllegalArgumentException ex) {</span>
-<span class="fc" id="L188">                logger.logDebug(() -&gt; &quot;Query string parsing failed for key: (%s) value: (%s).  Skipping to next key-value pair. error message: %s&quot;.formatted(key, rawValue, ex.getMessage()));</span>
+<span class="fc" id="L188">                logger.logDebug(() -&gt; &quot;Query string parsing failed for key: (%s) value: (%s).  Skipping to next key-value pair. error message: %s&quot;.formatted(key, myRawValue, ex.getMessage()));</span>
 <span class="fc" id="L189">            }</span>
         }
 <span class="fc" id="L191">        return queryStrings;</span>

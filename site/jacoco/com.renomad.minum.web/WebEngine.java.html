@@ -168,8 +168,9 @@ final class WebEngine {
 <span class="fc" id="L168">      final var socketFactory = sslContext.getServerSocketFactory();</span>
 <span class="fc" id="L169">      return socketFactory.createServerSocket(sslPort);</span>
 <span class="fc" id="L170">    } catch (Exception ex) {</span>
-<span class="fc" id="L171">      logger.logDebug(ex::getMessage);</span>
-<span class="fc" id="L172">      throw new WebServerException(ex);</span>
+<span class="fc" id="L171">      String extraMessage = &quot;Exception during creation of SSL socket with port %d, keystore URL of %s.  Exception message: %s&quot;.formatted(sslPort, keystoreUrl, ex.getMessage());</span>
+<span class="fc" id="L172">      logger.logDebug(() -&gt; extraMessage);</span>
+<span class="fc" id="L173">      throw new WebServerException(extraMessage, ex);</span>
     }
   }
 
@@ -177,8 +178,8 @@ final class WebEngine {
    * Create a client {@link ISocketWrapper} connected to the running host server
    */
   ISocketWrapper startClient(Socket socket) throws IOException {
-<span class="fc" id="L180">    logger.logDebug(() -&gt; String.format(&quot;Just created new client socket: %s&quot;, socket));</span>
-<span class="fc" id="L181">    return new SocketWrapper(socket, null, logger, constants.socketTimeoutMillis, constants.hostName);</span>
+<span class="fc" id="L181">    logger.logDebug(() -&gt; String.format(&quot;Just created new client socket: %s&quot;, socket));</span>
+<span class="fc" id="L182">    return new SocketWrapper(socket, null, logger, constants.socketTimeoutMillis, constants.hostName);</span>
   }
 
 }

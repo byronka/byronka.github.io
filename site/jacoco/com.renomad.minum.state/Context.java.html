@@ -2,6 +2,7 @@
 
 import com.renomad.minum.database.Db;
 import com.renomad.minum.database.DbData;
+import com.renomad.minum.database.DbEngine2;
 import com.renomad.minum.logging.ILogger;
 import com.renomad.minum.queue.ActionQueueState;
 import com.renomad.minum.web.FullSystem;
@@ -29,45 +30,45 @@ import java.util.concurrent.ExecutorService;
  */
 public final class Context {
 
-<span class="fc" id="L32">    public static final Context EMPTY = new Context(null, null);</span>
+<span class="fc" id="L33">    public static final Context EMPTY = new Context(null, null);</span>
     private ILogger logger;
     private final ExecutorService executorService;
     private final Constants constants;
     private FullSystem fullSystem;
     private final ActionQueueState actionQueueState;
 
-<span class="fc" id="L39">    public Context(ExecutorService executorService, Constants constants) {</span>
-<span class="fc" id="L40">        this.executorService = executorService;</span>
-<span class="fc" id="L41">        this.constants = constants;</span>
-<span class="fc" id="L42">        actionQueueState = new ActionQueueState();</span>
-<span class="fc" id="L43">    }</span>
+<span class="fc" id="L40">    public Context(ExecutorService executorService, Constants constants) {</span>
+<span class="fc" id="L41">        this.executorService = executorService;</span>
+<span class="fc" id="L42">        this.constants = constants;</span>
+<span class="fc" id="L43">        actionQueueState = new ActionQueueState();</span>
+<span class="fc" id="L44">    }</span>
 
     public void setLogger(ILogger logger) {
-<span class="fc" id="L46">        this.logger = logger;</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L47">        this.logger = logger;</span>
+<span class="fc" id="L48">    }</span>
 
     public ILogger getLogger() {
-<span class="fc" id="L50">        return logger;</span>
+<span class="fc" id="L51">        return logger;</span>
     }
 
     public ExecutorService getExecutorService() {
-<span class="fc" id="L54">        return executorService;</span>
+<span class="fc" id="L55">        return executorService;</span>
     }
 
     public Constants getConstants() {
-<span class="fc" id="L58">        return constants;</span>
+<span class="fc" id="L59">        return constants;</span>
     }
 
     public void setFullSystem(FullSystem fullSystem) {
-<span class="fc" id="L62">        this.fullSystem = fullSystem;</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L63">        this.fullSystem = fullSystem;</span>
+<span class="fc" id="L64">    }</span>
 
     public FullSystem getFullSystem() {
-<span class="fc" id="L66">        return fullSystem;</span>
+<span class="fc" id="L67">        return fullSystem;</span>
     }
 
     public ActionQueueState getActionQueueState() {
-<span class="fc" id="L70">        return actionQueueState;</span>
+<span class="fc" id="L71">        return actionQueueState;</span>
     }
 
     /**
@@ -87,7 +88,25 @@ public final class Context {
      *                 Db code to deserialize the data when reading.
      */
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
-<span class="fc" id="L90">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
+<span class="fc" id="L91">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
     }
+
+    /**
+     * This is a helper method to instantiate a {@link DbEngine2} class,
+     * using the engine2 database implementation. It is similar to
+     * {@link #getDb(String, DbData)} in all other respects.
+     * &lt;p&gt;
+     *     By switching your old database calls to use this, when it runs
+     *     it will convert the file schema.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *     &lt;b&gt;Please backup your database before conversion&lt;/b&gt;
+     * &lt;/p&gt;
+     */
+    public &lt;T extends DbData&lt;?&gt;&gt; DbEngine2&lt;T&gt; getDb2(String name, T instance) {
+<span class="fc" id="L107">        return new DbEngine2&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
+    }
+
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

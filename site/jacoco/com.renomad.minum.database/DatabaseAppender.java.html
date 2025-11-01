@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseAppender.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.database</a> &gt; <span class="el_source">DatabaseAppender.java</span></div><h1>DatabaseAppender.java</h1><pre class="source lang-java linenums">package com.renomad.minum.database;
+
+
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.state.Constants;
+import com.renomad.minum.state.Context;
+import com.renomad.minum.utils.FileUtils;
+import com.renomad.minum.utils.MyThread;
+import com.renomad.minum.utils.StacktraceUtils;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * This class provide the capability of appending database changes
+ * to the disk, quickly and efficiently.
+ */
+final class DatabaseAppender {
+
+    /**
+     * Results in output like &quot;2025_08_30_13_01_49_123&quot;, which is year_month_day_hour_minute_second_millisecond.
+     * This can be used to parse the file names to {@link java.util.Date} so we can process the oldest
+     * file first.
+     */
+<span class="fc" id="L34">    static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(&quot;yyyy_MM_dd_HH_mm_ss_SSS&quot;);</span>
+
+    private final Path persistenceDirectory;
+
+    Writer bufferedWriter;
+
+    /**
+     * if true, there is data in the buffered writer that needs to be
+     * written to disk using {@link BufferedWriter#flush()}
+     */
+    private boolean bufferedWriterHasUnwrittenData;
+
+    /**
+     * This class field tracks the status of the loop which runs
+     * a flush every second
+     */
+    private boolean flushLoopRunning;
+
+    /**
+     * The directory for this database
+     */
+    private final Path appendLogDirectory;
+
+    /**
+     * Used to create a thread that contains an inner loop
+     * to flush the data to disk on a periodic basis
+     */
+    private final ExecutorService executorService;
+
+    private final ILogger logger;
+
+    private final ReentrantLock moveFileLock;
+
+    /**
+     * The maximum number of data's we will add to the append-only
+     * file before we move on to a new file.
+     */
+    int maxAppendCount;
+
+    /**
+     * this is the current count of how many appends have
+     * been made to the current database file.  Once it
+     * exceeds a certain maximum, we'll switch to a
+     * different file.
+     */
+    int appendCount;
+
+    /**
+     * This is the count of bytes that have been appended
+     */
+    private long appendBytes;
+
+<span class="fc" id="L86">    DatabaseAppender(Path persistenceDirectory, Context context) throws IOException {</span>
+<span class="fc" id="L87">        this.persistenceDirectory = persistenceDirectory;</span>
+<span class="fc" id="L88">        this.appendLogDirectory = persistenceDirectory.resolve(&quot;append_logs&quot;);</span>
+<span class="fc" id="L89">        this.executorService = context.getExecutorService();</span>
+<span class="fc" id="L90">        this.logger = context.getLogger();</span>
+<span class="fc" id="L91">        Constants constants = context.getConstants();</span>
+<span class="fc" id="L92">        FileUtils fileUtils = new FileUtils(logger, constants);</span>
+<span class="fc" id="L93">        this.maxAppendCount = constants.maxAppendCount;</span>
+<span class="fc" id="L94">        fileUtils.makeDirectory(this.appendLogDirectory);</span>
+<span class="fc" id="L95">        moveFileLock = new ReentrantLock();</span>
+<span class="fc" id="L96">        createNewAppendFile();</span>
+<span class="fc" id="L97">    }</span>
+
+    /**
+     * Creates a new append-file (a file used for appending data) and
+     * resets the append count to zero.
+     */
+    private void createNewAppendFile() throws IOException {
+<span class="fc" id="L104">        Path currentAppendFile = this.persistenceDirectory.resolve(&quot;currentAppendLog&quot;);</span>
+
+        // if we are starting up with an existing currentAppendLog, set the appendCount
+        // appropriately.  Otherwise, initialize to 0.  The currentAppendLog file is
+        // never very large - it's mostly a temporary place to store incoming data
+        // until we can store it off elsewhere. For that reason, it's not a performance
+        // concern to read all the existing lines, just to get the count of current lines.
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (Files.exists(currentAppendFile)) {</span>
+<span class="fc" id="L112">            List&lt;String&gt; lines = Files.readAllLines(currentAppendFile);</span>
+<span class="fc" id="L113">            appendCount = lines.size();</span>
+<span class="fc" id="L114">        } else {</span>
+            // reset the count to zero, we're starting a new file.
+<span class="fc" id="L116">            logger.logDebug(() -&gt; &quot;Creating a new database append file. Previous file: %,d lines, %.2f megabytes&quot;.formatted(appendCount, (appendBytes / 1_048_576.0)));</span>
+<span class="fc" id="L117">            appendCount = 0;</span>
+<span class="fc" id="L118">            appendBytes = 0;</span>
+        }
+
+<span class="fc" id="L121">        bufferedWriter = Files.newBufferedWriter(currentAppendFile, StandardCharsets.US_ASCII, StandardOpenOption.CREATE, StandardOpenOption.APPEND);</span>
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * Appends new data to the end of a file.
+     * @return if we created a new append file, we'll return the name of it. Otherwise, an empty string.
+     */
+    String appendToDatabase(DatabaseChangeAction action, String serializedData) throws IOException {
+<span class="fc" id="L129">        String newlyCreatedFileName = &quot;&quot;;</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (appendCount &gt;= maxAppendCount) {</span>
+<span class="fc" id="L131">            moveFileLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+            try {
+<span class="fc" id="L133">                newlyCreatedFileName = saveOffWrapped(appendCount, maxAppendCount);</span>
+            } finally {
+<span class="fc" id="L135">                moveFileLock.unlock();</span>
+            }
+        }
+
+<span class="fc" id="L139">        bufferedWriter.append(action.toString()).append(' ').append(serializedData).append('\n');</span>
+<span class="fc" id="L140">        setBufferedWriterHasUnwrittenData();</span>
+<span class="fc" id="L141">        appendCount += 1;</span>
+<span class="fc" id="L142">        appendBytes += serializedData.length() + 8; // 8 includes the action (e.g. UPDATE), a space character, and a newline</span>
+<span class="fc" id="L143">        return newlyCreatedFileName;</span>
+    }
+
+    private void setBufferedWriterHasUnwrittenData() {
+<span class="fc" id="L147">        bufferedWriterHasUnwrittenData = true;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if (!flushLoopRunning) {</span>
+<span class="fc" id="L149">            initializeTimedFlusher();</span>
+        }
+<span class="fc" id="L151">    }</span>
+
+    /**
+     * This method is kicked off when there is new data added to
+     * the {@link BufferedWriter}.  While there is data to write, it
+     * will wake up every second to flush the data.  Once there is
+     * no more data, it will end.
+     */
+    private void initializeTimedFlusher() {
+<span class="fc" id="L160">        Runnable timedFlusherLoop = () -&gt; {</span>
+<span class="fc" id="L161">            flushLoopRunning = true;</span>
+<span class="fc" id="L162">            Thread.currentThread().setName(&quot;database_timed_flusher&quot;);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            while (bufferedWriterHasUnwrittenData) {</span>
+<span class="fc" id="L164">                flush();</span>
+
+                // this code only runs when there is data to add, so no need to take a
+                // lot of waiting time.  But, if the data is coming fast and furious,
+                // at least a small wait will allow greater efficiency.
+<span class="fc" id="L169">                MyThread.sleep(50);</span>
+            }
+<span class="fc" id="L171">            flushLoopRunning = false;</span>
+<span class="fc" id="L172">        };</span>
+<span class="fc" id="L173">        executorService.submit(timedFlusherLoop);</span>
+<span class="fc" id="L174">    }</span>
+
+    /**
+     * This helper just wraps a method to enable easier testing.
+     * @return true if the appendCount is greater or equal to maxAppendCount,
+     * meaning that we moved on to calling {@link #saveOffCurrentDataToReadyFolder()},
+     * false otherwise.
+     */
+    String saveOffWrapped(int appendCount, int maxAppendCount) throws IOException {
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (appendCount &gt;= maxAppendCount) {</span>
+<span class="fc" id="L184">            return saveOffCurrentDataToReadyFolder();</span>
+        }
+<span class="fc" id="L186">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Move the append-only file to a new place to prepare for
+     * consolidation, and reset the append count.
+     * @return the name of the newly-created file
+     */
+    String saveOffCurrentDataToReadyFolder() throws IOException {
+<span class="fc" id="L195">        flush();</span>
+<span class="fc" id="L196">        String newFileName = moveToReadyFolder();</span>
+<span class="fc" id="L197">        createNewAppendFile();</span>
+<span class="fc" id="L198">        return newFileName;</span>
+    }
+
+    /**
+     * When we are done filling a file, move it to the ready
+     * folder named by the date + time + millis.
+     * @return the name of the new file
+     */
+    private String moveToReadyFolder() throws IOException {
+<span class="fc" id="L207">        String appendFile = simpleDateFormat.format(new java.util.Date());</span>
+<span class="fc" id="L208">        Files.move(persistenceDirectory.resolve(&quot;currentAppendLog&quot;), this.appendLogDirectory.resolve(appendFile));</span>
+<span class="fc" id="L209">        return appendFile;</span>
+    }
+
+    void flush() {
+<span class="fc" id="L213">        flush(this.bufferedWriter, this.logger);</span>
+<span class="fc" id="L214">        this.bufferedWriterHasUnwrittenData = false;</span>
+<span class="fc" id="L215">    }</span>
+
+    static void flush(Writer writer, ILogger logger) {
+        try {
+<span class="fc" id="L219">            writer.flush();</span>
+<span class="fc" id="L220">        } catch (IOException e) {</span>
+<span class="fc" id="L221">            logger.logAsyncError(() -&gt; &quot;Error while flushing in TimedFlusher: &quot; + StacktraceUtils.stackTraceToString(e));</span>
+<span class="fc" id="L222">            throw new DbException(e);</span>
+<span class="fc" id="L223">        }</span>
+<span class="fc" id="L224">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

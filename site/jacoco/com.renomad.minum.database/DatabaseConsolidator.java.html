@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseConsolidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.database</a> &gt; <span class="el_source">DatabaseConsolidator.java</span></div><h1>DatabaseConsolidator.java</h1><pre class="source lang-java linenums">package com.renomad.minum.database;
+
+import com.renomad.minum.logging.ILogger;
+import com.renomad.minum.state.Context;
+import com.renomad.minum.utils.FileUtils;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.ParseException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.renomad.minum.database.DatabaseAppender.simpleDateFormat;
+
+/**
+ * Consolidates the database append logs.
+ * &lt;br&gt;
+ * As the append logs get filled up, the consolidator comes
+ * along after to analyze those changes and determine a
+ * consolidated version.  For example, if the append logs
+ * have three updates for a particular element, then the consolidated file
+ * will have just the last update.
+ */
+final class DatabaseConsolidator {
+
+    /**
+     * This is the path to the append-only files, where incoming
+     * changes to the data are quickly stored.
+     */
+    private final Path appendLogDirectory;
+
+    /**
+     * This is the path to where we store consolidated data, so that
+     * database startup is as fast as possible.
+     */
+    private final Path consolidatedDataDirectory;
+
+    private final ILogger logger;
+
+    private final int maxLinesPerFile;
+
+    /**
+     * This represents an instruction for how to change the overall consolidated
+     * database files on disk.  Instructions are either to UPDATE or DELETE. This
+     * also encapsulates the data we're updating.
+     */
+<span class="fc" id="L49">    private record DatabaseChangeInstruction(DatabaseChangeAction action, long dataIndex, String data) {}</span>
+
+<span class="fc" id="L51">    DatabaseConsolidator(Path persistenceDirectory, Context context) {</span>
+<span class="fc" id="L52">        this.appendLogDirectory = persistenceDirectory.resolve(&quot;append_logs&quot;);</span>
+<span class="fc" id="L53">        this.consolidatedDataDirectory = persistenceDirectory.resolve(&quot;consolidated_data&quot;);</span>
+<span class="fc" id="L54">        var constants = context.getConstants();</span>
+<span class="fc" id="L55">        this.logger = context.getLogger();</span>
+<span class="fc" id="L56">        FileUtils fileUtils = new FileUtils(logger, constants);</span>
+<span class="fc" id="L57">        fileUtils.makeDirectory(this.consolidatedDataDirectory);</span>
+<span class="fc" id="L58">        this.maxLinesPerFile = constants.maxLinesPerConsolidatedDatabaseFile;</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Loop through all the append-only files
+     */
+    void consolidate() throws IOException {
+<span class="fc" id="L65">        logger.logDebug(() -&gt; &quot;Starting database consolidator&quot;);</span>
+<span class="fc" id="L66">        List&lt;Date&gt; sortedList = getSortedAppendLogs(appendLogDirectory);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (sortedList.isEmpty()) {</span>
+<span class="fc" id="L68">            logger.logDebug(() -&gt; &quot;No database files found to consolidate - exiting&quot;);</span>
+<span class="fc" id="L69">            return;</span>
+        } else {
+<span class="fc" id="L71">            logger.logDebug(() -&gt; &quot;Files to consolidate: &quot; + sortedList.stream().map(simpleDateFormat::format).collect(Collectors.joining(&quot;;&quot;)));</span>
+        }
+
+        // process the files in order.  This does potentially cause
+        // multiple updates for the consolidated files, but that's
+        // safer than building up too large a structure in memory
+        // before writing, and in any case, we're prioritizing efficiency
+        // so there should only be one write to each file per loop.
+        //
+        // after each append-only file is fully processed, it gets deleted.
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (Date date : sortedList) {</span>
+<span class="fc" id="L82">            String filename = simpleDateFormat.format(date);</span>
+<span class="fc" id="L83">            logger.logDebug(() -&gt; &quot;consolidator processing file &quot; + filename + &quot; in &quot; + appendLogDirectory);</span>
+<span class="fc" id="L84">            processAppendLogFile(filename);</span>
+<span class="fc" id="L85">            logger.logDebug(() -&gt; &quot;consolidator finished with file &quot; + filename + &quot; in &quot; + appendLogDirectory);</span>
+<span class="fc" id="L86">        }</span>
+<span class="fc" id="L87">        logger.logDebug(() -&gt; &quot;Database consolidation finished&quot;);</span>
+<span class="fc" id="L88">    }</span>
+
+
+    /**
+     * The expectation is that after we finish reading the X lines in
+     * this append log, we will have a set of clear instructions to
+     * apply to our previously consolidated files. There should end up
+     * being just one action for each id - update or delete.
+     * &lt;br&gt;
+     * Build a data structure holding instructions for the next step.
+     */
+    private void processAppendLogFile(String filename) throws IOException {
+<span class="fc" id="L100">        Path fullPathToFile = this.appendLogDirectory.resolve(filename);</span>
+<span class="fc" id="L101">        List&lt;String&gt; lines = Files.readAllLines(fullPathToFile);</span>
+<span class="fc" id="L102">        Map&lt;Long, DatabaseChangeInstruction&gt; resultingInstructions = new HashMap&lt;&gt;();</span>
+
+        // process each line from the file
+
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        for (String line : lines) {</span>
+<span class="fc" id="L107">            DatabaseChangeInstruction databaseChange = parseDatabaseChangeInstructionString(line, filename);</span>
+
+            // the trick here is that by using a Map, only the last item added will remain at the end
+<span class="fc" id="L110">            resultingInstructions.put(databaseChange.dataIndex(), databaseChange);</span>
+<span class="fc" id="L111">        }</span>
+
+        // now we have the concise list of state changes, but the next step is figuring out how
+        // to organize them by their destination.  consolidated files will be grouped somehow.
+        // For example, indexes 1 - 1000, 1001-2000, etc (there may be more than 1000 per file).
+        // &lt;br&gt;
+        // So, we will group our data that way,
+        // and then efficiently update the files (a bad outcome, in contrast, would be updating
+        // the files multiple times each).
+
+<span class="fc" id="L121">        Map&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; groupedInstructions = groupInstructionsByPartition(resultingInstructions);</span>
+
+<span class="fc" id="L123">        rewriteFiles(groupedInstructions);</span>
+
+        // delete the file
+<span class="fc" id="L126">        Files.delete(fullPathToFile);</span>
+<span class="fc" id="L127">    }</span>
+
+    /**
+     * Given a {@link Map} of database change instructions, grouped by keys representing the
+     * first index in a group of indexes (like 1 to 100, or 101 to 200, etc), write the
+     * data to files, with consideration for what might already exist.  That is to say,
+     * if we are adding grouped instructions to an existing file such as &quot;1_to_100&quot;, then
+     * we want to merge our incoming data with what is already there.  Otherwise, we are just
+     * creating a new file.
+     */
+    private void rewriteFiles(Map&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; groupedInstructions) throws IOException {
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (Map.Entry&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; instructions : groupedInstructions.entrySet()) {</span>
+<span class="fc" id="L139">            String filename = String.format(&quot;%d_to_%d&quot;, instructions.getKey(), instructions.getKey() + (maxLinesPerFile - 1));</span>
+<span class="fc" id="L140">            logger.logTrace(() -&gt; &quot;Writing consolidated data to &quot; + filename);</span>
+            List&lt;String&gt; data;
+            // if the file doesn't exist, we'll just start with an empty list. If it
+            // does exist, read its lines into a List data structure.
+<span class="fc" id="L144">            Path fullPathToConsolidatedFile = this.consolidatedDataDirectory.resolve(filename);</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">            if (!Files.exists(fullPathToConsolidatedFile)) {</span>
+<span class="fc" id="L146">                data = new ArrayList&lt;&gt;();</span>
+            } else {
+<span class="fc" id="L148">                data = Files.readAllLines(fullPathToConsolidatedFile);</span>
+            }
+
+            // update the data in memory per the instructions
+<span class="fc" id="L152">            Collection&lt;String&gt; updatedData = updateData(filename, data, instructions.getValue());</span>
+
+            // write the data to disk
+<span class="fc" id="L155">            Files.write(fullPathToConsolidatedFile, updatedData, StandardCharsets.US_ASCII);</span>
+<span class="fc" id="L156">        }</span>
+<span class="fc" id="L157">    }</span>
+
+    /**
+     * Here, we have raw lines of data from a file, and a list of instructions for updating
+     * that data.  We will organize the raw data better, apply the instructions, and return
+     * the updated data
+     *
+     * @param linesOfData  raw lines of data from a file
+     * @param instructions details of how to change the data in the file, either UPDATE or DELETE
+     * @return an updated and sorted list of strings (sorted by index, which is the first value on each line)
+     */
+    static Collection&lt;String&gt; updateData(String filename, List&lt;String&gt; linesOfData, Collection&lt;DatabaseChangeInstruction&gt; instructions) {
+<span class="fc" id="L169">        SortedMap&lt;Long, String&gt; result = new TreeMap&lt;&gt;();</span>
+        // put the original data into a map
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (String data : linesOfData) {</span>
+            // the first pipe symbol is where the index number ends.  Apologies for
+            // the overlap of terms here, index and index.
+<span class="fc" id="L174">            int indexOfFirstPipe = data.indexOf('|');</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            if (indexOfFirstPipe == -1) {</span>
+<span class="fc" id="L176">                throw new DbException(String.format(&quot;Error parsing line in file.  File: %s line: %s&quot;, filename, data));</span>
+            }
+<span class="fc" id="L178">            String dataIndexString = data.substring(0, indexOfFirstPipe);</span>
+            long dataIndexLong;
+            try {
+<span class="fc" id="L181">                dataIndexLong = Long.parseLong(dataIndexString);</span>
+<span class="fc" id="L182">            } catch (NumberFormatException ex) {</span>
+<span class="fc" id="L183">                throw new DbException(String.format(&quot;Failed to parse index from line in file. File: %s line: %s&quot;, filename, data), ex);</span>
+<span class="fc" id="L184">            }</span>
+<span class="fc" id="L185">            result.put(dataIndexLong, data);</span>
+<span class="fc" id="L186">        }</span>
+
+        // change that data per instructions
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (DatabaseChangeInstruction instruction : instructions) {</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">            if (DatabaseChangeAction.UPDATE.equals(instruction.action())) {</span>
+<span class="fc" id="L191">                result.put(instruction.dataIndex(), instruction.data());</span>
+            } else {
+                // only other option is DELETE
+<span class="fc" id="L194">                result.remove(instruction.dataIndex());</span>
+            }
+<span class="fc" id="L196">        }</span>
+<span class="fc" id="L197">        return result.values();</span>
+    }
+
+    /**
+     * This method will group the instructions for changes to the database by which
+     * consolidated files they apply to, so that we only need to make one change
+     * to each file.  Files are named like this: 1, 1001, etc., or
+     * in other words, the starting index of each set of consolidated data.
+     * @param databaseChangeInstructionMap this is a map between keys representing the
+     *                                     index of the data, and the data itself.
+     * @return a map consisting of keys representing the target file for the data, and
+     * a collection of DatabaseChangeInstruction data to place in that file.
+     */
+    private Map&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; groupInstructionsByPartition(
+            Map&lt;Long, DatabaseChangeInstruction&gt; databaseChangeInstructionMap) {
+
+        // initialize a data structure to store our results
+<span class="fc" id="L214">        Map&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; instructionsGroupedByPartition = new HashMap&lt;&gt;();</span>
+
+        // loop through the incoming data, grouping and ordering as necessary
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        for (var databaseChangeInstruction : databaseChangeInstructionMap.entrySet()) {</span>
+
+            // determine the expected filename for this file.  For example, if the index is 1234, then
+            // the filename should be 1001
+<span class="fc" id="L221">            long expectedFilename = (((databaseChangeInstruction.getKey() - 1) / maxLinesPerFile) * maxLinesPerFile) + 1;</span>
+
+            // If there is no key found, we need to add one, and add a new collection
+<span class="fc" id="L224">            instructionsGroupedByPartition.computeIfAbsent(expectedFilename, x -&gt; new ArrayList&lt;&gt;());</span>
+
+            // add a new item to the collection for this filename
+<span class="fc" id="L227">            instructionsGroupedByPartition.get(expectedFilename).add(databaseChangeInstruction.getValue());</span>
+<span class="fc" id="L228">        }</span>
+
+<span class="fc" id="L230">        return instructionsGroupedByPartition;</span>
+    }
+
+    /**
+     * read first 6 characters - is it update or delete?
+     * skip a character
+     * read digits until we hit a pipe symbol, that's our index.
+     * read the rest of the content
+     */
+    static DatabaseChangeInstruction parseDatabaseChangeInstructionString(String databaseInstructionString, String filename) {
+<span class="fc" id="L240">        String actionString = databaseInstructionString.substring(0, 6);</span>
+        DatabaseChangeAction action;
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (&quot;UPDATE&quot;.equals(actionString)) {</span>
+<span class="fc" id="L243">            action = DatabaseChangeAction.UPDATE;</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        } else if (&quot;DELETE&quot;.equals(actionString)) {</span>
+<span class="fc" id="L245">            action = DatabaseChangeAction.DELETE;</span>
+        } else {
+<span class="fc" id="L247">            throw new DbException(&quot;Line in append-only log was missing an action (UPDATE or DELETE) in the first characters. Line was: &quot; + databaseInstructionString);</span>
+        }
+        // confusing overlap of terms - index is used here to mean two things:
+        // a) where we find the first pipe symbol
+        // b) the index value of the data
+<span class="fc" id="L252">        int indexOfPipe = databaseInstructionString.indexOf('|', 7);</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        if (indexOfPipe == -1) {</span>
+<span class="fc" id="L254">            throw new DbException(</span>
+<span class="fc" id="L255">                    &quot;Failed to find index of the first pipe in the file %s, with content %s&quot;.formatted(filename, databaseInstructionString));</span>
+        }
+<span class="fc" id="L257">        String dataIndex = databaseInstructionString.substring(7, indexOfPipe);</span>
+<span class="fc" id="L258">        long dataIndexLong = Long.parseLong(dataIndex);</span>
+
+<span class="fc" id="L260">        return new DatabaseChangeInstruction(action, dataIndexLong, databaseInstructionString.substring(7));</span>
+    }
+
+    /**
+     * Given a directory, convert the list of files into a sorted
+     * list of dates.
+     * @return a sorted list of dates, or an empty list if nothing found
+     */
+    static List&lt;Date&gt; getSortedAppendLogs(Path appendLogDirectory) {
+        // get the list of file names, which are date-time stamps
+<span class="fc" id="L270">        String[] fileList = appendLogDirectory.toFile().list();</span>
+
+        // if there aren't any append-only files, bail out with an empty list
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        if (fileList == null) {</span>
+<span class="fc" id="L274">            return List.of();</span>
+        }
+
+<span class="fc" id="L277">        List&lt;Date&gt; appendLogDates = convertFileListToDateList(fileList);</span>
+
+        // sort
+<span class="fc" id="L280">        return appendLogDates.stream().sorted().toList();</span>
+    }
+
+    /**
+     * Convert a list of filenames to a list of dates
+     */
+    static List&lt;Date&gt; convertFileListToDateList(String[] listOfFiles) {
+        // initialize a list which will hold the dates associated with each file name
+<span class="fc" id="L288">        List&lt;Date&gt; appendLogDates = new ArrayList&lt;&gt;();</span>
+
+        // convert the names to dates
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        for (String file : listOfFiles) {</span>
+            Date date;
+            try {
+<span class="fc" id="L294">                date = simpleDateFormat.parse(file);</span>
+<span class="fc" id="L295">            } catch (ParseException e) {</span>
+<span class="fc" id="L296">                throw new DbException(e);</span>
+<span class="fc" id="L297">            }</span>
+<span class="fc" id="L298">            appendLogDates.add(date);</span>
+        }
+
+<span class="fc" id="L301">        return appendLogDates;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

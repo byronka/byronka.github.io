@@ -129,56 +129,55 @@ public final class TheBrig implements ITheBrig {
         }
 <span class="fc" id="L130">    }</span>
 
-
     @Override
     public boolean sendToJail(String clientIdentifier, long sentenceDuration) {
-<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (!constants.isTheBrigEnabled) {</span>
-<span class="fc" id="L136">            return false;</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (!constants.isTheBrigEnabled) {</span>
+<span class="fc" id="L135">            return false;</span>
         }
-<span class="fc" id="L138">        lock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+<span class="fc" id="L137">        lock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
         try {
-<span class="fc" id="L140">            long now = System.currentTimeMillis();</span>
+<span class="fc" id="L139">            long now = System.currentTimeMillis();</span>
 
-<span class="fc" id="L142">            Inmate existingInmate = SearchUtils.findExactlyOne(inmatesDb.values().stream(), x -&gt; x.getClientId().equals(clientIdentifier));</span>
-<span class="fc bfc" id="L143" title="All 2 branches covered.">            if (existingInmate == null) {</span>
+<span class="fc" id="L141">            Inmate existingInmate = SearchUtils.findExactlyOne(inmatesDb.values().stream(), x -&gt; x.getClientId().equals(clientIdentifier));</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">            if (existingInmate == null) {</span>
                 // if this is a new inmate, add them
-<span class="fc" id="L145">                long releaseTime = now + sentenceDuration;</span>
-<span class="fc" id="L146">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
-<span class="fc" id="L147">                Inmate newInmate = new Inmate(0L, clientIdentifier, releaseTime);</span>
-<span class="fc" id="L148">                inmatesDb.write(newInmate);</span>
-<span class="fc" id="L149">            } else {</span>
+<span class="fc" id="L144">                long releaseTime = now + sentenceDuration;</span>
+<span class="fc" id="L145">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
+<span class="fc" id="L146">                Inmate newInmate = new Inmate(0L, clientIdentifier, releaseTime);</span>
+<span class="fc" id="L147">                inmatesDb.write(newInmate);</span>
+<span class="fc" id="L148">            } else {</span>
                 // if this is an existing inmate continuing to attack us, just update their duration
-<span class="fc" id="L151">                long releaseTime = existingInmate.getReleaseTime() + sentenceDuration;</span>
-<span class="fc" id="L152">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
-<span class="fc" id="L153">                inmatesDb.write(new Inmate(existingInmate.getIndex(), existingInmate.getClientId(), releaseTime));</span>
+<span class="fc" id="L150">                long releaseTime = existingInmate.getReleaseTime() + sentenceDuration;</span>
+<span class="fc" id="L151">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
+<span class="fc" id="L152">                inmatesDb.write(new Inmate(existingInmate.getIndex(), existingInmate.getClientId(), releaseTime));</span>
             }
         } finally {
-<span class="fc" id="L156">            lock.unlock();</span>
+<span class="fc" id="L155">            lock.unlock();</span>
         }
-<span class="fc" id="L158">        return true;</span>
+<span class="fc" id="L157">        return true;</span>
 
     }
 
     @Override
     public boolean isInJail(String clientIdentifier) {
-<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (!constants.isTheBrigEnabled) {</span>
-<span class="fc" id="L165">            return false;</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (!constants.isTheBrigEnabled) {</span>
+<span class="fc" id="L164">            return false;</span>
         }
-<span class="fc" id="L167">        lock.lock();</span>
+<span class="fc" id="L166">        lock.lock();</span>
         try {
-<span class="fc" id="L169">            return inmatesDb.values().stream().anyMatch(x -&gt; x.getClientId().equals(clientIdentifier));</span>
+<span class="fc" id="L168">            return inmatesDb.values().stream().anyMatch(x -&gt; x.getClientId().equals(clientIdentifier));</span>
         } finally {
-<span class="fc" id="L171">            lock.unlock();</span>
+<span class="fc" id="L170">            lock.unlock();</span>
         }
     }
 
     @Override
     public List&lt;Inmate&gt; getInmates() {
-<span class="fc" id="L177">        lock.lock();</span>
+<span class="fc" id="L176">        lock.lock();</span>
         try {
-<span class="fc" id="L179">            return inmatesDb.values().stream().toList();</span>
+<span class="fc" id="L178">            return inmatesDb.values().stream().toList();</span>
         } finally {
-<span class="fc" id="L181">            lock.unlock();</span>
+<span class="fc" id="L180">            lock.unlock();</span>
         }
     }
 
