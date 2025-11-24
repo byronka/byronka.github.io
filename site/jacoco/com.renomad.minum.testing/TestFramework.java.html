@@ -268,11 +268,9 @@ public final class TestFramework {
 <span class="fc" id="L268">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
 <span class="fc" id="L269">        var logger = new TestLogger(constants, executorService, loggerName);</span>
 
-<span class="fc" id="L271">        var context = new Context(executorService, constants);</span>
+<span class="fc" id="L271">        var context = new Context(executorService, constants, logger);</span>
 
-<span class="fc" id="L273">        context.setLogger(logger);</span>
-
-<span class="fc" id="L275">        return context;</span>
+<span class="fc" id="L273">        return context;</span>
     }
 
     /**
@@ -280,10 +278,10 @@ public final class TestFramework {
      * the {@link #buildTestingContext} methods.
      */
     public static void shutdownTestingContext(Context context) {
-<span class="fc" id="L283">            new ActionQueueKiller(context).killAllQueues();</span>
-<span class="fc" id="L284">            context.getLogger().stop();</span>
-<span class="fc" id="L285">            context.getExecutorService().shutdownNow();</span>
-<span class="fc" id="L286">    }</span>
+<span class="fc" id="L281">            new ActionQueueKiller(context).killAllQueues();</span>
+<span class="fc" id="L282">            context.getLogger().stop();</span>
+<span class="fc" id="L283">            context.getExecutorService().shutdownNow();</span>
+<span class="fc" id="L284">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

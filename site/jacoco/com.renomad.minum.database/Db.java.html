@@ -47,7 +47,7 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb&lt;T&gt; {
      */
     private long maxIndexOnDisk;
 
-    private boolean hasLoadedData;
+    boolean hasLoadedData;
 
     /**
      * Constructs an in-memory disk-persisted database.
@@ -193,77 +193,79 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb&lt;T&gt; {
      * method is run by various programs when the system first loads.
      */
     private void loadDataFromDisk() throws IOException {
+<span class="fc" id="L196">        logger.logDebug(() -&gt; &quot;Loading data from disk. Db classic. Directory: &quot; + dbDirectory);</span>
+
         // check if the folder has content for a DbEngine2 database, meaning we
         // need to convert it back to the classic DB file structure.
-<span class="fc bfc" id="L198" title="All 2 branches covered.">        if (Files.exists(dbDirectory.resolve(&quot;currentAppendLog&quot;))) {</span>
-<span class="fc" id="L199">            new DbFileConverter(context, dbDirectory).convertFolderStructureToDbClassic();</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (Files.exists(dbDirectory.resolve(&quot;currentAppendLog&quot;))) {</span>
+<span class="fc" id="L201">            new DbFileConverter(context, dbDirectory).convertFolderStructureToDbClassic();</span>
         }
 
-<span class="fc bfc" id="L202" title="All 2 branches covered.">        if (! Files.exists(dbDirectory)) {</span>
-<span class="fc" id="L203">            logger.logDebug(() -&gt; dbDirectory + &quot; directory missing, adding nothing to the data list&quot;);</span>
-<span class="fc" id="L204">            return;</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">        if (! Files.exists(dbDirectory)) {</span>
+<span class="fc" id="L205">            logger.logDebug(() -&gt; dbDirectory + &quot; directory missing, adding nothing to the data list&quot;);</span>
+<span class="fc" id="L206">            return;</span>
         }
 
-<span class="fc" id="L207">        walkAndLoad(dbDirectory);</span>
-<span class="fc" id="L208">    }</span>
+<span class="fc" id="L209">        walkAndLoad(dbDirectory);</span>
+<span class="fc" id="L210">    }</span>
 
     void walkAndLoad(Path dbDirectory) {
         // walk through all the files in this directory, collecting
         // all regular files (non-subdirectories) except for index.ddps
-<span class="fc" id="L213">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
-<span class="fc" id="L214">            final var listOfFiles = pathStream.filter(path -&gt;</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">                        Files.isRegularFile(path) &amp;&amp;</span>
-<span class="fc bfc" id="L216" title="All 2 branches covered.">                        !path.getFileName().toString().startsWith(&quot;index&quot;)</span>
-<span class="fc" id="L217">            ).toList();</span>
-<span class="fc bfc" id="L218" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
-<span class="fc" id="L219">                readAndDeserialize(p);</span>
-<span class="fc" id="L220">            }</span>
-<span class="fc" id="L221">        } catch (IOException e) {</span>
-<span class="fc" id="L222">            throw new DbException(e);</span>
-<span class="fc" id="L223">        }</span>
-<span class="fc" id="L224">    }</span>
+<span class="fc" id="L215">        try (final var pathStream = Files.walk(dbDirectory)) {</span>
+<span class="fc" id="L216">            final var listOfFiles = pathStream.filter(path -&gt;</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">                        Files.isRegularFile(path) &amp;&amp;</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">                        !path.getFileName().toString().startsWith(&quot;index&quot;)</span>
+<span class="fc" id="L219">            ).toList();</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">            for (Path p : listOfFiles) {</span>
+<span class="fc" id="L221">                readAndDeserialize(p);</span>
+<span class="fc" id="L222">            }</span>
+<span class="fc" id="L223">        } catch (IOException e) {</span>
+<span class="fc" id="L224">            throw new DbException(e);</span>
+<span class="fc" id="L225">        }</span>
+<span class="fc" id="L226">    }</span>
 
     /**
      * Carry out the process of reading data files into our in-memory structure
      * @param p the path of a particular file
      */
     void readAndDeserialize(Path p) throws IOException {
-<span class="fc" id="L231">        Path fileName = p.getFileName();</span>
-<span class="fc bfc" id="L232" title="All 2 branches covered.">        if (fileName == null) throw new DbException(&quot;At readAndDeserialize, path &quot; + p + &quot; returned a null filename&quot;);</span>
-<span class="fc" id="L233">        String filename = fileName.toString();</span>
-<span class="fc" id="L234">        int startOfSuffixIndex = filename.indexOf('.');</span>
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        if(startOfSuffixIndex == -1) {</span>
-<span class="fc" id="L236">            throw new DbException(&quot;the files must have a ddps suffix, like 1.ddps.  filename: &quot; + filename);</span>
+<span class="fc" id="L233">        Path fileName = p.getFileName();</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (fileName == null) throw new DbException(&quot;At readAndDeserialize, path &quot; + p + &quot; returned a null filename&quot;);</span>
+<span class="fc" id="L235">        String filename = fileName.toString();</span>
+<span class="fc" id="L236">        int startOfSuffixIndex = filename.indexOf('.');</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">        if(startOfSuffixIndex == -1) {</span>
+<span class="fc" id="L238">            throw new DbException(&quot;the files must have a ddps suffix, like 1.ddps.  filename: &quot; + filename);</span>
         }
-<span class="fc" id="L238">        String fileContents = Files.readString(p);</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (fileContents.isBlank()) {</span>
-<span class="fc" id="L240">            logger.logDebug( () -&gt; fileName + &quot; file exists but empty, skipping&quot;);</span>
+<span class="fc" id="L240">        String fileContents = Files.readString(p);</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">        if (fileContents.isBlank()) {</span>
+<span class="fc" id="L242">            logger.logDebug( () -&gt; fileName + &quot; file exists but empty, skipping&quot;);</span>
         } else {
             try {
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L244">                T deserializedData = (T) emptyInstance.deserialize(fileContents);</span>
-<span class="fc bfc" id="L245" title="All 2 branches covered.">                mustBeTrue(deserializedData != null, &quot;deserialization of &quot; + emptyInstance +</span>
+<span class="fc" id="L246">                T deserializedData = (T) emptyInstance.deserialize(fileContents);</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">                mustBeTrue(deserializedData != null, &quot;deserialization of &quot; + emptyInstance +</span>
                         &quot; resulted in a null value. Was the serialization method implemented properly?&quot;);
-<span class="fc" id="L247">                int fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));</span>
-<span class="fc bfc" id="L248" title="All 2 branches covered.">                mustBeTrue(deserializedData.getIndex() == fileNameIdentifier,</span>
+<span class="fc" id="L249">                int fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">                mustBeTrue(deserializedData.getIndex() == fileNameIdentifier,</span>
                         &quot;The filename must correspond to the data's index. e.g. 1.ddps must have an id of 1&quot;);
 
                 // put the data into the in-memory data structure
-<span class="fc" id="L252">                data.put(deserializedData.getIndex(), deserializedData);</span>
-<span class="fc" id="L253">                addToIndexes(deserializedData);</span>
+<span class="fc" id="L254">                data.put(deserializedData.getIndex(), deserializedData);</span>
+<span class="fc" id="L255">                addToIndexes(deserializedData);</span>
 
-<span class="fc" id="L255">            } catch (Exception e) {</span>
-<span class="fc" id="L256">                throw new DbException(&quot;Failed to deserialize &quot;+ p +&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;). Caused by: &quot; + e);</span>
-<span class="fc" id="L257">            }</span>
+<span class="fc" id="L257">            } catch (Exception e) {</span>
+<span class="fc" id="L258">                throw new DbException(&quot;Failed to deserialize &quot;+ p +&quot; with data (\&quot;&quot;+fileContents+&quot;\&quot;). Caused by: &quot; + e);</span>
+<span class="fc" id="L259">            }</span>
         }
-<span class="fc" id="L259">    }</span>
+<span class="fc" id="L261">    }</span>
 
     @Override
     public Collection&lt;T&gt; values() {
         // load data if needed
-<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
 
-<span class="fc" id="L266">        return Collections.unmodifiableCollection(data.values());</span>
+<span class="fc" id="L268">        return Collections.unmodifiableCollection(data.values());</span>
     }
 
     /**
@@ -275,18 +277,18 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb&lt;T&gt; {
      */
     @Override
     public void loadData() {
-<span class="fc" id="L278">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+<span class="fc" id="L280">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
         try {
-<span class="fc bfc" id="L280" title="All 2 branches covered.">            if (!hasLoadedData) {</span>
-<span class="fc" id="L281">                loadDataFromDisk();</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">            if (!hasLoadedData) {</span>
+<span class="fc" id="L283">                loadDataFromDisk();</span>
             }
-<span class="fc" id="L283">            hasLoadedData = true;</span>
-<span class="fc" id="L284">        } catch (Exception ex) {</span>
-<span class="fc" id="L285">            throw new DbException(&quot;Failed to load data from disk.&quot;, ex);</span>
+<span class="fc" id="L285">            hasLoadedData = true;</span>
+<span class="fc" id="L286">        } catch (Exception ex) {</span>
+<span class="fc" id="L287">            throw new DbException(&quot;Failed to load data from disk.&quot;, ex);</span>
         } finally {
-<span class="fc" id="L287">            loadDataLock.unlock();</span>
+<span class="fc" id="L289">            loadDataLock.unlock();</span>
         }
-<span class="fc" id="L289">    }</span>
+<span class="fc" id="L291">    }</span>
 
     /**
      * Register an index in the database for higher performance data access.
@@ -317,11 +319,11 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb&lt;T&gt; {
      */
     @Override
     public boolean registerIndex(String indexName, Function&lt;T, String&gt; keyObtainingFunction) {
-<span class="fc bfc" id="L320" title="All 2 branches covered.">        if (hasLoadedData) {</span>
-<span class="fc" id="L321">            throw new DbException(&quot;This method must be run before the database loads data from disk.  Typically, &quot; +</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">        if (hasLoadedData) {</span>
+<span class="fc" id="L323">            throw new DbException(&quot;This method must be run before the database loads data from disk.  Typically, &quot; +</span>
                     &quot;it should be run immediately after the database is created.  See this method's documentation&quot;);
         }
-<span class="fc" id="L324">        return super.registerIndex(indexName, keyObtainingFunction);</span>
+<span class="fc" id="L326">        return super.registerIndex(indexName, keyObtainingFunction);</span>
     }
 
     /**
@@ -335,8 +337,8 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb&lt;T&gt; {
     @Override
     public Collection&lt;T&gt; getIndexedData(String indexName, String key) {
         // load data if needed
-<span class="fc bfc" id="L338" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
-<span class="fc" id="L339">        return super.getIndexedData(indexName, key);</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
+<span class="fc" id="L341">        return super.getIndexedData(indexName, key);</span>
     }
 
     /**
@@ -351,8 +353,8 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb&lt;T&gt; {
      */
     @Override
     public void stop() {
-<span class="fc" id="L354">        actionQueue.stop();</span>
-<span class="fc" id="L355">    }</span>
+<span class="fc" id="L356">        actionQueue.stop();</span>
+<span class="fc" id="L357">    }</span>
 
     /**
      * Similar to {@link #stop()} but gives more control over how long
@@ -360,8 +362,8 @@ public class Db&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb&lt;T&gt; {
      */
     @Override
     public void stop(int count, int sleepTime) {
-<span class="fc" id="L363">        actionQueue.stop(count, sleepTime);</span>
-<span class="fc" id="L364">    }</span>
+<span class="fc" id="L365">        actionQueue.stop(count, sleepTime);</span>
+<span class="fc" id="L366">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

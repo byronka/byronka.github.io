@@ -278,72 +278,74 @@ public final class DbEngine2&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb
      * as getting the data loaded into memory immediately at program start.
      */
     private void loadDataFromDisk() throws IOException {
+<span class="fc" id="L281">        logger.logDebug(() -&gt; &quot;Loading data from disk. Db Engine2. Directory: &quot; + dbDirectory);</span>
+
         // if we find the &quot;index.ddps&quot; file, it means we are looking at an old
         // version of the database.  Update it to the new version, and then afterwards
         // remove the old version files.
-<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (Files.exists(dbDirectory.resolve(&quot;index.ddps&quot;))) {</span>
-<span class="fc" id="L285">            new DbFileConverter(context, dbDirectory).convertClassicFolderStructureToDbEngine2Form();</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        if (Files.exists(dbDirectory.resolve(&quot;index.ddps&quot;))) {</span>
+<span class="fc" id="L287">            new DbFileConverter(context, dbDirectory).convertClassicFolderStructureToDbEngine2Form();</span>
         }
 
-<span class="fc" id="L288">        fileUtils.makeDirectory(dbDirectory);</span>
+<span class="fc" id="L290">        fileUtils.makeDirectory(dbDirectory);</span>
         // if there are any remnant items in the current append-only file, move them
         // to a new file
-<span class="fc" id="L291">        databaseAppender.saveOffCurrentDataToReadyFolder();</span>
-<span class="fc" id="L292">        databaseAppender.flush();</span>
+<span class="fc" id="L293">        databaseAppender.saveOffCurrentDataToReadyFolder();</span>
+<span class="fc" id="L294">        databaseAppender.flush();</span>
 
         // consolidate whatever files still exist in the append logs
-<span class="fc" id="L295">        databaseConsolidator.consolidate();</span>
+<span class="fc" id="L297">        databaseConsolidator.consolidate();</span>
 
         // load the data into memory
-<span class="fc" id="L298">        walkAndLoad(dbDirectory);</span>
+<span class="fc" id="L300">        walkAndLoad(dbDirectory);</span>
 
-<span class="fc bfc" id="L300" title="All 2 branches covered.">        if (data.isEmpty()) {</span>
-<span class="fc" id="L301">            this.index = new AtomicLong(1);</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">        if (data.isEmpty()) {</span>
+<span class="fc" id="L303">            this.index = new AtomicLong(1);</span>
         } else {
-<span class="fc" id="L303">            var initialIndex = Collections.max(data.keySet()) + 1L;</span>
-<span class="fc" id="L304">            this.index = new AtomicLong(initialIndex);</span>
+<span class="fc" id="L305">            var initialIndex = Collections.max(data.keySet()) + 1L;</span>
+<span class="fc" id="L306">            this.index = new AtomicLong(initialIndex);</span>
         }
-<span class="fc" id="L306">    }</span>
+<span class="fc" id="L308">    }</span>
 
     /**
      * Loops through each line of data in the consolidated data files,
      * converting each to its strongly-typed form and adding to the database
      */
     void walkAndLoad(Path dbDirectory) {
-<span class="fc" id="L313">        List&lt;String&gt; consolidatedFiles = new ArrayList&lt;&gt;(</span>
-<span class="fc" id="L314">                List.of(Objects.requireNonNull(dbDirectory.resolve(&quot;consolidated_data&quot;).toFile().list())));</span>
+<span class="fc" id="L315">        List&lt;String&gt; consolidatedFiles = new ArrayList&lt;&gt;(</span>
+<span class="fc" id="L316">                List.of(Objects.requireNonNull(dbDirectory.resolve(&quot;consolidated_data&quot;).toFile().list())));</span>
 
         // if there aren't any files, bail out
-<span class="fc bfc" id="L317" title="All 2 branches covered.">        if (consolidatedFiles.isEmpty()) return;</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">        if (consolidatedFiles.isEmpty()) return;</span>
 
         // sort
-<span class="fc" id="L320">        consolidatedFiles.sort(Comparator.comparingLong(DbEngine2::parseConsolidatedFileName));</span>
+<span class="fc" id="L322">        consolidatedFiles.sort(Comparator.comparingLong(DbEngine2::parseConsolidatedFileName));</span>
 
-<span class="fc bfc" id="L322" title="All 2 branches covered.">        for (String fileName : consolidatedFiles) {</span>
-<span class="fc" id="L323">            logger.logDebug(() -&gt; &quot;Processing database file: &quot; + fileName);</span>
-<span class="fc" id="L324">            Path consolidatedDataFile = dbDirectory.resolve(&quot;consolidated_data&quot;).resolve(fileName);</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">        for (String fileName : consolidatedFiles) {</span>
+<span class="fc" id="L325">            logger.logDebug(() -&gt; &quot;Processing database file: &quot; + fileName);</span>
+<span class="fc" id="L326">            Path consolidatedDataFile = dbDirectory.resolve(&quot;consolidated_data&quot;).resolve(fileName);</span>
 
             // By using a lazy stream, we are able to read each item from the file into
             // memory without needing to read the whole file contents into memory at once,
             // thus avoiding requiring a great amount of memory
-<span class="fc" id="L329">            try(Stream&lt;String&gt; fileStream = Files.lines(consolidatedDataFile, StandardCharsets.US_ASCII)) {</span>
-<span class="fc" id="L330">                fileStream.forEach(line -&gt; readAndDeserialize(line, fileName));</span>
-<span class="fc" id="L331">            } catch (Exception e) {</span>
-<span class="fc" id="L332">                throw new DbException(e);</span>
-<span class="fc" id="L333">            }</span>
-<span class="fc" id="L334">        }</span>
-<span class="fc" id="L335">    }</span>
+<span class="fc" id="L331">            try(Stream&lt;String&gt; fileStream = Files.lines(consolidatedDataFile, StandardCharsets.US_ASCII)) {</span>
+<span class="fc" id="L332">                fileStream.forEach(line -&gt; readAndDeserialize(line, fileName));</span>
+<span class="fc" id="L333">            } catch (Exception e) {</span>
+<span class="fc" id="L334">                throw new DbException(e);</span>
+<span class="fc" id="L335">            }</span>
+<span class="fc" id="L336">        }</span>
+<span class="fc" id="L337">    }</span>
 
     /**
      * Given a file like 1_to_1000 or 1001_to_2000, extract out the
      * beginning index (i.e. 1, or 1001).
      */
     static long parseConsolidatedFileName(String file) {
-<span class="fc" id="L342">        int index = file.indexOf(&quot;_to_&quot;);</span>
-<span class="fc bfc" id="L343" title="All 2 branches covered.">        if (index == -1) {</span>
-<span class="fc" id="L344">            throw new DbException(&quot;Consolidated filename was invalid: &quot; + file);</span>
+<span class="fc" id="L344">        int index = file.indexOf(&quot;_to_&quot;);</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        if (index == -1) {</span>
+<span class="fc" id="L346">            throw new DbException(&quot;Consolidated filename was invalid: &quot; + file);</span>
         }
-<span class="fc" id="L346">        return Long.parseLong(file, 0, index, 10);</span>
+<span class="fc" id="L348">        return Long.parseLong(file, 0, index, 10);</span>
     }
 
     /**
@@ -353,18 +355,18 @@ public final class DbEngine2&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb
     void readAndDeserialize(String lineOfData, String fileName) {
         try {
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L356">            T deserializedData = (T) emptyInstance.deserialize(lineOfData);</span>
-<span class="fc bfc" id="L357" title="All 2 branches covered.">            mustBeTrue(deserializedData != null, &quot;deserialization of &quot; + emptyInstance +</span>
+<span class="fc" id="L358">            T deserializedData = (T) emptyInstance.deserialize(lineOfData);</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">            mustBeTrue(deserializedData != null, &quot;deserialization of &quot; + emptyInstance +</span>
                     &quot; resulted in a null value. Was the serialization method implemented properly?&quot;);
 
             // put the data into the in-memory data structure
-<span class="fc" id="L361">            data.put(deserializedData.getIndex(), deserializedData);</span>
-<span class="fc" id="L362">            addToIndexes(deserializedData);</span>
+<span class="fc" id="L363">            data.put(deserializedData.getIndex(), deserializedData);</span>
+<span class="fc" id="L364">            addToIndexes(deserializedData);</span>
 
-<span class="fc" id="L364">        } catch (Exception e) {</span>
-<span class="fc" id="L365">            throw new DbException(&quot;Failed to deserialize &quot; + lineOfData + &quot; with data (\&quot;&quot; + fileName + &quot;\&quot;). Caused by: &quot; + e);</span>
-<span class="fc" id="L366">        }</span>
-<span class="fc" id="L367">    }</span>
+<span class="fc" id="L366">        } catch (Exception e) {</span>
+<span class="fc" id="L367">            throw new DbException(&quot;Failed to deserialize &quot; + lineOfData + &quot; with data (\&quot;&quot; + fileName + &quot;\&quot;). Caused by: &quot; + e);</span>
+<span class="fc" id="L368">        }</span>
+<span class="fc" id="L369">    }</span>
 
 
     /**
@@ -376,18 +378,18 @@ public final class DbEngine2&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb
      */
     @Override
     public void loadData() {
-<span class="fc" id="L379">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+<span class="fc" id="L381">        loadDataLock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
         try {
-<span class="fc bfc" id="L381" title="All 2 branches covered.">            if (!hasLoadedData) {</span>
-<span class="fc" id="L382">                loadDataFromDisk();</span>
+<span class="fc bfc" id="L383" title="All 2 branches covered.">            if (!hasLoadedData) {</span>
+<span class="fc" id="L384">                loadDataFromDisk();</span>
             }
-<span class="fc" id="L384">            hasLoadedData = true;</span>
-<span class="fc" id="L385">        } catch (Exception ex) {</span>
-<span class="fc" id="L386">            throw new DbException(&quot;Failed to load data from disk.&quot;, ex);</span>
+<span class="fc" id="L386">            hasLoadedData = true;</span>
+<span class="fc" id="L387">        } catch (Exception ex) {</span>
+<span class="fc" id="L388">            throw new DbException(&quot;Failed to load data from disk.&quot;, ex);</span>
         } finally {
-<span class="fc" id="L388">            loadDataLock.unlock();</span>
+<span class="fc" id="L390">            loadDataLock.unlock();</span>
         }
-<span class="fc" id="L390">    }</span>
+<span class="fc" id="L392">    }</span>
 
     /**
      * This method provides read capability for the values of a database.
@@ -404,26 +406,26 @@ public final class DbEngine2&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb
     @Override
     public Collection&lt;T&gt; values() {
         // load data if needed
-<span class="fc bfc" id="L407" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
+<span class="fc bfc" id="L409" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
 
-<span class="fc" id="L409">        return Collections.unmodifiableCollection(data.values());</span>
+<span class="fc" id="L411">        return Collections.unmodifiableCollection(data.values());</span>
     }
 
     @Override
     public boolean registerIndex(String indexName, Function&lt;T, String&gt; keyObtainingFunction) {
-<span class="fc bfc" id="L414" title="All 2 branches covered.">        if (hasLoadedData) {</span>
-<span class="fc" id="L415">            throw new DbException(&quot;This method must be run before the database loads data from disk.  Typically, &quot; +</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        if (hasLoadedData) {</span>
+<span class="fc" id="L417">            throw new DbException(&quot;This method must be run before the database loads data from disk.  Typically, &quot; +</span>
                     &quot;it should be run immediately after the database is created.  See this method's documentation&quot;);
         }
-<span class="fc" id="L418">        return super.registerIndex(indexName, keyObtainingFunction);</span>
+<span class="fc" id="L420">        return super.registerIndex(indexName, keyObtainingFunction);</span>
     }
 
 
     @Override
     public Collection&lt;T&gt; getIndexedData(String indexName, String key) {
         // load data if needed
-<span class="fc bfc" id="L425" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
-<span class="fc" id="L426">        return super.getIndexedData(indexName, key);</span>
+<span class="fc bfc" id="L427" title="All 2 branches covered.">        if (!hasLoadedData) loadData();</span>
+<span class="fc" id="L428">        return super.getIndexedData(indexName, key);</span>
     }
 
     /**
@@ -434,8 +436,8 @@ public final class DbEngine2&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb
      * to disk at a particular moment.
      */
     public void flush() {
-<span class="fc" id="L437">        this.databaseAppender.flush();</span>
-<span class="fc" id="L438">    }</span>
+<span class="fc" id="L439">        this.databaseAppender.flush();</span>
+<span class="fc" id="L440">    }</span>
 
     /**
      * This is here to match the contract of {@link Db}
@@ -444,8 +446,8 @@ public final class DbEngine2&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb
      */
     @Override
     public void stop() {
-<span class="fc" id="L447">        flush();</span>
-<span class="fc" id="L448">    }</span>
+<span class="fc" id="L449">        flush();</span>
+<span class="fc" id="L450">    }</span>
 
     /**
      * No real difference to {@link #stop()} but here
@@ -453,7 +455,7 @@ public final class DbEngine2&lt;T extends DbData&lt;?&gt;&gt; extends AbstractDb
      */
     @Override
     public void stop(int count, int sleepTime) {
-<span class="fc" id="L456">        flush();</span>
-<span class="fc" id="L457">    }</span>
+<span class="fc" id="L458">        flush();</span>
+<span class="fc" id="L459">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

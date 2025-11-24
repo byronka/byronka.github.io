@@ -55,7 +55,7 @@
 <a class="jxr_linenumber" name="L47" href="#L47">47</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L48" href="#L48">48</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">long</strong> maxIndexOnDisk;
 <a class="jxr_linenumber" name="L49" href="#L49">49</a>  
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> hasLoadedData;
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>      <strong class="jxr_keyword">boolean</strong> hasLoadedData;
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>  
 <a class="jxr_linenumber" name="L52" href="#L52">52</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>  <em class="jxr_javadoccomment">     * Constructs an in-memory disk-persisted database.</em>
@@ -201,177 +201,179 @@
 <a class="jxr_linenumber" name="L193" href="#L193">193</a> <em class="jxr_javadoccomment">     * method is run by various programs when the system first loads.</em>
 <a class="jxr_linenumber" name="L194" href="#L194">194</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L195" href="#L195">195</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> loadDataFromDisk() <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L196" href="#L196">196</a>         <em class="jxr_comment">// check if the folder has content for a DbEngine2 database, meaning we</em>
-<a class="jxr_linenumber" name="L197" href="#L197">197</a>         <em class="jxr_comment">// need to convert it back to the classic DB file structure.</em>
-<a class="jxr_linenumber" name="L198" href="#L198">198</a>         <strong class="jxr_keyword">if</strong> (Files.exists(dbDirectory.resolve(<span class="jxr_string">"currentAppendLog"</span>))) {
-<a class="jxr_linenumber" name="L199" href="#L199">199</a>             <strong class="jxr_keyword">new</strong> <a name="DbFileConverter" href="../../../../com/renomad/minum/database/DbFileConverter.html#DbFileConverter">DbFileConverter</a>(context, dbDirectory).convertFolderStructureToDbClassic();
-<a class="jxr_linenumber" name="L200" href="#L200">200</a>         }
-<a class="jxr_linenumber" name="L201" href="#L201">201</a> 
-<a class="jxr_linenumber" name="L202" href="#L202">202</a>         <strong class="jxr_keyword">if</strong> (! Files.exists(dbDirectory)) {
-<a class="jxr_linenumber" name="L203" href="#L203">203</a>             logger.logDebug(() -&gt; dbDirectory + <span class="jxr_string">" directory missing, adding nothing to the data list"</span>);
-<a class="jxr_linenumber" name="L204" href="#L204">204</a>             <strong class="jxr_keyword">return</strong>;
-<a class="jxr_linenumber" name="L205" href="#L205">205</a>         }
-<a class="jxr_linenumber" name="L206" href="#L206">206</a> 
-<a class="jxr_linenumber" name="L207" href="#L207">207</a>         walkAndLoad(dbDirectory);
-<a class="jxr_linenumber" name="L208" href="#L208">208</a>     }
-<a class="jxr_linenumber" name="L209" href="#L209">209</a> 
-<a class="jxr_linenumber" name="L210" href="#L210">210</a>     <strong class="jxr_keyword">void</strong> walkAndLoad(Path dbDirectory) {
-<a class="jxr_linenumber" name="L211" href="#L211">211</a>         <em class="jxr_comment">// walk through all the files in this directory, collecting</em>
-<a class="jxr_linenumber" name="L212" href="#L212">212</a>         <em class="jxr_comment">// all regular files (non-subdirectories) except for index.ddps</em>
-<a class="jxr_linenumber" name="L213" href="#L213">213</a>         <strong class="jxr_keyword">try</strong> (<strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> pathStream = Files.walk(dbDirectory)) {
-<a class="jxr_linenumber" name="L214" href="#L214">214</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> listOfFiles = pathStream.filter(path -&gt;
-<a class="jxr_linenumber" name="L215" href="#L215">215</a>                         Files.isRegularFile(path) &amp;&amp;
-<a class="jxr_linenumber" name="L216" href="#L216">216</a>                         !path.getFileName().toString().startsWith(<span class="jxr_string">"index"</span>)
-<a class="jxr_linenumber" name="L217" href="#L217">217</a>             ).toList();
-<a class="jxr_linenumber" name="L218" href="#L218">218</a>             <strong class="jxr_keyword">for</strong> (Path p : listOfFiles) {
-<a class="jxr_linenumber" name="L219" href="#L219">219</a>                 readAndDeserialize(p);
-<a class="jxr_linenumber" name="L220" href="#L220">220</a>             }
-<a class="jxr_linenumber" name="L221" href="#L221">221</a>         } <strong class="jxr_keyword">catch</strong> (IOException e) {
-<a class="jxr_linenumber" name="L222" href="#L222">222</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(e);
-<a class="jxr_linenumber" name="L223" href="#L223">223</a>         }
-<a class="jxr_linenumber" name="L224" href="#L224">224</a>     }
-<a class="jxr_linenumber" name="L225" href="#L225">225</a> 
-<a class="jxr_linenumber" name="L226" href="#L226">226</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L227" href="#L227">227</a> <em class="jxr_javadoccomment">     * Carry out the process of reading data files into our in-memory structure</em>
-<a class="jxr_linenumber" name="L228" href="#L228">228</a> <em class="jxr_javadoccomment">     * @param p the path of a particular file</em>
-<a class="jxr_linenumber" name="L229" href="#L229">229</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L230" href="#L230">230</a>     <strong class="jxr_keyword">void</strong> readAndDeserialize(Path p) <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L231" href="#L231">231</a>         Path fileName = p.getFileName();
-<a class="jxr_linenumber" name="L232" href="#L232">232</a>         <strong class="jxr_keyword">if</strong> (fileName == <strong class="jxr_keyword">null</strong>) <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"At readAndDeserialize, path "</span> + p + <span class="jxr_string">" returned a null filename"</span>);
-<a class="jxr_linenumber" name="L233" href="#L233">233</a>         String filename = fileName.toString();
-<a class="jxr_linenumber" name="L234" href="#L234">234</a>         <strong class="jxr_keyword">int</strong> startOfSuffixIndex = filename.indexOf('.');
-<a class="jxr_linenumber" name="L235" href="#L235">235</a>         <strong class="jxr_keyword">if</strong>(startOfSuffixIndex == -1) {
-<a class="jxr_linenumber" name="L236" href="#L236">236</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"the files must have a ddps suffix, like 1.ddps.  filename: "</span> + filename);
-<a class="jxr_linenumber" name="L237" href="#L237">237</a>         }
-<a class="jxr_linenumber" name="L238" href="#L238">238</a>         String fileContents = Files.readString(p);
-<a class="jxr_linenumber" name="L239" href="#L239">239</a>         <strong class="jxr_keyword">if</strong> (fileContents.isBlank()) {
-<a class="jxr_linenumber" name="L240" href="#L240">240</a>             logger.logDebug( () -&gt; fileName + <span class="jxr_string">" file exists but empty, skipping"</span>);
-<a class="jxr_linenumber" name="L241" href="#L241">241</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L242" href="#L242">242</a>             <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L243" href="#L243">243</a>                 @SuppressWarnings(<span class="jxr_string">"unchecked"</span>)
-<a class="jxr_linenumber" name="L244" href="#L244">244</a>                 T deserializedData = (T) emptyInstance.deserialize(fileContents);
-<a class="jxr_linenumber" name="L245" href="#L245">245</a>                 mustBeTrue(deserializedData != <strong class="jxr_keyword">null</strong>, <span class="jxr_string">"deserialization of "</span> + emptyInstance +
-<a class="jxr_linenumber" name="L246" href="#L246">246</a>                         <span class="jxr_string">" resulted in a null value. Was the serialization method implemented properly?"</span>);
-<a class="jxr_linenumber" name="L247" href="#L247">247</a>                 <strong class="jxr_keyword">int</strong> fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));
-<a class="jxr_linenumber" name="L248" href="#L248">248</a>                 mustBeTrue(deserializedData.getIndex() == fileNameIdentifier,
-<a class="jxr_linenumber" name="L249" href="#L249">249</a>                         <span class="jxr_string">"The filename must correspond to the data's index. e.g. 1.ddps must have an id of 1"</span>);
-<a class="jxr_linenumber" name="L250" href="#L250">250</a> 
-<a class="jxr_linenumber" name="L251" href="#L251">251</a>                 <em class="jxr_comment">// put the data into the in-memory data structure</em>
-<a class="jxr_linenumber" name="L252" href="#L252">252</a>                 data.put(deserializedData.getIndex(), deserializedData);
-<a class="jxr_linenumber" name="L253" href="#L253">253</a>                 addToIndexes(deserializedData);
-<a class="jxr_linenumber" name="L254" href="#L254">254</a> 
-<a class="jxr_linenumber" name="L255" href="#L255">255</a>             } <strong class="jxr_keyword">catch</strong> (Exception e) {
-<a class="jxr_linenumber" name="L256" href="#L256">256</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to deserialize "</span>+ p +<span class="jxr_string">" with data (\&quot;"</span>+fileContents+<span class="jxr_string">"\&quot;). Caused by: "</span> + e);
-<a class="jxr_linenumber" name="L257" href="#L257">257</a>             }
-<a class="jxr_linenumber" name="L258" href="#L258">258</a>         }
-<a class="jxr_linenumber" name="L259" href="#L259">259</a>     }
-<a class="jxr_linenumber" name="L260" href="#L260">260</a> 
-<a class="jxr_linenumber" name="L261" href="#L261">261</a>     @Override
-<a class="jxr_linenumber" name="L262" href="#L262">262</a>     <strong class="jxr_keyword">public</strong> Collection&lt;T&gt; values() {
-<a class="jxr_linenumber" name="L263" href="#L263">263</a>         <em class="jxr_comment">// load data if needed</em>
-<a class="jxr_linenumber" name="L264" href="#L264">264</a>         <strong class="jxr_keyword">if</strong> (!hasLoadedData) loadData();
-<a class="jxr_linenumber" name="L265" href="#L265">265</a> 
-<a class="jxr_linenumber" name="L266" href="#L266">266</a>         <strong class="jxr_keyword">return</strong> Collections.unmodifiableCollection(data.values());
-<a class="jxr_linenumber" name="L267" href="#L267">267</a>     }
-<a class="jxr_linenumber" name="L268" href="#L268">268</a> 
-<a class="jxr_linenumber" name="L269" href="#L269">269</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L270" href="#L270">270</a> <em class="jxr_javadoccomment">     * This is what loads the data from disk the</em>
-<a class="jxr_linenumber" name="L271" href="#L271">271</a> <em class="jxr_javadoccomment">     * first time someone needs it.  Because it is</em>
-<a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_javadoccomment">     * locked, only one thread can enter at</em>
-<a class="jxr_linenumber" name="L273" href="#L273">273</a> <em class="jxr_javadoccomment">     * a time.  The first one in will load the data,</em>
-<a class="jxr_linenumber" name="L274" href="#L274">274</a> <em class="jxr_javadoccomment">     * and the second will encounter a branch which skips loading.</em>
-<a class="jxr_linenumber" name="L275" href="#L275">275</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L276" href="#L276">276</a>     @Override
-<a class="jxr_linenumber" name="L277" href="#L277">277</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> loadData() {
-<a class="jxr_linenumber" name="L278" href="#L278">278</a>         loadDataLock.lock(); <em class="jxr_comment">// block threads here if multiple are trying to get in - only one gets in at a time</em>
-<a class="jxr_linenumber" name="L279" href="#L279">279</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L280" href="#L280">280</a>             <strong class="jxr_keyword">if</strong> (!hasLoadedData) {
-<a class="jxr_linenumber" name="L281" href="#L281">281</a>                 loadDataFromDisk();
-<a class="jxr_linenumber" name="L282" href="#L282">282</a>             }
-<a class="jxr_linenumber" name="L283" href="#L283">283</a>             hasLoadedData = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L284" href="#L284">284</a>         } <strong class="jxr_keyword">catch</strong> (Exception ex) {
-<a class="jxr_linenumber" name="L285" href="#L285">285</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to load data from disk."</span>, ex);
-<a class="jxr_linenumber" name="L286" href="#L286">286</a>         } <strong class="jxr_keyword">finally</strong> {
-<a class="jxr_linenumber" name="L287" href="#L287">287</a>             loadDataLock.unlock();
-<a class="jxr_linenumber" name="L288" href="#L288">288</a>         }
-<a class="jxr_linenumber" name="L289" href="#L289">289</a>     }
-<a class="jxr_linenumber" name="L290" href="#L290">290</a> 
-<a class="jxr_linenumber" name="L291" href="#L291">291</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L292" href="#L292">292</a> <em class="jxr_javadoccomment">     * Register an index in the database for higher performance data access.</em>
-<a class="jxr_linenumber" name="L293" href="#L293">293</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L294" href="#L294">294</a> <em class="jxr_javadoccomment">     *     This command should be run immediately after database declaration,</em>
-<a class="jxr_linenumber" name="L295" href="#L295">295</a> <em class="jxr_javadoccomment">     *     or more specifically, before any data is loaded from disk. Otherwise,</em>
-<a class="jxr_linenumber" name="L296" href="#L296">296</a> <em class="jxr_javadoccomment">     *     it would be possible to skip indexing that data.</em>
-<a class="jxr_linenumber" name="L297" href="#L297">297</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L298" href="#L298">298</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
-<a class="jxr_linenumber" name="L299" href="#L299">299</a> <em class="jxr_javadoccomment">     * Example:</em>
-<a class="jxr_linenumber" name="L300" href="#L300">300</a> <em class="jxr_javadoccomment">     *  {@snippet :</em>
-<a class="jxr_linenumber" name="L301" href="#L301">301</a> <em class="jxr_javadoccomment">     *           final var myDatabase = context.getDb("photos", Photograph.EMPTY);</em>
-<a class="jxr_linenumber" name="L302" href="#L302">302</a> <em class="jxr_javadoccomment">     *           myDatabase.registerIndex("url", photo -&gt; photo.getUrl());</em>
-<a class="jxr_linenumber" name="L303" href="#L303">303</a> <em class="jxr_javadoccomment">     *  }</em>
-<a class="jxr_linenumber" name="L304" href="#L304">304</a> <em class="jxr_javadoccomment">     * @param indexName a string used to distinguish this index.  This string will be used again</em>
-<a class="jxr_linenumber" name="L305" href="#L305">305</a> <em class="jxr_javadoccomment">     *                  when requesting data in a method like {@link #getIndexedData} or {@link #findExactlyOne}</em>
-<a class="jxr_linenumber" name="L306" href="#L306">306</a> <em class="jxr_javadoccomment">     * @param keyObtainingFunction a function which obtains data from the data in this database, used</em>
-<a class="jxr_linenumber" name="L307" href="#L307">307</a> <em class="jxr_javadoccomment">     *                             to partition the data into groups (potentially up to a 1-to-1 correspondence</em>
-<a class="jxr_linenumber" name="L308" href="#L308">308</a> <em class="jxr_javadoccomment">     *                             between id and object)</em>
-<a class="jxr_linenumber" name="L309" href="#L309">309</a> <em class="jxr_javadoccomment">     * @return true if the registration succeeded</em>
-<a class="jxr_linenumber" name="L310" href="#L310">310</a> <em class="jxr_javadoccomment">     * @throws DbException if the parameters are not entered properly, if the index has already</em>
-<a class="jxr_linenumber" name="L311" href="#L311">311</a> <em class="jxr_javadoccomment">     * been registered, or if the data has already been loaded. It is necessary that</em>
-<a class="jxr_linenumber" name="L312" href="#L312">312</a> <em class="jxr_javadoccomment">     * this is run immediately after declaring the database. To explain further: the data is not</em>
-<a class="jxr_linenumber" name="L313" href="#L313">313</a> <em class="jxr_javadoccomment">     * actually loaded until the first time it is needed, such as running a write or delete, or</em>
-<a class="jxr_linenumber" name="L314" href="#L314">314</a> <em class="jxr_javadoccomment">     * if the {@link #loadDataFromDisk()} method is run.  Creating an index map for the data that</em>
-<a class="jxr_linenumber" name="L315" href="#L315">315</a> <em class="jxr_javadoccomment">     * is read from disk only occurs once, at data load time.  Thus, it is crucial that the</em>
-<a class="jxr_linenumber" name="L316" href="#L316">316</a> <em class="jxr_javadoccomment">     * registerIndex command is run before any data is loaded.</em>
-<a class="jxr_linenumber" name="L317" href="#L317">317</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L318" href="#L318">318</a>     @Override
-<a class="jxr_linenumber" name="L319" href="#L319">319</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> registerIndex(String indexName, Function&lt;T, String&gt; keyObtainingFunction) {
-<a class="jxr_linenumber" name="L320" href="#L320">320</a>         <strong class="jxr_keyword">if</strong> (hasLoadedData) {
-<a class="jxr_linenumber" name="L321" href="#L321">321</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"This method must be run before the database loads data from disk.  Typically, "</span> +
-<a class="jxr_linenumber" name="L322" href="#L322">322</a>                     <span class="jxr_string">"it should be run immediately after the database is created.  See this method's documentation"</span>);
-<a class="jxr_linenumber" name="L323" href="#L323">323</a>         }
-<a class="jxr_linenumber" name="L324" href="#L324">324</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">super</strong>.registerIndex(indexName, keyObtainingFunction);
-<a class="jxr_linenumber" name="L325" href="#L325">325</a>     }
-<a class="jxr_linenumber" name="L326" href="#L326">326</a> 
-<a class="jxr_linenumber" name="L327" href="#L327">327</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L328" href="#L328">328</a> <em class="jxr_javadoccomment">     * Given the name of a registered index (see {@link #registerIndex(String, Function)}),</em>
-<a class="jxr_linenumber" name="L329" href="#L329">329</a> <em class="jxr_javadoccomment">     * use the key to find the collection of data that matches it.</em>
-<a class="jxr_linenumber" name="L330" href="#L330">330</a> <em class="jxr_javadoccomment">     * @param indexName the name of an index</em>
-<a class="jxr_linenumber" name="L331" href="#L331">331</a> <em class="jxr_javadoccomment">     * @param key a string value that matches a partition calculated from the partition</em>
-<a class="jxr_linenumber" name="L332" href="#L332">332</a> <em class="jxr_javadoccomment">     *            function provided to {@link #registerIndex(String, Function)}</em>
-<a class="jxr_linenumber" name="L333" href="#L333">333</a> <em class="jxr_javadoccomment">     * @return a collection of data, an empty collection if nothing found</em>
-<a class="jxr_linenumber" name="L334" href="#L334">334</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L335" href="#L335">335</a>     @Override
-<a class="jxr_linenumber" name="L336" href="#L336">336</a>     <strong class="jxr_keyword">public</strong> Collection&lt;T&gt; getIndexedData(String indexName, String key) {
-<a class="jxr_linenumber" name="L337" href="#L337">337</a>         <em class="jxr_comment">// load data if needed</em>
-<a class="jxr_linenumber" name="L338" href="#L338">338</a>         <strong class="jxr_keyword">if</strong> (!hasLoadedData) loadData();
-<a class="jxr_linenumber" name="L339" href="#L339">339</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">super</strong>.getIndexedData(indexName, key);
-<a class="jxr_linenumber" name="L340" href="#L340">340</a>     }
-<a class="jxr_linenumber" name="L341" href="#L341">341</a> 
-<a class="jxr_linenumber" name="L342" href="#L342">342</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L343" href="#L343">343</a> <em class="jxr_javadoccomment">     * This function will stop the minum.database persistence cleanly.</em>
-<a class="jxr_linenumber" name="L344" href="#L344">344</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L345" href="#L345">345</a> <em class="jxr_javadoccomment">     * In order to do this, we need to wait for our threads</em>
-<a class="jxr_linenumber" name="L346" href="#L346">346</a> <em class="jxr_javadoccomment">     * to finish their work.  In particular, we</em>
-<a class="jxr_linenumber" name="L347" href="#L347">347</a> <em class="jxr_javadoccomment">     * have offloaded our file writes to [actionQueue], which</em>
-<a class="jxr_linenumber" name="L348" href="#L348">348</a> <em class="jxr_javadoccomment">     * has an internal thread for serializing all actions</em>
-<a class="jxr_linenumber" name="L349" href="#L349">349</a> <em class="jxr_javadoccomment">     * on our minum.database</em>
-<a class="jxr_linenumber" name="L350" href="#L350">350</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L351" href="#L351">351</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L352" href="#L352">352</a>     @Override
-<a class="jxr_linenumber" name="L353" href="#L353">353</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> stop() {
-<a class="jxr_linenumber" name="L354" href="#L354">354</a>         actionQueue.stop();
-<a class="jxr_linenumber" name="L355" href="#L355">355</a>     }
-<a class="jxr_linenumber" name="L356" href="#L356">356</a> 
-<a class="jxr_linenumber" name="L357" href="#L357">357</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L358" href="#L358">358</a> <em class="jxr_javadoccomment">     * Similar to {@link #stop()} but gives more control over how long</em>
-<a class="jxr_linenumber" name="L359" href="#L359">359</a> <em class="jxr_javadoccomment">     * we'll wait before crashing it closed.  See {@link ActionQueue#stop(int, int)}</em>
-<a class="jxr_linenumber" name="L360" href="#L360">360</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L361" href="#L361">361</a>     @Override
-<a class="jxr_linenumber" name="L362" href="#L362">362</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> stop(<strong class="jxr_keyword">int</strong> count, <strong class="jxr_keyword">int</strong> sleepTime) {
-<a class="jxr_linenumber" name="L363" href="#L363">363</a>         actionQueue.stop(count, sleepTime);
-<a class="jxr_linenumber" name="L364" href="#L364">364</a>     }
-<a class="jxr_linenumber" name="L365" href="#L365">365</a> 
-<a class="jxr_linenumber" name="L366" href="#L366">366</a> }
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>         logger.logDebug(() -&gt; <span class="jxr_string">"Loading data from disk. Db classic. Directory: "</span> + dbDirectory);
+<a class="jxr_linenumber" name="L197" href="#L197">197</a> 
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>         <em class="jxr_comment">// check if the folder has content for a DbEngine2 database, meaning we</em>
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>         <em class="jxr_comment">// need to convert it back to the classic DB file structure.</em>
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>         <strong class="jxr_keyword">if</strong> (Files.exists(dbDirectory.resolve(<span class="jxr_string">"currentAppendLog"</span>))) {
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>             <strong class="jxr_keyword">new</strong> <a name="DbFileConverter" href="../../../../com/renomad/minum/database/DbFileConverter.html#DbFileConverter">DbFileConverter</a>(context, dbDirectory).convertFolderStructureToDbClassic();
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>         }
+<a class="jxr_linenumber" name="L203" href="#L203">203</a> 
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>         <strong class="jxr_keyword">if</strong> (! Files.exists(dbDirectory)) {
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>             logger.logDebug(() -&gt; dbDirectory + <span class="jxr_string">" directory missing, adding nothing to the data list"</span>);
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>             <strong class="jxr_keyword">return</strong>;
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>         }
+<a class="jxr_linenumber" name="L208" href="#L208">208</a> 
+<a class="jxr_linenumber" name="L209" href="#L209">209</a>         walkAndLoad(dbDirectory);
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>     }
+<a class="jxr_linenumber" name="L211" href="#L211">211</a> 
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>     <strong class="jxr_keyword">void</strong> walkAndLoad(Path dbDirectory) {
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>         <em class="jxr_comment">// walk through all the files in this directory, collecting</em>
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>         <em class="jxr_comment">// all regular files (non-subdirectories) except for index.ddps</em>
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>         <strong class="jxr_keyword">try</strong> (<strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> pathStream = Files.walk(dbDirectory)) {
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> listOfFiles = pathStream.filter(path -&gt;
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>                         Files.isRegularFile(path) &amp;&amp;
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>                         !path.getFileName().toString().startsWith(<span class="jxr_string">"index"</span>)
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>             ).toList();
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>             <strong class="jxr_keyword">for</strong> (Path p : listOfFiles) {
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>                 readAndDeserialize(p);
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>             }
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>         } <strong class="jxr_keyword">catch</strong> (IOException e) {
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(e);
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>         }
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>     }
+<a class="jxr_linenumber" name="L227" href="#L227">227</a> 
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L229" href="#L229">229</a> <em class="jxr_javadoccomment">     * Carry out the process of reading data files into our in-memory structure</em>
+<a class="jxr_linenumber" name="L230" href="#L230">230</a> <em class="jxr_javadoccomment">     * @param p the path of a particular file</em>
+<a class="jxr_linenumber" name="L231" href="#L231">231</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>     <strong class="jxr_keyword">void</strong> readAndDeserialize(Path p) <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>         Path fileName = p.getFileName();
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>         <strong class="jxr_keyword">if</strong> (fileName == <strong class="jxr_keyword">null</strong>) <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"At readAndDeserialize, path "</span> + p + <span class="jxr_string">" returned a null filename"</span>);
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>         String filename = fileName.toString();
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>         <strong class="jxr_keyword">int</strong> startOfSuffixIndex = filename.indexOf('.');
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>         <strong class="jxr_keyword">if</strong>(startOfSuffixIndex == -1) {
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"the files must have a ddps suffix, like 1.ddps.  filename: "</span> + filename);
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>         }
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>         String fileContents = Files.readString(p);
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>         <strong class="jxr_keyword">if</strong> (fileContents.isBlank()) {
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>             logger.logDebug( () -&gt; fileName + <span class="jxr_string">" file exists but empty, skipping"</span>);
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>             <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>                 @SuppressWarnings(<span class="jxr_string">"unchecked"</span>)
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>                 T deserializedData = (T) emptyInstance.deserialize(fileContents);
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>                 mustBeTrue(deserializedData != <strong class="jxr_keyword">null</strong>, <span class="jxr_string">"deserialization of "</span> + emptyInstance +
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>                         <span class="jxr_string">" resulted in a null value. Was the serialization method implemented properly?"</span>);
+<a class="jxr_linenumber" name="L249" href="#L249">249</a>                 <strong class="jxr_keyword">int</strong> fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>                 mustBeTrue(deserializedData.getIndex() == fileNameIdentifier,
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>                         <span class="jxr_string">"The filename must correspond to the data's index. e.g. 1.ddps must have an id of 1"</span>);
+<a class="jxr_linenumber" name="L252" href="#L252">252</a> 
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>                 <em class="jxr_comment">// put the data into the in-memory data structure</em>
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>                 data.put(deserializedData.getIndex(), deserializedData);
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>                 addToIndexes(deserializedData);
+<a class="jxr_linenumber" name="L256" href="#L256">256</a> 
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>             } <strong class="jxr_keyword">catch</strong> (Exception e) {
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to deserialize "</span>+ p +<span class="jxr_string">" with data (\&quot;"</span>+fileContents+<span class="jxr_string">"\&quot;). Caused by: "</span> + e);
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>             }
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>         }
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>     }
+<a class="jxr_linenumber" name="L262" href="#L262">262</a> 
+<a class="jxr_linenumber" name="L263" href="#L263">263</a>     @Override
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>     <strong class="jxr_keyword">public</strong> Collection&lt;T&gt; values() {
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>         <em class="jxr_comment">// load data if needed</em>
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>         <strong class="jxr_keyword">if</strong> (!hasLoadedData) loadData();
+<a class="jxr_linenumber" name="L267" href="#L267">267</a> 
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>         <strong class="jxr_keyword">return</strong> Collections.unmodifiableCollection(data.values());
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>     }
+<a class="jxr_linenumber" name="L270" href="#L270">270</a> 
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_javadoccomment">     * This is what loads the data from disk the</em>
+<a class="jxr_linenumber" name="L273" href="#L273">273</a> <em class="jxr_javadoccomment">     * first time someone needs it.  Because it is</em>
+<a class="jxr_linenumber" name="L274" href="#L274">274</a> <em class="jxr_javadoccomment">     * locked, only one thread can enter at</em>
+<a class="jxr_linenumber" name="L275" href="#L275">275</a> <em class="jxr_javadoccomment">     * a time.  The first one in will load the data,</em>
+<a class="jxr_linenumber" name="L276" href="#L276">276</a> <em class="jxr_javadoccomment">     * and the second will encounter a branch which skips loading.</em>
+<a class="jxr_linenumber" name="L277" href="#L277">277</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>     @Override
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> loadData() {
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>         loadDataLock.lock(); <em class="jxr_comment">// block threads here if multiple are trying to get in - only one gets in at a time</em>
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>             <strong class="jxr_keyword">if</strong> (!hasLoadedData) {
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>                 loadDataFromDisk();
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>             }
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>             hasLoadedData = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L286" href="#L286">286</a>         } <strong class="jxr_keyword">catch</strong> (Exception ex) {
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to load data from disk."</span>, ex);
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>         } <strong class="jxr_keyword">finally</strong> {
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>             loadDataLock.unlock();
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>         }
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>     }
+<a class="jxr_linenumber" name="L292" href="#L292">292</a> 
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L294" href="#L294">294</a> <em class="jxr_javadoccomment">     * Register an index in the database for higher performance data access.</em>
+<a class="jxr_linenumber" name="L295" href="#L295">295</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L296" href="#L296">296</a> <em class="jxr_javadoccomment">     *     This command should be run immediately after database declaration,</em>
+<a class="jxr_linenumber" name="L297" href="#L297">297</a> <em class="jxr_javadoccomment">     *     or more specifically, before any data is loaded from disk. Otherwise,</em>
+<a class="jxr_linenumber" name="L298" href="#L298">298</a> <em class="jxr_javadoccomment">     *     it would be possible to skip indexing that data.</em>
+<a class="jxr_linenumber" name="L299" href="#L299">299</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L300" href="#L300">300</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
+<a class="jxr_linenumber" name="L301" href="#L301">301</a> <em class="jxr_javadoccomment">     * Example:</em>
+<a class="jxr_linenumber" name="L302" href="#L302">302</a> <em class="jxr_javadoccomment">     *  {@snippet :</em>
+<a class="jxr_linenumber" name="L303" href="#L303">303</a> <em class="jxr_javadoccomment">     *           final var myDatabase = context.getDb("photos", Photograph.EMPTY);</em>
+<a class="jxr_linenumber" name="L304" href="#L304">304</a> <em class="jxr_javadoccomment">     *           myDatabase.registerIndex("url", photo -&gt; photo.getUrl());</em>
+<a class="jxr_linenumber" name="L305" href="#L305">305</a> <em class="jxr_javadoccomment">     *  }</em>
+<a class="jxr_linenumber" name="L306" href="#L306">306</a> <em class="jxr_javadoccomment">     * @param indexName a string used to distinguish this index.  This string will be used again</em>
+<a class="jxr_linenumber" name="L307" href="#L307">307</a> <em class="jxr_javadoccomment">     *                  when requesting data in a method like {@link #getIndexedData} or {@link #findExactlyOne}</em>
+<a class="jxr_linenumber" name="L308" href="#L308">308</a> <em class="jxr_javadoccomment">     * @param keyObtainingFunction a function which obtains data from the data in this database, used</em>
+<a class="jxr_linenumber" name="L309" href="#L309">309</a> <em class="jxr_javadoccomment">     *                             to partition the data into groups (potentially up to a 1-to-1 correspondence</em>
+<a class="jxr_linenumber" name="L310" href="#L310">310</a> <em class="jxr_javadoccomment">     *                             between id and object)</em>
+<a class="jxr_linenumber" name="L311" href="#L311">311</a> <em class="jxr_javadoccomment">     * @return true if the registration succeeded</em>
+<a class="jxr_linenumber" name="L312" href="#L312">312</a> <em class="jxr_javadoccomment">     * @throws DbException if the parameters are not entered properly, if the index has already</em>
+<a class="jxr_linenumber" name="L313" href="#L313">313</a> <em class="jxr_javadoccomment">     * been registered, or if the data has already been loaded. It is necessary that</em>
+<a class="jxr_linenumber" name="L314" href="#L314">314</a> <em class="jxr_javadoccomment">     * this is run immediately after declaring the database. To explain further: the data is not</em>
+<a class="jxr_linenumber" name="L315" href="#L315">315</a> <em class="jxr_javadoccomment">     * actually loaded until the first time it is needed, such as running a write or delete, or</em>
+<a class="jxr_linenumber" name="L316" href="#L316">316</a> <em class="jxr_javadoccomment">     * if the {@link #loadDataFromDisk()} method is run.  Creating an index map for the data that</em>
+<a class="jxr_linenumber" name="L317" href="#L317">317</a> <em class="jxr_javadoccomment">     * is read from disk only occurs once, at data load time.  Thus, it is crucial that the</em>
+<a class="jxr_linenumber" name="L318" href="#L318">318</a> <em class="jxr_javadoccomment">     * registerIndex command is run before any data is loaded.</em>
+<a class="jxr_linenumber" name="L319" href="#L319">319</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L320" href="#L320">320</a>     @Override
+<a class="jxr_linenumber" name="L321" href="#L321">321</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> registerIndex(String indexName, Function&lt;T, String&gt; keyObtainingFunction) {
+<a class="jxr_linenumber" name="L322" href="#L322">322</a>         <strong class="jxr_keyword">if</strong> (hasLoadedData) {
+<a class="jxr_linenumber" name="L323" href="#L323">323</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"This method must be run before the database loads data from disk.  Typically, "</span> +
+<a class="jxr_linenumber" name="L324" href="#L324">324</a>                     <span class="jxr_string">"it should be run immediately after the database is created.  See this method's documentation"</span>);
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>         }
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">super</strong>.registerIndex(indexName, keyObtainingFunction);
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>     }
+<a class="jxr_linenumber" name="L328" href="#L328">328</a> 
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L330" href="#L330">330</a> <em class="jxr_javadoccomment">     * Given the name of a registered index (see {@link #registerIndex(String, Function)}),</em>
+<a class="jxr_linenumber" name="L331" href="#L331">331</a> <em class="jxr_javadoccomment">     * use the key to find the collection of data that matches it.</em>
+<a class="jxr_linenumber" name="L332" href="#L332">332</a> <em class="jxr_javadoccomment">     * @param indexName the name of an index</em>
+<a class="jxr_linenumber" name="L333" href="#L333">333</a> <em class="jxr_javadoccomment">     * @param key a string value that matches a partition calculated from the partition</em>
+<a class="jxr_linenumber" name="L334" href="#L334">334</a> <em class="jxr_javadoccomment">     *            function provided to {@link #registerIndex(String, Function)}</em>
+<a class="jxr_linenumber" name="L335" href="#L335">335</a> <em class="jxr_javadoccomment">     * @return a collection of data, an empty collection if nothing found</em>
+<a class="jxr_linenumber" name="L336" href="#L336">336</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>     @Override
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>     <strong class="jxr_keyword">public</strong> Collection&lt;T&gt; getIndexedData(String indexName, String key) {
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>         <em class="jxr_comment">// load data if needed</em>
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>         <strong class="jxr_keyword">if</strong> (!hasLoadedData) loadData();
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">super</strong>.getIndexedData(indexName, key);
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>     }
+<a class="jxr_linenumber" name="L343" href="#L343">343</a> 
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L345" href="#L345">345</a> <em class="jxr_javadoccomment">     * This function will stop the minum.database persistence cleanly.</em>
+<a class="jxr_linenumber" name="L346" href="#L346">346</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L347" href="#L347">347</a> <em class="jxr_javadoccomment">     * In order to do this, we need to wait for our threads</em>
+<a class="jxr_linenumber" name="L348" href="#L348">348</a> <em class="jxr_javadoccomment">     * to finish their work.  In particular, we</em>
+<a class="jxr_linenumber" name="L349" href="#L349">349</a> <em class="jxr_javadoccomment">     * have offloaded our file writes to [actionQueue], which</em>
+<a class="jxr_linenumber" name="L350" href="#L350">350</a> <em class="jxr_javadoccomment">     * has an internal thread for serializing all actions</em>
+<a class="jxr_linenumber" name="L351" href="#L351">351</a> <em class="jxr_javadoccomment">     * on our minum.database</em>
+<a class="jxr_linenumber" name="L352" href="#L352">352</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L353" href="#L353">353</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>     @Override
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> stop() {
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>         actionQueue.stop();
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>     }
+<a class="jxr_linenumber" name="L358" href="#L358">358</a> 
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L360" href="#L360">360</a> <em class="jxr_javadoccomment">     * Similar to {@link #stop()} but gives more control over how long</em>
+<a class="jxr_linenumber" name="L361" href="#L361">361</a> <em class="jxr_javadoccomment">     * we'll wait before crashing it closed.  See {@link ActionQueue#stop(int, int)}</em>
+<a class="jxr_linenumber" name="L362" href="#L362">362</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>     @Override
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> stop(<strong class="jxr_keyword">int</strong> count, <strong class="jxr_keyword">int</strong> sleepTime) {
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>         actionQueue.stop(count, sleepTime);
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>     }
+<a class="jxr_linenumber" name="L367" href="#L367">367</a> 
+<a class="jxr_linenumber" name="L368" href="#L368">368</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2025. All rights reserved.</div>

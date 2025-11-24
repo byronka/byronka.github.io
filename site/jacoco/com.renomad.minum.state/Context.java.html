@@ -30,45 +30,41 @@ import java.util.concurrent.ExecutorService;
  */
 public final class Context {
 
-<span class="fc" id="L33">    public static final Context EMPTY = new Context(null, null);</span>
-    private ILogger logger;
+    private final ILogger logger;
     private final ExecutorService executorService;
     private final Constants constants;
     private FullSystem fullSystem;
     private final ActionQueueState actionQueueState;
 
-<span class="fc" id="L40">    public Context(ExecutorService executorService, Constants constants) {</span>
-<span class="fc" id="L41">        this.executorService = executorService;</span>
-<span class="fc" id="L42">        this.constants = constants;</span>
-<span class="fc" id="L43">        actionQueueState = new ActionQueueState();</span>
+<span class="fc" id="L39">    public Context(ExecutorService executorService, Constants constants, ILogger logger) {</span>
+<span class="fc" id="L40">        this.executorService = executorService;</span>
+<span class="fc" id="L41">        this.constants = constants;</span>
+<span class="fc" id="L42">        actionQueueState = new ActionQueueState();</span>
+<span class="fc" id="L43">        this.logger = logger;</span>
 <span class="fc" id="L44">    }</span>
 
-    public void setLogger(ILogger logger) {
-<span class="fc" id="L47">        this.logger = logger;</span>
-<span class="fc" id="L48">    }</span>
-
     public ILogger getLogger() {
-<span class="fc" id="L51">        return logger;</span>
+<span class="fc" id="L47">        return logger;</span>
     }
 
     public ExecutorService getExecutorService() {
-<span class="fc" id="L55">        return executorService;</span>
+<span class="fc" id="L51">        return executorService;</span>
     }
 
     public Constants getConstants() {
-<span class="fc" id="L59">        return constants;</span>
+<span class="fc" id="L55">        return constants;</span>
     }
 
     public void setFullSystem(FullSystem fullSystem) {
-<span class="fc" id="L63">        this.fullSystem = fullSystem;</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L59">        this.fullSystem = fullSystem;</span>
+<span class="fc" id="L60">    }</span>
 
     public FullSystem getFullSystem() {
-<span class="fc" id="L67">        return fullSystem;</span>
+<span class="fc" id="L63">        return fullSystem;</span>
     }
 
     public ActionQueueState getActionQueueState() {
-<span class="fc" id="L71">        return actionQueueState;</span>
+<span class="fc" id="L67">        return actionQueueState;</span>
     }
 
     /**
@@ -88,7 +84,7 @@ public final class Context {
      *                 Db code to deserialize the data when reading.
      */
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
-<span class="fc" id="L91">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
+<span class="fc" id="L87">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
     }
 
     /**
@@ -104,7 +100,7 @@ public final class Context {
      * &lt;/p&gt;
      */
     public &lt;T extends DbData&lt;?&gt;&gt; DbEngine2&lt;T&gt; getDb2(String name, T instance) {
-<span class="fc" id="L107">        return new DbEngine2&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
+<span class="fc" id="L103">        return new DbEngine2&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
     }
 
 
