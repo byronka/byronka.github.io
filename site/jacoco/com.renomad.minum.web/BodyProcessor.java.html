@@ -164,7 +164,7 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L164">                final var result = postedPairs.put(key, convertedValue);</span>
 
 <span class="fc bfc" id="L166" title="All 2 branches covered.">                if (result != null) {</span>
-<span class="fc" id="L167">                    throw new WebServerException(&quot;Error: key (&quot; +key + &quot;) was duplicated in the post body - previous version was &quot; + new String(result, StandardCharsets.US_ASCII) + &quot; and recent data was &quot; + decodedValue);</span>
+<span class="fc" id="L167">                    logger.logDebug(() -&gt; &quot;Unexpected: key (&quot; +key + &quot;) was duplicated in the post body - previous value was &quot; + new String(result, StandardCharsets.US_ASCII) + &quot; and was overwritten by &quot; + decodedValue);</span>
                 }
 <span class="fc" id="L169">            }</span>
 <span class="fc" id="L170">        } catch (Exception ex) {</span>
@@ -298,7 +298,7 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L298">                int extraCrLfs = (2 * allHeaders.size()) + 2;</span>
 <span class="fc" id="L299">                countBytesRead.incrementBy(lengthOfHeaders + extraCrLfs);</span>
 
-<span class="fc" id="L301">                Headers headers = new Headers(allHeaders);</span>
+<span class="fc" id="L301">                Headers headers = new Headers(allHeaders, logger);</span>
 
 <span class="fc" id="L303">                List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
 <span class="fc bfc" id="L304" title="All 2 branches covered.">                if (cds == null) {</span>

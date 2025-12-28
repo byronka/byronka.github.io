@@ -8,35 +8,35 @@
 <div id="overview"><a href="../../../../../testapidocs/com/renomad/minum/web/HeadersTests.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.web;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
-<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.security.ForbiddenUseException;
-<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.ThrowingSupplier;
-<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
-<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.InvariantException;
-<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> org.junit.AfterClass;
-<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> org.junit.BeforeClass;
-<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> org.junit.Test;
-<a class="jxr_linenumber" name="L10" href="#L10">10</a>  
-<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> java.io.ByteArrayInputStream;
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
-<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> java.io.InputStream;
-<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> java.nio.charset.StandardCharsets;
-<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> java.util.ArrayList;
-<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> java.util.List;
-<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> java.util.Map;
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.TestLogger;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.security.ForbiddenUseException;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.ThrowingSupplier;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> org.junit.*;
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> java.io.ByteArrayInputStream;
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> java.io.InputStream;
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> java.nio.charset.StandardCharsets;
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> java.util.ArrayList;
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> java.util.Map;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.testing.TestFramework.*;
 <a class="jxr_linenumber" name="L18" href="#L18">18</a>  
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.renomad.minum.testing.TestFramework.*;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="HeadersTests" href="../../../../com/renomad/minum/web/HeadersTests.html#HeadersTests">HeadersTests</a> {
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>  
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="HeadersTests" href="../../../../com/renomad/minum/web/HeadersTests.html#HeadersTests">HeadersTests</a> {
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>  
-<a class="jxr_linenumber" name="L23" href="#L23">23</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> Context context;
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>  
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>      @BeforeClass
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> init() {
-<a class="jxr_linenumber" name="L27" href="#L27">27</a>          context = buildTestingContext(<span class="jxr_string">"header tests"</span>);
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">private</strong> Context context;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>      <strong class="jxr_keyword">private</strong> TestLogger logger;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>      @Before
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> init() {
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>          <strong class="jxr_keyword">this</strong>.context = buildTestingContext(<span class="jxr_string">"header tests"</span>);
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>          <strong class="jxr_keyword">this</strong>.logger = (TestLogger) context.getLogger();
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>      }
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>  
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>      @AfterClass
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> cleanup() {
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>      @After
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> cleanup() {
 <a class="jxr_linenumber" name="L32" href="#L32">32</a>          shutdownTestingContext(context);
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>      }
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  
@@ -119,33 +119,56 @@
 <a class="jxr_linenumber" name="L111" href="#L111">111</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L112" href="#L112">112</a>     @Test
 <a class="jxr_linenumber" name="L113" href="#L113">113</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentLength_TooMany() {
-<a class="jxr_linenumber" name="L114" href="#L114">114</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-length: 12"</span>, <span class="jxr_string">"content-length: 44"</span>));
-<a class="jxr_linenumber" name="L115" href="#L115">115</a>         <strong class="jxr_keyword">var</strong> ex = assertThrows(WebServerException.<strong class="jxr_keyword">class</strong>, headers::contentLength);
-<a class="jxr_linenumber" name="L116" href="#L116">116</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"The number of content-length headers must be exactly zero or one.  Received: [12, 44]"</span>);
-<a class="jxr_linenumber" name="L117" href="#L117">117</a>     }
-<a class="jxr_linenumber" name="L118" href="#L118">118</a> 
-<a class="jxr_linenumber" name="L119" href="#L119">119</a>     @Test
-<a class="jxr_linenumber" name="L120" href="#L120">120</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentLength_Negative() {
-<a class="jxr_linenumber" name="L121" href="#L121">121</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-length: -123"</span>));
-<a class="jxr_linenumber" name="L122" href="#L122">122</a>         <strong class="jxr_keyword">var</strong> ex = assertThrows(InvariantException.<strong class="jxr_keyword">class</strong>, headers::contentLength);
-<a class="jxr_linenumber" name="L123" href="#L123">123</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"Content-length cannot be negative"</span>);
-<a class="jxr_linenumber" name="L124" href="#L124">124</a>     }
-<a class="jxr_linenumber" name="L125" href="#L125">125</a> 
-<a class="jxr_linenumber" name="L126" href="#L126">126</a>     @Test
-<a class="jxr_linenumber" name="L127" href="#L127">127</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_HasKeepAlive() {
-<a class="jxr_linenumber" name="L128" href="#L128">128</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"connection: keep-alive"</span>));
-<a class="jxr_linenumber" name="L129" href="#L129">129</a>         assertTrue(headers.hasKeepAlive(), <span class="jxr_string">"should have keep-alive on"</span>);
-<a class="jxr_linenumber" name="L130" href="#L130">130</a>         Headers headers2 = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">""</span>));
-<a class="jxr_linenumber" name="L131" href="#L131">131</a>         assertFalse(headers2.hasKeepAlive(), <span class="jxr_string">"should not have keep-alive on"</span>);
-<a class="jxr_linenumber" name="L132" href="#L132">132</a>     }
-<a class="jxr_linenumber" name="L133" href="#L133">133</a> 
-<a class="jxr_linenumber" name="L134" href="#L134">134</a>     @Test
-<a class="jxr_linenumber" name="L135" href="#L135">135</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_HasConnectionClose() {
-<a class="jxr_linenumber" name="L136" href="#L136">136</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"connection: close"</span>));
-<a class="jxr_linenumber" name="L137" href="#L137">137</a>         assertTrue(headers.hasConnectionClose());
-<a class="jxr_linenumber" name="L138" href="#L138">138</a>     }
-<a class="jxr_linenumber" name="L139" href="#L139">139</a> 
-<a class="jxr_linenumber" name="L140" href="#L140">140</a> }
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-length: 44"</span>, <span class="jxr_string">"content-length: 12"</span>), logger);
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>         <strong class="jxr_keyword">var</strong> result = headers.contentLength();
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>         assertEquals(result, -1);
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>         assertTrue(logger.doesMessageExist(<span class="jxr_string">"Did not receive a valid content length.  Setting length to -1.  Received: [12, 44]"</span>));
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>     }
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> 
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L121" href="#L121">121</a> <em class="jxr_javadoccomment">     * If they send more than one content length, it's invalid. Note that</em>
+<a class="jxr_linenumber" name="L122" href="#L122">122</a> <em class="jxr_javadoccomment">     * this test is the same as {@link #test_ContentLength_TooMany} but lacks logging.</em>
+<a class="jxr_linenumber" name="L123" href="#L123">123</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>     @Test
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentLength_TooMany_NoLogging() {
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-length: 44"</span>, <span class="jxr_string">"content-length: 12"</span>));
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>         <strong class="jxr_keyword">var</strong> result = headers.contentLength();
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>         assertEquals(result, -1);
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>     }
+<a class="jxr_linenumber" name="L130" href="#L130">130</a> 
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>     @Test
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentLength_Negative() {
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-length: -123"</span>), logger);
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>         <strong class="jxr_keyword">var</strong> result = headers.contentLength();
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>         assertEquals(result, -1);
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>         assertTrue(logger.doesMessageExist(<span class="jxr_string">"Content length cannot be negative.  Setting length to -1.  Received: -123"</span>));
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>     }
+<a class="jxr_linenumber" name="L138" href="#L138">138</a> 
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L140" href="#L140">140</a> <em class="jxr_javadoccomment">     * Same as {@link test_ContentLength_Negative} but lacks logging</em>
+<a class="jxr_linenumber" name="L141" href="#L141">141</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>     @Test
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_ContentLength_Negative_NoLogging() {
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"content-length: -123"</span>));
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>         <strong class="jxr_keyword">var</strong> result = headers.contentLength();
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>         assertEquals(result, -1);
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>     }
+<a class="jxr_linenumber" name="L148" href="#L148">148</a> 
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>     @Test
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_HasKeepAlive() {
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"connection: keep-alive"</span>));
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>         assertTrue(headers.hasKeepAlive(), <span class="jxr_string">"should have keep-alive on"</span>);
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>         Headers headers2 = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">""</span>));
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>         assertFalse(headers2.hasKeepAlive(), <span class="jxr_string">"should not have keep-alive on"</span>);
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>     }
+<a class="jxr_linenumber" name="L156" href="#L156">156</a> 
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>     @Test
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_HasConnectionClose() {
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(List.of(<span class="jxr_string">"connection: close"</span>));
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>         assertTrue(headers.hasConnectionClose());
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>     }
+<a class="jxr_linenumber" name="L162" href="#L162">162</a> 
+<a class="jxr_linenumber" name="L163" href="#L163">163</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2025. All rights reserved.</div>

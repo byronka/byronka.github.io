@@ -143,5 +143,15 @@ public final class Request implements IRequest {
 
 <span class="fc" id="L144">        return bodyProcessor.getMultiPartIterable(getSocketWrapper().getInputStream(), boundaryValue, getHeaders().contentLength());</span>
     }
+
+    /**
+     * Returns true if the body has been accessed, either by running
+     * the {@link Request#getBody()} method, by accessing the
+     * {@link ISocketWrapper} using {@link Request#getSocketWrapper()},
+     * or by running {@link Request#getMultipartIterable()} or {@link Request#getUrlEncodedIterable()}
+     */
+    public boolean hasAccessedBody() {
+<span class="fc bfc" id="L154" title="All 4 branches covered.">        return hasStartedReadingBody || body != null;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

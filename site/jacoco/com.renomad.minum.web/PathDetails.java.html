@@ -62,26 +62,29 @@ public final class PathDetails {
     /**
      * This returns the query string portion of the request line as a map, with
      * case-sensitive keys.
+     * &lt;p&gt;
+     *     Note: in the case of duplicate keys, last-in wins
+     * &lt;/p&gt;
      */
     public Map&lt;String, String&gt; getQueryString() {
-<span class="fc" id="L67">        return new HashMap&lt;&gt;(queryString);</span>
+<span class="fc" id="L70">        return new HashMap&lt;&gt;(queryString);</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (!(o instanceof PathDetails that)) return false;</span>
-<span class="fc bfc" id="L74" title="All 6 branches covered.">        return Objects.equals(isolatedPath, that.isolatedPath) &amp;&amp; Objects.equals(rawQueryString, that.rawQueryString) &amp;&amp; Objects.equals(queryString, that.queryString);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (!(o instanceof PathDetails that)) return false;</span>
+<span class="fc bfc" id="L77" title="All 6 branches covered.">        return Objects.equals(isolatedPath, that.isolatedPath) &amp;&amp; Objects.equals(rawQueryString, that.rawQueryString) &amp;&amp; Objects.equals(queryString, that.queryString);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L79">        return Objects.hash(isolatedPath, rawQueryString, queryString);</span>
+<span class="fc" id="L82">        return Objects.hash(isolatedPath, rawQueryString, queryString);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L84">        return &quot;PathDetails{&quot; +</span>
+<span class="fc" id="L87">        return &quot;PathDetails{&quot; +</span>
                 &quot;isolatedPath='&quot; + isolatedPath + '\'' +
                 &quot;, rawQueryString='&quot; + rawQueryString + '\'' +
                 &quot;, queryString=&quot; + queryString +

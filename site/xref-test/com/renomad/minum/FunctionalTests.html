@@ -10,19 +10,19 @@
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.htmlparsing.HtmlParseNode;
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.htmlparsing.TagName;
-<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.TestLogger;
-<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
-<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.FileUtils;
-<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.InvariantException;
-<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.MyThread;
-<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.web.*;
-<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.web.FunctionalTesting.TestResponse;
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> org.junit.AfterClass;
-<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> org.junit.BeforeClass;
-<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> org.junit.Test;
-<a class="jxr_linenumber" name="L15" href="#L15">15</a>  
-<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
-<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> java.net.Socket;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.LoggingLevel;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.TestLogger;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.FileUtils;
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.InvariantException;
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.MyThread;
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.web.*;
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> com.renomad.minum.web.FunctionalTesting.TestResponse;
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> org.junit.*;
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> java.net.Socket;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> java.net.SocketException;
 <a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> java.net.URLEncoder;
 <a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> java.nio.charset.StandardCharsets;
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> java.nio.file.Files;
@@ -41,13 +41,13 @@
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>  <em class="jxr_javadoccomment"> */</em>
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="FunctionalTests" href="../../../com/renomad/minum/FunctionalTests.html#FunctionalTests">FunctionalTests</a> {
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>  
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> TestLogger logger;
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> Context context;
-<a class="jxr_linenumber" name="L38" href="#L38">38</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> FunctionalTesting ft;
-<a class="jxr_linenumber" name="L39" href="#L39">39</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> FullSystem fullSystem;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">private</strong> TestLogger logger;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>      <strong class="jxr_keyword">private</strong> Context context;
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>      <strong class="jxr_keyword">private</strong> FunctionalTesting ft;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>      <strong class="jxr_keyword">private</strong> FullSystem fullSystem;
 <a class="jxr_linenumber" name="L40" href="#L40">40</a>  
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>      @BeforeClass
-<a class="jxr_linenumber" name="L42" href="#L42">42</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> init() {
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>      @Before
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> init() {
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>          context = buildTestingContext(<span class="jxr_string">"_integration_test"</span>);
 <a class="jxr_linenumber" name="L44" href="#L44">44</a>          logger = (TestLogger) context.getLogger();
 <a class="jxr_linenumber" name="L45" href="#L45">45</a>          <strong class="jxr_keyword">var</strong> fileUtils = <strong class="jxr_keyword">new</strong> FileUtils(logger, context.getConstants());
@@ -62,8 +62,8 @@
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>                  context.getConstants().serverPort);
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>      }
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>  
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>      @AfterClass
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> cleanup() {
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>      @After
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> cleanup() {
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>          <em class="jxr_comment">// delay a sec so our system has time to finish before we start deleting files</em>
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>          MyThread.sleep(500);
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>          fullSystem.shutdown();
@@ -306,12 +306,57 @@
 <a class="jxr_linenumber" name="L298" href="#L298">298</a> <em class="jxr_javadoccomment">     * This test was needed to guarantee the system will clean up its sockets, that is,</em>
 <a class="jxr_linenumber" name="L299" href="#L299">299</a> <em class="jxr_javadoccomment">     * it will not have a leak.</em>
 <a class="jxr_linenumber" name="L300" href="#L300">300</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L301" href="#L301">301</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> checkForClosedSocket() {
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> checkForClosedSocket() {
 <a class="jxr_linenumber" name="L302" href="#L302">302</a>         MyThread.sleep(15);
 <a class="jxr_linenumber" name="L303" href="#L303">303</a>         assertTrue(logger.doesMessageExist(<span class="jxr_string">"from SetOfSws"</span>, 15));
 <a class="jxr_linenumber" name="L304" href="#L304">304</a>     }
 <a class="jxr_linenumber" name="L305" href="#L305">305</a> 
-<a class="jxr_linenumber" name="L306" href="#L306">306</a> }
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L307" href="#L307">307</a> <em class="jxr_javadoccomment">     * This seems like an unusual case but it is allowed.  If the user</em>
+<a class="jxr_linenumber" name="L308" href="#L308">308</a> <em class="jxr_javadoccomment">     * registers an endpoint that handles POST requests but doesn't check</em>
+<a class="jxr_linenumber" name="L309" href="#L309">309</a> <em class="jxr_javadoccomment">     * the body, it should still function smoothly.</em>
+<a class="jxr_linenumber" name="L310" href="#L310">310</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>     @Test
+<a class="jxr_linenumber" name="L312" href="#L312">312</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_EdgeCase_PostHandler_IgnoreBody() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>         <em class="jxr_comment">// first we enable trace logging so we can see everything going on in this test</em>
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>         <strong class="jxr_keyword">this</strong>.context.getLogger().getActiveLogLevels().put(LoggingLevel.TRACE, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L315" href="#L315">315</a> 
+<a class="jxr_linenumber" name="L316" href="#L316">316</a>         <em class="jxr_comment">// initialize our web client</em>
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>         FunctionalTesting myFt = <strong class="jxr_keyword">new</strong> FunctionalTesting(context, <span class="jxr_string">"localhost"</span>, 8080);
+<a class="jxr_linenumber" name="L318" href="#L318">318</a> 
+<a class="jxr_linenumber" name="L319" href="#L319">319</a>         <strong class="jxr_keyword">try</strong> (Socket socket = <strong class="jxr_keyword">new</strong> Socket(<span class="jxr_string">"localhost"</span>, 8080)) {
+<a class="jxr_linenumber" name="L320" href="#L320">320</a>             <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L321" href="#L321">321</a>                 logger.logDebug(() -&gt; String.format(<span class="jxr_string">"Just created new client socket: %s"</span>, socket));
+<a class="jxr_linenumber" name="L322" href="#L322">322</a>                 <strong class="jxr_keyword">try</strong> (ISocketWrapper client = <strong class="jxr_keyword">new</strong> SocketWrapper(socket, <strong class="jxr_keyword">null</strong>, logger, context.getConstants().socketTimeoutMillis, context.getConstants().hostName)) {
+<a class="jxr_linenumber" name="L323" href="#L323">323</a> 
+<a class="jxr_linenumber" name="L324" href="#L324">324</a>                     <em class="jxr_comment">// now we have an open connection to the web server.  If we send a POST to an endpoint that doesn't</em>
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>                     <em class="jxr_comment">// do anything with the body, it goes through fine.  However, because our endpoint ignores the body,</em>
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>                     <em class="jxr_comment">// the server will close the connection (this is fine, it just means the client needs to</em>
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>                     <em class="jxr_comment">// open a new socket to talk with it.)</em>
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>                     byte[] testMessageBytes = <span class="jxr_string">"this is a test"</span>.getBytes(StandardCharsets.UTF_8);
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>                     assertEquals(myFt.innerClientSend(client, RequestLine.Method.POST, <span class="jxr_string">"unusualpost"</span>, testMessageBytes, List.of()).statusLine().status(), CODE_200_OK);
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>                     assertEquals(myFt.innerClientSend(client, RequestLine.Method.POST, <span class="jxr_string">"unusualpost"</span>, testMessageBytes, List.of()).statusLine().status(), NULL);
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>                 }
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>             } <strong class="jxr_keyword">catch</strong> (SocketException e) {
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>                 logger.logDebug(() -&gt; <span class="jxr_string">"If you see this, we arrived in the exception handler because in fact the socket was closed, but that's alright and expected"</span>);
+<a class="jxr_linenumber" name="L334" href="#L334">334</a>             }
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>         }
+<a class="jxr_linenumber" name="L336" href="#L336">336</a> 
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>         <strong class="jxr_keyword">try</strong> (Socket socket = <strong class="jxr_keyword">new</strong> Socket(<span class="jxr_string">"localhost"</span>, 8080)) {
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>             logger.logDebug(() -&gt; String.format(<span class="jxr_string">"Just created new client socket: %s"</span>, socket));
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>             <strong class="jxr_keyword">try</strong> (ISocketWrapper client = <strong class="jxr_keyword">new</strong> SocketWrapper(socket, <strong class="jxr_keyword">null</strong>, logger, context.getConstants().socketTimeoutMillis, context.getConstants().hostName)) {
+<a class="jxr_linenumber" name="L340" href="#L340">340</a> 
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>                 <em class="jxr_comment">// This call will go through again, since it is on a new socket</em>
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>                 byte[] testMessageBytes = <span class="jxr_string">"this is a test"</span>.getBytes(StandardCharsets.UTF_8);
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>                 assertEquals(myFt.innerClientSend(client, RequestLine.Method.POST, <span class="jxr_string">"unusualpost"</span>, testMessageBytes, List.of()).statusLine().status(), CODE_200_OK);
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>             }
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>         }
+<a class="jxr_linenumber" name="L346" href="#L346">346</a> 
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>         <em class="jxr_comment">// disable the trace-level logging for other tests</em>
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>         <strong class="jxr_keyword">this</strong>.context.getLogger().getActiveLogLevels().put(LoggingLevel.TRACE, false);
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>     }
+<a class="jxr_linenumber" name="L350" href="#L350">350</a> 
+<a class="jxr_linenumber" name="L351" href="#L351">351</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2025. All rights reserved.</div>
