@@ -199,7 +199,7 @@ final class DbFileConverter {
         // get the list of consolidated data files
         List&lt;Path&gt; listOfFiles;
 <span class="fc" id="L201">        try (Stream&lt;Path&gt; fileStream = Files.list(dbDirectory.resolve(&quot;consolidated_data&quot;))) {</span>
-<span class="fc" id="L202">            listOfFiles = new ArrayList&lt;&gt;(fileStream.filter(Files::isRegularFile).toList());</span>
+<span class="fc" id="L202">            listOfFiles = new ArrayList&lt;&gt;(fileStream.filter(DbFileConverter::isDataFile).toList());</span>
 <span class="fc" id="L203">        } catch (IOException ex) {</span>
 <span class="fc" id="L204">            throw new DbException(&quot;Failed during the listing of files during conversion of db engine2 to db classic&quot;, ex);</span>
 <span class="fc" id="L205">        }</span>
@@ -251,13 +251,22 @@ final class DbFileConverter {
 <span class="fc" id="L251">                    logAlongConversion(logger, countConvertedFiles, 1000);</span>
 <span class="fc" id="L252">                }</span>
             }
-            // now we've converted everything from this file, delete it.
+            // now we've converted everything from this file, delete it and its checksum (if available)
 <span class="fc" id="L255">            Files.delete(filePath);</span>
-<span class="fc" id="L256">        }</span>
+<span class="fc" id="L256">            Path checksumPath = filePath.resolveSibling(filePath.getFileName() + &quot;.checksum&quot;);</span>
+<span class="fc" id="L257">            Files.deleteIfExists(checksumPath);</span>
+<span class="fc" id="L258">        }</span>
 
-<span class="fc" id="L258">        deleteEmptyDbEngine2Directories(dbDirectory);</span>
-<span class="fc" id="L259">        createNewIndexFile(dbDirectory, currentMaxIndexValue);</span>
-<span class="fc" id="L260">    }</span>
+<span class="fc" id="L260">        deleteEmptyDbEngine2Directories(dbDirectory);</span>
+<span class="fc" id="L261">        createNewIndexFile(dbDirectory, currentMaxIndexValue);</span>
+<span class="fc" id="L262">    }</span>
+
+    /**
+     * A predicate used to filter for just regular database files, not checksum files
+     */
+    static boolean isDataFile(Path path) {
+<span class="fc bfc" id="L268" title="All 4 branches covered.">        return Files.isRegularFile(path) &amp;&amp; !path.toString().contains(&quot;checksum&quot;);</span>
+    }
 
     /**
      * This small helper method will create an `index.ddps` file with the correct value
@@ -267,11 +276,11 @@ final class DbFileConverter {
     static void createNewIndexFile(Path dbDirectory, long currentMaxIndexValue) {
         // create an index.ddps with a value set to the current max, plus one
         try {
-<span class="fc" id="L270">            Files.writeString(dbDirectory.resolve(&quot;index.ddps&quot;), String.valueOf(currentMaxIndexValue + 1), CREATE_NEW);</span>
-<span class="fc" id="L271">        } catch (IOException ex) {</span>
-<span class="fc" id="L272">            throw new DbException(&quot;Failed to create an index.ddps file&quot;, ex);</span>
-<span class="fc" id="L273">        }</span>
-<span class="fc" id="L274">    }</span>
+<span class="fc" id="L279">            Files.writeString(dbDirectory.resolve(&quot;index.ddps&quot;), String.valueOf(currentMaxIndexValue + 1), CREATE_NEW);</span>
+<span class="fc" id="L280">        } catch (IOException ex) {</span>
+<span class="fc" id="L281">            throw new DbException(&quot;Failed to create an index.ddps file&quot;, ex);</span>
+<span class="fc" id="L282">        }</span>
+<span class="fc" id="L283">    }</span>
 
     /**
      * This method is called after conversion to Db classic, at which point these directories
@@ -279,13 +288,13 @@ final class DbFileConverter {
      */
     static void deleteEmptyDbEngine2Directories(Path dbDirectory) {
         try {
-<span class="fc" id="L282">            Files.deleteIfExists(dbDirectory.resolve(&quot;consolidated_data&quot;));</span>
-<span class="fc" id="L283">            Files.deleteIfExists(dbDirectory.resolve(&quot;currentAppendLog&quot;));</span>
-<span class="fc" id="L284">            Files.deleteIfExists(dbDirectory.resolve(&quot;append_logs&quot;));</span>
-<span class="fc" id="L285">        } catch (IOException ex) {</span>
-<span class="fc" id="L286">            throw new DbException(&quot;Failed to delete one of the DbEngine2 files&quot;, ex);</span>
-<span class="fc" id="L287">        }</span>
-<span class="fc" id="L288">    }</span>
+<span class="fc" id="L291">            Files.deleteIfExists(dbDirectory.resolve(&quot;consolidated_data&quot;));</span>
+<span class="fc" id="L292">            Files.deleteIfExists(dbDirectory.resolve(&quot;currentAppendLog&quot;));</span>
+<span class="fc" id="L293">            Files.deleteIfExists(dbDirectory.resolve(&quot;append_logs&quot;));</span>
+<span class="fc" id="L294">        } catch (IOException ex) {</span>
+<span class="fc" id="L295">            throw new DbException(&quot;Failed to delete one of the DbEngine2 files&quot;, ex);</span>
+<span class="fc" id="L296">        }</span>
+<span class="fc" id="L297">    }</span>
 
     /**
      * A helper to choose when to output logging statements during the conversion
@@ -293,10 +302,10 @@ final class DbFileConverter {
      * @param countConvertedFilesModulo modulo this number at which a log statement will be output.
      */
     static void logAlongConversion(ILogger logger, long countConvertedFiles, int countConvertedFilesModulo) {
-<span class="fc bfc" id="L296" title="All 2 branches covered.">        if (countConvertedFiles % countConvertedFilesModulo == 0) {</span>
-<span class="fc" id="L297">            logger.logDebug(() -&gt; &quot;DbFileConverter has converted %d files to Db Classic form&quot;</span>
-<span class="fc" id="L298">                    .formatted(countConvertedFiles));</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">        if (countConvertedFiles % countConvertedFilesModulo == 0) {</span>
+<span class="fc" id="L306">            logger.logDebug(() -&gt; &quot;DbFileConverter has converted %d files to Db Classic form&quot;</span>
+<span class="fc" id="L307">                    .formatted(countConvertedFiles));</span>
         }
-<span class="fc" id="L300">    }</span>
+<span class="fc" id="L309">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

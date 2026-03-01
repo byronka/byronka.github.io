@@ -207,7 +207,7 @@
 <a class="jxr_linenumber" name="L199" href="#L199">199</a>         <em class="jxr_comment">// get the list of consolidated data files</em>
 <a class="jxr_linenumber" name="L200" href="#L200">200</a>         List&lt;Path&gt; listOfFiles;
 <a class="jxr_linenumber" name="L201" href="#L201">201</a>         <strong class="jxr_keyword">try</strong> (Stream&lt;Path&gt; fileStream = Files.list(dbDirectory.resolve(<span class="jxr_string">"consolidated_data"</span>))) {
-<a class="jxr_linenumber" name="L202" href="#L202">202</a>             listOfFiles = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;(fileStream.filter(Files::isRegularFile).toList());
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>             listOfFiles = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;(fileStream.filter(DbFileConverter::isDataFile).toList());
 <a class="jxr_linenumber" name="L203" href="#L203">203</a>         } <strong class="jxr_keyword">catch</strong> (IOException ex) {
 <a class="jxr_linenumber" name="L204" href="#L204">204</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed during the listing of files during conversion of db engine2 to db classic"</span>, ex);
 <a class="jxr_linenumber" name="L205" href="#L205">205</a>         }
@@ -259,56 +259,65 @@
 <a class="jxr_linenumber" name="L251" href="#L251">251</a>                     logAlongConversion(logger, countConvertedFiles, 1000);
 <a class="jxr_linenumber" name="L252" href="#L252">252</a>                 }
 <a class="jxr_linenumber" name="L253" href="#L253">253</a>             }
-<a class="jxr_linenumber" name="L254" href="#L254">254</a>             <em class="jxr_comment">// now we've converted everything from this file, delete it.</em>
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>             <em class="jxr_comment">// now we've converted everything from this file, delete it and its checksum (if available)</em>
 <a class="jxr_linenumber" name="L255" href="#L255">255</a>             Files.delete(filePath);
-<a class="jxr_linenumber" name="L256" href="#L256">256</a>         }
-<a class="jxr_linenumber" name="L257" href="#L257">257</a> 
-<a class="jxr_linenumber" name="L258" href="#L258">258</a>         deleteEmptyDbEngine2Directories(dbDirectory);
-<a class="jxr_linenumber" name="L259" href="#L259">259</a>         createNewIndexFile(dbDirectory, currentMaxIndexValue);
-<a class="jxr_linenumber" name="L260" href="#L260">260</a>     }
-<a class="jxr_linenumber" name="L261" href="#L261">261</a> 
-<a class="jxr_linenumber" name="L262" href="#L262">262</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L263" href="#L263">263</a> <em class="jxr_javadoccomment">     * This small helper method will create an `index.ddps` file with the correct value</em>
-<a class="jxr_linenumber" name="L264" href="#L264">264</a> <em class="jxr_javadoccomment">     * for use with Db classic.  It determines the correct value by having calculated the</em>
-<a class="jxr_linenumber" name="L265" href="#L265">265</a> <em class="jxr_javadoccomment">     * maximum-value-seen throughout the conversion process.</em>
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>             Path checksumPath = filePath.resolveSibling(filePath.getFileName() + <span class="jxr_string">".checksum"</span>);
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>             Files.deleteIfExists(checksumPath);
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>         }
+<a class="jxr_linenumber" name="L259" href="#L259">259</a> 
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>         deleteEmptyDbEngine2Directories(dbDirectory);
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>         createNewIndexFile(dbDirectory, currentMaxIndexValue);
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>     }
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> 
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a> <em class="jxr_javadoccomment">     * A predicate used to filter for just regular database files, not checksum files</em>
 <a class="jxr_linenumber" name="L266" href="#L266">266</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L267" href="#L267">267</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> createNewIndexFile(Path dbDirectory, <strong class="jxr_keyword">long</strong> currentMaxIndexValue) {
-<a class="jxr_linenumber" name="L268" href="#L268">268</a>         <em class="jxr_comment">// create an index.ddps with a value set to the current max, plus one</em>
-<a class="jxr_linenumber" name="L269" href="#L269">269</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L270" href="#L270">270</a>             Files.writeString(dbDirectory.resolve(<span class="jxr_string">"index.ddps"</span>), String.valueOf(currentMaxIndexValue + 1), CREATE_NEW);
-<a class="jxr_linenumber" name="L271" href="#L271">271</a>         } <strong class="jxr_keyword">catch</strong> (IOException ex) {
-<a class="jxr_linenumber" name="L272" href="#L272">272</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to create an index.ddps file"</span>, ex);
-<a class="jxr_linenumber" name="L273" href="#L273">273</a>         }
-<a class="jxr_linenumber" name="L274" href="#L274">274</a>     }
-<a class="jxr_linenumber" name="L275" href="#L275">275</a> 
-<a class="jxr_linenumber" name="L276" href="#L276">276</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L277" href="#L277">277</a> <em class="jxr_javadoccomment">     * This method is called after conversion to Db classic, at which point these directories</em>
-<a class="jxr_linenumber" name="L278" href="#L278">278</a> <em class="jxr_javadoccomment">     * will be empty.</em>
-<a class="jxr_linenumber" name="L279" href="#L279">279</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L280" href="#L280">280</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> deleteEmptyDbEngine2Directories(Path dbDirectory) {
-<a class="jxr_linenumber" name="L281" href="#L281">281</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L282" href="#L282">282</a>             Files.deleteIfExists(dbDirectory.resolve(<span class="jxr_string">"consolidated_data"</span>));
-<a class="jxr_linenumber" name="L283" href="#L283">283</a>             Files.deleteIfExists(dbDirectory.resolve(<span class="jxr_string">"currentAppendLog"</span>));
-<a class="jxr_linenumber" name="L284" href="#L284">284</a>             Files.deleteIfExists(dbDirectory.resolve(<span class="jxr_string">"append_logs"</span>));
-<a class="jxr_linenumber" name="L285" href="#L285">285</a>         } <strong class="jxr_keyword">catch</strong> (IOException ex) {
-<a class="jxr_linenumber" name="L286" href="#L286">286</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to delete one of the DbEngine2 files"</span>, ex);
-<a class="jxr_linenumber" name="L287" href="#L287">287</a>         }
-<a class="jxr_linenumber" name="L288" href="#L288">288</a>     }
-<a class="jxr_linenumber" name="L289" href="#L289">289</a> 
-<a class="jxr_linenumber" name="L290" href="#L290">290</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L291" href="#L291">291</a> <em class="jxr_javadoccomment">     * A helper to choose when to output logging statements during the conversion</em>
-<a class="jxr_linenumber" name="L292" href="#L292">292</a> <em class="jxr_javadoccomment">     * of files from one database file format to another.</em>
-<a class="jxr_linenumber" name="L293" href="#L293">293</a> <em class="jxr_javadoccomment">     * @param countConvertedFilesModulo modulo this number at which a log statement will be output.</em>
-<a class="jxr_linenumber" name="L294" href="#L294">294</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L295" href="#L295">295</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> logAlongConversion(<a name="ILogger" href="../../../../com/renomad/minum/logging/ILogger.html#ILogger">ILogger</a> logger, <strong class="jxr_keyword">long</strong> countConvertedFiles, <strong class="jxr_keyword">int</strong> countConvertedFilesModulo) {
-<a class="jxr_linenumber" name="L296" href="#L296">296</a>         <strong class="jxr_keyword">if</strong> (countConvertedFiles % countConvertedFilesModulo == 0) {
-<a class="jxr_linenumber" name="L297" href="#L297">297</a>             logger.logDebug(() -&gt; <span class="jxr_string">"DbFileConverter has converted %d files to Db Classic form"</span>
-<a class="jxr_linenumber" name="L298" href="#L298">298</a>                     .formatted(countConvertedFiles));
-<a class="jxr_linenumber" name="L299" href="#L299">299</a>         }
-<a class="jxr_linenumber" name="L300" href="#L300">300</a>     }
-<a class="jxr_linenumber" name="L301" href="#L301">301</a> }
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">boolean</strong> isDataFile(Path path) {
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>         <strong class="jxr_keyword">return</strong> Files.isRegularFile(path) &amp;&amp; !path.toString().contains(<span class="jxr_string">"checksum"</span>);
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>     }
+<a class="jxr_linenumber" name="L270" href="#L270">270</a> 
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_javadoccomment">     * This small helper method will create an `index.ddps` file with the correct value</em>
+<a class="jxr_linenumber" name="L273" href="#L273">273</a> <em class="jxr_javadoccomment">     * for use with Db classic.  It determines the correct value by having calculated the</em>
+<a class="jxr_linenumber" name="L274" href="#L274">274</a> <em class="jxr_javadoccomment">     * maximum-value-seen throughout the conversion process.</em>
+<a class="jxr_linenumber" name="L275" href="#L275">275</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> createNewIndexFile(Path dbDirectory, <strong class="jxr_keyword">long</strong> currentMaxIndexValue) {
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>         <em class="jxr_comment">// create an index.ddps with a value set to the current max, plus one</em>
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>             Files.writeString(dbDirectory.resolve(<span class="jxr_string">"index.ddps"</span>), String.valueOf(currentMaxIndexValue + 1), CREATE_NEW);
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>         } <strong class="jxr_keyword">catch</strong> (IOException ex) {
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to create an index.ddps file"</span>, ex);
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>         }
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>     }
+<a class="jxr_linenumber" name="L284" href="#L284">284</a> 
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L286" href="#L286">286</a> <em class="jxr_javadoccomment">     * This method is called after conversion to Db classic, at which point these directories</em>
+<a class="jxr_linenumber" name="L287" href="#L287">287</a> <em class="jxr_javadoccomment">     * will be empty.</em>
+<a class="jxr_linenumber" name="L288" href="#L288">288</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> deleteEmptyDbEngine2Directories(Path dbDirectory) {
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>             Files.deleteIfExists(dbDirectory.resolve(<span class="jxr_string">"consolidated_data"</span>));
+<a class="jxr_linenumber" name="L292" href="#L292">292</a>             Files.deleteIfExists(dbDirectory.resolve(<span class="jxr_string">"currentAppendLog"</span>));
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>             Files.deleteIfExists(dbDirectory.resolve(<span class="jxr_string">"append_logs"</span>));
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>         } <strong class="jxr_keyword">catch</strong> (IOException ex) {
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(<span class="jxr_string">"Failed to delete one of the DbEngine2 files"</span>, ex);
+<a class="jxr_linenumber" name="L296" href="#L296">296</a>         }
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>     }
+<a class="jxr_linenumber" name="L298" href="#L298">298</a> 
+<a class="jxr_linenumber" name="L299" href="#L299">299</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L300" href="#L300">300</a> <em class="jxr_javadoccomment">     * A helper to choose when to output logging statements during the conversion</em>
+<a class="jxr_linenumber" name="L301" href="#L301">301</a> <em class="jxr_javadoccomment">     * of files from one database file format to another.</em>
+<a class="jxr_linenumber" name="L302" href="#L302">302</a> <em class="jxr_javadoccomment">     * @param countConvertedFilesModulo modulo this number at which a log statement will be output.</em>
+<a class="jxr_linenumber" name="L303" href="#L303">303</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L304" href="#L304">304</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> logAlongConversion(<a name="ILogger" href="../../../../com/renomad/minum/logging/ILogger.html#ILogger">ILogger</a> logger, <strong class="jxr_keyword">long</strong> countConvertedFiles, <strong class="jxr_keyword">int</strong> countConvertedFilesModulo) {
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>         <strong class="jxr_keyword">if</strong> (countConvertedFiles % countConvertedFilesModulo == 0) {
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>             logger.logDebug(() -&gt; <span class="jxr_string">"DbFileConverter has converted %d files to Db Classic form"</span>
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>                     .formatted(countConvertedFiles));
+<a class="jxr_linenumber" name="L308" href="#L308">308</a>         }
+<a class="jxr_linenumber" name="L309" href="#L309">309</a>     }
+<a class="jxr_linenumber" name="L310" href="#L310">310</a> }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2025. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2026. All rights reserved.</div>
 </body>
 </html>

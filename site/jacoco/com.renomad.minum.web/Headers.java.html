@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+import static com.renomad.minum.web.WebEngine.HTTP_CRLF;
+
 /**
  * Details extracted from the headers.  For example,
  * is this a keep-alive connection? what is the content-length,
@@ -25,9 +27,9 @@ import java.util.*;
  * of the document being downloaded, amongst others.
  * &lt;/p&gt;
  */
-public final class Headers{
+public final class Headers {
 
-<span class="fc" id="L30">    public static final Headers EMPTY = new Headers(List.of(), null);</span>
+<span class="fc" id="L32">    public static final Headers EMPTY = new Headers(List.of(), null);</span>
     private static final int MAX_HEADERS_COUNT = 70;
     private Integer contentLength;
 
@@ -38,16 +40,16 @@ public final class Headers{
     private final Map&lt;String, List&lt;String&gt;&gt; headersMap;
     private final ILogger logger;
 
-<span class="fc" id="L41">    public Headers(List&lt;String&gt; headerStrings, ILogger logger) {</span>
-<span class="fc" id="L42">        this.headerStrings = new ArrayList&lt;&gt;(headerStrings);</span>
-<span class="fc" id="L43">        this.headersMap = Collections.unmodifiableMap(extractHeadersToMap(headerStrings));</span>
-<span class="fc" id="L44">        this.logger = logger;</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L43">    public Headers(List&lt;String&gt; headerStrings, ILogger logger) {</span>
+<span class="fc" id="L44">        this.headerStrings = new ArrayList&lt;&gt;(headerStrings);</span>
+<span class="fc" id="L45">        this.headersMap = Collections.unmodifiableMap(extractHeadersToMap(headerStrings));</span>
+<span class="fc" id="L46">        this.logger = logger;</span>
+<span class="fc" id="L47">    }</span>
 
-<span class="fc" id="L47">    public Headers(List&lt;String&gt; headerStrings) { this(headerStrings, null); }</span>
+<span class="fc" id="L49">    public Headers(List&lt;String&gt; headerStrings) { this(headerStrings, null); }</span>
 
     public List&lt;String&gt; getHeaderStrings() {
-<span class="fc" id="L50">        return new ArrayList&lt;&gt;(headerStrings);</span>
+<span class="fc" id="L52">        return new ArrayList&lt;&gt;(headerStrings);</span>
     }
 
     /**
@@ -55,28 +57,28 @@ public final class Headers{
      * are made lowercase.
      */
     static Map&lt;String, List&lt;String&gt;&gt; extractHeadersToMap(List&lt;String&gt; headerStrings) {
-<span class="fc" id="L58">        var result = new HashMap&lt;String, List&lt;String&gt;&gt;();</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (var h : headerStrings) {</span>
-<span class="fc" id="L60">            var indexOfFirstColon = h.indexOf(&quot;:&quot;);</span>
+<span class="fc" id="L60">        var result = new HashMap&lt;String, List&lt;String&gt;&gt;();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        for (var h : headerStrings) {</span>
+<span class="fc" id="L62">            var indexOfFirstColon = h.indexOf(&quot;:&quot;);</span>
 
             // if the header is malformed, just move on
-<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (indexOfFirstColon &lt;= 0) continue;</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (indexOfFirstColon &lt;= 0) continue;</span>
 
-<span class="fc" id="L65">            String key = h.substring(0, indexOfFirstColon).toLowerCase(Locale.ROOT);</span>
-<span class="fc" id="L66">            String value = h.substring(indexOfFirstColon+1).trim();</span>
+<span class="fc" id="L67">            String key = h.substring(0, indexOfFirstColon).toLowerCase(Locale.ROOT);</span>
+<span class="fc" id="L68">            String value = h.substring(indexOfFirstColon+1).trim();</span>
 
-<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (result.containsKey(key)) {</span>
-<span class="fc" id="L69">                var currentValue = result.get(key);</span>
-<span class="fc" id="L70">                List&lt;String&gt; newList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L71">                newList.add(value);</span>
-<span class="fc" id="L72">                newList.addAll(currentValue);</span>
-<span class="fc" id="L73">                result.put(key, newList);</span>
-<span class="fc" id="L74">            } else {</span>
-<span class="fc" id="L75">                result.put(key, List.of(value));</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if (result.containsKey(key)) {</span>
+<span class="fc" id="L71">                var currentValue = result.get(key);</span>
+<span class="fc" id="L72">                List&lt;String&gt; newList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L73">                newList.add(value);</span>
+<span class="fc" id="L74">                newList.addAll(currentValue);</span>
+<span class="fc" id="L75">                result.put(key, newList);</span>
+<span class="fc" id="L76">            } else {</span>
+<span class="fc" id="L77">                result.put(key, List.of(value));</span>
             }
 
-<span class="fc" id="L78">        }</span>
-<span class="fc" id="L79">        return result;</span>
+<span class="fc" id="L80">        }</span>
+<span class="fc" id="L81">        return result;</span>
     }
 
     /**
@@ -84,17 +86,17 @@ public final class Headers{
      */
     public String contentType() {
         // find the header that starts with content-type
-<span class="fc" id="L87">        List&lt;String&gt; cts = Objects.requireNonNullElse(headersMap.get(&quot;content-type&quot;), List.of());</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (cts.size() &gt; 1) {</span>
-<span class="fc" id="L89">            cts.sort(Comparator.naturalOrder());</span>
-<span class="fc" id="L90">            throw new WebServerException(&quot;The number of content-type headers must be exactly zero or one.  Received: &quot; + cts);</span>
+<span class="fc" id="L89">        List&lt;String&gt; cts = Objects.requireNonNullElse(headersMap.get(&quot;content-type&quot;), new ArrayList&lt;&gt;());</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (cts.size() &gt; 1) {</span>
+<span class="fc" id="L91">            cts.sort(Comparator.naturalOrder());</span>
+<span class="fc" id="L92">            throw new WebServerException(&quot;The number of content-type headers must be exactly zero or one.  Received: &quot; + cts);</span>
         }
-<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (!cts.isEmpty()) {</span>
-<span class="fc" id="L93">            return cts.getFirst();</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (!cts.isEmpty()) {</span>
+<span class="fc" id="L95">            return cts.getFirst();</span>
         }
 
         // if we don't find a content-type header, or if we don't find one we can handle, return an empty string.
-<span class="fc" id="L97">        return &quot;&quot;;</span>
+<span class="fc" id="L99">        return &quot;&quot;;</span>
     }
 
     /**
@@ -104,22 +106,22 @@ public final class Headers{
      */
     public int contentLength() {
         // if we have a saved value for content length, use that
-<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (contentLength != null) return contentLength;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (contentLength != null) return contentLength;</span>
 
-<span class="fc" id="L109">        List&lt;String&gt; cl = Objects.requireNonNullElse(headersMap.get(&quot;content-length&quot;), List.of());</span>
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (cl.isEmpty()) {</span>
-<span class="fc" id="L111">            contentLength = -1;</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        } else if (cl.size() &gt; 1) {</span>
-<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (logger != null) logger.logDebug(() -&gt; &quot;Did not receive a valid content length.  Setting length to -1.  Received: &quot; + cl);</span>
-<span class="fc" id="L114">            contentLength = -1;</span>
+<span class="fc" id="L111">        List&lt;String&gt; cl = Objects.requireNonNullElse(headersMap.get(&quot;content-length&quot;), List.of());</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (cl.isEmpty()) {</span>
+<span class="fc" id="L113">            contentLength = -1;</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        } else if (cl.size() &gt; 1) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (logger != null) logger.logDebug(() -&gt; &quot;Did not receive a valid content length.  Setting length to -1.  Received: &quot; + cl);</span>
+<span class="fc" id="L116">            contentLength = -1;</span>
         } else {
-<span class="fc" id="L116">            contentLength = Integer.parseInt(cl.getFirst());</span>
-<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (contentLength &lt; 0) {</span>
-<span class="fc bfc" id="L118" title="All 2 branches covered.">                if (logger != null) logger.logDebug(() -&gt; &quot;Content length cannot be negative.  Setting length to -1.  Received: &quot; + contentLength);</span>
-<span class="fc" id="L119">                contentLength = -1;</span>
+<span class="fc" id="L118">            contentLength = Integer.parseInt(cl.getFirst());</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">            if (contentLength &lt; 0) {</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                if (logger != null) logger.logDebug(() -&gt; &quot;Content length cannot be negative.  Setting length to -1.  Received: &quot; + contentLength);</span>
+<span class="fc" id="L121">                contentLength = -1;</span>
             }
         }
-<span class="fc" id="L122">        return contentLength;</span>
+<span class="fc" id="L124">        return contentLength;</span>
     }
 
     /**
@@ -127,9 +129,9 @@ public final class Headers{
      * have a Connection: Keep-Alive
      */
     public boolean hasKeepAlive() {
-<span class="fc" id="L130">        List&lt;String&gt; connectionHeader = headersMap.get(&quot;connection&quot;);</span>
-<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (connectionHeader == null) return false;</span>
-<span class="fc" id="L132">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;keep-alive&quot;));</span>
+<span class="fc" id="L132">        List&lt;String&gt; connectionHeader = headersMap.get(&quot;connection&quot;);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (connectionHeader == null) return false;</span>
+<span class="fc" id="L134">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;keep-alive&quot;));</span>
     }
 
     /**
@@ -137,9 +139,9 @@ public final class Headers{
      * have a Connection: close
      */
     public boolean hasConnectionClose() {
-<span class="fc" id="L140">        List&lt;String&gt; connectionHeader = headersMap.get(&quot;connection&quot;);</span>
-<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (connectionHeader == null) return false;</span>
-<span class="fc" id="L142">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;close&quot;));</span>
+<span class="fc" id="L142">        List&lt;String&gt; connectionHeader = headersMap.get(&quot;connection&quot;);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (connectionHeader == null) return false;</span>
+<span class="fc" id="L144">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;close&quot;));</span>
     }
 
     /**
@@ -148,26 +150,33 @@ public final class Headers{
     static List&lt;String&gt; getAllHeaders(InputStream is, IInputStreamUtils inputStreamUtils) {
         // we'll give the list an initial size, since in most cases we're going to have headers.
         // 10 is just an arbitrary number, seems about right.
-<span class="fc" id="L151">        List&lt;String&gt; headers = new ArrayList&lt;&gt;(10);</span>
-<span class="fc" id="L152">        for (int i = 0;; i++) {</span>
-<span class="fc bfc" id="L153" title="All 2 branches covered.">            if (i &gt;=MAX_HEADERS_COUNT) {</span>
-<span class="fc" id="L154">                throw new ForbiddenUseException(&quot;User tried sending too many headers.  max: &quot; + MAX_HEADERS_COUNT);</span>
+<span class="fc" id="L153">        List&lt;String&gt; headers = new ArrayList&lt;&gt;(10);</span>
+<span class="fc" id="L154">        for (int i = 0;; i++) {</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (i &gt;=MAX_HEADERS_COUNT) {</span>
+<span class="fc" id="L156">                throw new ForbiddenUseException(&quot;User tried sending too many headers.  max: &quot; + MAX_HEADERS_COUNT);</span>
             }
             String value;
             try {
-<span class="fc" id="L158">                value = inputStreamUtils.readLine(is);</span>
-<span class="fc" id="L159">            } catch (IOException e) {</span>
-<span class="fc" id="L160">                throw new WebServerException(e);</span>
-<span class="fc" id="L161">            }</span>
-<span class="fc bfc" id="L162" title="All 4 branches covered.">            if (value != null &amp;&amp; value.isBlank()) {</span>
-<span class="fc" id="L163">                break;</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">            } else if (value == null) {</span>
-<span class="fc" id="L165">                return headers;</span>
+<span class="fc" id="L160">                value = inputStreamUtils.readLine(is);</span>
+<span class="fc" id="L161">            } catch (IOException e) {</span>
+<span class="fc" id="L162">                throw new WebServerException(e);</span>
+<span class="fc" id="L163">            }</span>
+<span class="fc bfc" id="L164" title="All 4 branches covered.">            if (value != null &amp;&amp; value.isBlank()) {</span>
+<span class="fc" id="L165">                break;</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">            } else if (value == null) {</span>
+<span class="fc" id="L167">                return headers;</span>
             } else {
-<span class="fc" id="L167">                headers.add(value);</span>
+<span class="fc" id="L169">                headers.add(value);</span>
             }
         }
-<span class="fc" id="L170">        return headers;</span>
+<span class="fc" id="L172">        return headers;</span>
+    }
+
+    /**
+     * Returns true if there is no header data in this instance.
+     */
+    public boolean isEmpty() {
+<span class="fc" id="L179">        return this.headersMap.isEmpty();</span>
     }
 
     /**
@@ -176,26 +185,37 @@ public final class Headers{
      * if no header was found.
      */
     public List&lt;String&gt; valueByKey(String key) {
-<span class="fc" id="L179">        return headersMap.get(key.toLowerCase(Locale.ROOT));</span>
+<span class="fc" id="L188">        return headersMap.get(key.toLowerCase(Locale.ROOT));</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L184" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L185">        Headers headers = (Headers) o;</span>
-<span class="fc bfc" id="L186" title="All 8 branches covered.">        return Objects.equals(contentLength, headers.contentLength) &amp;&amp; Objects.equals(headerStrings, headers.headerStrings) &amp;&amp; Objects.equals(headersMap, headers.headersMap) &amp;&amp; Objects.equals(logger, headers.logger);</span>
+<span class="fc bfc" id="L193" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L194">        Headers headers = (Headers) o;</span>
+<span class="fc bfc" id="L195" title="All 8 branches covered.">        return Objects.equals(contentLength, headers.contentLength) &amp;&amp; Objects.equals(headerStrings, headers.headerStrings) &amp;&amp; Objects.equals(headersMap, headers.headersMap) &amp;&amp; Objects.equals(logger, headers.logger);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L191">        return Objects.hash(contentLength, headerStrings, headersMap, logger);</span>
+<span class="fc" id="L200">        return Objects.hash(contentLength, headerStrings, headersMap, logger);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L196">        return &quot;Headers{&quot; +</span>
+<span class="fc" id="L205">        return &quot;Headers{&quot; +</span>
                 &quot;headerStrings=&quot; + headerStrings +
                 '}';
     }
+
+    /**
+     * This is used in the WebFramework when building a Response string,
+     * to avoid needing to create a copy of the headers list when preparing
+     * to send.
+     */
+    void appendHeadersToBuilder(StringBuilder sb) {
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        for (String header : headerStrings) {</span>
+<span class="fc" id="L217">            sb.append(header).append(HTTP_CRLF);</span>
+<span class="fc" id="L218">        }</span>
+<span class="fc" id="L219">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

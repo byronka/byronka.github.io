@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChecksumUtility.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.database</a> &gt; <span class="el_source">ChecksumUtility.java</span></div><h1>ChecksumUtility.java</h1><pre class="source lang-java linenums">package com.renomad.minum.database;
+
+import com.renomad.minum.utils.CryptoUtils;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * This class contains some functions related to the &quot;checksum&quot; feature
+ * of the database.  The &quot;checksum&quot; is a hash that is created when the
+ * database writes data to a file, and is checked when reading that file.
+ * &lt;br&gt;
+ * If the value is different than expected while reading, an exception will be thrown
+ * indicating data corruption.
+ */
+public class ChecksumUtility {
+
+    private ChecksumUtility() {
+        // not intended to be instantiated
+    }
+
+    /**
+     * Given a path to a consolidated database file, check its data against
+     * the recorded checksum and throw an exception if it doesn't match.
+     * @param fullPathToConsolidatedFile the path to a consolidated database file
+     * @param data the list of strings of data in a consolidated database file
+     */
+    static boolean compareWithChecksum(Path fullPathToConsolidatedFile, List&lt;String&gt; data) {
+        // check against the checksum, if it exists. If it is not there or blank, just move on.
+<span class="fc" id="L36">        Path checksumPath = fullPathToConsolidatedFile.resolveSibling(fullPathToConsolidatedFile.getFileName() + &quot;.checksum&quot;);</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (Files.exists(checksumPath)) {</span>
+            String existingChecksumValue;
+            try {
+<span class="fc" id="L40">                existingChecksumValue = Files.readString(checksumPath);</span>
+<span class="fc" id="L41">            } catch (IOException e) {</span>
+<span class="fc" id="L42">                throw new DbChecksumException(e);</span>
+<span class="fc" id="L43">            }</span>
+<span class="fc" id="L44">            String checksumString = buildChecksum(data);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            if (!checksumString.equals(existingChecksumValue)) {</span>
+<span class="fc" id="L46">                throw new DbChecksumException(generateChecksumErrorMessage(fullPathToConsolidatedFile));</span>
+            }
+        }
+<span class="fc" id="L49">        return true;</span>
+    }
+
+    static String generateChecksumErrorMessage(Path fullPathToConsolidatedFile) {
+<span class="fc" id="L53">        return &quot;&quot;&quot;</span>
+                
+                WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+                **************************************************************************************
+                **************************************************************************************
+                
+                Checksum failure for %s
+                
+                THIS FILE IS CORRUPTED, AND NEEDS TO BE RESTORED FROM BACKUP!
+                
+                The checksum file is at %s.checksum
+                
+                Next steps: This warning means the data does not align with its checksum, meaning
+                it has changed by something other than the program.  That is, it is corrupted data.
+                The best thing is to restore the data from backup for this.  Other options are to
+                review the data.  Deleting the checksum file will cause this complaint to stop.
+                
+                **************************************************************************************
+                **************************************************************************************
+                WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+                
+<span class="fc" id="L74">                &quot;&quot;&quot;.stripIndent().formatted(fullPathToConsolidatedFile, fullPathToConsolidatedFile);</span>
+    }
+
+    static String buildChecksum(Collection&lt;String&gt; updatedData) {
+        // build a hash for this data
+<span class="fc" id="L79">        MessageDigest messageDigestSha256 = getMessageDigest(&quot;SHA-256&quot;);</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        for (String item : updatedData) {</span>
+<span class="fc" id="L81">            messageDigestSha256.update(item.getBytes(StandardCharsets.US_ASCII));</span>
+<span class="fc" id="L82">        }</span>
+<span class="fc" id="L83">        byte[] hash = messageDigestSha256.digest();</span>
+<span class="fc" id="L84">        return CryptoUtils.bytesToHex(hash);</span>
+    }
+
+    static MessageDigest getMessageDigest(String algorithm) {
+        try {
+<span class="fc" id="L89">            return MessageDigest.getInstance(algorithm);</span>
+<span class="fc" id="L90">        } catch (NoSuchAlgorithmException e) {</span>
+<span class="fc" id="L91">            throw new DbChecksumException(e);</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

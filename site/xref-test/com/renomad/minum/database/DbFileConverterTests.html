@@ -346,9 +346,31 @@
 <a class="jxr_linenumber" name="L338" href="#L338">338</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"For input string: \&quot;a\&quot;"</span>);
 <a class="jxr_linenumber" name="L339" href="#L339">339</a>     }
 <a class="jxr_linenumber" name="L340" href="#L340">340</a> 
-<a class="jxr_linenumber" name="L341" href="#L341">341</a> }
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>     @Test
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsDataFile_Filtering() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>         Path myPath = Path.of(<span class="jxr_string">"out/simple_db/db_file_converter_tests/testing_is_data_file"</span>);
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>         fileUtils.deleteDirectoryRecursivelyIfExists(myPath);
+<a class="jxr_linenumber" name="L345" href="#L345">345</a> 
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>         <em class="jxr_comment">// make directories</em>
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>         fileUtils.makeDirectory(myPath);
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>         fileUtils.makeDirectory(myPath.resolve(<span class="jxr_string">"baz"</span>));
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>         fileUtils.makeDirectory(myPath.resolve(<span class="jxr_string">"baz.checksum"</span>));
+<a class="jxr_linenumber" name="L350" href="#L350">350</a> 
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>         <em class="jxr_comment">// write some regular files</em>
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>         Path dataFile = myPath.resolve(<span class="jxr_string">"1_to_100"</span>);
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>         Path checksumFile = myPath.resolve(<span class="jxr_string">"1_to_100.checksum"</span>);
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>         Files.writeString(dataFile, <span class="jxr_string">"foo"</span>);
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>         Files.writeString(checksumFile, <span class="jxr_string">"bar"</span>);
+<a class="jxr_linenumber" name="L356" href="#L356">356</a> 
+<a class="jxr_linenumber" name="L357" href="#L357">357</a> 
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>         assertTrue(DbFileConverter.isDataFile(dataFile));
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>         assertFalse(DbFileConverter.isDataFile(checksumFile));
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>         assertFalse(DbFileConverter.isDataFile(myPath.resolve(<span class="jxr_string">"baz"</span>)));
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>         assertFalse(DbFileConverter.isDataFile(myPath.resolve(<span class="jxr_string">"baz.checksum"</span>)));
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>     }
+<a class="jxr_linenumber" name="L363" href="#L363">363</a> }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2025. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2026. All rights reserved.</div>
 </body>
 </html>

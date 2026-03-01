@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplateSection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.templating</a> &gt; <span class="el_source">TemplateSection.java</span></div><h1>TemplateSection.java</h1><pre class="source lang-java linenums">package com.renomad.minum.templating;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import static com.renomad.minum.templating.TemplateType.DYNAMIC_TEXT;
+import static com.renomad.minum.templating.TemplateType.STATIC_TEXT;
+import static com.renomad.minum.utils.SerializationUtils.tokenizer;
+
 /**
  * Represents one item in the list that will eventually be cooked
  * up into a fully-rendered string.  This record is the magic
@@ -8,13 +16,13 @@
  * then the substring gets concatenated unchanged when the final string
  * is rendered.
  */
-class TemplateSection {
+final class TemplateSection {
 
-    public final String key;
-    public final int indent;
-    public final String staticData;
+    final String key;
+    private final String subString;
+    private final int indent;
     public final TemplateType templateType;
-    public final TemplateProcessor templateProcessor;
+
 
     /**
      * @param indent the column number, measured from the left, of the first character of this template key.  This is used
@@ -31,13 +39,64 @@ class TemplateSection {
      *                  it would generate three template sections - &quot;my favorite color is&quot; would be
      *                  the first subString, then a key of &quot;color&quot;, then a third subString of &quot;and I like it&quot;
      */
-<span class="fc" id="L34">    public TemplateSection(String key, String subString, TemplateProcessor templateProcessor, TemplateType templateType, int indent) {</span>
-<span class="fc" id="L35">        this.key = key;</span>
-<span class="fc" id="L36">        this.staticData = subString;</span>
-<span class="fc" id="L37">        this.templateProcessor = templateProcessor;</span>
-<span class="fc" id="L38">        this.templateType = templateType;</span>
-<span class="fc" id="L39">        this.indent = indent;</span>
-<span class="fc" id="L40">    }</span>
+<span class="fc" id="L42">    public TemplateSection(String key, String subString, int indent, TemplateType templateType) {</span>
+<span class="fc" id="L43">        this.key = key;</span>
+<span class="fc" id="L44">        this.subString = subString;</span>
+<span class="fc" id="L45">        this.indent = indent;</span>
+<span class="fc" id="L46">        this.templateType = templateType;</span>
+<span class="fc bfc" id="L47" title="All 6 branches covered.">        if ((templateType.equals(STATIC_TEXT) &amp;&amp; (key != null || subString == null)) ||</span>
+<span class="fc bfc" id="L48" title="All 6 branches covered.">            (templateType.equals(DYNAMIC_TEXT) &amp;&amp; (key == null || subString != null))) {</span>
+<span class="fc" id="L49">            throw new TemplateRenderException(&quot;Invalid templateSection: &quot; + this);</span>
+        }
+<span class="fc" id="L51">    }</span>
 
+    /**
+     * It would be absurd to send a million lines to a browser, much
+     * less ten million.  This is here to set an upper limit on
+     * the tokenizer loop, to prevent certain attacks.
+     */
+    static final int MAXIMUM_LINES_ALLOWED = 10_000_000;
+
+    public void render(Map&lt;String, String&gt; myMap, StringBuilder stringBuilder) {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (templateType.equals(STATIC_TEXT)) {</span>
+<span class="fc" id="L62">            stringBuilder.append(subString);</span>
+        } else {
+<span class="fc" id="L64">            String value = myMap.get(key);</span>
+<span class="fc" id="L65">            List&lt;String&gt; lines = tokenizer(value, '\n', MAXIMUM_LINES_ALLOWED);</span>
+
+            // if, after splitting on newlines, we have more than one line, we'll indent the remaining
+            // lines so that they end up at the same column as the first line.
+<span class="fc" id="L69">            stringBuilder.append(lines.getFirst());</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
+<span class="fc" id="L72">                    stringBuilder.append('\n');</span>
+                } else {
+<span class="fc" id="L74">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
+                }
+            }
+        }
+<span class="fc" id="L78">    }</span>
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L82" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L83">        TemplateSection that = (TemplateSection) o;</span>
+<span class="fc bfc" id="L84" title="All 8 branches covered.">        return indent == that.indent &amp;&amp; Objects.equals(key, that.key) &amp;&amp; Objects.equals(subString, that.subString) &amp;&amp; templateType == that.templateType;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L89">        return Objects.hash(key, subString, indent, templateType);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L94">        return &quot;TemplateSection{&quot; +</span>
+                &quot;key='&quot; + key + '\'' +
+                &quot;, subString='&quot; + subString + '\'' +
+                &quot;, indent=&quot; + indent +
+                &quot;, templateType=&quot; + templateType +
+                '}';
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
