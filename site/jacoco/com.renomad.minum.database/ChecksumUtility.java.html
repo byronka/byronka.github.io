@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChecksumUtility.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minum</a> &gt; <a href="index.source.html" class="el_package">com.renomad.minum.database</a> &gt; <span class="el_source">ChecksumUtility.java</span></div><h1>ChecksumUtility.java</h1><pre class="source lang-java linenums">package com.renomad.minum.database;
 
 import com.renomad.minum.utils.CryptoUtils;
+import com.renomad.minum.utils.IFileUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -31,13 +31,13 @@ public class ChecksumUtility {
      * @param fullPathToConsolidatedFile the path to a consolidated database file
      * @param data the list of strings of data in a consolidated database file
      */
-    static boolean compareWithChecksum(Path fullPathToConsolidatedFile, List&lt;String&gt; data) {
+    static boolean compareWithChecksum(Path fullPathToConsolidatedFile, List&lt;String&gt; data, IFileUtils fileUtils) {
         // check against the checksum, if it exists. If it is not there or blank, just move on.
 <span class="fc" id="L36">        Path checksumPath = fullPathToConsolidatedFile.resolveSibling(fullPathToConsolidatedFile.getFileName() + &quot;.checksum&quot;);</span>
-<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (Files.exists(checksumPath)) {</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (fileUtils.exists(checksumPath)) {</span>
             String existingChecksumValue;
             try {
-<span class="fc" id="L40">                existingChecksumValue = Files.readString(checksumPath);</span>
+<span class="fc" id="L40">                existingChecksumValue = fileUtils.readString(checksumPath);</span>
 <span class="fc" id="L41">            } catch (IOException e) {</span>
 <span class="fc" id="L42">                throw new DbChecksumException(e);</span>
 <span class="fc" id="L43">            }</span>
@@ -69,7 +69,7 @@ public class ChecksumUtility {
                 
                 **************************************************************************************
                 **************************************************************************************
-                WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+                WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
                 
 <span class="fc" id="L74">                &quot;&quot;&quot;.stripIndent().formatted(fullPathToConsolidatedFile, fullPathToConsolidatedFile);</span>
     }

@@ -272,9 +272,7 @@ public final class TestFramework {
 <span class="fc" id="L272">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
 <span class="fc" id="L273">        var logger = new TestLogger(constants, executorService, loggerName);</span>
 
-<span class="fc" id="L275">        var context = new Context(executorService, constants, logger);</span>
-
-<span class="fc" id="L277">        return context;</span>
+<span class="fc" id="L275">        return new Context(executorService, constants, logger);</span>
     }
 
     /**
@@ -282,10 +280,10 @@ public final class TestFramework {
      * the {@link #buildTestingContext} methods.
      */
     public static void shutdownTestingContext(Context context) {
-<span class="fc" id="L285">            new ActionQueueKiller(context).killAllQueues();</span>
-<span class="fc" id="L286">            context.getLogger().stop();</span>
-<span class="fc" id="L287">            context.getExecutorService().shutdownNow();</span>
-<span class="fc" id="L288">    }</span>
+<span class="fc" id="L283">            new ActionQueueKiller(context).killAllQueues();</span>
+<span class="fc" id="L284">            context.getLogger().stop();</span>
+<span class="fc" id="L285">            context.getExecutorService().shutdownNow();</span>
+<span class="fc" id="L286">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

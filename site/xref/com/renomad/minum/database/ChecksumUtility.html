@@ -9,10 +9,10 @@
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> com.renomad.minum.database;
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.CryptoUtils;
-<a class="jxr_linenumber" name="L4" href="#L4">4</a>   
-<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> java.io.IOException;
-<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> java.nio.charset.StandardCharsets;
-<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> java.nio.file.Files;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.IFileUtils;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> java.nio.charset.StandardCharsets;
 <a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> java.nio.file.Path;
 <a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> java.security.MessageDigest;
 <a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> java.security.NoSuchAlgorithmException;
@@ -39,13 +39,13 @@
 <a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment">     * @param fullPathToConsolidatedFile the path to a consolidated database file</em>
 <a class="jxr_linenumber" name="L32" href="#L32">32</a>  <em class="jxr_javadoccomment">     * @param data the list of strings of data in a consolidated database file</em>
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">boolean</strong> compareWithChecksum(Path fullPathToConsolidatedFile, List&lt;String&gt; data) {
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">boolean</strong> compareWithChecksum(Path fullPathToConsolidatedFile, List&lt;String&gt; data, <a name="IFileUtils" href="../../../../com/renomad/minum/utils/IFileUtils.html#IFileUtils">IFileUtils</a> fileUtils) {
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>          <em class="jxr_comment">// check against the checksum, if it exists. If it is not there or blank, just move on.</em>
 <a class="jxr_linenumber" name="L36" href="#L36">36</a>          Path checksumPath = fullPathToConsolidatedFile.resolveSibling(fullPathToConsolidatedFile.getFileName() + <span class="jxr_string">".checksum"</span>);
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>          <strong class="jxr_keyword">if</strong> (Files.exists(checksumPath)) {
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>          <strong class="jxr_keyword">if</strong> (fileUtils.exists(checksumPath)) {
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>              String existingChecksumValue;
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>              <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L40" href="#L40">40</a>                  existingChecksumValue = Files.readString(checksumPath);
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>                  existingChecksumValue = fileUtils.readString(checksumPath);
 <a class="jxr_linenumber" name="L41" href="#L41">41</a>              } <strong class="jxr_keyword">catch</strong> (IOException e) {
 <a class="jxr_linenumber" name="L42" href="#L42">42</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbChecksumException" href="../../../../com/renomad/minum/database/DbChecksumException.html#DbChecksumException">DbChecksumException</a>(e);
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>              }
@@ -77,7 +77,7 @@
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>                  
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>                  **************************************************************************************
 <a class="jxr_linenumber" name="L71" href="#L71">71</a>                  **************************************************************************************
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>                  WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>                  WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>                  
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>                  <span class="jxr_string">""</span><span class="jxr_string">".stripIndent().formatted(fullPathToConsolidatedFile, fullPathToConsolidatedFile);
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>      }

@@ -104,7 +104,7 @@ public class RingBuffer&lt;T&gt; implements Iterable&lt;T&gt;{
 <span class="fc" id="L104">        int myListLastIndex = myList.size() - 1;</span>
 <span class="fc" id="L105">        boolean comparing = false;</span>
 <span class="fc" id="L106">        var iterator = this.iterator();</span>
-        while (true) {
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        while (iterator.hasNext()) {</span>
 <span class="fc" id="L108">            var value = iterator.next();</span>
 <span class="fc bfc" id="L109" title="All 2 branches covered.">            if (i == index) {</span>
 <span class="fc" id="L110">                comparing = true;</span>
@@ -122,37 +122,38 @@ public class RingBuffer&lt;T&gt; implements Iterable&lt;T&gt;{
 
 <span class="fc" id="L123">            i += 1;</span>
 <span class="fc" id="L124">        }</span>
+<span class="fc" id="L125">        return false;</span>
     }
 
     @Override
     public Iterator&lt;T&gt; iterator() {
-<span class="fc" id="L129">        return new Iterator&lt;&gt;() {</span>
+<span class="fc" id="L130">        return new Iterator&lt;&gt;() {</span>
 
             /**
              * As we loop through the buffer, we have to use a similar
              * technique to the &quot;nextIndex&quot; - wrapping around when we
              * hit the end
              */
-<span class="fc" id="L136">            int iteratorIndex = nextIndex;</span>
+<span class="fc" id="L137">            int iteratorIndex = nextIndex;</span>
             /**
              * We'll count as we read values, stopping when we've read every slot.
              */
-<span class="fc" id="L140">            int count = 0;</span>
+<span class="fc" id="L141">            int count = 0;</span>
 
             @Override
             public boolean hasNext() {
-<span class="fc bfc" id="L144" title="All 2 branches covered.">                return count &lt; limit;</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                return count &lt; limit;</span>
             }
 
             @Override
             public T next() {
-<span class="fc bfc" id="L149" title="All 2 branches covered.">                if (!hasNext()) {</span>
-<span class="fc" id="L150">                    throw new NoSuchElementException();</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                if (!hasNext()) {</span>
+<span class="fc" id="L151">                    throw new NoSuchElementException();</span>
                 }
-<span class="fc" id="L152">                var result = innerArray[iteratorIndex];</span>
-<span class="fc" id="L153">                iteratorIndex = incrementIndex(iteratorIndex);</span>
-<span class="fc" id="L154">                count += 1;</span>
-<span class="fc" id="L155">                return result;</span>
+<span class="fc" id="L153">                var result = innerArray[iteratorIndex];</span>
+<span class="fc" id="L154">                iteratorIndex = incrementIndex(iteratorIndex);</span>
+<span class="fc" id="L155">                count += 1;</span>
+<span class="fc" id="L156">                return result;</span>
             }
         };
     }
@@ -162,7 +163,7 @@ public class RingBuffer&lt;T&gt; implements Iterable&lt;T&gt;{
      * this will be null at first while the array starts to get filled.
      */
     public T atNextIndex() {
-<span class="fc" id="L165">        return innerArray[nextIndex];</span>
+<span class="fc" id="L166">        return innerArray[nextIndex];</span>
     }
 
 }

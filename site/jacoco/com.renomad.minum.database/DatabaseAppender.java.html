@@ -4,15 +4,14 @@
 import com.renomad.minum.logging.ILogger;
 import com.renomad.minum.state.Constants;
 import com.renomad.minum.state.Context;
-import com.renomad.minum.utils.FileUtils;
+import com.renomad.minum.utils.IFileUtils;
 import com.renomad.minum.utils.MyThread;
-import com.renomad.minum.utils.StacktraceUtils;
+import com.renomad.minum.utils.ThrowingRunnable;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
@@ -31,9 +30,10 @@ final class DatabaseAppender {
      * This can be used to parse the file names to {@link java.util.Date} so we can process the oldest
      * file first.
      */
-<span class="fc" id="L34">    static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(&quot;yyyy_MM_dd_HH_mm_ss_SSS&quot;);</span>
+<span class="fc" id="L33">    static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(&quot;yyyy_MM_dd_HH_mm_ss_SSS&quot;);</span>
 
     private final Path persistenceDirectory;
+    private final IFileUtils fileUtils;
 
     Writer bufferedWriter;
 
@@ -83,13 +83,13 @@ final class DatabaseAppender {
      */
     private long appendBytes;
 
-<span class="fc" id="L86">    DatabaseAppender(Path persistenceDirectory, Context context) throws IOException {</span>
-<span class="fc" id="L87">        this.persistenceDirectory = persistenceDirectory;</span>
-<span class="fc" id="L88">        this.appendLogDirectory = persistenceDirectory.resolve(&quot;append_logs&quot;);</span>
-<span class="fc" id="L89">        this.executorService = context.getExecutorService();</span>
-<span class="fc" id="L90">        this.logger = context.getLogger();</span>
-<span class="fc" id="L91">        Constants constants = context.getConstants();</span>
-<span class="fc" id="L92">        FileUtils fileUtils = new FileUtils(logger, constants);</span>
+<span class="fc" id="L86">    DatabaseAppender(Path persistenceDirectory, Context context, IFileUtils fileUtils) throws IOException {</span>
+<span class="fc" id="L87">        this.fileUtils = fileUtils;</span>
+<span class="fc" id="L88">        this.persistenceDirectory = persistenceDirectory;</span>
+<span class="fc" id="L89">        this.appendLogDirectory = persistenceDirectory.resolve(&quot;append_logs&quot;);</span>
+<span class="fc" id="L90">        this.executorService = context.getExecutorService();</span>
+<span class="fc" id="L91">        this.logger = context.getLogger();</span>
+<span class="fc" id="L92">        Constants constants = context.getConstants();</span>
 <span class="fc" id="L93">        this.maxAppendCount = constants.maxAppendCount;</span>
 <span class="fc" id="L94">        fileUtils.makeDirectory(this.appendLogDirectory);</span>
 <span class="fc" id="L95">        moveFileLock = new ReentrantLock();</span>
@@ -108,8 +108,8 @@ final class DatabaseAppender {
         // never very large - it's mostly a temporary place to store incoming data
         // until we can store it off elsewhere. For that reason, it's not a performance
         // concern to read all the existing lines, just to get the count of current lines.
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (Files.exists(currentAppendFile)) {</span>
-<span class="fc" id="L112">            List&lt;String&gt; lines = Files.readAllLines(currentAppendFile);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (fileUtils.exists(currentAppendFile)) {</span>
+<span class="fc" id="L112">            List&lt;String&gt; lines = fileUtils.readAllLines(currentAppendFile);</span>
 <span class="fc" id="L113">            appendCount = lines.size();</span>
 <span class="fc" id="L114">        } else {</span>
             // reset the count to zero, we're starting a new file.
@@ -118,7 +118,7 @@ final class DatabaseAppender {
 <span class="fc" id="L118">            appendBytes = 0;</span>
         }
 
-<span class="fc" id="L121">        bufferedWriter = Files.newBufferedWriter(currentAppendFile, StandardCharsets.US_ASCII, StandardOpenOption.CREATE, StandardOpenOption.APPEND);</span>
+<span class="fc" id="L121">        bufferedWriter = fileUtils.newBufferedWriter(currentAppendFile, StandardCharsets.US_ASCII, StandardOpenOption.CREATE, StandardOpenOption.APPEND);</span>
 <span class="fc" id="L122">    }</span>
 
     /**
@@ -157,7 +157,7 @@ final class DatabaseAppender {
      * no more data, it will end.
      */
     private void initializeTimedFlusher() {
-<span class="fc" id="L160">        Runnable timedFlusherLoop = () -&gt; {</span>
+<span class="fc" id="L160">        ThrowingRunnable timedFlusherLoop = () -&gt; {</span>
 <span class="fc" id="L161">            flushLoopRunning = true;</span>
 <span class="fc" id="L162">            Thread.currentThread().setName(&quot;database_timed_flusher&quot;);</span>
 <span class="fc bfc" id="L163" title="All 2 branches covered.">            while (bufferedWriterHasUnwrittenData) {</span>
@@ -170,7 +170,7 @@ final class DatabaseAppender {
             }
 <span class="fc" id="L171">            flushLoopRunning = false;</span>
 <span class="fc" id="L172">        };</span>
-<span class="fc" id="L173">        executorService.submit(timedFlusherLoop);</span>
+<span class="fc" id="L173">        executorService.submit(ThrowingRunnable.throwingRunnableWrapper(timedFlusherLoop, logger));</span>
 <span class="fc" id="L174">    }</span>
 
     /**
@@ -193,7 +193,7 @@ final class DatabaseAppender {
      */
     String saveOffCurrentDataToReadyFolder() throws IOException {
 <span class="fc" id="L195">        flush();</span>
-<span class="fc" id="L196">        String newFileName = moveToReadyFolder();</span>
+<span class="fc" id="L196">        String newFileName = moveToReadyFolder(fileUtils, persistenceDirectory, appendLogDirectory);</span>
 <span class="fc" id="L197">        createNewAppendFile();</span>
 <span class="fc" id="L198">        return newFileName;</span>
     }
@@ -203,24 +203,15 @@ final class DatabaseAppender {
      * folder named by the date + time + millis.
      * @return the name of the new file
      */
-    private String moveToReadyFolder() throws IOException {
+    static String moveToReadyFolder(IFileUtils fileUtils, Path persistenceDirectory, Path appendLogDirectory) throws IOException {
 <span class="fc" id="L207">        String appendFile = simpleDateFormat.format(new java.util.Date());</span>
-<span class="fc" id="L208">        Files.move(persistenceDirectory.resolve(&quot;currentAppendLog&quot;), this.appendLogDirectory.resolve(appendFile));</span>
+<span class="fc" id="L208">        fileUtils.move(persistenceDirectory.resolve(&quot;currentAppendLog&quot;), appendLogDirectory.resolve(appendFile));</span>
 <span class="fc" id="L209">        return appendFile;</span>
     }
 
-    void flush() {
-<span class="fc" id="L213">        flush(this.bufferedWriter, this.logger);</span>
+    void flush() throws IOException {
+<span class="fc" id="L213">        this.bufferedWriter.flush();</span>
 <span class="fc" id="L214">        this.bufferedWriterHasUnwrittenData = false;</span>
 <span class="fc" id="L215">    }</span>
-
-    static void flush(Writer writer, ILogger logger) {
-        try {
-<span class="fc" id="L219">            writer.flush();</span>
-<span class="fc" id="L220">        } catch (IOException e) {</span>
-<span class="fc" id="L221">            logger.logAsyncError(() -&gt; &quot;Error while flushing in TimedFlusher: &quot; + StacktraceUtils.stackTraceToString(e));</span>
-<span class="fc" id="L222">            throw new DbException(e);</span>
-<span class="fc" id="L223">        }</span>
-<span class="fc" id="L224">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

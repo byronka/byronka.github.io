@@ -33,7 +33,7 @@
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>          } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L26" href="#L26">26</a>              hasRangeHeader = <strong class="jxr_keyword">true</strong>;
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>              <strong class="jxr_keyword">if</strong> (rangeHeaders.size() &gt; 1) {
-<a class="jxr_linenumber" name="L28" href="#L28">28</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="InvalidRangeException" href="../../../../com/renomad/minum/web/InvalidRangeException.html#InvalidRangeException">InvalidRangeException</a>(<span class="jxr_string">"Error: Request contained more than one Range header"</span>);
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="BadRequestException" href="../../../../com/renomad/minum/web/BadRequestException.html#BadRequestException">BadRequestException</a>(<span class="jxr_string">"Error: Request contained more than one Range header"</span>);
 <a class="jxr_linenumber" name="L29" href="#L29">29</a>              }
 <a class="jxr_linenumber" name="L30" href="#L30">30</a>              <em class="jxr_comment">// the "Range:" header provides a desired range, and can request multiple ranges.</em>
 <a class="jxr_linenumber" name="L31" href="#L31">31</a>              <em class="jxr_comment">// this server does not currently handle multiple ranges, so if that is requested we</em>
@@ -63,7 +63,7 @@
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>                  <em class="jxr_comment">// 5: (invalid) either of the range values are invalid longs</em>
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>                  <strong class="jxr_keyword">if</strong> (rangeFirstPart != <strong class="jxr_keyword">null</strong> &amp;&amp; rangeSecondPart != <strong class="jxr_keyword">null</strong>) {
 <a class="jxr_linenumber" name="L57" href="#L57">57</a>                      <strong class="jxr_keyword">if</strong> (rangeFirstPart &gt; rangeSecondPart) {
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>                          <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="InvalidRangeException" href="../../../../com/renomad/minum/web/InvalidRangeException.html#InvalidRangeException">InvalidRangeException</a>(<span class="jxr_string">"Error: The value of the first part of the range was larger than the second."</span>);
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>                          <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="BadRequestException" href="../../../../com/renomad/minum/web/BadRequestException.html#BadRequestException">BadRequestException</a>(<span class="jxr_string">"Error: The value of the first part of the range was larger than the second."</span>);
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>                      } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>                          length = (rangeSecondPart - rangeFirstPart) + 1;
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>                          offset = rangeFirstPart;

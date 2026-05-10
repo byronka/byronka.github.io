@@ -37,9 +37,13 @@ public final class ActionQueue implements AbstractActionQueue {
     private final ExecutorService queueExecutor;
     private final LinkedBlockingQueue&lt;RunnableWithDescription&gt; queue;
     private final ILogger logger;
-<span class="fc" id="L40">    private boolean stop = false;</span>
+    /**
+     * Set as volatile so that multiple threads may see the update
+     * as soon as it occurs.
+     */
+<span class="fc" id="L44">    private volatile boolean stop = false;</span>
     private Thread queueThread;
-    private boolean isStoppedStatus;
+    private volatile boolean isStoppedStatus;
 
     /**
      * See the {@link ActionQueue} description for more detail. This
@@ -47,56 +51,46 @@ public final class ActionQueue implements AbstractActionQueue {
      * it with a list of other action queues in the {@link Context} object.
      * @param name give this object a unique, explanatory name.
      */
-<span class="fc" id="L50">    public ActionQueue(String name, Context context) {</span>
-<span class="fc" id="L51">        this.name = name;</span>
-<span class="fc" id="L52">        this.queueExecutor = context.getExecutorService();</span>
-<span class="fc" id="L53">        this.queue = new LinkedBlockingQueue&lt;&gt;();</span>
-<span class="fc" id="L54">        context.getActionQueueState().offerToQueue(this);</span>
-<span class="fc" id="L55">        this.logger = context.getLogger();</span>
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L54">    public ActionQueue(String name, Context context) {</span>
+<span class="fc" id="L55">        this.name = name;</span>
+<span class="fc" id="L56">        this.queueExecutor = context.getExecutorService();</span>
+<span class="fc" id="L57">        this.queue = new LinkedBlockingQueue&lt;&gt;();</span>
+<span class="fc" id="L58">        context.getActionQueueState().offerToQueue(this);</span>
+<span class="fc" id="L59">        this.logger = context.getLogger();</span>
+<span class="fc" id="L60">    }</span>
 
     // Regarding the InfiniteLoopStatement - indeed, we expect that the while loop
     // below is an infinite loop unless there's an exception thrown, that's what it is.
     @SuppressWarnings(&quot;InfiniteLoopStatement&quot;)
     @Override
     public ActionQueue initialize() {
-<span class="fc" id="L63">        Runnable centralLoop = () -&gt; {</span>
-<span class="fc" id="L64">            Thread.currentThread().setName(name);</span>
-<span class="fc" id="L65">            this.queueThread = Thread.currentThread();</span>
+<span class="fc" id="L67">        Runnable centralLoop = () -&gt; {</span>
+<span class="fc" id="L68">            Thread.currentThread().setName(name);</span>
+<span class="fc" id="L69">            this.queueThread = Thread.currentThread();</span>
             try {
                 while (true) {
-<span class="fc" id="L68">                    runAction(logger, queue);</span>
+<span class="fc" id="L72">                    runAction(logger, queue);</span>
                 }
-<span class="fc" id="L70">            } catch (InterruptedException ex) {</span>
+<span class="fc" id="L74">            } catch (InterruptedException ex) {</span>
                 /*
                 this is what we expect to happen.
                 once this happens, we just continue on.
                 this only gets called when we are trying to shut everything
                 down cleanly
                  */
-<span class="fc" id="L77">                logger.logDebug(() -&gt; String.format(&quot;%s ActionQueue for %s is stopped.%n&quot;, TimeUtils.getTimestampIsoInstant(), name));</span>
-<span class="fc" id="L78">                Thread.currentThread().interrupt();</span>
+<span class="fc" id="L81">                logger.logDebug(() -&gt; String.format(&quot;%s ActionQueue for %s is stopped.%n&quot;, TimeUtils.getTimestampIsoInstant(), name));</span>
+<span class="fc" id="L82">                Thread.currentThread().interrupt();</span>
             }
-<span class="fc" id="L80">        };</span>
-<span class="fc" id="L81">        queueExecutor.submit(centralLoop);</span>
-<span class="fc" id="L82">        return this;</span>
+<span class="fc" id="L84">        };</span>
+<span class="fc" id="L85">        queueExecutor.submit(centralLoop);</span>
+<span class="fc" id="L86">        return this;</span>
     }
 
     static void runAction(ILogger logger, LinkedBlockingQueue&lt;RunnableWithDescription&gt; queue) throws InterruptedException {
-<span class="fc" id="L86">        RunnableWithDescription action = queue.take();</span>
-        try {
-<span class="fc" id="L88">            action.run();</span>
-<span class="fc" id="L89">        } catch (Throwable e) {</span>
-            /*
-             This needs to be a Throwable and not an Exception, for important reasons.
-
-             Sometimes, the command being run will encounter Errors, rather than
-             Exceptions. For example, OutOfMemoryError.  We must catch it, log the
-             issue, and move on to avoid killing the thread needlessly
-             */
-<span class="fc" id="L97">            logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(e));</span>
-<span class="fc" id="L98">        }</span>
-<span class="fc" id="L99">    }</span>
+<span class="fc" id="L90">        RunnableWithDescription action = queue.take();</span>
+<span class="fc" id="L91">        logger.logTrace(() -&gt; &quot;in ActionQueue.runAction, running this: &quot; + action);</span>
+<span class="fc" id="L92">        ThrowingRunnable.throwingRunnableWrapper(action, logger).run();</span>
+<span class="fc" id="L93">    }</span>
 
     /**
      * Adds something to the queue to be processed.
@@ -111,12 +105,12 @@ public final class ActionQueue implements AbstractActionQueue {
      */
     @Override
     public void enqueue(String description, ThrowingRunnable action) {
-<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (! stop) {</span>
-<span class="fc" id="L115">            queue.add(new RunnableWithDescription(action, description));</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (! stop) {</span>
+<span class="fc" id="L109">            queue.add(new RunnableWithDescription(action, description));</span>
         } else {
-<span class="fc" id="L117">            throw new UtilsException(String.format(&quot;failed to enqueue %s - ActionQueue \&quot;%s\&quot; is stopped&quot;, description, this.name));</span>
+<span class="fc" id="L111">            throw new QueueException(String.format(&quot;failed to enqueue %s - ActionQueue \&quot;%s\&quot; is stopped&quot;, description, this.name));</span>
         }
-<span class="fc" id="L119">    }</span>
+<span class="fc" id="L113">    }</span>
 
     /**
      * Stops the action queue
@@ -125,17 +119,17 @@ public final class ActionQueue implements AbstractActionQueue {
      */
     @Override
     public void stop(int count, int sleepTime) {
-<span class="fc" id="L128">        String timestamp = TimeUtils.getTimestampIsoInstant();</span>
-<span class="fc" id="L129">        logger.logDebug(() -&gt;  String.format(&quot;%s Stopping queue %s&quot;, timestamp, this));</span>
-<span class="fc" id="L130">        stop = true;</span>
-<span class="fc bfc" id="L131" title="All 2 branches covered.">        for (int i = 0; i &lt; count; i++) {</span>
-<span class="fc bfc" id="L132" title="All 2 branches covered.">            if (queue.isEmpty()) return;</span>
-<span class="fc" id="L133">            logger.logDebug(() -&gt;  String.format(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;,timestamp, queue.size()));</span>
-<span class="fc" id="L134">            MyThread.sleep(sleepTime);</span>
+<span class="fc" id="L122">        String timestamp = TimeUtils.getTimestampIsoInstant();</span>
+<span class="fc" id="L123">        logger.logDebug(() -&gt;  String.format(&quot;%s Stopping queue %s&quot;, timestamp, this));</span>
+<span class="fc" id="L124">        stop = true;</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        for (int i = 0; i &lt; count; i++) {</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (queue.isEmpty()) return;</span>
+<span class="fc" id="L127">            logger.logDebug(() -&gt;  String.format(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;,timestamp, queue.size()));</span>
+<span class="fc" id="L128">            MyThread.sleep(sleepTime);</span>
         }
-<span class="fc" id="L136">        isStoppedStatus = true;</span>
-<span class="fc" id="L137">        logger.logDebug(() -&gt; String.format(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, timestamp, this, queue.size(), queue));</span>
-<span class="fc" id="L138">    }</span>
+<span class="fc" id="L130">        isStoppedStatus = true;</span>
+<span class="fc" id="L131">        logger.logDebug(() -&gt; String.format(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, timestamp, this, queue.size(), queue));</span>
+<span class="fc" id="L132">    }</span>
 
     /**
      * This will prevent any new actions being
@@ -146,26 +140,26 @@ public final class ActionQueue implements AbstractActionQueue {
      */
     @Override
     public void stop() {
-<span class="fc" id="L149">        stop(5, 20);</span>
-<span class="fc" id="L150">    }</span>
+<span class="fc" id="L143">        stop(5, 20);</span>
+<span class="fc" id="L144">    }</span>
 
     @Override
     public String toString() {
-<span class="fc" id="L154">        return this.name;</span>
+<span class="fc" id="L148">        return this.name;</span>
     }
 
     Thread getQueueThread() {
-<span class="fc" id="L158">        return queueThread;</span>
+<span class="fc" id="L152">        return queueThread;</span>
     }
 
     @Override
     public LinkedBlockingQueue&lt;RunnableWithDescription&gt; getQueue() {
-<span class="fc" id="L163">        return new LinkedBlockingQueue&lt;&gt;(queue);</span>
+<span class="fc" id="L157">        return new LinkedBlockingQueue&lt;&gt;(queue);</span>
     }
 
     @Override
     public boolean isStopped() {
-<span class="fc" id="L168">        return isStoppedStatus;</span>
+<span class="fc" id="L162">        return isStoppedStatus;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

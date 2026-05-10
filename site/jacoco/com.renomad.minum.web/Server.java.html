@@ -118,44 +118,47 @@ final class Server implements IServer {
 
 <span class="fc" id="L119">            webFramework.httpProcessing(socketWrapper);</span>
 <span class="fc" id="L120">        } catch (Exception ex) {</span>
-<span class="fc" id="L121">            logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+<span class="fc" id="L121">            logger.logWarn(() -&gt; &quot;Exception caught in Server.doHttpWork: &quot; + StacktraceUtils.stackTraceToString(ex));</span>
 <span class="fc" id="L122">        }</span>
 <span class="fc" id="L123">    }</span>
 
     static void handleServerException(IOException ex, ILogger logger) {
-<span class="fc bfc" id="L126" title="All 4 branches covered.">        if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
-<span class="fc" id="L127">            logger.logAsyncError(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
+        // we do expect to see an exception bubbling up to here if we
+        // are closing our server, so if the message includes certain values,
+        // we will skip logging an error.
+<span class="fc bfc" id="L129" title="All 4 branches covered.">        if (!(ex.getMessage().contains(&quot;Socket closed&quot;) || ex.getMessage().contains(&quot;Socket is closed&quot;))) {</span>
+<span class="fc" id="L130">            logger.logWarn(() -&gt; StacktraceUtils.stackTraceToString(ex));</span>
         }
-<span class="fc" id="L129">    }</span>
+<span class="fc" id="L132">    }</span>
 
     @Override
     public void close() throws IOException {
         // close all the running sockets
-<span class="fc" id="L134">        setOfSWs.stopAllServers();</span>
-<span class="fc" id="L135">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
+<span class="fc" id="L137">        setOfSWs.stopAllServers();</span>
+<span class="fc" id="L138">        logger.logTrace(() -&gt; &quot;close called on &quot; + this);</span>
         // close the primary server socket
-<span class="fc" id="L137">        serverSocket.close();</span>
-<span class="fc" id="L138">    }</span>
+<span class="fc" id="L140">        serverSocket.close();</span>
+<span class="fc" id="L141">    }</span>
 
     @Override
     public String getHost() {
-<span class="fc" id="L142">        return serverSocket.getInetAddress().getHostAddress();</span>
+<span class="fc" id="L145">        return serverSocket.getInetAddress().getHostAddress();</span>
     }
 
     @Override
     public int getPort() {
-<span class="fc" id="L147">        return serverSocket.getLocalPort();</span>
+<span class="fc" id="L150">        return serverSocket.getLocalPort();</span>
     }
 
     @Override
     public void removeMyRecord(ISocketWrapper socketWrapper) {
-<span class="fc" id="L152">        setOfSWs.remove(socketWrapper);</span>
-<span class="fc" id="L153">    }</span>
+<span class="fc" id="L155">        setOfSWs.remove(socketWrapper);</span>
+<span class="fc" id="L156">    }</span>
 
     @Override
     public void addToSetOfSws(ISocketWrapper sw) {
-<span class="fc" id="L157">        this.setOfSWs.add(sw);</span>
-<span class="fc" id="L158">    }</span>
+<span class="fc" id="L160">        this.setOfSWs.add(sw);</span>
+<span class="fc" id="L161">    }</span>
 
     /**
      * Returns the name of this server, which is set
@@ -163,17 +166,17 @@ final class Server implements IServer {
      */
     @Override
     public String toString() {
-<span class="fc" id="L166">        return this.serverName;</span>
+<span class="fc" id="L169">        return this.serverName;</span>
     }
 
     @Override
     public Future&lt;?&gt; getCentralLoopFuture() {
-<span class="fc" id="L171">        return centralLoopFuture;</span>
+<span class="fc" id="L174">        return centralLoopFuture;</span>
     }
 
     @Override
     public HttpServerType getServerType() {
-<span class="fc" id="L176">        return serverType;</span>
+<span class="fc" id="L179">        return serverType;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

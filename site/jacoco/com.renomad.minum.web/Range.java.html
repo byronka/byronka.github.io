@@ -25,7 +25,7 @@ final class Range {
         } else {
 <span class="fc" id="L26">            hasRangeHeader = true;</span>
 <span class="fc bfc" id="L27" title="All 2 branches covered.">            if (rangeHeaders.size() &gt; 1) {</span>
-<span class="fc" id="L28">                throw new InvalidRangeException(&quot;Error: Request contained more than one Range header&quot;);</span>
+<span class="fc" id="L28">                throw new BadRequestException(&quot;Error: Request contained more than one Range header&quot;);</span>
             }
             // the &quot;Range:&quot; header provides a desired range, and can request multiple ranges.
             // this server does not currently handle multiple ranges, so if that is requested we
@@ -55,7 +55,7 @@ final class Range {
                 // 5: (invalid) either of the range values are invalid longs
 <span class="fc bfc" id="L56" title="All 4 branches covered.">                if (rangeFirstPart != null &amp;&amp; rangeSecondPart != null) {</span>
 <span class="fc bfc" id="L57" title="All 2 branches covered.">                    if (rangeFirstPart &gt; rangeSecondPart) {</span>
-<span class="fc" id="L58">                        throw new InvalidRangeException(&quot;Error: The value of the first part of the range was larger than the second.&quot;);</span>
+<span class="fc" id="L58">                        throw new BadRequestException(&quot;Error: The value of the first part of the range was larger than the second.&quot;);</span>
                     } else {
 <span class="fc" id="L60">                        length = (rangeSecondPart - rangeFirstPart) + 1;</span>
 <span class="fc" id="L61">                        offset = rangeFirstPart;</span>

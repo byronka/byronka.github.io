@@ -7,9 +7,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.renomad.minum.utils.FileUtils.checkForBadFilePatterns;
 
@@ -21,6 +20,7 @@ public final class FileReader implements IFileReader {
     private final Map&lt;String, byte[]&gt; lruCache;
     private final boolean useCacheForStaticFiles;
     private final ILogger logger;
+<span class="fc" id="L23">    private final ReentrantLock cacheLock = new ReentrantLock();</span>
 
 <span class="fc" id="L25">    public FileReader(Map&lt;String, byte[]&gt; lruCache, boolean useCacheForStaticFiles, ILogger logger) {</span>
 <span class="fc" id="L26">        this.lruCache = lruCache;</span>
@@ -31,55 +31,65 @@ public final class FileReader implements IFileReader {
     @Override
     public byte[] readFile(String path) throws IOException {
 <span class="fc bfc" id="L33" title="All 4 branches covered.">        if (useCacheForStaticFiles &amp;&amp; lruCache.containsKey(path)) {</span>
-<span class="fc" id="L34">            return lruCache.get(path);</span>
+<span class="fc" id="L34">            cacheLock.lock();</span>
+            try {
+<span class="fc" id="L36">                return lruCache.get(path);</span>
+            } finally {
+<span class="fc" id="L38">                cacheLock.unlock();</span>
+            }
         }
-
-        try {
-<span class="fc" id="L38">            checkForBadFilePatterns(path);</span>
-<span class="fc" id="L39">        } catch (Exception ex) {</span>
-<span class="fc" id="L40">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at readFile: %s. Exception: %s&quot;, path, ex.getMessage()));</span>
-<span class="fc" id="L41">            return new byte[0];</span>
-<span class="fc" id="L42">        }</span>
-
-<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (!Files.exists(Path.of(path))) {</span>
-<span class="fc" id="L45">            logger.logDebug(() -&gt; String.format(&quot;No file found at %s, returning an empty byte array&quot;, path));</span>
-<span class="fc" id="L46">            return new byte[0];</span>
-        }
-
-<span class="fc" id="L49">        return readTheFile(path, logger, useCacheForStaticFiles, lruCache);</span>
+<span class="fc" id="L41">        checkForBadFilePatterns(path);</span>
+<span class="fc" id="L42">        return readTheFile(path, logger, useCacheForStaticFiles, lruCache);</span>
     }
 
-    static byte[] readTheFile(String path, ILogger logger, boolean useCacheForStaticFiles, Map&lt;String, byte[]&gt; lruCache) throws IOException {
-<span class="fc" id="L53">        try (RandomAccessFile reader = new RandomAccessFile(path, &quot;r&quot;);</span>
-<span class="fc" id="L54">             ByteArrayOutputStream out = new ByteArrayOutputStream()) {</span>
-<span class="fc" id="L55">            FileChannel channel = reader.getChannel();</span>
-<span class="fc" id="L56">            int bufferSize = 8 * 1024;</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">            if (bufferSize &gt; channel.size()) {</span>
-<span class="fc" id="L58">                bufferSize = (int) channel.size();</span>
+    byte[] readTheFile(String path, ILogger logger, boolean useCacheForStaticFiles, Map&lt;String, byte[]&gt; lruCache) throws IOException {
+<span class="fc" id="L46">        try (RandomAccessFile reader = new RandomAccessFile(path, &quot;r&quot;);</span>
+<span class="fc" id="L47">             ByteArrayOutputStream out = new ByteArrayOutputStream()) {</span>
+<span class="fc" id="L48">            FileChannel channel = reader.getChannel();</span>
+<span class="fc" id="L49">            int bufferSize = 8 * 1024;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (bufferSize &gt; channel.size()) {</span>
+<span class="fc" id="L51">                bufferSize = (int) channel.size();</span>
             }
-<span class="fc" id="L60">            ByteBuffer buff = ByteBuffer.allocate(bufferSize);</span>
+<span class="fc" id="L53">            ByteBuffer buff = ByteBuffer.allocate(bufferSize);</span>
 
-<span class="fc bfc" id="L62" title="All 2 branches covered.">            while (channel.read(buff) &gt; 0) {</span>
-<span class="fc" id="L63">                out.write(buff.array(), 0, buff.position());</span>
-<span class="fc" id="L64">                buff.clear();</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            while (channel.read(buff) &gt; 0) {</span>
+<span class="fc" id="L56">                out.write(buff.array(), 0, buff.position());</span>
+<span class="fc" id="L57">                buff.clear();</span>
             }
 
-<span class="fc" id="L67">            byte[] bytes = out.toByteArray();</span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (bytes.length == 0) {</span>
-<span class="fc" id="L69">                logger.logTrace(() -&gt; path + &quot; filesize was 0, returning empty byte array&quot;);</span>
-<span class="fc" id="L70">                return new byte[0];</span>
+<span class="fc" id="L60">            byte[] bytes = out.toByteArray();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (bytes.length == 0) {</span>
+<span class="fc" id="L62">                logger.logTrace(() -&gt; path + &quot; filesize was 0, returning empty byte array&quot;);</span>
+<span class="fc" id="L63">                return new byte[0];</span>
             } else {
-<span class="fc" id="L72">                String s = path + &quot; filesize was &quot; + bytes.length + &quot; bytes.&quot;;</span>
-<span class="fc" id="L73">                logger.logTrace(() -&gt; s);</span>
+<span class="fc" id="L65">                String s = path + &quot; filesize was &quot; + bytes.length + &quot; bytes.&quot;;</span>
+<span class="fc" id="L66">                logger.logTrace(() -&gt; s);</span>
 
-<span class="fc bfc" id="L75" title="All 2 branches covered.">                if (useCacheForStaticFiles) {</span>
-<span class="fc" id="L76">                    logger.logDebug(() -&gt; &quot;Storing &quot; + path + &quot; in the cache&quot;);</span>
-<span class="fc" id="L77">                    lruCache.put(path, bytes);</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">                if (useCacheForStaticFiles) {</span>
+<span class="fc" id="L69">                    logger.logDebug(() -&gt; &quot;Storing &quot; + path + &quot; in the cache&quot;);</span>
+<span class="fc" id="L70">                    cacheLock.lock();</span>
+                    try {
+<span class="fc" id="L72">                        lruCache.put(path, bytes);</span>
+                    } finally {
+<span class="fc" id="L74">                        cacheLock.unlock();</span>
+                    }
                 }
-<span class="fc" id="L79">                return bytes;</span>
+<span class="fc" id="L77">                return bytes;</span>
             }
-<span class="fc" id="L81">        }</span>
+<span class="fc" id="L79">        }</span>
     }
 
+    /**
+     * Returns the lock used to prevent concurrent modification
+     * exceptions when mutating the LRU cache data.
+     * &lt;br&gt;
+     * This may be useful if you need to access the LRU cache,
+     * which, owing to how a least-recently-used cache works,
+     * will cause the data to mutate, and which requires to
+     * be protected with locks.
+     */
+    public ReentrantLock getCacheLock() {
+<span class="fc" id="L92">        return cacheLock;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

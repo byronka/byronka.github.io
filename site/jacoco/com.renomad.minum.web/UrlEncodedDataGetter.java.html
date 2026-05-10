@@ -9,7 +9,7 @@ import java.io.InputStream;
  * from the Request body. This enables the developer to pull data
  * incrementally, rather than reading it all into memory at once.
  */
-public class UrlEncodedDataGetter extends InputStream {
+public final class UrlEncodedDataGetter extends InputStream {
     private final InputStream inputStream;
     private final CountBytesRead countBytesRead;
     private final long contentLength;
@@ -27,51 +27,55 @@ public class UrlEncodedDataGetter extends InputStream {
 
     /**
      * Mostly similar behavior to {@link InputStream#read()}
-     * @throws IOException if the inputstream is closed unexpectedly while reading.
      */
     @Override
-    public int read() throws IOException {
-<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (isFinished) {</span>
-<span class="fc" id="L35">            return -1;</span>
+    public int read() {
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (isFinished) {</span>
+<span class="fc" id="L34">            return -1;</span>
         }
-<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (countBytesRead.getCount() == contentLength) {</span>
-<span class="fc" id="L38">            isFinished = true;</span>
-<span class="fc" id="L39">            return -1;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (countBytesRead.getCount() == contentLength) {</span>
+<span class="fc" id="L37">            isFinished = true;</span>
+<span class="fc" id="L38">            return -1;</span>
         }
-<span class="fc" id="L41">        int result = inputStream.read();</span>
+<span class="fc" id="L40">        int result = 0;</span>
+        try {
+<span class="fc" id="L42">            result = inputStream.read();</span>
+<span class="fc" id="L43">        } catch (IOException e) {</span>
+<span class="fc" id="L44">            throw new WebServerException(&quot;Error in UrlEncodedDataGetter.read&quot;, e);</span>
+<span class="fc" id="L45">        }</span>
 
-<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (result == -1) {</span>
-<span class="fc" id="L44">            isFinished = true;</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (result == -1) {</span>
+<span class="fc" id="L48">            isFinished = true;</span>
             // I know this is surprising, however: Because we always have the content length while reading the body,
             // we know exactly when we expect to read the last byte.  If we read and get a -1, it means
             // the stream is closed - but that should not have happened, because we should have stopped reading when
             // we hit the limit of bytes to read.  But in the real world, it will happen:  You can observe it by uploading a large
             // file and using the browser's &quot;stop&quot; button during the upload.
-<span class="fc" id="L50">            throw new IOException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
+<span class="fc" id="L54">            throw new WebServerException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
         }
 
-<span class="fc" id="L53">        countBytesRead.increment();</span>
-<span class="fc" id="L54">        char byteValue = (char) result;</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (byteValue == '&amp;') {</span>
-<span class="fc" id="L56">            isFinished = true;</span>
-<span class="fc" id="L57">            return -1;</span>
+<span class="fc" id="L57">        countBytesRead.increment();</span>
+<span class="fc" id="L58">        char byteValue = (char) result;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (byteValue == '&amp;') {</span>
+<span class="fc" id="L60">            isFinished = true;</span>
+<span class="fc" id="L61">            return -1;</span>
         }
-<span class="fc" id="L59">        return result;</span>
+<span class="fc" id="L63">        return result;</span>
     }
 
     @Override
-    public byte[] readAllBytes() throws IOException {
-<span class="fc" id="L64">        var baos = new ByteArrayOutputStream();</span>
+    public byte[] readAllBytes() {
+<span class="fc" id="L68">        var baos = new ByteArrayOutputStream();</span>
         while (true) {
-<span class="fc" id="L66">            int result = read();</span>
-<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L70">            int result = read();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (result == -1) {</span>
                 // if our read function determines we are at the end of the value,
                 // because we encountered an ampersand, it will return a -1 value,
                 // and we return our value - but more keys and values expected.
-<span class="fc" id="L71">                return baos.toByteArray();</span>
+<span class="fc" id="L75">                return baos.toByteArray();</span>
             }
-<span class="fc" id="L73">            baos.write((byte)result);</span>
-<span class="fc" id="L74">        }</span>
+<span class="fc" id="L77">            baos.write((byte)result);</span>
+<span class="fc" id="L78">        }</span>
     }
 
     /**
@@ -79,13 +83,13 @@ public class UrlEncodedDataGetter extends InputStream {
      * so that our InputStream has been read until the start of the next partition.
      */
     @Override
-    public void close() throws IOException {
+    public void close() {
         while (true) {
-<span class="fc" id="L84">            int result = read();</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (result == -1) {</span>
-<span class="fc" id="L86">                return;</span>
+<span class="fc" id="L88">            int result = read();</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L90">                return;</span>
             }
-<span class="fc" id="L88">        }</span>
+<span class="fc" id="L92">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

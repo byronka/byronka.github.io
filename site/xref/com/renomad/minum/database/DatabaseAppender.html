@@ -12,36 +12,36 @@
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.logging.ILogger;
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Constants;
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.state.Context;
-<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.FileUtils;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.IFileUtils;
 <a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.MyThread;
-<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.StacktraceUtils;
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> com.renomad.minum.utils.ThrowingRunnable;
 <a class="jxr_linenumber" name="L10" href="#L10">10</a>  
 <a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> java.io.BufferedWriter;
 <a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
 <a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> java.io.Writer;
 <a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> java.nio.charset.StandardCharsets;
-<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> java.nio.file.Files;
-<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> java.nio.file.Path;
-<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> java.nio.file.StandardOpenOption;
-<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> java.text.SimpleDateFormat;
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> java.util.List;
-<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.ExecutorService;
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.locks.ReentrantLock;
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>  
-<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <em class="jxr_javadoccomment"> * This class provide the capability of appending database changes</em>
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <em class="jxr_javadoccomment"> * to the disk, quickly and efficiently.</em>
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <em class="jxr_javadoccomment"> */</em>
-<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a name="DatabaseAppender" href="../../../../com/renomad/minum/database/DatabaseAppender.html#DatabaseAppender">DatabaseAppender</a> {
-<a class="jxr_linenumber" name="L28" href="#L28">28</a>  
-<a class="jxr_linenumber" name="L29" href="#L29">29</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <em class="jxr_javadoccomment">     * Results in output like "2025_08_30_13_01_49_123", which is year_month_day_hour_minute_second_millisecond.</em>
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment">     * This can be used to parse the file names to {@link java.util.Date} so we can process the oldest</em>
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <em class="jxr_javadoccomment">     * file first.</em>
-<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> SimpleDateFormat simpleDateFormat = <strong class="jxr_keyword">new</strong> SimpleDateFormat(<span class="jxr_string">"yyyy_MM_dd_HH_mm_ss_SSS"</span>);
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>  
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Path persistenceDirectory;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> java.nio.file.Path;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> java.nio.file.StandardOpenOption;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> java.text.SimpleDateFormat;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.ExecutorService;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.locks.ReentrantLock;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <em class="jxr_javadoccomment"> * This class provide the capability of appending database changes</em>
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <em class="jxr_javadoccomment"> * to the disk, quickly and efficiently.</em>
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a name="DatabaseAppender" href="../../../../com/renomad/minum/database/DatabaseAppender.html#DatabaseAppender">DatabaseAppender</a> {
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment">     * Results in output like "2025_08_30_13_01_49_123", which is year_month_day_hour_minute_second_millisecond.</em>
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <em class="jxr_javadoccomment">     * This can be used to parse the file names to {@link java.util.Date} so we can process the oldest</em>
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment">     * file first.</em>
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>      <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> SimpleDateFormat simpleDateFormat = <strong class="jxr_keyword">new</strong> SimpleDateFormat(<span class="jxr_string">"yyyy_MM_dd_HH_mm_ss_SSS"</span>);
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Path persistenceDirectory;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="IFileUtils" href="../../../../com/renomad/minum/utils/IFileUtils.html#IFileUtils">IFileUtils</a> fileUtils;
 <a class="jxr_linenumber" name="L37" href="#L37">37</a>  
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>      Writer bufferedWriter;
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>  
@@ -91,13 +91,13 @@
 <a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L84" href="#L84">84</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">long</strong> appendBytes;
 <a class="jxr_linenumber" name="L85" href="#L85">85</a>  
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>      <a name="DatabaseAppender" href="../../../../com/renomad/minum/database/DatabaseAppender.html#DatabaseAppender">DatabaseAppender</a>(Path persistenceDirectory, <a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context) <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L87" href="#L87">87</a>          <strong class="jxr_keyword">this</strong>.persistenceDirectory = persistenceDirectory;
-<a class="jxr_linenumber" name="L88" href="#L88">88</a>          <strong class="jxr_keyword">this</strong>.appendLogDirectory = persistenceDirectory.resolve(<span class="jxr_string">"append_logs"</span>);
-<a class="jxr_linenumber" name="L89" href="#L89">89</a>          <strong class="jxr_keyword">this</strong>.executorService = context.getExecutorService();
-<a class="jxr_linenumber" name="L90" href="#L90">90</a>          <strong class="jxr_keyword">this</strong>.logger = context.getLogger();
-<a class="jxr_linenumber" name="L91" href="#L91">91</a>          <a name="Constants" href="../../../../com/renomad/minum/state/Constants.html#Constants">Constants</a> constants = context.getConstants();
-<a class="jxr_linenumber" name="L92" href="#L92">92</a>          <a name="FileUtils" href="../../../../com/renomad/minum/utils/FileUtils.html#FileUtils">FileUtils</a> fileUtils = <strong class="jxr_keyword">new</strong> <a name="FileUtils" href="../../../../com/renomad/minum/utils/FileUtils.html#FileUtils">FileUtils</a>(logger, constants);
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      <a name="DatabaseAppender" href="../../../../com/renomad/minum/database/DatabaseAppender.html#DatabaseAppender">DatabaseAppender</a>(Path persistenceDirectory, <a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context, <a name="IFileUtils" href="../../../../com/renomad/minum/utils/IFileUtils.html#IFileUtils">IFileUtils</a> fileUtils) <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>          <strong class="jxr_keyword">this</strong>.fileUtils = fileUtils;
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>          <strong class="jxr_keyword">this</strong>.persistenceDirectory = persistenceDirectory;
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>          <strong class="jxr_keyword">this</strong>.appendLogDirectory = persistenceDirectory.resolve(<span class="jxr_string">"append_logs"</span>);
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>          <strong class="jxr_keyword">this</strong>.executorService = context.getExecutorService();
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>          <strong class="jxr_keyword">this</strong>.logger = context.getLogger();
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>          <a name="Constants" href="../../../../com/renomad/minum/state/Constants.html#Constants">Constants</a> constants = context.getConstants();
 <a class="jxr_linenumber" name="L93" href="#L93">93</a>          <strong class="jxr_keyword">this</strong>.maxAppendCount = constants.maxAppendCount;
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>          fileUtils.makeDirectory(<strong class="jxr_keyword">this</strong>.appendLogDirectory);
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>          moveFileLock = <strong class="jxr_keyword">new</strong> ReentrantLock();
@@ -116,8 +116,8 @@
 <a class="jxr_linenumber" name="L108" href="#L108">108</a>         <em class="jxr_comment">// never very large - it's mostly a temporary place to store incoming data</em>
 <a class="jxr_linenumber" name="L109" href="#L109">109</a>         <em class="jxr_comment">// until we can store it off elsewhere. For that reason, it's not a performance</em>
 <a class="jxr_linenumber" name="L110" href="#L110">110</a>         <em class="jxr_comment">// concern to read all the existing lines, just to get the count of current lines.</em>
-<a class="jxr_linenumber" name="L111" href="#L111">111</a>         <strong class="jxr_keyword">if</strong> (Files.exists(currentAppendFile)) {
-<a class="jxr_linenumber" name="L112" href="#L112">112</a>             List&lt;String&gt; lines = Files.readAllLines(currentAppendFile);
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>         <strong class="jxr_keyword">if</strong> (fileUtils.exists(currentAppendFile)) {
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>             List&lt;String&gt; lines = fileUtils.readAllLines(currentAppendFile);
 <a class="jxr_linenumber" name="L113" href="#L113">113</a>             appendCount = lines.size();
 <a class="jxr_linenumber" name="L114" href="#L114">114</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L115" href="#L115">115</a>             <em class="jxr_comment">// reset the count to zero, we're starting a new file.</em>
@@ -126,7 +126,7 @@
 <a class="jxr_linenumber" name="L118" href="#L118">118</a>             appendBytes = 0;
 <a class="jxr_linenumber" name="L119" href="#L119">119</a>         }
 <a class="jxr_linenumber" name="L120" href="#L120">120</a> 
-<a class="jxr_linenumber" name="L121" href="#L121">121</a>         bufferedWriter = Files.newBufferedWriter(currentAppendFile, StandardCharsets.US_ASCII, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>         bufferedWriter = fileUtils.newBufferedWriter(currentAppendFile, StandardCharsets.US_ASCII, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 <a class="jxr_linenumber" name="L122" href="#L122">122</a>     }
 <a class="jxr_linenumber" name="L123" href="#L123">123</a> 
 <a class="jxr_linenumber" name="L124" href="#L124">124</a>     <em class="jxr_javadoccomment">/**</em>
@@ -165,7 +165,7 @@
 <a class="jxr_linenumber" name="L157" href="#L157">157</a> <em class="jxr_javadoccomment">     * no more data, it will end.</em>
 <a class="jxr_linenumber" name="L158" href="#L158">158</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L159" href="#L159">159</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> initializeTimedFlusher() {
-<a class="jxr_linenumber" name="L160" href="#L160">160</a>         Runnable timedFlusherLoop = () -&gt; {
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>         <a name="ThrowingRunnable" href="../../../../com/renomad/minum/utils/ThrowingRunnable.html#ThrowingRunnable">ThrowingRunnable</a> timedFlusherLoop = () -&gt; {
 <a class="jxr_linenumber" name="L161" href="#L161">161</a>             flushLoopRunning = <strong class="jxr_keyword">true</strong>;
 <a class="jxr_linenumber" name="L162" href="#L162">162</a>             Thread.currentThread().setName(<span class="jxr_string">"database_timed_flusher"</span>);
 <a class="jxr_linenumber" name="L163" href="#L163">163</a>             <strong class="jxr_keyword">while</strong> (bufferedWriterHasUnwrittenData) {
@@ -178,7 +178,7 @@
 <a class="jxr_linenumber" name="L170" href="#L170">170</a>             }
 <a class="jxr_linenumber" name="L171" href="#L171">171</a>             flushLoopRunning = false;
 <a class="jxr_linenumber" name="L172" href="#L172">172</a>         };
-<a class="jxr_linenumber" name="L173" href="#L173">173</a>         executorService.submit(timedFlusherLoop);
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>         executorService.submit(ThrowingRunnable.throwingRunnableWrapper(timedFlusherLoop, logger));
 <a class="jxr_linenumber" name="L174" href="#L174">174</a>     }
 <a class="jxr_linenumber" name="L175" href="#L175">175</a> 
 <a class="jxr_linenumber" name="L176" href="#L176">176</a>     <em class="jxr_javadoccomment">/**</em>
@@ -201,7 +201,7 @@
 <a class="jxr_linenumber" name="L193" href="#L193">193</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L194" href="#L194">194</a>     String saveOffCurrentDataToReadyFolder() <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="L195" href="#L195">195</a>         flush();
-<a class="jxr_linenumber" name="L196" href="#L196">196</a>         String newFileName = moveToReadyFolder();
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>         String newFileName = moveToReadyFolder(fileUtils, persistenceDirectory, appendLogDirectory);
 <a class="jxr_linenumber" name="L197" href="#L197">197</a>         createNewAppendFile();
 <a class="jxr_linenumber" name="L198" href="#L198">198</a>         <strong class="jxr_keyword">return</strong> newFileName;
 <a class="jxr_linenumber" name="L199" href="#L199">199</a>     }
@@ -211,26 +211,17 @@
 <a class="jxr_linenumber" name="L203" href="#L203">203</a> <em class="jxr_javadoccomment">     * folder named by the date + time + millis.</em>
 <a class="jxr_linenumber" name="L204" href="#L204">204</a> <em class="jxr_javadoccomment">     * @return the name of the new file</em>
 <a class="jxr_linenumber" name="L205" href="#L205">205</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L206" href="#L206">206</a>     <strong class="jxr_keyword">private</strong> String moveToReadyFolder() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>     <strong class="jxr_keyword">static</strong> String moveToReadyFolder(<a name="IFileUtils" href="../../../../com/renomad/minum/utils/IFileUtils.html#IFileUtils">IFileUtils</a> fileUtils, Path persistenceDirectory, Path appendLogDirectory) <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="L207" href="#L207">207</a>         String appendFile = simpleDateFormat.format(<strong class="jxr_keyword">new</strong> java.util.Date());
-<a class="jxr_linenumber" name="L208" href="#L208">208</a>         Files.move(persistenceDirectory.resolve(<span class="jxr_string">"currentAppendLog"</span>), <strong class="jxr_keyword">this</strong>.appendLogDirectory.resolve(appendFile));
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>         fileUtils.move(persistenceDirectory.resolve(<span class="jxr_string">"currentAppendLog"</span>), appendLogDirectory.resolve(appendFile));
 <a class="jxr_linenumber" name="L209" href="#L209">209</a>         <strong class="jxr_keyword">return</strong> appendFile;
 <a class="jxr_linenumber" name="L210" href="#L210">210</a>     }
 <a class="jxr_linenumber" name="L211" href="#L211">211</a> 
-<a class="jxr_linenumber" name="L212" href="#L212">212</a>     <strong class="jxr_keyword">void</strong> flush() {
-<a class="jxr_linenumber" name="L213" href="#L213">213</a>         flush(<strong class="jxr_keyword">this</strong>.bufferedWriter, <strong class="jxr_keyword">this</strong>.logger);
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>     <strong class="jxr_keyword">void</strong> flush() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>         <strong class="jxr_keyword">this</strong>.bufferedWriter.flush();
 <a class="jxr_linenumber" name="L214" href="#L214">214</a>         <strong class="jxr_keyword">this</strong>.bufferedWriterHasUnwrittenData = false;
 <a class="jxr_linenumber" name="L215" href="#L215">215</a>     }
-<a class="jxr_linenumber" name="L216" href="#L216">216</a> 
-<a class="jxr_linenumber" name="L217" href="#L217">217</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> flush(Writer writer, <a name="ILogger" href="../../../../com/renomad/minum/logging/ILogger.html#ILogger">ILogger</a> logger) {
-<a class="jxr_linenumber" name="L218" href="#L218">218</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L219" href="#L219">219</a>             writer.flush();
-<a class="jxr_linenumber" name="L220" href="#L220">220</a>         } <strong class="jxr_keyword">catch</strong> (IOException e) {
-<a class="jxr_linenumber" name="L221" href="#L221">221</a>             logger.logAsyncError(() -&gt; <span class="jxr_string">"Error while flushing in TimedFlusher: "</span> + StacktraceUtils.stackTraceToString(e));
-<a class="jxr_linenumber" name="L222" href="#L222">222</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="DbException" href="../../../../com/renomad/minum/database/DbException.html#DbException">DbException</a>(e);
-<a class="jxr_linenumber" name="L223" href="#L223">223</a>         }
-<a class="jxr_linenumber" name="L224" href="#L224">224</a>     }
-<a class="jxr_linenumber" name="L225" href="#L225">225</a> }
+<a class="jxr_linenumber" name="L216" href="#L216">216</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2026. All rights reserved.</div>
