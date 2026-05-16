@@ -32,8 +32,8 @@ final class InputStreamUtils implements IInputStreamUtils {
             }
 <span class="fc" id="L33">            int a = inputStream.read();</span>
 <span class="fc bfc" id="L34" title="All 2 branches covered.">            if (a == -1) {</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">                if (bytesRead &gt; 0) {</span>
-<span class="fc" id="L36">                    return result.toString(StandardCharsets.UTF_8);</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">                if (bytesRead &gt; 0) {</span>
+<span class="nc" id="L36">                    return result.toString(StandardCharsets.UTF_8);</span>
                 } else {
                 /*
                 it could be unclear whether we read a line that's an empty string, or we
@@ -62,7 +62,7 @@ final class InputStreamUtils implements IInputStreamUtils {
         int read;
 <span class="fc" id="L63">        int totalRead = 0;</span>
         while (true) {
-<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (!((read = inputStream.read(buf)) &gt;= 0)) break;</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">            if (!((read = inputStream.read(buf)) &gt;= 0)) break;</span>
 <span class="fc" id="L66">            totalRead += read;</span>
 <span class="fc bfc" id="L67" title="All 2 branches covered.">            if (totalRead &lt; lengthToRead) {</span>
                 // if we haven't gotten everything we wanted, write this to the output and loop again
@@ -74,24 +74,24 @@ final class InputStreamUtils implements IInputStreamUtils {
         }
 <span class="fc" id="L75">        data = baos.toByteArray();</span>
 
-<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (data.length != lengthToRead) {</span>
-<span class="fc" id="L78">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
-<span class="fc" id="L79">            throw new ForbiddenUseException(message);</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (data.length != lengthToRead) {</span>
+<span class="nc" id="L78">            String message = String.format(&quot;length of bytes read (%d) must be what we expected (%d)&quot;, data.length, lengthToRead);</span>
+<span class="nc" id="L79">            throw new ForbiddenUseException(message);</span>
         }
 <span class="fc" id="L81">        return data;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L87" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L88">        InputStreamUtils that = (InputStreamUtils) o;</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        return maxReadLineSizeBytes == that.maxReadLineSizeBytes;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="nc" id="L88">        InputStreamUtils that = (InputStreamUtils) o;</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        return maxReadLineSizeBytes == that.maxReadLineSizeBytes;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L94">        return Objects.hash(maxReadLineSizeBytes);</span>
+<span class="nc" id="L94">        return Objects.hash(maxReadLineSizeBytes);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -35,14 +35,14 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L35">        final var contentType = h.contentType();</span>
 
 <span class="fc bfc" id="L37" title="All 2 branches covered.">        if (h.contentLength() &gt;= 0) {</span>
-<span class="fc bfc" id="L38" title="All 2 branches covered.">            if (h.contentLength() &gt;= constants.maxReadSizeBytes) {</span>
-<span class="fc" id="L39">                throw new ForbiddenUseException(&quot;It is disallowed to process a body with a length more than &quot; + constants.maxReadSizeBytes + &quot; bytes&quot;);</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">            if (h.contentLength() &gt;= constants.maxReadSizeBytes) {</span>
+<span class="nc" id="L39">                throw new ForbiddenUseException(&quot;It is disallowed to process a body with a length more than &quot; + constants.maxReadSizeBytes + &quot; bytes&quot;);</span>
             }
         } else {
             // we don't process chunked transfer encodings.  just bail.
 <span class="fc" id="L43">            List&lt;String&gt; transferEncodingHeaders = h.valueByKey(&quot;transfer-encoding&quot;);</span>
-<span class="fc bfc" id="L44" title="All 2 branches covered.">            if (List.of(&quot;chunked&quot;).equals(transferEncodingHeaders)) {</span>
-<span class="fc" id="L45">                throw new BadRequestException(&quot;client sent chunked transfer-encoding.  Minum does not automatically read bodies of this type.&quot;);</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">            if (List.of(&quot;chunked&quot;).equals(transferEncodingHeaders)) {</span>
+<span class="nc" id="L45">                throw new BadRequestException(&quot;client sent chunked transfer-encoding.  Minum does not automatically read bodies of this type.&quot;);</span>
             }
 <span class="fc" id="L47">            return Body.EMPTY;</span>
         }
@@ -92,8 +92,8 @@ final class BodyProcessor implements IBodyProcessor {
      */
     private Body parseMultipartForm(int contentLength, String boundaryValue, InputStream inputStream) {
 
-<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (boundaryValue.isBlank()) {</span>
-<span class="fc" id="L96">            throw new BadRequestException(&quot;The boundary value was blank for the multipart input&quot;);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (boundaryValue.isBlank()) {</span>
+<span class="nc" id="L96">            throw new BadRequestException(&quot;The boundary value was blank for the multipart input&quot;);</span>
         }
 
 <span class="fc" id="L99">        List&lt;Partition&gt; partitions = new ArrayList&lt;&gt;();</span>
@@ -102,19 +102,19 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L102">            int countOfPartitions = 0;</span>
 <span class="fc bfc" id="L103" title="All 2 branches covered.">            for (StreamingMultipartPartition p : getMultiPartIterable(inputStream, boundaryValue, contentLength)) {</span>
 <span class="fc" id="L104">                countOfPartitions += 1;</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">                if (countOfPartitions &gt;= MAX_BODY_KEYS_URL_ENCODED) {</span>
-<span class="fc" id="L106">                    throw new WebServerException(&quot;Error: body had excessive number of partitions (&quot; + countOfPartitions + &quot;).  Maximum allowed: &quot; + MAX_BODY_KEYS_URL_ENCODED);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                if (countOfPartitions &gt;= MAX_BODY_KEYS_URL_ENCODED) {</span>
+<span class="nc" id="L106">                    throw new WebServerException(&quot;Error: body had excessive number of partitions (&quot; + countOfPartitions + &quot;).  Maximum allowed: &quot; + MAX_BODY_KEYS_URL_ENCODED);</span>
                 }
 <span class="fc" id="L108">                partitions.add(new Partition(p.getHeaders(), p.readAllBytes(), p.getContentDisposition()));</span>
 <span class="fc" id="L109">            }</span>
 
 
-<span class="fc" id="L112">        } catch (Exception ex) {</span>
-<span class="fc" id="L113">            throw new BadRequestException(&quot;Unable to parse the body as a multipart/form-data content-type&quot;, ex);</span>
+<span class="nc" id="L112">        } catch (Exception ex) {</span>
+<span class="nc" id="L113">            throw new BadRequestException(&quot;Unable to parse the body as a multipart/form-data content-type&quot;, ex);</span>
 <span class="fc" id="L114">        }</span>
 
-<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (partitions.isEmpty()) {</span>
-<span class="fc" id="L117">            return new Body(Map.of(), new byte[0], List.of(), BodyType.UNRECOGNIZED);</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (partitions.isEmpty()) {</span>
+<span class="nc" id="L117">            return new Body(Map.of(), new byte[0], List.of(), BodyType.UNRECOGNIZED);</span>
         } else {
 <span class="fc" id="L119">            return new Body(Map.of(), new byte[0], partitions, BodyType.MULTIPART);</span>
         }
@@ -128,14 +128,14 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L128">        String boundaryKey = &quot;boundary=&quot;;</span>
 <span class="fc" id="L129">        String boundaryValue = &quot;&quot;;</span>
 <span class="fc" id="L130">        int indexOfBoundaryKey = contentType.indexOf(boundaryKey);</span>
-<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (indexOfBoundaryKey &gt;= 0) {</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (indexOfBoundaryKey &gt;= 0) {</span>
             // grab all the text after the key to obtain the boundary value
 <span class="fc" id="L133">            boundaryValue = contentType.substring(indexOfBoundaryKey + boundaryKey.length());</span>
             // the index after the end of the boundary value, used to trim the string if necessary
 <span class="fc" id="L135">            int indexEndOfBoundaryValue = 0;</span>
 <span class="fc bfc" id="L136" title="All 2 branches covered.">            for (char c : boundaryValue.toCharArray()) {</span>
-<span class="fc bfc" id="L137" title="All 2 branches covered.">                if (c == ' ') break;</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">                if (c == ';') break;</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                if (c == ' ') break;</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">                if (c == ';') break;</span>
 <span class="fc" id="L139">                indexEndOfBoundaryValue += 1;</span>
             }
 <span class="fc" id="L141">            boundaryValue = boundaryValue.substring(0, indexEndOfBoundaryValue);</span>
@@ -153,8 +153,8 @@ final class BodyProcessor implements IBodyProcessor {
      * for example, {@code valuea=3&amp;valueb=this+is+something}
      */
     Body parseUrlEncodedForm(InputStream is, int contentLength) {
-<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (contentLength == 0) {</span>
-<span class="fc" id="L157">            return Body.EMPTY;</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (contentLength == 0) {</span>
+<span class="nc" id="L157">            return Body.EMPTY;</span>
         }
 <span class="fc" id="L159">        final var postedPairs = new HashMap&lt;String, byte[]&gt;();</span>
 
@@ -162,18 +162,18 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L162">            int countOfPartitions = 0;</span>
 <span class="fc bfc" id="L163" title="All 2 branches covered.">            for (final var keyValue : getUrlEncodedDataIterable(is, contentLength)) {</span>
 <span class="fc" id="L164">                countOfPartitions += 1;</span>
-<span class="fc bfc" id="L165" title="All 2 branches covered.">                if (countOfPartitions &gt;= MAX_BODY_KEYS_URL_ENCODED) {</span>
-<span class="fc" id="L166">                    throw new WebServerException(&quot;Error: body had excessive number of partitions (&quot;+countOfPartitions+&quot;).  Maximum allowed: &quot; + MAX_BODY_KEYS_URL_ENCODED);</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">                if (countOfPartitions &gt;= MAX_BODY_KEYS_URL_ENCODED) {</span>
+<span class="nc" id="L166">                    throw new WebServerException(&quot;Error: body had excessive number of partitions (&quot;+countOfPartitions+&quot;).  Maximum allowed: &quot; + MAX_BODY_KEYS_URL_ENCODED);</span>
                 }
 <span class="fc" id="L168">                String value = new String(keyValue.getUedg().readAllBytes(), StandardCharsets.US_ASCII);</span>
 <span class="fc" id="L169">                String key = keyValue.getKey();</span>
 <span class="fc" id="L170">                final var decodedValue = StringUtils.decode(value);</span>
-<span class="fc bfc" id="L171" title="All 2 branches covered.">                final var convertedValue = decodedValue == null ? &quot;&quot;.getBytes(StandardCharsets.UTF_8) : decodedValue.getBytes(StandardCharsets.UTF_8);</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                final var convertedValue = decodedValue == null ? &quot;&quot;.getBytes(StandardCharsets.UTF_8) : decodedValue.getBytes(StandardCharsets.UTF_8);</span>
 
 <span class="fc" id="L173">                final var result = postedPairs.put(key, convertedValue);</span>
 
-<span class="fc bfc" id="L175" title="All 2 branches covered.">                if (result != null) {</span>
-<span class="fc" id="L176">                    throw new BadRequestException(&quot;Unexpected: key (&quot; +key + &quot;) was duplicated in the post body - previous value was &quot; + new String(result, StandardCharsets.US_ASCII) + &quot; and was overwritten by &quot; + decodedValue);</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                if (result != null) {</span>
+<span class="nc" id="L176">                    throw new BadRequestException(&quot;Unexpected: key (&quot; +key + &quot;) was duplicated in the post body - previous value was &quot; + new String(result, StandardCharsets.US_ASCII) + &quot; and was overwritten by &quot; + decodedValue);</span>
                 }
 <span class="fc" id="L178">            }</span>
 <span class="fc" id="L179">        } catch (Exception ex) {</span>
@@ -217,8 +217,8 @@ final class BodyProcessor implements IBodyProcessor {
 
             @Override
             public UrlEncodedKeyValue next() {
-<span class="fc bfc" id="L220" title="All 2 branches covered.">                if (!hasNext()) {</span>
-<span class="fc" id="L221">                    throw new NoSuchElementException();</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">                if (!hasNext()) {</span>
+<span class="nc" id="L221">                    throw new NoSuchElementException();</span>
                 }
 <span class="fc" id="L223">                String key = &quot;&quot;;</span>
 <span class="fc" id="L224">                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
@@ -227,8 +227,8 @@ final class BodyProcessor implements IBodyProcessor {
                     try {
 <span class="fc" id="L228">                        result = inputStream.read();</span>
 <span class="fc" id="L229">                        countBytesRead.increment();</span>
-<span class="fc" id="L230">                    } catch (IOException e) {</span>
-<span class="fc" id="L231">                        throw new WebServerException(&quot;Error in getUrlEncodedDataIterable.next&quot;, e);</span>
+<span class="nc" id="L230">                    } catch (IOException e) {</span>
+<span class="nc" id="L231">                        throw new WebServerException(&quot;Error in getUrlEncodedDataIterable.next&quot;, e);</span>
 <span class="fc" id="L232">                    }</span>
                     // if this is true, the inputstream is closed
 <span class="fc bfc" id="L234" title="All 2 branches covered.">                    if (result == -1) break;</span>
@@ -239,8 +239,8 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L239">                        key = byteArrayOutputStream.toString(StandardCharsets.US_ASCII);</span>
 <span class="fc" id="L240">                        break;</span>
                     } else {
-<span class="fc bfc" id="L242" title="All 2 branches covered.">                        if (byteArrayOutputStream.size() &gt;= MAX_KEY_SIZE_BYTES) {</span>
-<span class="fc" id="L243">                            throw new WebServerException(&quot;Maximum size for name attribute is &quot; + MAX_KEY_SIZE_BYTES + &quot; ascii characters&quot;);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">                        if (byteArrayOutputStream.size() &gt;= MAX_KEY_SIZE_BYTES) {</span>
+<span class="nc" id="L243">                            throw new WebServerException(&quot;Maximum size for name attribute is &quot; + MAX_KEY_SIZE_BYTES + &quot; ascii characters&quot;);</span>
                         }
 <span class="fc" id="L245">                        byteArrayOutputStream.write(myByte);</span>
                     }
@@ -248,10 +248,10 @@ final class BodyProcessor implements IBodyProcessor {
 
 <span class="fc bfc" id="L249" title="All 2 branches covered.">                if (key.isBlank()) {</span>
 <span class="fc" id="L250">                    throw new WebServerException(&quot;Unable to parse this body. no key found during parsing&quot;);</span>
-<span class="fc bfc" id="L251" title="All 2 branches covered.">                } else if (countBytesRead.getCount() == contentLength) {</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">                } else if (countBytesRead.getCount() == contentLength) {</span>
                     // if the only thing sent was the key and there's no further data, return the key with a null input stream
                     // that will immediately return
-<span class="fc" id="L254">                    return new UrlEncodedKeyValue(key, new UrlEncodedDataGetter(InputStream.nullInputStream(), countBytesRead, contentLength));</span>
+<span class="nc" id="L254">                    return new UrlEncodedKeyValue(key, new UrlEncodedDataGetter(InputStream.nullInputStream(), countBytesRead, contentLength));</span>
                 } else {
 <span class="fc" id="L256">                    return new UrlEncodedKeyValue(key, new UrlEncodedDataGetter(inputStream, countBytesRead, contentLength));</span>
                 }
@@ -277,22 +277,22 @@ final class BodyProcessor implements IBodyProcessor {
             @Override
             public StreamingMultipartPartition next() {
                 try {
-<span class="fc bfc" id="L280" title="All 2 branches covered.">                    if (!hasNext()) {</span>
-<span class="fc" id="L281">                        throw new NoSuchElementException();</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">                    if (!hasNext()) {</span>
+<span class="nc" id="L281">                        throw new NoSuchElementException();</span>
                     }
                     // confirm that the boundary value is as expected, as a sanity check,
                     // and avoid including the boundary value in the first set of headers
 <span class="fc bfc" id="L285" title="All 2 branches covered.">                    if (!hasReadFirstPartition) {</span>
                         String s;
 <span class="fc" id="L287">                        s = inputStreamUtils.readLine(inputStream);</span>
-<span class="fc bfc" id="L288" title="All 2 branches covered.">                        if (s == null) {</span>
-<span class="fc" id="L289">                            throw new BadRequestException(&quot;Unexpectedly encountered end of stream while reading in BodyProcessor.next()&quot;);</span>
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">                        if (s == null) {</span>
+<span class="nc" id="L289">                            throw new BadRequestException(&quot;Unexpectedly encountered end of stream while reading in BodyProcessor.next()&quot;);</span>
                         }
 <span class="fc" id="L291">                        countBytesRead.incrementBy(s.length() + 2);</span>
 <span class="fc" id="L292">                        hasReadFirstPartition = true;</span>
 
-<span class="fc bfc" id="L294" title="All 2 branches covered.">                        if (!s.contains(boundaryValue)) {</span>
-<span class="fc" id="L295">                            throw new BadRequestException(&quot;Error: First line must contain the expected boundary value. Expected to find: &quot; + boundaryValue + &quot; in: &quot; + s);</span>
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">                        if (!s.contains(boundaryValue)) {</span>
+<span class="nc" id="L295">                            throw new BadRequestException(&quot;Error: First line must contain the expected boundary value. Expected to find: &quot; + boundaryValue + &quot; in: &quot; + s);</span>
                         }
                     }
 <span class="fc" id="L298">                    List&lt;String&gt; allHeaders = null;</span>
@@ -305,8 +305,8 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L305">                    Headers headers = new Headers(allHeaders);</span>
 
 <span class="fc" id="L307">                    List&lt;String&gt; cds = headers.valueByKey(&quot;Content-Disposition&quot;);</span>
-<span class="fc bfc" id="L308" title="All 2 branches covered.">                    if (cds == null) {</span>
-<span class="fc" id="L309">                        throw new WebServerException(&quot;Error: no Content-Disposition header on partition in Multipart/form data&quot;);</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">                    if (cds == null) {</span>
+<span class="nc" id="L309">                        throw new WebServerException(&quot;Error: no Content-Disposition header on partition in Multipart/form data&quot;);</span>
                     }
 <span class="fc" id="L311">                    String contentDisposition = String.join(&quot;;&quot;, cds);</span>
 
@@ -314,10 +314,10 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L314">                    Matcher filenameMatcher = multiformFilenameRegex.matcher(contentDisposition);</span>
 
 <span class="fc" id="L316">                    String name = &quot;&quot;;</span>
-<span class="fc bfc" id="L317" title="All 2 branches covered.">                    if (nameMatcher.find()) {</span>
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">                    if (nameMatcher.find()) {</span>
 <span class="fc" id="L318">                        name = nameMatcher.group(&quot;namevalue&quot;);</span>
                     } else {
-<span class="fc" id="L320">                        throw new WebServerException(&quot;Error: No name value set on multipart partition&quot;);</span>
+<span class="nc" id="L320">                        throw new WebServerException(&quot;Error: No name value set on multipart partition&quot;);</span>
                     }
 <span class="fc" id="L322">                    String filename = &quot;&quot;;</span>
 <span class="fc bfc" id="L323" title="All 2 branches covered.">                    if (filenameMatcher.find()) {</span>

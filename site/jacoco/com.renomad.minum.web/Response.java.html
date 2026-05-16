@@ -87,8 +87,8 @@ public final class Response implements IResponse {
      */
     Response(StatusLine.StatusCode statusCode, Headers extraHeaders, byte[] body,
 <span class="fc" id="L89">             ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator, long bodyLength, boolean isBodyText) {</span>
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (statusCode == null) throw new IllegalArgumentException(&quot;Status code must not be null&quot;);</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (extraHeaders == null) throw new IllegalArgumentException(&quot;Extra headers must not be null (may use Headers.EMPTY)&quot;);</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (statusCode == null) throw new IllegalArgumentException(&quot;Status code must not be null&quot;);</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (extraHeaders == null) throw new IllegalArgumentException(&quot;Extra headers must not be null (may use Headers.EMPTY)&quot;);</span>
 <span class="fc" id="L92">        this.statusCode = statusCode;</span>
 <span class="fc" id="L93">        this.extraHeaders = extraHeaders;</span>
 <span class="fc" id="L94">        this.body = body;</span>
@@ -106,7 +106,7 @@ public final class Response implements IResponse {
      *                        ability to send bytes on the socket.
      */
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Headers extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator) {
-<span class="fc" id="L109">        return new Response(statusCode, extraHeaders, null, outputGenerator, 0, false);</span>
+<span class="nc" id="L109">        return new Response(statusCode, extraHeaders, null, outputGenerator, 0, false);</span>
     }
 
     /**
@@ -119,7 +119,7 @@ public final class Response implements IResponse {
      *                        ability to send bytes on the socket.
      */
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Map&lt;String,String&gt; extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator) {
-<span class="fc" id="L122">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator);</span>
+<span class="nc" id="L122">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator);</span>
     }
 
     /**
@@ -131,7 +131,7 @@ public final class Response implements IResponse {
      * @param bodyLength the length, in bytes, of the data to be sent to the client
      */
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Headers extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator, long bodyLength) {
-<span class="fc" id="L134">        return new Response(statusCode, extraHeaders, null, outputGenerator, bodyLength, false);</span>
+<span class="nc" id="L134">        return new Response(statusCode, extraHeaders, null, outputGenerator, bodyLength, false);</span>
     }
 
     /**
@@ -144,7 +144,7 @@ public final class Response implements IResponse {
      * @param bodyLength the length, in bytes, of the data to be sent to the client
      */
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Map&lt;String,String&gt; extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator, long bodyLength) {
-<span class="fc" id="L147">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator, bodyLength);</span>
+<span class="nc" id="L147">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator, bodyLength);</span>
     }
 
     /**
@@ -230,8 +230,8 @@ public final class Response implements IResponse {
 <span class="fc" id="L230">        long fileSize = 0;</span>
         try {
 <span class="fc" id="L232">            fileSize = fileUtils.size(Path.of(filePath));</span>
-<span class="fc" id="L233">        } catch (IOException e) {</span>
-<span class="fc" id="L234">            throw new WebServerException(&quot;Error in Response.buildLargeFileResponse&quot;, e);</span>
+<span class="nc" id="L233">        } catch (IOException e) {</span>
+<span class="nc" id="L234">            throw new WebServerException(&quot;Error in Response.buildLargeFileResponse&quot;, e);</span>
 <span class="fc" id="L235">        }</span>
 <span class="fc" id="L236">        var range = new Range(requestHeaders, fileSize);</span>
 <span class="fc" id="L237">        StatusLine.StatusCode responseCode = CODE_200_OK;</span>
@@ -271,13 +271,13 @@ public final class Response implements IResponse {
      *                        allows the developer to use directories anywhere in the system.
      */
     public static IResponse buildLargeFileResponse(Headers extraHeaders, String filePath, String parentDirectory, Headers requestHeaders, IFileUtils fileUtils) {
-<span class="fc" id="L274">        Path path = null;</span>
+<span class="nc" id="L274">        Path path = null;</span>
         try {
-<span class="fc" id="L276">            path = fileUtils.safeResolve(parentDirectory, filePath);</span>
-<span class="fc" id="L277">        } catch (IOException e) {</span>
-<span class="fc" id="L278">            throw new WebServerException(&quot;Error at Response.buildLargeFileResponse&quot;, e);</span>
-<span class="fc" id="L279">        }</span>
-<span class="fc" id="L280">        return buildLargeFileResponse(extraHeaders, path.toString(), requestHeaders, fileUtils);</span>
+<span class="nc" id="L276">            path = fileUtils.safeResolve(parentDirectory, filePath);</span>
+<span class="nc" id="L277">        } catch (IOException e) {</span>
+<span class="nc" id="L278">            throw new WebServerException(&quot;Error at Response.buildLargeFileResponse&quot;, e);</span>
+<span class="nc" id="L279">        }</span>
+<span class="nc" id="L280">        return buildLargeFileResponse(extraHeaders, path.toString(), requestHeaders, fileUtils);</span>
     }
 
     /**
@@ -295,7 +295,7 @@ public final class Response implements IResponse {
      *                        allows the developer to use directories anywhere in the system.
      */
     public static IResponse buildLargeFileResponse(Map&lt;String,String&gt; extraHeaders, String filePath, String parentDirectory, Headers requestHeaders, IFileUtils fileUtils) {
-<span class="fc" id="L298">        return buildLargeFileResponse(convertMapToHeaders(extraHeaders), filePath, parentDirectory, requestHeaders, fileUtils);</span>
+<span class="nc" id="L298">        return buildLargeFileResponse(convertMapToHeaders(extraHeaders), filePath, parentDirectory, requestHeaders, fileUtils);</span>
     }
 
     /**
@@ -331,8 +331,8 @@ public final class Response implements IResponse {
         try {
             // check if we can create a URL from this - any failures indicate invalid syntax.
 <span class="fc" id="L333">            URI.create(locationUrl);</span>
-<span class="fc" id="L334">        } catch (Exception ex) {</span>
-<span class="fc" id="L335">            throw new WebServerException(&quot;Failure in redirect to (&quot; + locationUrl + &quot;). Exception: &quot; + ex);</span>
+<span class="nc" id="L334">        } catch (Exception ex) {</span>
+<span class="nc" id="L335">            throw new WebServerException(&quot;Failure in redirect to (&quot; + locationUrl + &quot;). Exception: &quot; + ex);</span>
 <span class="fc" id="L336">        }</span>
 <span class="fc" id="L337">        return buildResponse(StatusLine.StatusCode.CODE_303_SEE_OTHER, new Headers(List.of(&quot;location: &quot; + locationUrl, &quot;Content-Type: text/html; charset=UTF-8&quot;)), &quot;&lt;p&gt;See &lt;a href=\&quot;&quot;+locationUrl+&quot;\&quot;&gt;this link&lt;/a&gt;&lt;/p&gt;&quot;);</span>
     }

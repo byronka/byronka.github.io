@@ -68,11 +68,11 @@ public final class FullSystem {
      * parameter to constructing a {@link FullSystem}
      */
     public static Context buildContext() {
-<span class="fc" id="L71">        var constants = new Constants();</span>
-<span class="fc" id="L72">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
-<span class="fc" id="L73">        var logger = new Logger(constants, executorService, &quot;primary logger&quot;);</span>
+<span class="nc" id="L71">        var constants = new Constants();</span>
+<span class="nc" id="L72">        var executorService = Executors.newVirtualThreadPerTaskExecutor();</span>
+<span class="nc" id="L73">        var logger = new Logger(constants, executorService, &quot;primary logger&quot;);</span>
 
-<span class="fc" id="L75">        return new Context(executorService, constants, logger);</span>
+<span class="nc" id="L75">        return new Context(executorService, constants, logger);</span>
     }
 
     /**
@@ -100,9 +100,9 @@ public final class FullSystem {
      * }&lt;/pre&gt;
      */
     public static FullSystem initialize() {
-<span class="fc" id="L103">        var context = buildContext();</span>
-<span class="fc" id="L104">        var fullSystem = new FullSystem(context);</span>
-<span class="fc" id="L105">        return fullSystem.start();</span>
+<span class="nc" id="L103">        var context = buildContext();</span>
+<span class="nc" id="L104">        var fullSystem = new FullSystem(context);</span>
+<span class="nc" id="L105">        return fullSystem.start();</span>
     }
 
     /**
@@ -142,7 +142,7 @@ public final class FullSystem {
 
     static void createSystemRunningFile(boolean enableSystemRunningMarker, ILogger logger, IFileUtils fileUtils) {
         // create a file in our current working directory to indicate we are running
-<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (enableSystemRunningMarker) {</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (enableSystemRunningMarker) {</span>
             try {
 <span class="fc" id="L147">                logger.logDebug(() -&gt; &quot;Writing a file to disk, SYSTEM_RUNNING, as a record that Minum is currently running&quot;);</span>
 <span class="fc bfc" id="L148" title="All 2 branches covered.">                if (fileUtils.exists(Path.of(&quot;SYSTEM_RUNNING&quot;))) {</span>
@@ -151,8 +151,8 @@ public final class FullSystem {
 <span class="fc" id="L151">                    fileUtils.writeString(Path.of(&quot;SYSTEM_RUNNING&quot;), &quot;This file serves as a marker to indicate the system is running.\n&quot;, StandardOpenOption.CREATE_NEW);</span>
                 }
 
-<span class="fc" id="L154">            } catch (IOException e) {</span>
-<span class="fc" id="L155">                throw new RuntimeException(e);</span>
+<span class="nc" id="L154">            } catch (IOException e) {</span>
+<span class="nc" id="L155">                throw new RuntimeException(e);</span>
 <span class="fc" id="L156">            }</span>
         }
 <span class="fc" id="L158">    }</span>
@@ -172,14 +172,14 @@ public final class FullSystem {
      * Returns current information on the non-encrypted server
      */
     public IServer getServer() {
-<span class="fc" id="L175">        return server;</span>
+<span class="nc" id="L175">        return server;</span>
     }
 
     /**
      * Returns current information on the encrypted server
      */
     public IServer getSslServer() {
-<span class="fc" id="L182">        return sslServer;</span>
+<span class="nc" id="L182">        return sslServer;</span>
     }
 
     /**
@@ -201,11 +201,11 @@ public final class FullSystem {
      * this class's construction
      */
     public Context getContext() {
-<span class="fc" id="L204">        return context;</span>
+<span class="nc" id="L204">        return context;</span>
     }
 
     WebEngine getWebEngine() {
-<span class="fc" id="L208">        return webEngine;</span>
+<span class="nc" id="L208">        return webEngine;</span>
     }
 
     /**
@@ -227,12 +227,12 @@ public final class FullSystem {
     static void closeCore(ILogger logger, Context context, IServer server, IServer sslServer, String fullSystemName, IFileUtils fileUtils) throws IOException {
 <span class="fc" id="L228">        logger.logDebug(() -&gt; &quot;Received shutdown command&quot;);</span>
 
-<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (server != null) {</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">        if (server != null) {</span>
 <span class="fc" id="L231">            logger.logDebug(() -&gt; &quot; Stopping the server: &quot; + server);</span>
 <span class="fc" id="L232">            server.close();</span>
         }
 
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        if (sslServer != null) {</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">        if (sslServer != null) {</span>
 <span class="fc" id="L236">            logger.logDebug(() -&gt; &quot; Stopping the SSL server: &quot; + server);</span>
 <span class="fc" id="L237">            sslServer.close();</span>
         }
@@ -280,24 +280,24 @@ public final class FullSystem {
      * &lt;/p&gt;
      */
     public void block() {
-<span class="fc" id="L283">        blockCore(this.server, this.sslServer, this.logger);</span>
-<span class="fc" id="L284">    }</span>
+<span class="nc" id="L283">        blockCore(this.server, this.sslServer, this.logger);</span>
+<span class="nc" id="L284">    }</span>
 
     static void blockCore(IServer server, IServer sslServer, ILogger logger) {
         try {
-<span class="fc bfc" id="L288" title="All 2 branches covered.">            if (server != null) {</span>
-<span class="fc" id="L289">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), server));</span>
-<span class="fc" id="L290">                server.getCentralLoopFuture().get();</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            if (server != null) {</span>
+<span class="nc" id="L289">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), server));</span>
+<span class="nc" id="L290">                server.getCentralLoopFuture().get();</span>
             }
-<span class="fc bfc" id="L292" title="All 2 branches covered.">            if (sslServer != null) {</span>
-<span class="fc" id="L293">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), sslServer));</span>
-<span class="fc" id="L294">                sslServer.getCentralLoopFuture().get();</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            if (sslServer != null) {</span>
+<span class="nc" id="L293">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), sslServer));</span>
+<span class="nc" id="L294">                sslServer.getCentralLoopFuture().get();</span>
             }
-<span class="fc" id="L296">        } catch (InterruptedException | ExecutionException | CancellationException ex) {</span>
-<span class="fc" id="L297">            Thread.currentThread().interrupt();</span>
-<span class="fc" id="L298">            throw new WebServerException(ex);</span>
-<span class="fc" id="L299">        }</span>
-<span class="fc" id="L300">    }</span>
+<span class="nc" id="L296">        } catch (InterruptedException | ExecutionException | CancellationException ex) {</span>
+<span class="nc" id="L297">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L298">            throw new WebServerException(ex);</span>
+<span class="nc" id="L299">        }</span>
+<span class="nc" id="L300">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

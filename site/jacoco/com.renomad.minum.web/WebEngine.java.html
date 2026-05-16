@@ -50,15 +50,15 @@ final class WebEngine {
 
     // if the user sets a value of -1 for the port, it indicates that they want
     // to disable that server.  Reason for this are if they want just one server running.
-<span class="fc bfc" id="L53" title="All 2 branches covered.">    if (port == -1) {</span>
-<span class="fc" id="L54">      return null;</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">    if (port == -1) {</span>
+<span class="nc" id="L54">      return null;</span>
     }
     
     ServerSocket ss;
     try {
 <span class="fc" id="L59">        ss = new ServerSocket(port);</span>
-<span class="fc" id="L60">    } catch (Exception e) {</span>
-<span class="fc" id="L61">        throw new WebServerException(&quot;Failed to create serversocket on port &quot; + port, e);</span>
+<span class="nc" id="L60">    } catch (Exception e) {</span>
+<span class="nc" id="L61">        throw new WebServerException(&quot;Failed to create serversocket on port &quot; + port, e);</span>
 <span class="fc" id="L62">    }</span>
 <span class="fc" id="L63">    logger.logDebug(() -&gt; String.format(&quot;Just created a new ServerSocket: %s&quot;, ss));</span>
 <span class="fc" id="L64">    IServer server = new Server(ss, context, &quot;http server&quot;, webFramework, executorService, PLAIN_TEXT_HTTP);</span>
@@ -77,8 +77,8 @@ final class WebEngine {
 
     // if the user sets a value of -1 for the port, it indicates that they want
     // to disable that server.  Reason for this are if they want just one server running.
-<span class="fc bfc" id="L80" title="All 2 branches covered.">    if (port == -1) {</span>
-<span class="fc" id="L81">        return null;</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">    if (port == -1) {</span>
+<span class="nc" id="L81">        return null;</span>
     }
 
     /*
@@ -103,22 +103,22 @@ final class WebEngine {
           String keystorePath,
           String keystorePassword,
           ILogger logger) {
-<span class="fc bfc" id="L106" title="All 2 branches covered.">    if (useExternalKeystore) {</span>
-<span class="fc" id="L107">      logger.logDebug(() -&gt; &quot;Using keystore and password referenced in minum.config&quot;);</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">    if (useExternalKeystore) {</span>
+<span class="nc" id="L107">      logger.logDebug(() -&gt; &quot;Using keystore and password referenced in minum.config&quot;);</span>
     } else {
 <span class="fc" id="L109">      logger.logDebug(() -&gt; &quot;Using the default (self-signed / testing-only) certificate&quot;);</span>
     }
 
     final URL keystoreUrl;
     try {
-<span class="fc bfc" id="L114" title="All 2 branches covered.">        keystoreUrl = useExternalKeystore ?</span>
-<span class="fc" id="L115">                Path.of(keystorePath).toUri().toURL() :</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        keystoreUrl = useExternalKeystore ?</span>
+<span class="nc" id="L115">                Path.of(keystorePath).toUri().toURL() :</span>
 <span class="fc" id="L116">                WebEngine.class.getResource(&quot;/certs/keystore&quot;);</span>
-<span class="fc" id="L117">    } catch (Exception e) {</span>
-<span class="fc" id="L118">        throw new WebServerException(&quot;Error while building keystoreUrl: &quot; + e);</span>
+<span class="nc" id="L117">    } catch (Exception e) {</span>
+<span class="nc" id="L118">        throw new WebServerException(&quot;Error while building keystoreUrl: &quot; + e);</span>
 <span class="fc" id="L119">    }</span>
-<span class="fc bfc" id="L120" title="All 2 branches covered.">    final String keystorePasswordFinal = useExternalKeystore ?</span>
-<span class="fc" id="L121">          keystorePassword :</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">    final String keystorePasswordFinal = useExternalKeystore ?</span>
+<span class="nc" id="L121">          keystorePassword :</span>
 <span class="fc" id="L122">          &quot;passphrase&quot;;</span>
 <span class="fc" id="L123">    return new KeyStoreResult(keystoreUrl, keystorePasswordFinal);</span>
   }
@@ -145,18 +145,18 @@ final class WebEngine {
   static Boolean isProvidedKeystoreProperties(String keystorePath, String keystorePassword, ILogger logger) {
 
     // get the directory to the keystore from a system property
-<span class="fc bfc" id="L148" title="All 4 branches covered.">    boolean hasKeystore = ! (keystorePath == null || keystorePath.isBlank());</span>
-<span class="fc bfc" id="L149" title="All 2 branches covered.">    if (! hasKeystore) {</span>
+<span class="pc bpc" id="L148" title="2 of 4 branches missed.">    boolean hasKeystore = ! (keystorePath == null || keystorePath.isBlank());</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">    if (! hasKeystore) {</span>
 <span class="fc" id="L150">      logger.logDebug(() -&gt; &quot;Keystore system property was not set&quot;);</span>
     }
 
     // get the password to that keystore from a system property
-<span class="fc bfc" id="L154" title="All 4 branches covered.">    boolean hasKeystorePassword = ! (keystorePassword == null || keystorePassword.isBlank());</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">    if (! hasKeystorePassword) {</span>
+<span class="pc bpc" id="L154" title="2 of 4 branches missed.">    boolean hasKeystorePassword = ! (keystorePassword == null || keystorePassword.isBlank());</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">    if (! hasKeystorePassword) {</span>
 <span class="fc" id="L156">      logger.logDebug(() -&gt; &quot;keystorePassword system property was not set&quot;);</span>
     }
 
-<span class="fc bfc" id="L159" title="All 4 branches covered.">    return hasKeystore &amp;&amp; hasKeystorePassword;</span>
+<span class="pc bpc" id="L159" title="3 of 4 branches missed.">    return hasKeystore &amp;&amp; hasKeystorePassword;</span>
   }
 
 
@@ -179,10 +179,10 @@ final class WebEngine {
 
 <span class="fc" id="L180">      final var socketFactory = sslContext.getServerSocketFactory();</span>
 <span class="fc" id="L181">      return socketFactory.createServerSocket(sslPort);</span>
-<span class="fc" id="L182">    } catch (Exception ex) {</span>
-<span class="fc" id="L183">      String extraMessage = &quot;Exception during creation of SSL socket with port %d, keystore URL of %s.  Exception message: %s&quot;.formatted(sslPort, keystoreUrl, ex.getMessage());</span>
-<span class="fc" id="L184">      logger.logDebug(() -&gt; extraMessage);</span>
-<span class="fc" id="L185">      throw new WebServerException(extraMessage, ex);</span>
+<span class="nc" id="L182">    } catch (Exception ex) {</span>
+<span class="nc" id="L183">      String extraMessage = &quot;Exception during creation of SSL socket with port %d, keystore URL of %s.  Exception message: %s&quot;.formatted(sslPort, keystoreUrl, ex.getMessage());</span>
+<span class="nc" id="L184">      logger.logDebug(() -&gt; extraMessage);</span>
+<span class="nc" id="L185">      throw new WebServerException(extraMessage, ex);</span>
     }
   }
 

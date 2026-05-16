@@ -46,8 +46,8 @@ public final class Request implements IRequest {
 
     @Override
     public Body getBody() {
-<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (hasStartedReadingBody) {</span>
-<span class="fc" id="L50">            throw new WebServerException(&quot;The InputStream in Request has already been accessed for reading, preventing body extraction from stream.&quot; +</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (hasStartedReadingBody) {</span>
+<span class="nc" id="L50">            throw new WebServerException(&quot;The InputStream in Request has already been accessed for reading, preventing body extraction from stream.&quot; +</span>
                     &quot; If intending to use getBody(), use it exclusively&quot;);
         }
 <span class="fc bfc" id="L53" title="All 2 branches covered.">        if (body == null) {</span>
@@ -70,20 +70,20 @@ public final class Request implements IRequest {
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L74" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L75">        Request request = (Request) o;</span>
-<span class="fc bfc" id="L76" title="All 14 branches covered.">        return hasStartedReadingBody == request.hasStartedReadingBody &amp;&amp; Objects.equals(headers, request.headers) &amp;&amp; Objects.equals(requestLine, request.requestLine) &amp;&amp; Objects.equals(body, request.body) &amp;&amp; Objects.equals(remoteRequester, request.remoteRequester) &amp;&amp; Objects.equals(socketWrapper, request.socketWrapper) &amp;&amp; Objects.equals(bodyProcessor, request.bodyProcessor);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L74" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="nc" id="L75">        Request request = (Request) o;</span>
+<span class="nc bnc" id="L76" title="All 14 branches missed.">        return hasStartedReadingBody == request.hasStartedReadingBody &amp;&amp; Objects.equals(headers, request.headers) &amp;&amp; Objects.equals(requestLine, request.requestLine) &amp;&amp; Objects.equals(body, request.body) &amp;&amp; Objects.equals(remoteRequester, request.remoteRequester) &amp;&amp; Objects.equals(socketWrapper, request.socketWrapper) &amp;&amp; Objects.equals(bodyProcessor, request.bodyProcessor);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L81">        return Objects.hash(headers, requestLine, body, remoteRequester, socketWrapper, bodyProcessor, hasStartedReadingBody);</span>
+<span class="nc" id="L81">        return Objects.hash(headers, requestLine, body, remoteRequester, socketWrapper, bodyProcessor, hasStartedReadingBody);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L86">        return &quot;Request{&quot; +</span>
+<span class="nc" id="L86">        return &quot;Request{&quot; +</span>
                 &quot;headers=&quot; + headers +
                 &quot;, requestLine=&quot; + requestLine +
                 &quot;, body=&quot; + body +
@@ -96,8 +96,8 @@ public final class Request implements IRequest {
     @Override
     public Iterable&lt;UrlEncodedKeyValue&gt; getUrlEncodedIterable() {
 <span class="fc" id="L98">        checkForExistingBody();</span>
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (!headers.contentType().contains(&quot;application/x-www-form-urlencoded&quot;)) {</span>
-<span class="fc" id="L100">            throw new WebServerException(&quot;This request was not sent with a content type of application/x-www-form-urlencoded.  The content type was: &quot; + headers.contentType());</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (!headers.contentType().contains(&quot;application/x-www-form-urlencoded&quot;)) {</span>
+<span class="nc" id="L100">            throw new WebServerException(&quot;This request was not sent with a content type of application/x-www-form-urlencoded.  The content type was: &quot; + headers.contentType());</span>
         }
 <span class="fc" id="L102">        return bodyProcessor.getUrlEncodedDataIterable(getSocketWrapper().getInputStream(), getHeaders().contentLength());</span>
     }
@@ -109,34 +109,34 @@ public final class Request implements IRequest {
      * and any further reading would be incorrect.
      */
     private void checkForExistingBody() {
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (body != null) {</span>
-<span class="fc" id="L113">            throw new WebServerException(&quot;Requesting this after getting the body with getBody() will result in incorrect behavior.  &quot; +</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (body != null) {</span>
+<span class="nc" id="L113">            throw new WebServerException(&quot;Requesting this after getting the body with getBody() will result in incorrect behavior.  &quot; +</span>
                     &quot;If you intend to work with the Request at this level, do not use getBody&quot;);
         }
-<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (hasStartedReadingBody) {</span>
-<span class="fc" id="L117">            throw new WebServerException(&quot;The InputStream has begun processing elsewhere.  Results are invalid.&quot;);</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (hasStartedReadingBody) {</span>
+<span class="nc" id="L117">            throw new WebServerException(&quot;The InputStream has begun processing elsewhere.  Results are invalid.&quot;);</span>
         }
 <span class="fc" id="L119">    }</span>
 
     @Override
     public Iterable&lt;StreamingMultipartPartition&gt; getMultipartIterable() {
-<span class="fc" id="L123">        checkForExistingBody();</span>
-<span class="fc" id="L124">        String boundaryKey = &quot;boundary=&quot;;</span>
-<span class="fc" id="L125">        String contentType = getHeaders().contentType();</span>
-<span class="fc" id="L126">        int indexOfBoundaryKey = contentType.indexOf(boundaryKey);</span>
-<span class="fc" id="L127">        String boundaryValue = &quot;&quot;;</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">        if (indexOfBoundaryKey &gt; 0) {</span>
+<span class="nc" id="L123">        checkForExistingBody();</span>
+<span class="nc" id="L124">        String boundaryKey = &quot;boundary=&quot;;</span>
+<span class="nc" id="L125">        String contentType = getHeaders().contentType();</span>
+<span class="nc" id="L126">        int indexOfBoundaryKey = contentType.indexOf(boundaryKey);</span>
+<span class="nc" id="L127">        String boundaryValue = &quot;&quot;;</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (indexOfBoundaryKey &gt; 0) {</span>
             // grab all the text after the key to obtain the boundary value
-<span class="fc" id="L130">            boundaryValue = contentType.substring(indexOfBoundaryKey + boundaryKey.length());</span>
+<span class="nc" id="L130">            boundaryValue = contentType.substring(indexOfBoundaryKey + boundaryKey.length());</span>
         } else {
-<span class="fc" id="L132">            throw new BadRequestException(&quot;Did not find a valid boundary value for the multipart input. Header was: &quot; + contentType);</span>
+<span class="nc" id="L132">            throw new BadRequestException(&quot;Did not find a valid boundary value for the multipart input. Header was: &quot; + contentType);</span>
         }
 
-<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (boundaryValue.isBlank()) {</span>
-<span class="fc" id="L136">            throw new BadRequestException(&quot;Boundary value was blank. Header was: &quot; + contentType);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (boundaryValue.isBlank()) {</span>
+<span class="nc" id="L136">            throw new BadRequestException(&quot;Boundary value was blank. Header was: &quot; + contentType);</span>
         }
 
-<span class="fc" id="L139">        return bodyProcessor.getMultiPartIterable(getSocketWrapper().getInputStream(), boundaryValue, getHeaders().contentLength());</span>
+<span class="nc" id="L139">        return bodyProcessor.getMultiPartIterable(getSocketWrapper().getInputStream(), boundaryValue, getHeaders().contentLength());</span>
     }
 
     @Override
