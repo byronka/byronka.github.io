@@ -97,8 +97,8 @@ public final class StreamingMultipartPartition extends InputStream {
     @Override
     public int read() {
         try {
-<span class="pc bpc" id="L100" title="1 of 2 branches missed.">            if (isFinished) {</span>
-<span class="nc" id="L101">                return -1;</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            if (isFinished) {</span>
+<span class="fc" id="L101">                return -1;</span>
             }
 <span class="fc bfc" id="L103" title="All 2 branches covered.">            if (!hasFilledBuffer) {</span>
 <span class="fc" id="L104">                fillBuffer();</span>
@@ -113,12 +113,12 @@ public final class StreamingMultipartPartition extends InputStream {
 <span class="fc" id="L113">            } else {</span>
 <span class="fc" id="L114">                int result = inputStream.read();</span>
 <span class="fc" id="L115">                countBytesRead.increment();</span>
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">                if (countBytesRead.getCount() &gt;= contentLength) {</span>
-<span class="nc" id="L117">                    isFinished = true;</span>
-<span class="nc" id="L118">                    return -1;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                if (countBytesRead.getCount() &gt;= contentLength) {</span>
+<span class="fc" id="L117">                    isFinished = true;</span>
+<span class="fc" id="L118">                    return -1;</span>
                 }
-<span class="pc bpc" id="L120" title="1 of 2 branches missed.">                if (result == -1) {</span>
-<span class="nc" id="L121">                    throw new WebServerException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                if (result == -1) {</span>
+<span class="fc" id="L121">                    throw new WebServerException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
                 }
 <span class="fc" id="L123">                byte byteValue = (byte) result;</span>
 <span class="fc" id="L124">                boolean isAtEndOfPartition = updateRecentBytesBufferAndCheck(byteValue);</span>
@@ -131,8 +131,8 @@ public final class StreamingMultipartPartition extends InputStream {
                 }
 
             }
-<span class="nc" id="L134">        } catch (Exception e) {</span>
-<span class="nc" id="L135">            throw new WebServerException(&quot;Error in StreamingMultipartPartition.read&quot;, e);</span>
+<span class="fc" id="L134">        } catch (Exception e) {</span>
+<span class="fc" id="L135">            throw new WebServerException(&quot;Error in StreamingMultipartPartition.read&quot;, e);</span>
 <span class="fc" id="L136">        }</span>
 <span class="fc" id="L137">        return ((int)recentBytesBuffer.atNextIndex()) &amp; 0xff;</span>
     }
@@ -142,12 +142,12 @@ public final class StreamingMultipartPartition extends InputStream {
             int result;
             try {
 <span class="fc" id="L144">                result = inputStream.read();</span>
-<span class="nc" id="L145">            } catch (IOException e) {</span>
-<span class="nc" id="L146">                throw new WebServerException(&quot;Error in StreamingMultipartPartition.fillBuffer&quot;, e);</span>
+<span class="fc" id="L145">            } catch (IOException e) {</span>
+<span class="fc" id="L146">                throw new WebServerException(&quot;Error in StreamingMultipartPartition.fillBuffer&quot;, e);</span>
 <span class="fc" id="L147">            }</span>
 <span class="fc" id="L148">            countBytesRead.increment();</span>
-<span class="pc bpc" id="L149" title="1 of 2 branches missed.">            if (result == -1) {</span>
-<span class="nc" id="L150">                throw new WebServerException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L150">                throw new WebServerException(&quot;Error: The inputstream has closed unexpectedly while reading&quot;);</span>
             }
 <span class="fc" id="L152">            byte byteValue = (byte) result;</span>
 <span class="fc" id="L153">            updateRecentBytesBufferAndCheck(byteValue);</span>
@@ -184,11 +184,11 @@ public final class StreamingMultipartPartition extends InputStream {
     @Override
     public void close() {
         while (true) {
-<span class="nc" id="L187">            int result = read();</span>
-<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (result == -1) {</span>
-<span class="nc" id="L189">                return;</span>
+<span class="fc" id="L187">            int result = read();</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">            if (result == -1) {</span>
+<span class="fc" id="L189">                return;</span>
             }
-<span class="nc" id="L191">        }</span>
+<span class="fc" id="L191">        }</span>
     }
 
 }

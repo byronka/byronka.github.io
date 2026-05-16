@@ -170,9 +170,9 @@ public final class FunctionalTesting {
 <span class="fc" id="L170">            try (ISocketWrapper client = new SocketWrapper(socket, null, logger, constants.socketTimeoutMillis, constants.hostName)) {</span>
 <span class="fc" id="L171">                return innerClientSend(client, method, path, payload, extraHeaders);</span>
             }
-<span class="nc" id="L173">        } catch (Exception e) {</span>
-<span class="nc" id="L174">            logger.logDebug(() -&gt; &quot;Error during client send: &quot; + StacktraceUtils.stackTraceToString(e));</span>
-<span class="nc" id="L175">            return TestResponse.EMPTY;</span>
+<span class="fc" id="L173">        } catch (Exception e) {</span>
+<span class="fc" id="L174">            logger.logDebug(() -&gt; &quot;Error during client send: &quot; + StacktraceUtils.stackTraceToString(e));</span>
+<span class="fc" id="L175">            return TestResponse.EMPTY;</span>
         }
     }
 
@@ -222,16 +222,16 @@ public final class FunctionalTesting {
      * return a {@link StatusLine} with null-object values
      */
     public static StatusLine extractStatusLine(String value) {
-<span class="pc bpc" id="L225" title="1 of 4 branches missed.">        if (value == null || value.isBlank()) {</span>
+<span class="fc bfc" id="L225" title="All 4 branches covered.">        if (value == null || value.isBlank()) {</span>
 <span class="fc" id="L226">            return StatusLine.EMPTY;</span>
         }
 <span class="fc" id="L228">        Matcher mr = statusLineRegex.matcher(value);</span>
 <span class="fc" id="L229">        mustBeTrue(mr.matches(), String.format(&quot;%s must match the statusLinePattern: %s&quot;, value, statusLinePattern));</span>
 <span class="fc" id="L230">        String version = mr.group(1);</span>
-<span class="pc bpc" id="L231" title="2 of 3 branches missed.">        HttpVersion httpVersion = switch (version) {</span>
+<span class="fc bfc" id="L231" title="All 3 branches covered.">        HttpVersion httpVersion = switch (version) {</span>
 <span class="fc" id="L232">            case &quot;1.1&quot; -&gt; HttpVersion.ONE_DOT_ONE;</span>
-<span class="nc" id="L233">            case &quot;1.0&quot; -&gt; HttpVersion.ONE_DOT_ZERO;</span>
-<span class="pc" id="L234">            default -&gt; throw new WebServerException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
+<span class="fc" id="L233">            case &quot;1.0&quot; -&gt; HttpVersion.ONE_DOT_ZERO;</span>
+<span class="fc" id="L234">            default -&gt; throw new WebServerException(String.format(&quot;HTTP version was not an acceptable value. Given: %s&quot;, version));</span>
         };
 <span class="fc" id="L236">        StatusLine.StatusCode status = StatusLine.StatusCode.findByCode(Integer.parseInt(mr.group(2)));</span>
 

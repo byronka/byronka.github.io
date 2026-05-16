@@ -57,7 +57,7 @@ public final class Headers {
 <span class="fc" id="L57">            var indexOfFirstColon = h.indexOf(&quot;:&quot;);</span>
 
             // if the header is malformed, make the user know
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">            if (indexOfFirstColon &lt;= 0) throw new BadRequestException(&quot;Invalid formatting on header in request, was expecting to find a colon separating key from value: &quot; + h);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (indexOfFirstColon &lt;= 0) throw new BadRequestException(&quot;Invalid formatting on header in request, was expecting to find a colon separating key from value: &quot; + h);</span>
 
 <span class="fc" id="L62">            String key = h.substring(0, indexOfFirstColon).toLowerCase(Locale.ROOT);</span>
 <span class="fc" id="L63">            String value = h.substring(indexOfFirstColon+1).trim();</span>
@@ -82,9 +82,9 @@ public final class Headers {
     public String contentType() {
         // find the header that starts with content-type
 <span class="fc" id="L84">        List&lt;String&gt; cts = Objects.requireNonNullElse(headersMap.get(&quot;content-type&quot;), new ArrayList&lt;&gt;());</span>
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (cts.size() &gt; 1) {</span>
-<span class="nc" id="L86">            cts.sort(Comparator.naturalOrder()); // sorting so our error message is consistent</span>
-<span class="nc" id="L87">            throw new BadRequestException(&quot;The number of content-type headers must be exactly zero or one.  Received: &quot; + cts);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (cts.size() &gt; 1) {</span>
+<span class="fc" id="L86">            cts.sort(Comparator.naturalOrder()); // sorting so our error message is consistent</span>
+<span class="fc" id="L87">            throw new BadRequestException(&quot;The number of content-type headers must be exactly zero or one.  Received: &quot; + cts);</span>
         }
 <span class="fc bfc" id="L89" title="All 2 branches covered.">        if (!cts.isEmpty()) {</span>
 <span class="fc" id="L90">            return cts.getFirst();</span>
@@ -106,16 +106,16 @@ public final class Headers {
 <span class="fc" id="L106">        List&lt;String&gt; cl = Objects.requireNonNullElse(headersMap.get(&quot;content-length&quot;), List.of());</span>
 <span class="fc bfc" id="L107" title="All 2 branches covered.">        if (cl.isEmpty()) {</span>
 <span class="fc" id="L108">            contentLength = -1;</span>
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        } else if (cl.size() &gt; 1) {</span>
-<span class="nc" id="L110">            throw new BadRequestException(&quot;Received multiple content-length headers, which does not make sense.  Received: &quot; + cl);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        } else if (cl.size() &gt; 1) {</span>
+<span class="fc" id="L110">            throw new BadRequestException(&quot;Received multiple content-length headers, which does not make sense.  Received: &quot; + cl);</span>
         } else {
             try {
 <span class="fc" id="L113">                contentLength = Integer.parseInt(cl.getFirst());</span>
-<span class="nc" id="L114">            } catch (NumberFormatException ex) {</span>
-<span class="nc" id="L115">                throw new BadRequestException(&quot;Received a non-numeric content length value. Received: &quot; + cl.getFirst(), ex);</span>
+<span class="fc" id="L114">            } catch (NumberFormatException ex) {</span>
+<span class="fc" id="L115">                throw new BadRequestException(&quot;Received a non-numeric content length value. Received: &quot; + cl.getFirst(), ex);</span>
 <span class="fc" id="L116">            }</span>
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">            if (contentLength &lt; 0) {</span>
-<span class="nc" id="L118">                throw new BadRequestException(&quot;Content length cannot be negative.  Received: &quot; + contentLength);</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (contentLength &lt; 0) {</span>
+<span class="fc" id="L118">                throw new BadRequestException(&quot;Content length cannot be negative.  Received: &quot; + contentLength);</span>
             }
         }
 <span class="fc" id="L121">        return contentLength;</span>
@@ -126,9 +126,9 @@ public final class Headers {
      * have a Connection: Keep-Alive
      */
     public boolean hasKeepAlive() {
-<span class="nc" id="L129">        List&lt;String&gt; connectionHeader = headersMap.get(&quot;connection&quot;);</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (connectionHeader == null) return false;</span>
-<span class="nc" id="L131">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;keep-alive&quot;));</span>
+<span class="fc" id="L129">        List&lt;String&gt; connectionHeader = headersMap.get(&quot;connection&quot;);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (connectionHeader == null) return false;</span>
+<span class="fc" id="L131">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;keep-alive&quot;));</span>
     }
 
     /**
@@ -137,8 +137,8 @@ public final class Headers {
      */
     public boolean hasConnectionClose() {
 <span class="fc" id="L139">        List&lt;String&gt; connectionHeader = headersMap.get(&quot;connection&quot;);</span>
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (connectionHeader == null) return false;</span>
-<span class="nc" id="L141">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;close&quot;));</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (connectionHeader == null) return false;</span>
+<span class="fc" id="L141">        return connectionHeader.stream().anyMatch(x -&gt; x.toLowerCase(Locale.ROOT).contains(&quot;close&quot;));</span>
     }
 
     /**
@@ -149,8 +149,8 @@ public final class Headers {
         // 10 is just an arbitrary number, seems about right.
 <span class="fc" id="L150">        List&lt;String&gt; headers = new ArrayList&lt;&gt;(10);</span>
 <span class="fc" id="L151">        for (int i = 0;; i++) {</span>
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (i &gt;=MAX_HEADERS_COUNT) {</span>
-<span class="nc" id="L153">                throw new ForbiddenUseException(&quot;User tried sending too many headers.  max: &quot; + MAX_HEADERS_COUNT);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if (i &gt;=MAX_HEADERS_COUNT) {</span>
+<span class="fc" id="L153">                throw new ForbiddenUseException(&quot;User tried sending too many headers.  max: &quot; + MAX_HEADERS_COUNT);</span>
             }
             String value;
 <span class="fc" id="L156">            value = inputStreamUtils.readLine(is);</span>
@@ -169,7 +169,7 @@ public final class Headers {
      * Returns true if there is no header data in this instance.
      */
     public boolean isEmpty() {
-<span class="nc" id="L172">        return this.headersMap.isEmpty();</span>
+<span class="fc" id="L172">        return this.headersMap.isEmpty();</span>
     }
 
     /**
