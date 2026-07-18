@@ -81,7 +81,7 @@ final class DatabaseAppender {
     /**
      * This is the count of bytes that have been appended
      */
-    private long appendBytes;
+    private int appendBytes;
 
 <span class="fc" id="L86">    DatabaseAppender(Path persistenceDirectory, Context context, IFileUtils fileUtils) throws IOException {</span>
 <span class="fc" id="L87">        this.fileUtils = fileUtils;</span>
@@ -113,7 +113,7 @@ final class DatabaseAppender {
 <span class="fc" id="L113">            appendCount = lines.size();</span>
 <span class="fc" id="L114">        } else {</span>
             // reset the count to zero, we're starting a new file.
-<span class="fc" id="L116">            logger.logDebug(() -&gt; &quot;Creating a new database append file. Previous file: %,d lines, %.2f megabytes&quot;.formatted(appendCount, (appendBytes / 1_048_576.0)));</span>
+<span class="fc" id="L116">            logger.logDebug(() -&gt; &quot;Creating a new database append file. Previous file: %,d lines, %.2f megabytes&quot;.formatted(appendCount, ((double) appendBytes / 1_048_576.0)));</span>
 <span class="fc" id="L117">            appendCount = 0;</span>
 <span class="fc" id="L118">            appendBytes = 0;</span>
         }
@@ -166,7 +166,7 @@ final class DatabaseAppender {
                 // this code only runs when there is data to add, so no need to take a
                 // lot of waiting time.  But, if the data is coming fast and furious,
                 // at least a small wait will allow greater efficiency.
-<span class="fc" id="L169">                MyThread.sleep(50);</span>
+<span class="fc" id="L169">                MyThread.sleep(50L);</span>
             }
 <span class="fc" id="L171">            flushLoopRunning = false;</span>
 <span class="fc" id="L172">        };</span>

@@ -85,7 +85,7 @@ public final class Response implements IResponse {
      *                   from being compressed before sending (presuming sufficiently large
      *                   to make it worth the time for compression)
      */
-    Response(StatusLine.StatusCode statusCode, Headers extraHeaders, byte[] body,
+    public Response(StatusLine.StatusCode statusCode, Headers extraHeaders, byte[] body,
 <span class="fc" id="L89">             ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator, long bodyLength, boolean isBodyText) {</span>
 <span class="fc bfc" id="L90" title="All 2 branches covered.">        if (statusCode == null) throw new IllegalArgumentException(&quot;Status code must not be null&quot;);</span>
 <span class="fc bfc" id="L91" title="All 2 branches covered.">        if (extraHeaders == null) throw new IllegalArgumentException(&quot;Extra headers must not be null (may use Headers.EMPTY)&quot;);</span>
@@ -106,7 +106,7 @@ public final class Response implements IResponse {
      *                        ability to send bytes on the socket.
      */
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Headers extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator) {
-<span class="fc" id="L109">        return new Response(statusCode, extraHeaders, null, outputGenerator, 0, false);</span>
+<span class="fc" id="L109">        return new Response(statusCode, extraHeaders, null, outputGenerator, 0L, false);</span>
     }
 
     /**
@@ -227,7 +227,7 @@ public final class Response implements IResponse {
      */
     public static IResponse buildLargeFileResponse(Headers extraHeaders, String filePath, Headers requestHeaders, IFileUtils fileUtils) {
 <span class="fc" id="L229">        Headers adjustedHeaders = extraHeaders;</span>
-<span class="fc" id="L230">        long fileSize = 0;</span>
+        long fileSize;
         try {
 <span class="fc" id="L232">            fileSize = fileUtils.size(Path.of(filePath));</span>
 <span class="fc" id="L233">        } catch (IOException e) {</span>
@@ -271,7 +271,7 @@ public final class Response implements IResponse {
      *                        allows the developer to use directories anywhere in the system.
      */
     public static IResponse buildLargeFileResponse(Headers extraHeaders, String filePath, String parentDirectory, Headers requestHeaders, IFileUtils fileUtils) {
-<span class="fc" id="L274">        Path path = null;</span>
+        Path path;
         try {
 <span class="fc" id="L276">            path = fileUtils.safeResolve(parentDirectory, filePath);</span>
 <span class="fc" id="L277">        } catch (IOException e) {</span>
@@ -402,7 +402,7 @@ public final class Response implements IResponse {
 <span class="fc bfc" id="L402" title="All 2 branches covered.">                if (countBytesRead &lt;= 0) {</span>
 <span class="fc" id="L403">                    break;</span>
                 } else {
-<span class="fc bfc" id="L405" title="All 2 branches covered.">                    if (countBytesLeftToSend &lt; countBytesRead) {</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">                    if (countBytesLeftToSend &lt; (long) countBytesRead) {</span>
 <span class="fc" id="L406">                        sw.send(buff.array(), 0, (int)countBytesLeftToSend);</span>
 <span class="fc" id="L407">                        break;</span>
                     } else {
@@ -410,7 +410,7 @@ public final class Response implements IResponse {
                     }
 <span class="fc" id="L411">                    buff.clear();</span>
                 }
-<span class="fc" id="L413">                countBytesLeftToSend -= countBytesRead;</span>
+<span class="fc" id="L413">                countBytesLeftToSend = countBytesLeftToSend - countBytesRead;</span>
 <span class="fc" id="L414">            }</span>
         } finally {
 <span class="fc" id="L416">            fileChannel.close();</span>
@@ -422,21 +422,21 @@ public final class Response implements IResponse {
 <span class="fc" id="L422">        return body;</span>
     }
 
-
+    @Override
+    public ThrowingConsumer&lt;ISocketWrapper&gt; getOutputGenerator() {
+<span class="fc" id="L427">        return outputGenerator;</span>
+    }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L429" title="All 2 branches covered.">        if (this == o) return true;</span>
-<span class="fc bfc" id="L430" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L431">        Response response = (Response) o;</span>
-<span class="fc bfc" id="L432" title="All 10 branches covered.">        return bodyLength == response.bodyLength &amp;&amp; isBodyText == response.isBodyText &amp;&amp; statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Arrays.equals(body, response.body);</span>
+<span class="fc bfc" id="L432" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L433">        Response response = (Response) o;</span>
+<span class="fc bfc" id="L434" title="All 10 branches covered.">        return bodyLength == response.bodyLength &amp;&amp; isBodyText == response.isBodyText &amp;&amp; statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Objects.deepEquals(body, response.body);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L437">        int result = Objects.hash(statusCode, extraHeaders, bodyLength, isBodyText);</span>
-<span class="fc" id="L438">        result = 31 * result + Arrays.hashCode(body);</span>
-<span class="fc" id="L439">        return result;</span>
+<span class="fc" id="L439">        return Objects.hash(statusCode, extraHeaders, Arrays.hashCode(body), bodyLength, isBodyText);</span>
     }
 
     @Override

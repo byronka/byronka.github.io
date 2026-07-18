@@ -49,8 +49,8 @@ public final class FileReader implements IFileReader {
 <span class="fc" id="L49">             ByteArrayOutputStream out = new ByteArrayOutputStream()) {</span>
 <span class="fc" id="L50">            FileChannel channel = reader.getChannel();</span>
 <span class="fc" id="L51">            int bufferSize = 8 * 1024;</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">            if (bufferSize &gt; channel.size()) {</span>
-<span class="fc" id="L53">                bufferSize = (int) channel.size();</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            if ((long) bufferSize &gt; channel.size()) {</span>
+<span class="fc" id="L53">                bufferSize = Math.toIntExact(channel.size());</span>
             }
 <span class="fc" id="L55">            ByteBuffer buff = ByteBuffer.allocate(bufferSize);</span>
 

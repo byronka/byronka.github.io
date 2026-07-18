@@ -42,8 +42,8 @@
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>      <strong class="jxr_keyword">public</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> extractData(InputStream is, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> h) {
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> contentType = h.contentType();
 <a class="jxr_linenumber" name="L36" href="#L36">36</a>  
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>          <strong class="jxr_keyword">if</strong> (h.contentLength() &gt;= 0) {
-<a class="jxr_linenumber" name="L38" href="#L38">38</a>              <strong class="jxr_keyword">if</strong> (h.contentLength() &gt;= constants.maxReadSizeBytes) {
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>          <strong class="jxr_keyword">if</strong> (h.contentLength() &gt;= 0L) {
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>              <strong class="jxr_keyword">if</strong> (h.contentLength() &gt;= (<strong class="jxr_keyword">long</strong>) constants.maxReadSizeBytes) {
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="ForbiddenUseException" href="../../../../com/renomad/minum/security/ForbiddenUseException.html#ForbiddenUseException">ForbiddenUseException</a>(<span class="jxr_string">"It is disallowed to process a body with a length more than "</span> + constants.maxReadSizeBytes + <span class="jxr_string">" bytes"</span>);
 <a class="jxr_linenumber" name="L40" href="#L40">40</a>              }
 <a class="jxr_linenumber" name="L41" href="#L41">41</a>          } <strong class="jxr_keyword">else</strong> {
@@ -68,9 +68,9 @@
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>  <em class="jxr_javadoccomment">     *                    cases where this makes sense - if the user is sending us plain text,</em>
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment">     *                    html, json, or css, we want to simply accept the data and not try to parse it.</em>
 <a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>      <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> extractBodyFromInputStream(<strong class="jxr_keyword">int</strong> contentLength, String contentType, InputStream is) {
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>      <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> extractBodyFromInputStream(<strong class="jxr_keyword">long</strong> contentLength, String contentType, InputStream is) {
 <a class="jxr_linenumber" name="L64" href="#L64">64</a>          <em class="jxr_comment">// if the body is zero bytes long, just return</em>
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>          <strong class="jxr_keyword">if</strong> (contentLength == 0) {
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>          <strong class="jxr_keyword">if</strong> (contentLength == 0L) {
 <a class="jxr_linenumber" name="L66" href="#L66">66</a>              logger.logDebug(() -&gt; <span class="jxr_string">"the length of the body was 0, returning an empty Body"</span>);
 <a class="jxr_linenumber" name="L67" href="#L67">67</a>              <strong class="jxr_keyword">return</strong> Body.EMPTY;
 <a class="jxr_linenumber" name="L68" href="#L68">68</a>          }
@@ -84,7 +84,7 @@
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>              logger.logDebug(() -&gt; <span class="jxr_string">"did not recognize a key-value pattern content-type, returning the raw bytes for the body.  Content-Type was: "</span> + contentType);
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>              <em class="jxr_comment">// we can return the whole byte array here because we never read from it</em>
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>              <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L79" href="#L79">79</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), inputStreamUtils.read(contentLength, is), List.of(), BodyType.UNRECOGNIZED);
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>                  <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a>(Map.of(), inputStreamUtils.read((<strong class="jxr_keyword">int</strong>) contentLength, is), List.of(), BodyType.UNRECOGNIZED);
 <a class="jxr_linenumber" name="L80" href="#L80">80</a>              } <strong class="jxr_keyword">catch</strong> (IOException e) {
 <a class="jxr_linenumber" name="L81" href="#L81">81</a>                  <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="WebServerException" href="../../../../com/renomad/minum/web/WebServerException.html#WebServerException">WebServerException</a>(<span class="jxr_string">"Error in BodyProcessor.extractBodyFromInputStream"</span>, e);
 <a class="jxr_linenumber" name="L82" href="#L82">82</a>              }
@@ -98,7 +98,7 @@
 <a class="jxr_linenumber" name="L90" href="#L90">90</a>  <em class="jxr_javadoccomment">     *                      multipart/form data protocol for further information.</em>
 <a class="jxr_linenumber" name="L91" href="#L91">91</a>  <em class="jxr_javadoccomment">     * @param inputStream A stream of bytes coming from the socket.</em>
 <a class="jxr_linenumber" name="L92" href="#L92">92</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L93" href="#L93">93</a>      <strong class="jxr_keyword">private</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> parseMultipartForm(<strong class="jxr_keyword">int</strong> contentLength, String boundaryValue, InputStream inputStream) {
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>      <strong class="jxr_keyword">private</strong> <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> parseMultipartForm(<strong class="jxr_keyword">long</strong> contentLength, String boundaryValue, InputStream inputStream) {
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>  
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>          <strong class="jxr_keyword">if</strong> (boundaryValue.isBlank()) {
 <a class="jxr_linenumber" name="L96" href="#L96">96</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="BadRequestException" href="../../../../com/renomad/minum/web/BadRequestException.html#BadRequestException">BadRequestException</a>(<span class="jxr_string">"The boundary value was blank for the multipart input"</span>);
@@ -160,8 +160,8 @@
 <a class="jxr_linenumber" name="L152" href="#L152">152</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
 <a class="jxr_linenumber" name="L153" href="#L153">153</a> <em class="jxr_javadoccomment">     * for example, {@code valuea=3&amp;valueb=this+is+something}</em>
 <a class="jxr_linenumber" name="L154" href="#L154">154</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L155" href="#L155">155</a>     <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> parseUrlEncodedForm(InputStream is, <strong class="jxr_keyword">int</strong> contentLength) {
-<a class="jxr_linenumber" name="L156" href="#L156">156</a>         <strong class="jxr_keyword">if</strong> (contentLength == 0) {
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>     <a name="Body" href="../../../../com/renomad/minum/web/Body.html#Body">Body</a> parseUrlEncodedForm(InputStream is, <strong class="jxr_keyword">long</strong> contentLength) {
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>         <strong class="jxr_keyword">if</strong> (contentLength == 0L) {
 <a class="jxr_linenumber" name="L157" href="#L157">157</a>             <strong class="jxr_keyword">return</strong> Body.EMPTY;
 <a class="jxr_linenumber" name="L158" href="#L158">158</a>         }
 <a class="jxr_linenumber" name="L159" href="#L159">159</a>         <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> postedPairs = <strong class="jxr_keyword">new</strong> HashMap&lt;String, byte[]&gt;();
@@ -231,7 +231,7 @@
 <a class="jxr_linenumber" name="L223" href="#L223">223</a>                 String key = <span class="jxr_string">""</span>;
 <a class="jxr_linenumber" name="L224" href="#L224">224</a>                 ByteArrayOutputStream byteArrayOutputStream = <strong class="jxr_keyword">new</strong> ByteArrayOutputStream();
 <a class="jxr_linenumber" name="L225" href="#L225">225</a>                 <strong class="jxr_keyword">while</strong>(<strong class="jxr_keyword">true</strong>) {
-<a class="jxr_linenumber" name="L226" href="#L226">226</a>                     <strong class="jxr_keyword">int</strong> result = 0;
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>                     <strong class="jxr_keyword">int</strong> result;
 <a class="jxr_linenumber" name="L227" href="#L227">227</a>                     <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L228" href="#L228">228</a>                         result = inputStream.read();
 <a class="jxr_linenumber" name="L229" href="#L229">229</a>                         countBytesRead.increment();
@@ -269,7 +269,7 @@
 <a class="jxr_linenumber" name="L261" href="#L261">261</a> 
 <a class="jxr_linenumber" name="L262" href="#L262">262</a> 
 <a class="jxr_linenumber" name="L263" href="#L263">263</a>     @Override
-<a class="jxr_linenumber" name="L264" href="#L264">264</a>     <strong class="jxr_keyword">public</strong> Iterable&lt;StreamingMultipartPartition&gt; getMultiPartIterable(InputStream inputStream, String boundaryValue, <strong class="jxr_keyword">int</strong> contentLength) {
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>     <strong class="jxr_keyword">public</strong> Iterable&lt;StreamingMultipartPartition&gt; getMultiPartIterable(InputStream inputStream, String boundaryValue, <strong class="jxr_keyword">long</strong> contentLength) {
 <a class="jxr_linenumber" name="L265" href="#L265">265</a>         <strong class="jxr_keyword">return</strong> () -&gt; <strong class="jxr_keyword">new</strong> Iterator&lt;&gt;() {
 <a class="jxr_linenumber" name="L266" href="#L266">266</a> 
 <a class="jxr_linenumber" name="L267" href="#L267">267</a>             <strong class="jxr_keyword">final</strong> <a name="CountBytesRead" href="../../../../com/renomad/minum/web/CountBytesRead.html#CountBytesRead">CountBytesRead</a> countBytesRead = <strong class="jxr_keyword">new</strong> <a name="CountBytesRead" href="../../../../com/renomad/minum/web/CountBytesRead.html#CountBytesRead">CountBytesRead</a>();
@@ -279,7 +279,7 @@
 <a class="jxr_linenumber" name="L271" href="#L271">271</a>             <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> hasNext() {
 <a class="jxr_linenumber" name="L272" href="#L272">272</a>                 <em class="jxr_comment">// determining if we have more to read is a little tricky because we have a buffer</em>
 <a class="jxr_linenumber" name="L273" href="#L273">273</a>                 <em class="jxr_comment">// filled by reading ahead, looking for the boundary value</em>
-<a class="jxr_linenumber" name="L274" href="#L274">274</a>                 <strong class="jxr_keyword">return</strong> (contentLength - countBytesRead.getCount()) &gt; boundaryValue.length();
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>                 <strong class="jxr_keyword">return</strong> (contentLength - countBytesRead.getCount()) &gt; (<strong class="jxr_keyword">long</strong>) boundaryValue.length();
 <a class="jxr_linenumber" name="L275" href="#L275">275</a>             }
 <a class="jxr_linenumber" name="L276" href="#L276">276</a> 
 <a class="jxr_linenumber" name="L277" href="#L277">277</a>             @Override
@@ -303,7 +303,7 @@
 <a class="jxr_linenumber" name="L295" href="#L295">295</a>                             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="BadRequestException" href="../../../../com/renomad/minum/web/BadRequestException.html#BadRequestException">BadRequestException</a>(<span class="jxr_string">"Error: First line must contain the expected boundary value. Expected to find: "</span> + boundaryValue + <span class="jxr_string">" in: "</span> + s);
 <a class="jxr_linenumber" name="L296" href="#L296">296</a>                         }
 <a class="jxr_linenumber" name="L297" href="#L297">297</a>                     }
-<a class="jxr_linenumber" name="L298" href="#L298">298</a>                     List&lt;String&gt; allHeaders = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>                     List&lt;String&gt; allHeaders;
 <a class="jxr_linenumber" name="L299" href="#L299">299</a>                     allHeaders = Headers.getAllHeaders(inputStream, inputStreamUtils);
 <a class="jxr_linenumber" name="L300" href="#L300">300</a>                     <strong class="jxr_keyword">int</strong> lengthOfHeaders = allHeaders.stream().map(String::length).reduce(0, Integer::sum);
 <a class="jxr_linenumber" name="L301" href="#L301">301</a>                     <em class="jxr_comment">// each line has a CR + LF (that's two bytes) and the headers end with a second pair of CR+LF.</em>
@@ -321,7 +321,7 @@
 <a class="jxr_linenumber" name="L313" href="#L313">313</a>                     Matcher nameMatcher = multiformNameRegex.matcher(contentDisposition);
 <a class="jxr_linenumber" name="L314" href="#L314">314</a>                     Matcher filenameMatcher = multiformFilenameRegex.matcher(contentDisposition);
 <a class="jxr_linenumber" name="L315" href="#L315">315</a> 
-<a class="jxr_linenumber" name="L316" href="#L316">316</a>                     String name = <span class="jxr_string">""</span>;
+<a class="jxr_linenumber" name="L316" href="#L316">316</a>                     String name;
 <a class="jxr_linenumber" name="L317" href="#L317">317</a>                     <strong class="jxr_keyword">if</strong> (nameMatcher.find()) {
 <a class="jxr_linenumber" name="L318" href="#L318">318</a>                         name = nameMatcher.group(<span class="jxr_string">"namevalue"</span>);
 <a class="jxr_linenumber" name="L319" href="#L319">319</a>                     } <strong class="jxr_keyword">else</strong> {

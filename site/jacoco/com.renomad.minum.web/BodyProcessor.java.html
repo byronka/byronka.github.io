@@ -34,8 +34,8 @@ final class BodyProcessor implements IBodyProcessor {
     public Body extractData(InputStream is, Headers h) {
 <span class="fc" id="L35">        final var contentType = h.contentType();</span>
 
-<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (h.contentLength() &gt;= 0) {</span>
-<span class="fc bfc" id="L38" title="All 2 branches covered.">            if (h.contentLength() &gt;= constants.maxReadSizeBytes) {</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (h.contentLength() &gt;= 0L) {</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">            if (h.contentLength() &gt;= (long) constants.maxReadSizeBytes) {</span>
 <span class="fc" id="L39">                throw new ForbiddenUseException(&quot;It is disallowed to process a body with a length more than &quot; + constants.maxReadSizeBytes + &quot; bytes&quot;);</span>
             }
         } else {
@@ -60,9 +60,9 @@ final class BodyProcessor implements IBodyProcessor {
      *                    cases where this makes sense - if the user is sending us plain text,
      *                    html, json, or css, we want to simply accept the data and not try to parse it.
      */
-    Body extractBodyFromInputStream(int contentLength, String contentType, InputStream is) {
+    Body extractBodyFromInputStream(long contentLength, String contentType, InputStream is) {
         // if the body is zero bytes long, just return
-<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (contentLength == 0) {</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (contentLength == 0L) {</span>
 <span class="fc" id="L66">            logger.logDebug(() -&gt; &quot;the length of the body was 0, returning an empty Body&quot;);</span>
 <span class="fc" id="L67">            return Body.EMPTY;</span>
         }
@@ -76,7 +76,7 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L76">            logger.logDebug(() -&gt; &quot;did not recognize a key-value pattern content-type, returning the raw bytes for the body.  Content-Type was: &quot; + contentType);</span>
             // we can return the whole byte array here because we never read from it
             try {
-<span class="fc" id="L79">                return new Body(Map.of(), inputStreamUtils.read(contentLength, is), List.of(), BodyType.UNRECOGNIZED);</span>
+<span class="fc" id="L79">                return new Body(Map.of(), inputStreamUtils.read((int) contentLength, is), List.of(), BodyType.UNRECOGNIZED);</span>
 <span class="fc" id="L80">            } catch (IOException e) {</span>
 <span class="fc" id="L81">                throw new WebServerException(&quot;Error in BodyProcessor.extractBodyFromInputStream&quot;, e);</span>
             }
@@ -90,7 +90,7 @@ final class BodyProcessor implements IBodyProcessor {
      *                      multipart/form data protocol for further information.
      * @param inputStream A stream of bytes coming from the socket.
      */
-    private Body parseMultipartForm(int contentLength, String boundaryValue, InputStream inputStream) {
+    private Body parseMultipartForm(long contentLength, String boundaryValue, InputStream inputStream) {
 
 <span class="fc bfc" id="L95" title="All 2 branches covered.">        if (boundaryValue.isBlank()) {</span>
 <span class="fc" id="L96">            throw new BadRequestException(&quot;The boundary value was blank for the multipart input&quot;);</span>
@@ -152,8 +152,8 @@ final class BodyProcessor implements IBodyProcessor {
      * &lt;p&gt;
      * for example, {@code valuea=3&amp;valueb=this+is+something}
      */
-    Body parseUrlEncodedForm(InputStream is, int contentLength) {
-<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (contentLength == 0) {</span>
+    Body parseUrlEncodedForm(InputStream is, long contentLength) {
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (contentLength == 0L) {</span>
 <span class="fc" id="L157">            return Body.EMPTY;</span>
         }
 <span class="fc" id="L159">        final var postedPairs = new HashMap&lt;String, byte[]&gt;();</span>
@@ -223,7 +223,7 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L223">                String key = &quot;&quot;;</span>
 <span class="fc" id="L224">                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
                 while(true) {
-<span class="fc" id="L226">                    int result = 0;</span>
+                    int result;
                     try {
 <span class="fc" id="L228">                        result = inputStream.read();</span>
 <span class="fc" id="L229">                        countBytesRead.increment();</span>
@@ -261,7 +261,7 @@ final class BodyProcessor implements IBodyProcessor {
 
 
     @Override
-    public Iterable&lt;StreamingMultipartPartition&gt; getMultiPartIterable(InputStream inputStream, String boundaryValue, int contentLength) {
+    public Iterable&lt;StreamingMultipartPartition&gt; getMultiPartIterable(InputStream inputStream, String boundaryValue, long contentLength) {
 <span class="fc" id="L265">        return () -&gt; new Iterator&lt;&gt;() {</span>
 
 <span class="fc" id="L267">            final CountBytesRead countBytesRead = new CountBytesRead();</span>
@@ -271,7 +271,7 @@ final class BodyProcessor implements IBodyProcessor {
             public boolean hasNext() {
                 // determining if we have more to read is a little tricky because we have a buffer
                 // filled by reading ahead, looking for the boundary value
-<span class="fc bfc" id="L274" title="All 2 branches covered.">                return (contentLength - countBytesRead.getCount()) &gt; boundaryValue.length();</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">                return (contentLength - countBytesRead.getCount()) &gt; (long) boundaryValue.length();</span>
             }
 
             @Override
@@ -295,7 +295,7 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L295">                            throw new BadRequestException(&quot;Error: First line must contain the expected boundary value. Expected to find: &quot; + boundaryValue + &quot; in: &quot; + s);</span>
                         }
                     }
-<span class="fc" id="L298">                    List&lt;String&gt; allHeaders = null;</span>
+                    List&lt;String&gt; allHeaders;
 <span class="fc" id="L299">                    allHeaders = Headers.getAllHeaders(inputStream, inputStreamUtils);</span>
 <span class="fc" id="L300">                    int lengthOfHeaders = allHeaders.stream().map(String::length).reduce(0, Integer::sum);</span>
                     // each line has a CR + LF (that's two bytes) and the headers end with a second pair of CR+LF.
@@ -313,7 +313,7 @@ final class BodyProcessor implements IBodyProcessor {
 <span class="fc" id="L313">                    Matcher nameMatcher = multiformNameRegex.matcher(contentDisposition);</span>
 <span class="fc" id="L314">                    Matcher filenameMatcher = multiformFilenameRegex.matcher(contentDisposition);</span>
 
-<span class="fc" id="L316">                    String name = &quot;&quot;;</span>
+                    String name;
 <span class="fc bfc" id="L317" title="All 2 branches covered.">                    if (nameMatcher.find()) {</span>
 <span class="fc" id="L318">                        name = nameMatcher.group(&quot;namevalue&quot;);</span>
                     } else {

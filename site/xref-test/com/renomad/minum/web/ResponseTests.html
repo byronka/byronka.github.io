@@ -272,7 +272,26 @@
 <a class="jxr_linenumber" name="L264" href="#L264">264</a>         assertEquals(ex.getMessage(), <span class="jxr_string">"JUST A TEST"</span>);
 <a class="jxr_linenumber" name="L265" href="#L265">265</a>     }
 <a class="jxr_linenumber" name="L266" href="#L266">266</a> 
-<a class="jxr_linenumber" name="L267" href="#L267">267</a> }
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L268" href="#L268">268</a> <em class="jxr_javadoccomment">     * It should be possible to edit a response by creating a new response</em>
+<a class="jxr_linenumber" name="L269" href="#L269">269</a> <em class="jxr_javadoccomment">     * using the old properties</em>
+<a class="jxr_linenumber" name="L270" href="#L270">270</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>     @Test
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testCopyingResponse() {
+<a class="jxr_linenumber" name="L273" href="#L273">273</a>         IResponse oldResponse = Response.buildResponse(CODE_200_OK, Map.of(<span class="jxr_string">"foo"</span>, <span class="jxr_string">"bar"</span>), <span class="jxr_string">"hello world"</span>);
+<a class="jxr_linenumber" name="L274" href="#L274">274</a> 
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>         <strong class="jxr_keyword">var</strong> newResponse = <strong class="jxr_keyword">new</strong> Response(
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>                 oldResponse.getStatusCode(),
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>                 oldResponse.getExtraHeaders(),
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>                 oldResponse.getBody(),
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>                 oldResponse.getOutputGenerator(),
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>                 oldResponse.getBodyLength(),
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>                 oldResponse.isBodyText());
+<a class="jxr_linenumber" name="L282" href="#L282">282</a> 
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>         assertEquals(oldResponse, newResponse);
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>     }
+<a class="jxr_linenumber" name="L285" href="#L285">285</a> 
+<a class="jxr_linenumber" name="L286" href="#L286">286</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2026. All rights reserved.</div>

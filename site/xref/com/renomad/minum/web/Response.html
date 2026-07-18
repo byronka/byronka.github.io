@@ -93,7 +93,7 @@
 <a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment">     *                   from being compressed before sending (presuming sufficiently large</em>
 <a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_javadoccomment">     *                   to make it worth the time for compression)</em>
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L88" href="#L88">88</a>      <a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a>(StatusLine.StatusCode statusCode, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> extraHeaders, byte[] body,
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>      <strong class="jxr_keyword">public</strong> <a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a>(StatusLine.StatusCode statusCode, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> extraHeaders, byte[] body,
 <a class="jxr_linenumber" name="L89" href="#L89">89</a>               ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator, <strong class="jxr_keyword">long</strong> bodyLength, <strong class="jxr_keyword">boolean</strong> isBodyText) {
 <a class="jxr_linenumber" name="L90" href="#L90">90</a>          <strong class="jxr_keyword">if</strong> (statusCode == <strong class="jxr_keyword">null</strong>) <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalArgumentException(<span class="jxr_string">"Status code must not be null"</span>);
 <a class="jxr_linenumber" name="L91" href="#L91">91</a>          <strong class="jxr_keyword">if</strong> (extraHeaders == <strong class="jxr_keyword">null</strong>) <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalArgumentException(<span class="jxr_string">"Extra headers must not be null (may use Headers.EMPTY)"</span>);
@@ -114,7 +114,7 @@
 <a class="jxr_linenumber" name="L106" href="#L106">106</a> <em class="jxr_javadoccomment">     *                        ability to send bytes on the socket.</em>
 <a class="jxr_linenumber" name="L107" href="#L107">107</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L108" href="#L108">108</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> buildStreamingResponse(StatusLine.StatusCode statusCode, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator) {
-<a class="jxr_linenumber" name="L109" href="#L109">109</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a>(statusCode, extraHeaders, <strong class="jxr_keyword">null</strong>, outputGenerator, 0, false);
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a>(statusCode, extraHeaders, <strong class="jxr_keyword">null</strong>, outputGenerator, 0L, false);
 <a class="jxr_linenumber" name="L110" href="#L110">110</a>     }
 <a class="jxr_linenumber" name="L111" href="#L111">111</a> 
 <a class="jxr_linenumber" name="L112" href="#L112">112</a>     <em class="jxr_javadoccomment">/**</em>
@@ -235,7 +235,7 @@
 <a class="jxr_linenumber" name="L227" href="#L227">227</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L228" href="#L228">228</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> buildLargeFileResponse(<a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> extraHeaders, String filePath, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> requestHeaders, <a name="IFileUtils" href="../../../../com/renomad/minum/utils/IFileUtils.html#IFileUtils">IFileUtils</a> fileUtils) {
 <a class="jxr_linenumber" name="L229" href="#L229">229</a>         <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> adjustedHeaders = extraHeaders;
-<a class="jxr_linenumber" name="L230" href="#L230">230</a>         <strong class="jxr_keyword">long</strong> fileSize = 0;
+<a class="jxr_linenumber" name="L230" href="#L230">230</a>         <strong class="jxr_keyword">long</strong> fileSize;
 <a class="jxr_linenumber" name="L231" href="#L231">231</a>         <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L232" href="#L232">232</a>             fileSize = fileUtils.size(Path.of(filePath));
 <a class="jxr_linenumber" name="L233" href="#L233">233</a>         } <strong class="jxr_keyword">catch</strong> (IOException e) {
@@ -279,7 +279,7 @@
 <a class="jxr_linenumber" name="L271" href="#L271">271</a> <em class="jxr_javadoccomment">     *                        allows the developer to use directories anywhere in the system.</em>
 <a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L273" href="#L273">273</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a name="IResponse" href="../../../../com/renomad/minum/web/IResponse.html#IResponse">IResponse</a> buildLargeFileResponse(<a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> extraHeaders, String filePath, String parentDirectory, <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> requestHeaders, <a name="IFileUtils" href="../../../../com/renomad/minum/utils/IFileUtils.html#IFileUtils">IFileUtils</a> fileUtils) {
-<a class="jxr_linenumber" name="L274" href="#L274">274</a>         Path path = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>         Path path;
 <a class="jxr_linenumber" name="L275" href="#L275">275</a>         <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L276" href="#L276">276</a>             path = fileUtils.safeResolve(parentDirectory, filePath);
 <a class="jxr_linenumber" name="L277" href="#L277">277</a>         } <strong class="jxr_keyword">catch</strong> (IOException e) {
@@ -410,7 +410,7 @@
 <a class="jxr_linenumber" name="L402" href="#L402">402</a>                 <strong class="jxr_keyword">if</strong> (countBytesRead &lt;= 0) {
 <a class="jxr_linenumber" name="L403" href="#L403">403</a>                     <strong class="jxr_keyword">break</strong>;
 <a class="jxr_linenumber" name="L404" href="#L404">404</a>                 } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L405" href="#L405">405</a>                     <strong class="jxr_keyword">if</strong> (countBytesLeftToSend &lt; countBytesRead) {
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>                     <strong class="jxr_keyword">if</strong> (countBytesLeftToSend &lt; (<strong class="jxr_keyword">long</strong>) countBytesRead) {
 <a class="jxr_linenumber" name="L406" href="#L406">406</a>                         sw.send(buff.array(), 0, (<strong class="jxr_keyword">int</strong>)countBytesLeftToSend);
 <a class="jxr_linenumber" name="L407" href="#L407">407</a>                         <strong class="jxr_keyword">break</strong>;
 <a class="jxr_linenumber" name="L408" href="#L408">408</a>                     } <strong class="jxr_keyword">else</strong> {
@@ -418,7 +418,7 @@
 <a class="jxr_linenumber" name="L410" href="#L410">410</a>                     }
 <a class="jxr_linenumber" name="L411" href="#L411">411</a>                     buff.clear();
 <a class="jxr_linenumber" name="L412" href="#L412">412</a>                 }
-<a class="jxr_linenumber" name="L413" href="#L413">413</a>                 countBytesLeftToSend -= countBytesRead;
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>                 countBytesLeftToSend = countBytesLeftToSend - countBytesRead;
 <a class="jxr_linenumber" name="L414" href="#L414">414</a>             }
 <a class="jxr_linenumber" name="L415" href="#L415">415</a>         } <strong class="jxr_keyword">finally</strong> {
 <a class="jxr_linenumber" name="L416" href="#L416">416</a>             fileChannel.close();
@@ -430,21 +430,21 @@
 <a class="jxr_linenumber" name="L422" href="#L422">422</a>         <strong class="jxr_keyword">return</strong> body;
 <a class="jxr_linenumber" name="L423" href="#L423">423</a>     }
 <a class="jxr_linenumber" name="L424" href="#L424">424</a> 
-<a class="jxr_linenumber" name="L425" href="#L425">425</a> 
-<a class="jxr_linenumber" name="L426" href="#L426">426</a> 
-<a class="jxr_linenumber" name="L427" href="#L427">427</a>     @Override
-<a class="jxr_linenumber" name="L428" href="#L428">428</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> equals(Object o) {
-<a class="jxr_linenumber" name="L429" href="#L429">429</a>         <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">this</strong> == o) <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L430" href="#L430">430</a>         <strong class="jxr_keyword">if</strong> (o == <strong class="jxr_keyword">null</strong> || getClass() != o.getClass()) <strong class="jxr_keyword">return</strong> false;
-<a class="jxr_linenumber" name="L431" href="#L431">431</a>         <a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a> response = (<a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a>) o;
-<a class="jxr_linenumber" name="L432" href="#L432">432</a>         <strong class="jxr_keyword">return</strong> bodyLength == response.bodyLength &amp;&amp; isBodyText == response.isBodyText &amp;&amp; statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Arrays.equals(body, response.body);
-<a class="jxr_linenumber" name="L433" href="#L433">433</a>     }
-<a class="jxr_linenumber" name="L434" href="#L434">434</a> 
-<a class="jxr_linenumber" name="L435" href="#L435">435</a>     @Override
-<a class="jxr_linenumber" name="L436" href="#L436">436</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> hashCode() {
-<a class="jxr_linenumber" name="L437" href="#L437">437</a>         <strong class="jxr_keyword">int</strong> result = Objects.hash(statusCode, extraHeaders, bodyLength, isBodyText);
-<a class="jxr_linenumber" name="L438" href="#L438">438</a>         result = 31 * result + Arrays.hashCode(body);
-<a class="jxr_linenumber" name="L439" href="#L439">439</a>         <strong class="jxr_keyword">return</strong> result;
+<a class="jxr_linenumber" name="L425" href="#L425">425</a>     @Override
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>     <strong class="jxr_keyword">public</strong> ThrowingConsumer&lt;ISocketWrapper&gt; getOutputGenerator() {
+<a class="jxr_linenumber" name="L427" href="#L427">427</a>         <strong class="jxr_keyword">return</strong> outputGenerator;
+<a class="jxr_linenumber" name="L428" href="#L428">428</a>     }
+<a class="jxr_linenumber" name="L429" href="#L429">429</a> 
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>     @Override
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> equals(Object o) {
+<a class="jxr_linenumber" name="L432" href="#L432">432</a>         <strong class="jxr_keyword">if</strong> (o == <strong class="jxr_keyword">null</strong> || getClass() != o.getClass()) <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>         <a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a> response = (<a name="Response" href="../../../../com/renomad/minum/web/Response.html#Response">Response</a>) o;
+<a class="jxr_linenumber" name="L434" href="#L434">434</a>         <strong class="jxr_keyword">return</strong> bodyLength == response.bodyLength &amp;&amp; isBodyText == response.isBodyText &amp;&amp; statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Objects.deepEquals(body, response.body);
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>     }
+<a class="jxr_linenumber" name="L436" href="#L436">436</a> 
+<a class="jxr_linenumber" name="L437" href="#L437">437</a>     @Override
+<a class="jxr_linenumber" name="L438" href="#L438">438</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> hashCode() {
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>         <strong class="jxr_keyword">return</strong> Objects.hash(statusCode, extraHeaders, Arrays.hashCode(body), bodyLength, isBodyText);
 <a class="jxr_linenumber" name="L440" href="#L440">440</a>     }
 <a class="jxr_linenumber" name="L441" href="#L441">441</a> 
 <a class="jxr_linenumber" name="L442" href="#L442">442</a>     @Override

@@ -69,7 +69,7 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      * used to place locks around certain actions that need to avoid
      * thread interleaving.
      */
-    private final ReentrantLock dbLock;
+    protected final InspectableLock dbLock;
 
     /**
      * The current index, used when creating new data items.  Each item has its own
@@ -94,17 +94,24 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      */
     protected final Map&lt;String, Function&lt;T, String&gt;&gt; partitioningMap;
 
-<span class="fc" id="L97">    protected AbstractDb(Path dbDirectory, Context context, T instance, IFileUtils fileUtils) {</span>
-<span class="fc" id="L98">        this.dbDirectory = dbDirectory;</span>
-<span class="fc" id="L99">        this.context = context;</span>
-<span class="fc" id="L100">        this.emptyInstance = instance;</span>
-<span class="fc" id="L101">        this.data = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="fc" id="L102">        this.logger = context.getLogger();</span>
-<span class="fc" id="L103">        this.registeredIndexes = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L104">        this.partitioningMap = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L105">        this.fileUtils = fileUtils;</span>
-<span class="fc" id="L106">        this.dbLock = new ReentrantLock();</span>
-<span class="fc" id="L107">    }</span>
+    private final ReentrantLock indexLock;
+
+<span class="fc" id="L99">    protected AbstractDb(Path dbDirectory, Context context, T instance, IFileUtils fileUtils) {</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (context.isDbPathRegistered(dbDirectory)) {</span>
+<span class="fc" id="L101">            throw new DbException(&quot;Attempted to register more than one database to the same path: &quot; + dbDirectory);</span>
+        }
+<span class="fc" id="L103">        context.addToDbPaths(dbDirectory);</span>
+<span class="fc" id="L104">        this.dbDirectory = dbDirectory;</span>
+<span class="fc" id="L105">        this.context = context;</span>
+<span class="fc" id="L106">        this.emptyInstance = instance;</span>
+<span class="fc" id="L107">        this.data = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L108">        this.logger = context.getLogger();</span>
+<span class="fc" id="L109">        this.registeredIndexes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L110">        this.partitioningMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L111">        this.fileUtils = fileUtils;</span>
+<span class="fc" id="L112">        this.dbLock = new InspectableLock();</span>
+<span class="fc" id="L113">        this.indexLock = new ReentrantLock();</span>
+<span class="fc" id="L114">    }</span>
 
     /**
      * Used to cleanly stop the database.
@@ -127,7 +134,7 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      *              and instead crash the instance closed.
      * @param sleepTime how long to wait, in milliseconds, for each iteration of the waiting loop.
      */
-    public abstract void stop(int count, int sleepTime) throws IOException;
+    public abstract void stop(int count, long sleepTime) throws IOException;
 
 
     /**
@@ -167,17 +174,17 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      */
     protected void writeToMemory(T newData, boolean newElementCreated) {
         // if we got here, we are safe to proceed with putting the data into memory and disk
-<span class="fc" id="L170">        logger.logTrace(() -&gt; String.format(&quot;in thread %s, writing data %s&quot;, Thread.currentThread().getName(), newData));</span>
-<span class="fc" id="L171">        T oldData = data.put(newData.getIndex(), newData);</span>
+<span class="fc" id="L177">        logger.logTrace(() -&gt; String.format(&quot;in thread %d, writing data %s&quot;, Thread.currentThread().threadId(), newData));</span>
+<span class="fc" id="L178">        T oldData = data.put(newData.getIndex(), newData);</span>
 
         // handle the indexes differently depending on whether this is a create or delete
-<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (newElementCreated) {</span>
-<span class="fc" id="L175">            addToIndexes(newData);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (newElementCreated) {</span>
+<span class="fc" id="L182">            addToIndexes(newData);</span>
         } else {
-<span class="fc" id="L177">            removeFromIndexes(oldData);</span>
-<span class="fc" id="L178">            addToIndexes(newData);</span>
+<span class="fc" id="L184">            removeFromIndexes(oldData);</span>
+<span class="fc" id="L185">            addToIndexes(newData);</span>
         }
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L187">    }</span>
 
     /**
      * When new data comes in, we look at its &quot;index&quot; value. If
@@ -188,22 +195,22 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      */
     protected boolean processDataIndex(T newData) {
         // *** deal with the in-memory portion ***
-<span class="fc" id="L191">        boolean newElementCreated = false;</span>
+<span class="fc" id="L198">        boolean newElementCreated = false;</span>
         // create a new index for the data, if needed
-<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (newData.getIndex() == 0) {</span>
-<span class="fc" id="L194">            newData.setIndex(index.getAndIncrement());</span>
-<span class="fc" id="L195">            newElementCreated = true;</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (newData.getIndex() == 0L) {</span>
+<span class="fc" id="L201">            newData.setIndex(index.getAndIncrement());</span>
+<span class="fc" id="L202">            newElementCreated = true;</span>
         } else {
             // if the data does not exist, and a positive non-zero
             // index was provided, throw an exception.
-<span class="fc" id="L199">            boolean dataEntryExists = data.containsKey(newData.getIndex());</span>
-<span class="fc bfc" id="L200" title="All 2 branches covered.">            if (!dataEntryExists) {</span>
-<span class="fc" id="L201">                throw new DbException(</span>
-<span class="fc" id="L202">                        String.format(&quot;Positive indexes are only allowed when updating existing data. Index: %d&quot;,</span>
-<span class="fc" id="L203">                                newData.getIndex()));</span>
+<span class="fc" id="L206">            boolean dataEntryExists = data.containsKey(newData.getIndex());</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">            if (!dataEntryExists) {</span>
+<span class="fc" id="L208">                throw new DbException(</span>
+<span class="fc" id="L209">                        String.format(&quot;Positive indexes are only allowed when updating existing data. Index: %d&quot;,</span>
+<span class="fc" id="L210">                                newData.getIndex()));</span>
             }
         }
-<span class="fc" id="L206">        return newElementCreated;</span>
+<span class="fc" id="L213">        return newElementCreated;</span>
     }
 
     /**
@@ -223,24 +230,21 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      */
     protected void deleteFromMemory(T dataToDelete) {
         long dataIndex;
-<span class="fc bfc" id="L226" title="All 2 branches covered.">        if (dataToDelete == null) {</span>
-<span class="fc" id="L227">            throw new DbException(&quot;Invalid to be given a null value to delete&quot;);</span>
+<span class="fc" id="L233">        dataIndex = dataToDelete.getIndex();</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (!data.containsKey(dataIndex)) {</span>
+<span class="fc" id="L235">            throw new DbException(&quot;no data was found with index of &quot; + dataIndex);</span>
         }
-<span class="fc" id="L229">        dataIndex = dataToDelete.getIndex();</span>
-<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (!data.containsKey(dataIndex)) {</span>
-<span class="fc" id="L231">            throw new DbException(&quot;no data was found with index of &quot; + dataIndex);</span>
-        }
-<span class="fc" id="L233">        long finalDataIndex = dataIndex;</span>
-<span class="fc" id="L234">        logger.logTrace(() -&gt; String.format(&quot;in thread %s, deleting data with index %d&quot;, Thread.currentThread().getName(), finalDataIndex));</span>
-<span class="fc" id="L235">        data.remove(dataIndex);</span>
-<span class="fc" id="L236">        removeFromIndexes(dataToDelete);</span>
+<span class="fc" id="L237">        long finalDataIndex = dataIndex;</span>
+<span class="fc" id="L238">        logger.logTrace(() -&gt; String.format(&quot;in thread %d, deleting data with index %d&quot;, Thread.currentThread().threadId(), finalDataIndex));</span>
+<span class="fc" id="L239">        data.remove(dataIndex);</span>
+<span class="fc" id="L240">        removeFromIndexes(dataToDelete);</span>
 
         // if all the data was just now deleted, we need to
         // reset the index back to 1
-<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (data.isEmpty()) {</span>
-<span class="fc" id="L241">            index.set(1);</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (data.isEmpty()) {</span>
+<span class="fc" id="L245">            index.set(1L);</span>
         }
-<span class="fc" id="L243">    }</span>
+<span class="fc" id="L247">    }</span>
 
 
     /**
@@ -252,51 +256,51 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      */
     protected void addToIndexes(T dbData) {
 
-<span class="fc bfc" id="L255" title="All 2 branches covered.">        for (var entry : partitioningMap.entrySet()) {</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        for (var entry : partitioningMap.entrySet()) {</span>
             // a function provided by the user to obtain an index-key: a unique or semi-unique
             // value to help partition / index the data
-<span class="fc" id="L258">            Function&lt;T, String&gt; indexStringFunction = entry.getValue();</span>
-<span class="fc" id="L259">            String propertyAsString = indexStringFunction.apply(dbData);</span>
-<span class="fc" id="L260">            Map&lt;String, Set&lt;T&gt;&gt; stringIndexMap = registeredIndexes.get(entry.getKey());</span>
-<span class="fc" id="L261">            dbLock.lock();</span>
+<span class="fc" id="L262">            Function&lt;T, String&gt; indexStringFunction = entry.getValue();</span>
+<span class="fc" id="L263">            String propertyAsString = indexStringFunction.apply(dbData);</span>
+<span class="fc" id="L264">            Map&lt;String, Set&lt;T&gt;&gt; stringIndexMap = registeredIndexes.get(entry.getKey());</span>
+<span class="fc" id="L265">            indexLock.lock();</span>
             try {
-<span class="fc" id="L263">                stringIndexMap.computeIfAbsent(propertyAsString, k -&gt; new HashSet&lt;&gt;());</span>
+<span class="fc" id="L267">                stringIndexMap.computeIfAbsent(propertyAsString, k -&gt; new HashSet&lt;&gt;());</span>
                 // if the index-key provides a 1-to-1 mapping to items, like UUIDs, then
                 // each value will have only one item in the collection.  In other cases,
                 // like when partitioning the data into multiple groups, there could easily
                 // be many items per index value.
-<span class="fc" id="L268">                Set&lt;T&gt; dataSet = stringIndexMap.get(propertyAsString);</span>
-<span class="fc" id="L269">                dataSet.add(dbData);</span>
+<span class="fc" id="L272">                Set&lt;T&gt; dataSet = stringIndexMap.get(propertyAsString);</span>
+<span class="fc" id="L273">                dataSet.add(dbData);</span>
             } finally {
-<span class="fc" id="L271">                dbLock.unlock();</span>
+<span class="fc" id="L275">                indexLock.unlock();</span>
             }
-<span class="fc" id="L273">        }</span>
-<span class="fc" id="L274">    }</span>
+<span class="fc" id="L277">        }</span>
+<span class="fc" id="L278">    }</span>
 
     /**
      * Run when an item is deleted from the database
      */
     private void removeFromIndexes(T dbData) {
-<span class="fc bfc" id="L280" title="All 2 branches covered.">        for (var entry : partitioningMap.entrySet()) {</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        for (var entry : partitioningMap.entrySet()) {</span>
             // a function provided by the user to obtain an index-key: a unique or semi-unique
             // value to help partition / index the data
-<span class="fc" id="L283">            Function&lt;T, String&gt; indexStringFunction = entry.getValue();</span>
-<span class="fc" id="L284">            String propertyAsString = indexStringFunction.apply(dbData);</span>
-<span class="fc" id="L285">            Map&lt;String, Set&lt;T&gt;&gt; stringIndexMap = registeredIndexes.get(entry.getKey());</span>
-<span class="fc" id="L286">            dbLock.lock();</span>
+<span class="fc" id="L287">            Function&lt;T, String&gt; indexStringFunction = entry.getValue();</span>
+<span class="fc" id="L288">            String propertyAsString = indexStringFunction.apply(dbData);</span>
+<span class="fc" id="L289">            Map&lt;String, Set&lt;T&gt;&gt; stringIndexMap = registeredIndexes.get(entry.getKey());</span>
+<span class="fc" id="L290">            indexLock.lock();</span>
             try {
-<span class="fc bfc" id="L288" title="All 2 branches covered.">                stringIndexMap.get(propertyAsString).removeIf(x -&gt; x.getIndex() == dbData.getIndex());</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">                stringIndexMap.get(propertyAsString).removeIf(x -&gt; x.getIndex() == dbData.getIndex());</span>
 
                 // in certain cases, we're removing one of the items that is indexed but
                 // there are more left.  If there's nothing left though, we'll remove the mapping.
-<span class="fc bfc" id="L292" title="All 2 branches covered.">                if (stringIndexMap.get(propertyAsString).isEmpty()) {</span>
-<span class="fc" id="L293">                    stringIndexMap.remove(propertyAsString);</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">                if (stringIndexMap.get(propertyAsString).isEmpty()) {</span>
+<span class="fc" id="L297">                    stringIndexMap.remove(propertyAsString);</span>
                 }
             } finally {
-<span class="fc" id="L296">                dbLock.unlock();</span>
+<span class="fc" id="L300">                indexLock.unlock();</span>
             }
-<span class="fc" id="L298">        }</span>
-<span class="fc" id="L299">    }</span>
+<span class="fc" id="L302">        }</span>
+<span class="fc" id="L303">    }</span>
 
 
     /**
@@ -370,19 +374,19 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      * registerIndex command is run before any data is loaded.
      */
     public AbstractDb&lt;T&gt; registerIndex(String indexName, Function&lt;T, String&gt; keyObtainingFunction) {
-<span class="fc bfc" id="L373" title="All 2 branches covered.">        if (keyObtainingFunction == null) {</span>
-<span class="fc" id="L374">            throw new DbException(&quot;When registering an index, the partitioning algorithm must not be null&quot;);</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">        if (keyObtainingFunction == null) {</span>
+<span class="fc" id="L378">            throw new DbException(&quot;When registering an index, the partitioning algorithm must not be null&quot;);</span>
         }
-<span class="fc bfc" id="L376" title="All 4 branches covered.">        if (indexName == null || indexName.isBlank()) {</span>
-<span class="fc" id="L377">            throw new DbException(&quot;When registering an index, value must be a non-empty string&quot;);</span>
+<span class="fc bfc" id="L380" title="All 4 branches covered.">        if (indexName == null || indexName.isBlank()) {</span>
+<span class="fc" id="L381">            throw new DbException(&quot;When registering an index, value must be a non-empty string&quot;);</span>
         }
-<span class="fc bfc" id="L379" title="All 2 branches covered.">        if (registeredIndexes.containsKey(indexName)) {</span>
-<span class="fc" id="L380">            throw new DbException(&quot;It is forbidden to register the same index more than once.  Duplicate index: \&quot;&quot;+indexName+&quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L383" title="All 2 branches covered.">        if (registeredIndexes.containsKey(indexName)) {</span>
+<span class="fc" id="L384">            throw new DbException(&quot;It is forbidden to register the same index more than once.  Duplicate index: \&quot;&quot;+indexName+&quot;\&quot;&quot;);</span>
         }
-<span class="fc" id="L382">        HashMap&lt;String, Set&lt;T&gt;&gt; stringCollectionHashMap = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L383">        registeredIndexes.put(indexName, stringCollectionHashMap);</span>
-<span class="fc" id="L384">        partitioningMap.put(indexName, keyObtainingFunction);</span>
-<span class="fc" id="L385">        return this;</span>
+<span class="fc" id="L386">        HashMap&lt;String, Set&lt;T&gt;&gt; stringCollectionHashMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L387">        registeredIndexes.put(indexName, stringCollectionHashMap);</span>
+<span class="fc" id="L388">        partitioningMap.put(indexName, keyObtainingFunction);</span>
+<span class="fc" id="L389">        return this;</span>
     }
 
     /**
@@ -394,19 +398,19 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      * @return a collection of data, an empty collection if nothing found
      */
     public Collection&lt;T&gt; getIndexedData(String indexName, String key) {
-<span class="fc bfc" id="L397" title="All 2 branches covered.">        if (!registeredIndexes.containsKey(indexName)) {</span>
-<span class="fc" id="L398">            throw new DbException(&quot;There is no index registered on the database Db&lt;&quot;+this.emptyInstance.getClass().getSimpleName()+&quot;&gt; with a name of \&quot;&quot;+indexName+&quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L401" title="All 2 branches covered.">        if (!registeredIndexes.containsKey(indexName)) {</span>
+<span class="fc" id="L402">            throw new DbException(&quot;There is no index registered on the database Db&lt;&quot;+this.emptyInstance.getClass().getSimpleName()+&quot;&gt; with a name of \&quot;&quot;+indexName+&quot;\&quot;&quot;);</span>
         }
-<span class="fc" id="L400">        dbLock.lock();</span>
+<span class="fc" id="L404">        indexLock.lock();</span>
         try {
-<span class="fc" id="L402">            Set&lt;T&gt; ts = registeredIndexes.get(indexName).get(key);</span>
-<span class="fc bfc" id="L403" title="All 2 branches covered.">            if (ts != null) {</span>
-<span class="fc" id="L404">                return new HashSet&lt;&gt;(ts);</span>
+<span class="fc" id="L406">            Set&lt;T&gt; ts = registeredIndexes.get(indexName).get(key);</span>
+<span class="fc bfc" id="L407" title="All 2 branches covered.">            if (ts != null) {</span>
+<span class="fc" id="L408">                return new HashSet&lt;&gt;(ts);</span>
             } else {
-<span class="fc" id="L406">                return Set.of();</span>
+<span class="fc" id="L410">                return Set.of();</span>
             }
         } finally {
-<span class="fc" id="L409">            dbLock.unlock();</span>
+<span class="fc" id="L413">            indexLock.unlock();</span>
         }
     }
 
@@ -415,7 +419,7 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      * for debugging.
      */
     public Set&lt;String&gt; getSetOfIndexes() {
-<span class="fc" id="L418">        return partitioningMap.keySet();</span>
+<span class="fc" id="L422">        return partitioningMap.keySet();</span>
     }
 
     /**
@@ -435,7 +439,7 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      * @see #findExactlyOne(String, String, Callable)
      */
     public T findExactlyOne(String indexName, String indexKey) {
-<span class="fc" id="L438">        return findExactlyOne(indexName, indexKey, () -&gt; null);</span>
+<span class="fc" id="L442">        return findExactlyOne(indexName, indexKey, () -&gt; null);</span>
     }
 
     /**
@@ -458,19 +462,56 @@ public abstract class AbstractDb&lt;T extends DbData&lt;?&gt;&gt; {
      * @see #findExactlyOne(String, String)
      */
     public T findExactlyOne(String indexName, String indexKey, Callable&lt;T&gt; alternate) {
-<span class="fc" id="L461">        Collection&lt;T&gt; indexedData = getIndexedData(indexName, indexKey);</span>
-<span class="fc bfc" id="L462" title="All 2 branches covered.">        if (indexedData.isEmpty()) {</span>
+<span class="fc" id="L465">        Collection&lt;T&gt; indexedData = getIndexedData(indexName, indexKey);</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">        if (indexedData.isEmpty()) {</span>
             try {
-<span class="fc" id="L464">                return alternate.call();</span>
-<span class="fc" id="L465">            } catch (Exception ex) {</span>
-<span class="fc" id="L466">                throw new DbException(ex);</span>
+<span class="fc" id="L468">                return alternate.call();</span>
+<span class="fc" id="L469">            } catch (Exception ex) {</span>
+<span class="fc" id="L470">                throw new DbException(ex);</span>
             }
-<span class="fc bfc" id="L468" title="All 2 branches covered.">        } else if (indexedData.size() == 1) {</span>
-<span class="fc" id="L469">            return indexedData.stream().findFirst().orElseThrow();</span>
+<span class="fc bfc" id="L472" title="All 2 branches covered.">        } else if (indexedData.size() == 1) {</span>
+<span class="fc" id="L473">            return indexedData.stream().findFirst().orElseThrow();</span>
         } else {
-<span class="fc" id="L471">            throw new DbException(&quot;More than one item found when searching database Db&lt;%s&gt; on index \&quot;%s\&quot; with key %s&quot;</span>
-<span class="fc" id="L472">                    .formatted(emptyInstance.getClass().getSimpleName(), indexName, indexKey));</span>
+<span class="fc" id="L475">            throw new DbException(&quot;More than one item found when searching database Db&lt;%s&gt; on index \&quot;%s\&quot; with key %s&quot;</span>
+<span class="fc" id="L476">                    .formatted(emptyInstance.getClass().getSimpleName(), indexName, indexKey));</span>
         }
     }
+
+    /**
+     * Provides access to the lock that is used around all
+     * modifications to the database.  Useful for wrapping
+     * around multiple statements when you need to ensure
+     * nothing else can intervene while they run.
+     * &lt;br&gt;
+     * Here is an example of usage:
+     * &lt;pre&gt;
+     * {@code
+     *     ReentrantLock dbLock = db.getDbLock();
+     *     dbLock.lock();
+     *     try {
+     *         db.write(foo);
+     *         db.write(bar);
+     *     } finally {
+     *         dbLock.unlock();
+     *     }
+     * }
+     * &lt;/pre&gt;
+     */
+    public InspectableLock getDbLock() {
+<span class="fc" id="L501">        return dbLock;</span>
+    }
+
+    /**
+     * Check that the input is non-null and has a positive index
+     */
+    protected static &lt;T extends DbData&lt;?&gt;&gt; void basicDataChecks(T newData) {
+        // disallowed to be null input
+<span class="fc bfc" id="L509" title="All 2 branches covered.">        if (newData == null) {</span>
+<span class="fc" id="L510">            throw new DbException(&quot;Incoming data was null&quot;);</span>
+        }
+        // disallowed for input to have a negative index
+<span class="fc bfc" id="L513" title="All 2 branches covered.">        if (newData.getIndex() &lt; 0L) throw new DbException(&quot;Negative indexes are disallowed&quot;);</span>
+<span class="fc" id="L514">    }</span>
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

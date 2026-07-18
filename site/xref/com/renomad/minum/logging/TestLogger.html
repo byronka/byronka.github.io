@@ -157,95 +157,96 @@
 <a class="jxr_linenumber" name="L149" href="#L149">149</a> <em class="jxr_javadoccomment">     * @param lines how many lines back to examine</em>
 <a class="jxr_linenumber" name="L150" href="#L150">150</a> <em class="jxr_javadoccomment">     * @return whether this string was found, even if there</em>
 <a class="jxr_linenumber" name="L151" href="#L151">151</a> <em class="jxr_javadoccomment">     *      were multiple places it was found.</em>
-<a class="jxr_linenumber" name="L152" href="#L152">152</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L153" href="#L153">153</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> doesMessageExist(String value, <strong class="jxr_keyword">int</strong> lines) {
-<a class="jxr_linenumber" name="L154" href="#L154">154</a>         <strong class="jxr_keyword">if</strong> (! findMessage(value, lines, recentLogLines).isEmpty()) {
-<a class="jxr_linenumber" name="L155" href="#L155">155</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L156" href="#L156">156</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L157" href="#L157">157</a>             List&lt;String&gt; logsBeingSearched = logLinesToSearch(lines, recentLogLines);
-<a class="jxr_linenumber" name="L158" href="#L158">158</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="TestLoggerException" href="../../../../com/renomad/minum/logging/TestLoggerException.html#TestLoggerException">TestLoggerException</a>(value + <span class="jxr_string">" was not found in \n\t"</span> + String.join(<span class="jxr_string">"\n\t"</span>, logsBeingSearched));
-<a class="jxr_linenumber" name="L159" href="#L159">159</a>         }
-<a class="jxr_linenumber" name="L160" href="#L160">160</a>     }
-<a class="jxr_linenumber" name="L161" href="#L161">161</a> 
-<a class="jxr_linenumber" name="L162" href="#L162">162</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L163" href="#L163">163</a> <em class="jxr_javadoccomment">     * Whether the given string exists in the log messages. May</em>
-<a class="jxr_linenumber" name="L164" href="#L164">164</a> <em class="jxr_javadoccomment">     * exist multiple times.</em>
-<a class="jxr_linenumber" name="L165" href="#L165">165</a> <em class="jxr_javadoccomment">     * @param value a string to search in the log</em>
-<a class="jxr_linenumber" name="L166" href="#L166">166</a> <em class="jxr_javadoccomment">     * @return whether or not this string was found, even if there</em>
-<a class="jxr_linenumber" name="L167" href="#L167">167</a> <em class="jxr_javadoccomment">     * were multiple places it was found.</em>
-<a class="jxr_linenumber" name="L168" href="#L168">168</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L169" href="#L169">169</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> doesMessageExist(String value) {
-<a class="jxr_linenumber" name="L170" href="#L170">170</a>         <strong class="jxr_keyword">return</strong> doesMessageExist(value, 3);
-<a class="jxr_linenumber" name="L171" href="#L171">171</a>     }
-<a class="jxr_linenumber" name="L172" href="#L172">172</a> 
-<a class="jxr_linenumber" name="L173" href="#L173">173</a>     <strong class="jxr_keyword">static</strong> List&lt;String&gt; findMessage(String value, <strong class="jxr_keyword">int</strong> lines, Queue&lt;String&gt; recentLogLines) {
-<a class="jxr_linenumber" name="L174" href="#L174">174</a>         <strong class="jxr_keyword">if</strong> (lines &gt; MAX_CACHE_SIZE) {
-<a class="jxr_linenumber" name="L175" href="#L175">175</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="TestLoggerException" href="../../../../com/renomad/minum/logging/TestLoggerException.html#TestLoggerException">TestLoggerException</a>(String.format(<span class="jxr_string">"Can only get up to %s lines from the log"</span>, MAX_CACHE_SIZE));
-<a class="jxr_linenumber" name="L176" href="#L176">176</a>         }
-<a class="jxr_linenumber" name="L177" href="#L177">177</a>         <strong class="jxr_keyword">if</strong> (lines &lt;= 0) {
-<a class="jxr_linenumber" name="L178" href="#L178">178</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="TestLoggerException" href="../../../../com/renomad/minum/logging/TestLoggerException.html#TestLoggerException">TestLoggerException</a>(<span class="jxr_string">"number of recent log lines must be a positive number"</span>);
-<a class="jxr_linenumber" name="L179" href="#L179">179</a>         }
-<a class="jxr_linenumber" name="L180" href="#L180">180</a>         MyThread.sleep(20);
-<a class="jxr_linenumber" name="L181" href="#L181">181</a>         <strong class="jxr_keyword">var</strong> lineList = logLinesToSearch(lines, recentLogLines);
-<a class="jxr_linenumber" name="L182" href="#L182">182</a>         <strong class="jxr_keyword">return</strong> lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();
-<a class="jxr_linenumber" name="L183" href="#L183">183</a> 
-<a class="jxr_linenumber" name="L184" href="#L184">184</a>     }
-<a class="jxr_linenumber" name="L185" href="#L185">185</a> 
-<a class="jxr_linenumber" name="L186" href="#L186">186</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> List&lt;String&gt; logLinesToSearch(<strong class="jxr_keyword">int</strong> lines, Queue&lt;String&gt; recentLogLines) {
-<a class="jxr_linenumber" name="L187" href="#L187">187</a>         <strong class="jxr_keyword">var</strong> fromIndex = Math.max(recentLogLines.size() - lines, 0);
-<a class="jxr_linenumber" name="L188" href="#L188">188</a>         <strong class="jxr_keyword">return</strong> recentLogLines.stream().toList().subList(fromIndex, recentLogLines.size());
-<a class="jxr_linenumber" name="L189" href="#L189">189</a>     }
-<a class="jxr_linenumber" name="L190" href="#L190">190</a> 
-<a class="jxr_linenumber" name="L191" href="#L191">191</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L192" href="#L192">192</a> <em class="jxr_javadoccomment">     * Looks back through the last 3 log messages for one that</em>
-<a class="jxr_linenumber" name="L193" href="#L193">193</a> <em class="jxr_javadoccomment">     * contains the provided value.  Returns the whole line if</em>
-<a class="jxr_linenumber" name="L194" href="#L194">194</a> <em class="jxr_javadoccomment">     * found and an exception if not found.</em>
-<a class="jxr_linenumber" name="L195" href="#L195">195</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
-<a class="jxr_linenumber" name="L196" href="#L196">196</a> <em class="jxr_javadoccomment">     *     See {@link #findFirstMessageThatContains(String, int)} if you</em>
-<a class="jxr_linenumber" name="L197" href="#L197">197</a> <em class="jxr_javadoccomment">     *     want to search through more than 3.  However, it is only</em>
-<a class="jxr_linenumber" name="L198" href="#L198">198</a> <em class="jxr_javadoccomment">     *     possible to search up to {@link #MAX_CACHE_SIZE}</em>
-<a class="jxr_linenumber" name="L199" href="#L199">199</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
-<a class="jxr_linenumber" name="L200" href="#L200">200</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L201" href="#L201">201</a>     <strong class="jxr_keyword">public</strong> String findFirstMessageThatContains(String value) {
-<a class="jxr_linenumber" name="L202" href="#L202">202</a>         <strong class="jxr_keyword">return</strong> findFirstMessageThatContains(value, 3);
-<a class="jxr_linenumber" name="L203" href="#L203">203</a>     }
-<a class="jxr_linenumber" name="L204" href="#L204">204</a> 
-<a class="jxr_linenumber" name="L205" href="#L205">205</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L206" href="#L206">206</a> <em class="jxr_javadoccomment">     * A helper function to log a test title prefixed with "TEST:"</em>
-<a class="jxr_linenumber" name="L207" href="#L207">207</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
-<a class="jxr_linenumber" name="L208" href="#L208">208</a> <em class="jxr_javadoccomment">     * Also collects data about the previously-run test</em>
-<a class="jxr_linenumber" name="L209" href="#L209">209</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L210" href="#L210">210</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test(String msg) {
-<a class="jxr_linenumber" name="L211" href="#L211">211</a>         <em class="jxr_comment">// put together some pretty-looking text graphics to show the suiteName of our test in log</em>
-<a class="jxr_linenumber" name="L212" href="#L212">212</a>         loggingLock.lock();
-<a class="jxr_linenumber" name="L213" href="#L213">213</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L214" href="#L214">214</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> baseLength = 11;
-<a class="jxr_linenumber" name="L215" href="#L215">215</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> dashes = <span class="jxr_string">"-"</span>.repeat(msg.length() + baseLength);
-<a class="jxr_linenumber" name="L216" href="#L216">216</a> 
-<a class="jxr_linenumber" name="L217" href="#L217">217</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> currentCount = testCount.incrementAndGet();
-<a class="jxr_linenumber" name="L218" href="#L218">218</a>             loggingActionQueue.enqueue(<span class="jxr_string">"Testlogger#test("</span>+msg+<span class="jxr_string">")"</span>, () -&gt; {
-<a class="jxr_linenumber" name="L219" href="#L219">219</a>                 System.out.printf(<span class="jxr_string">"%n+%s+%n| TEST %d: %s |%n+%s+%n%n"</span>, dashes, currentCount, msg, dashes);
-<a class="jxr_linenumber" name="L220" href="#L220">220</a>                 recentLogLines.add(msg);
-<a class="jxr_linenumber" name="L221" href="#L221">221</a>             });
-<a class="jxr_linenumber" name="L222" href="#L222">222</a>         } <strong class="jxr_keyword">finally</strong> {
-<a class="jxr_linenumber" name="L223" href="#L223">223</a>             loggingLock.unlock();
-<a class="jxr_linenumber" name="L224" href="#L224">224</a>         }
-<a class="jxr_linenumber" name="L225" href="#L225">225</a>     }
-<a class="jxr_linenumber" name="L226" href="#L226">226</a> 
-<a class="jxr_linenumber" name="L227" href="#L227">227</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L228" href="#L228">228</a> <em class="jxr_javadoccomment">     * Returns the count of calls to the {@link TestLogger#test(String)} method</em>
-<a class="jxr_linenumber" name="L229" href="#L229">229</a> <em class="jxr_javadoccomment">     * for an instance of this class.</em>
-<a class="jxr_linenumber" name="L230" href="#L230">230</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L231" href="#L231">231</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> getTestCount() {
-<a class="jxr_linenumber" name="L232" href="#L232">232</a>         <strong class="jxr_keyword">return</strong> testCount.get();
-<a class="jxr_linenumber" name="L233" href="#L233">233</a>     }
-<a class="jxr_linenumber" name="L234" href="#L234">234</a> 
-<a class="jxr_linenumber" name="L235" href="#L235">235</a>     @Override
-<a class="jxr_linenumber" name="L236" href="#L236">236</a>     <strong class="jxr_keyword">public</strong> String toString() {
-<a class="jxr_linenumber" name="L237" href="#L237">237</a>         <strong class="jxr_keyword">return</strong> <span class="jxr_string">"TestLogger using queue: "</span> + <strong class="jxr_keyword">super</strong>.loggingActionQueue.toString();
-<a class="jxr_linenumber" name="L238" href="#L238">238</a>     }
-<a class="jxr_linenumber" name="L239" href="#L239">239</a> 
-<a class="jxr_linenumber" name="L240" href="#L240">240</a> }
+<a class="jxr_linenumber" name="L152" href="#L152">152</a> <em class="jxr_javadoccomment">     * @throws TestLoggerException if value was not found.</em>
+<a class="jxr_linenumber" name="L153" href="#L153">153</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> doesMessageExist(String value, <strong class="jxr_keyword">int</strong> lines) {
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>         <strong class="jxr_keyword">if</strong> (! findMessage(value, lines, recentLogLines).isEmpty()) {
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>             List&lt;String&gt; logsBeingSearched = logLinesToSearch(lines, recentLogLines);
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="TestLoggerException" href="../../../../com/renomad/minum/logging/TestLoggerException.html#TestLoggerException">TestLoggerException</a>(value + <span class="jxr_string">" was not found in \n\t"</span> + String.join(<span class="jxr_string">"\n\t"</span>, logsBeingSearched));
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>         }
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>     }
+<a class="jxr_linenumber" name="L162" href="#L162">162</a> 
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L164" href="#L164">164</a> <em class="jxr_javadoccomment">     * Whether the given string exists in the log messages. May</em>
+<a class="jxr_linenumber" name="L165" href="#L165">165</a> <em class="jxr_javadoccomment">     * exist multiple times.</em>
+<a class="jxr_linenumber" name="L166" href="#L166">166</a> <em class="jxr_javadoccomment">     * @param value a string to search in the log</em>
+<a class="jxr_linenumber" name="L167" href="#L167">167</a> <em class="jxr_javadoccomment">     * @return whether or not this string was found, even if there</em>
+<a class="jxr_linenumber" name="L168" href="#L168">168</a> <em class="jxr_javadoccomment">     * were multiple places it was found.</em>
+<a class="jxr_linenumber" name="L169" href="#L169">169</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> doesMessageExist(String value) {
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>         <strong class="jxr_keyword">return</strong> doesMessageExist(value, 3);
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>     }
+<a class="jxr_linenumber" name="L173" href="#L173">173</a> 
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>     <strong class="jxr_keyword">static</strong> List&lt;String&gt; findMessage(String value, <strong class="jxr_keyword">int</strong> lines, Queue&lt;String&gt; recentLogLines) {
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>         <strong class="jxr_keyword">if</strong> (lines &gt; MAX_CACHE_SIZE) {
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="TestLoggerException" href="../../../../com/renomad/minum/logging/TestLoggerException.html#TestLoggerException">TestLoggerException</a>(String.format(<span class="jxr_string">"Can only get up to %s lines from the log"</span>, MAX_CACHE_SIZE));
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>         }
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>         <strong class="jxr_keyword">if</strong> (lines &lt;= 0) {
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a name="TestLoggerException" href="../../../../com/renomad/minum/logging/TestLoggerException.html#TestLoggerException">TestLoggerException</a>(<span class="jxr_string">"number of recent log lines must be a positive number"</span>);
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>         }
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>         MyThread.sleep(20);
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>         <strong class="jxr_keyword">var</strong> lineList = logLinesToSearch(lines, recentLogLines);
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>         <strong class="jxr_keyword">return</strong> lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();
+<a class="jxr_linenumber" name="L184" href="#L184">184</a> 
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>     }
+<a class="jxr_linenumber" name="L186" href="#L186">186</a> 
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> List&lt;String&gt; logLinesToSearch(<strong class="jxr_keyword">int</strong> lines, Queue&lt;String&gt; recentLogLines) {
+<a class="jxr_linenumber" name="L188" href="#L188">188</a>         <strong class="jxr_keyword">var</strong> fromIndex = Math.max(recentLogLines.size() - lines, 0);
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>         <strong class="jxr_keyword">return</strong> recentLogLines.stream().toList().subList(fromIndex, recentLogLines.size());
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>     }
+<a class="jxr_linenumber" name="L191" href="#L191">191</a> 
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L193" href="#L193">193</a> <em class="jxr_javadoccomment">     * Looks back through the last 3 log messages for one that</em>
+<a class="jxr_linenumber" name="L194" href="#L194">194</a> <em class="jxr_javadoccomment">     * contains the provided value.  Returns the whole line if</em>
+<a class="jxr_linenumber" name="L195" href="#L195">195</a> <em class="jxr_javadoccomment">     * found and an exception if not found.</em>
+<a class="jxr_linenumber" name="L196" href="#L196">196</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L197" href="#L197">197</a> <em class="jxr_javadoccomment">     *     See {@link #findFirstMessageThatContains(String, int)} if you</em>
+<a class="jxr_linenumber" name="L198" href="#L198">198</a> <em class="jxr_javadoccomment">     *     want to search through more than 3.  However, it is only</em>
+<a class="jxr_linenumber" name="L199" href="#L199">199</a> <em class="jxr_javadoccomment">     *     possible to search up to {@link #MAX_CACHE_SIZE}</em>
+<a class="jxr_linenumber" name="L200" href="#L200">200</a> <em class="jxr_javadoccomment">     * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L201" href="#L201">201</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>     <strong class="jxr_keyword">public</strong> String findFirstMessageThatContains(String value) {
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>         <strong class="jxr_keyword">return</strong> findFirstMessageThatContains(value, 3);
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>     }
+<a class="jxr_linenumber" name="L205" href="#L205">205</a> 
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L207" href="#L207">207</a> <em class="jxr_javadoccomment">     * A helper function to log a test title prefixed with "TEST:"</em>
+<a class="jxr_linenumber" name="L208" href="#L208">208</a> <em class="jxr_javadoccomment">     * &lt;br&gt;</em>
+<a class="jxr_linenumber" name="L209" href="#L209">209</a> <em class="jxr_javadoccomment">     * Also collects data about the previously-run test</em>
+<a class="jxr_linenumber" name="L210" href="#L210">210</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test(String msg) {
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>         <em class="jxr_comment">// put together some pretty-looking text graphics to show the suiteName of our test in log</em>
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>         loggingLock.lock();
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> baseLength = 11;
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">var</strong> dashes = <span class="jxr_string">"-"</span>.repeat(msg.length() + baseLength);
+<a class="jxr_linenumber" name="L217" href="#L217">217</a> 
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> currentCount = testCount.incrementAndGet();
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>             loggingActionQueue.enqueue(<span class="jxr_string">"Testlogger#test("</span>+msg+<span class="jxr_string">")"</span>, () -&gt; {
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>                 System.out.printf(<span class="jxr_string">"%n+%s+%n| TEST %d: %s |%n+%s+%n%n"</span>, dashes, currentCount, msg, dashes);
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>                 recentLogLines.add(msg);
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>             });
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>         } <strong class="jxr_keyword">finally</strong> {
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>             loggingLock.unlock();
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>         }
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>     }
+<a class="jxr_linenumber" name="L227" href="#L227">227</a> 
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L229" href="#L229">229</a> <em class="jxr_javadoccomment">     * Returns the count of calls to the {@link TestLogger#test(String)} method</em>
+<a class="jxr_linenumber" name="L230" href="#L230">230</a> <em class="jxr_javadoccomment">     * for an instance of this class.</em>
+<a class="jxr_linenumber" name="L231" href="#L231">231</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> getTestCount() {
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>         <strong class="jxr_keyword">return</strong> testCount.get();
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>     }
+<a class="jxr_linenumber" name="L235" href="#L235">235</a> 
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>     @Override
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>     <strong class="jxr_keyword">public</strong> String toString() {
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>         <strong class="jxr_keyword">return</strong> <span class="jxr_string">"TestLogger using queue: "</span> + <strong class="jxr_keyword">super</strong>.loggingActionQueue.toString();
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>     }
+<a class="jxr_linenumber" name="L240" href="#L240">240</a> 
+<a class="jxr_linenumber" name="L241" href="#L241">241</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2026. All rights reserved.</div>

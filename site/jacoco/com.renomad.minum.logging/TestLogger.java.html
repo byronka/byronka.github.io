@@ -149,13 +149,14 @@ public final class TestLogger extends Logger {
      * @param lines how many lines back to examine
      * @return whether this string was found, even if there
      *      were multiple places it was found.
+     * @throws TestLoggerException if value was not found.
      */
     public boolean doesMessageExist(String value, int lines) {
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (! findMessage(value, lines, recentLogLines).isEmpty()) {</span>
-<span class="fc" id="L155">            return true;</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        if (! findMessage(value, lines, recentLogLines).isEmpty()) {</span>
+<span class="fc" id="L156">            return true;</span>
         } else {
-<span class="fc" id="L157">            List&lt;String&gt; logsBeingSearched = logLinesToSearch(lines, recentLogLines);</span>
-<span class="fc" id="L158">            throw new TestLoggerException(value + &quot; was not found in \n\t&quot; + String.join(&quot;\n\t&quot;, logsBeingSearched));</span>
+<span class="fc" id="L158">            List&lt;String&gt; logsBeingSearched = logLinesToSearch(lines, recentLogLines);</span>
+<span class="fc" id="L159">            throw new TestLoggerException(value + &quot; was not found in \n\t&quot; + String.join(&quot;\n\t&quot;, logsBeingSearched));</span>
         }
     }
 
@@ -167,25 +168,25 @@ public final class TestLogger extends Logger {
      * were multiple places it was found.
      */
     public boolean doesMessageExist(String value) {
-<span class="fc" id="L170">        return doesMessageExist(value, 3);</span>
+<span class="fc" id="L171">        return doesMessageExist(value, 3);</span>
     }
 
     static List&lt;String&gt; findMessage(String value, int lines, Queue&lt;String&gt; recentLogLines) {
-<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (lines &gt; MAX_CACHE_SIZE) {</span>
-<span class="fc" id="L175">            throw new TestLoggerException(String.format(&quot;Can only get up to %s lines from the log&quot;, MAX_CACHE_SIZE));</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (lines &gt; MAX_CACHE_SIZE) {</span>
+<span class="fc" id="L176">            throw new TestLoggerException(String.format(&quot;Can only get up to %s lines from the log&quot;, MAX_CACHE_SIZE));</span>
         }
-<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (lines &lt;= 0) {</span>
-<span class="fc" id="L178">            throw new TestLoggerException(&quot;number of recent log lines must be a positive number&quot;);</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (lines &lt;= 0) {</span>
+<span class="fc" id="L179">            throw new TestLoggerException(&quot;number of recent log lines must be a positive number&quot;);</span>
         }
-<span class="fc" id="L180">        MyThread.sleep(20);</span>
-<span class="fc" id="L181">        var lineList = logLinesToSearch(lines, recentLogLines);</span>
-<span class="fc" id="L182">        return lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
+<span class="fc" id="L181">        MyThread.sleep(20);</span>
+<span class="fc" id="L182">        var lineList = logLinesToSearch(lines, recentLogLines);</span>
+<span class="fc" id="L183">        return lineList.stream().filter(x -&gt; x.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT))).toList();</span>
 
     }
 
     private static List&lt;String&gt; logLinesToSearch(int lines, Queue&lt;String&gt; recentLogLines) {
-<span class="fc" id="L187">        var fromIndex = Math.max(recentLogLines.size() - lines, 0);</span>
-<span class="fc" id="L188">        return recentLogLines.stream().toList().subList(fromIndex, recentLogLines.size());</span>
+<span class="fc" id="L188">        var fromIndex = Math.max(recentLogLines.size() - lines, 0);</span>
+<span class="fc" id="L189">        return recentLogLines.stream().toList().subList(fromIndex, recentLogLines.size());</span>
     }
 
     /**
@@ -199,7 +200,7 @@ public final class TestLogger extends Logger {
      * &lt;/p&gt;
      */
     public String findFirstMessageThatContains(String value) {
-<span class="fc" id="L202">        return findFirstMessageThatContains(value, 3);</span>
+<span class="fc" id="L203">        return findFirstMessageThatContains(value, 3);</span>
     }
 
     /**
@@ -209,32 +210,32 @@ public final class TestLogger extends Logger {
      */
     public void test(String msg) {
         // put together some pretty-looking text graphics to show the suiteName of our test in log
-<span class="fc" id="L212">        loggingLock.lock();</span>
+<span class="fc" id="L213">        loggingLock.lock();</span>
         try {
-<span class="fc" id="L214">            final var baseLength = 11;</span>
-<span class="fc" id="L215">            final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
+<span class="fc" id="L215">            final var baseLength = 11;</span>
+<span class="fc" id="L216">            final var dashes = &quot;-&quot;.repeat(msg.length() + baseLength);</span>
 
-<span class="fc" id="L217">            final int currentCount = testCount.incrementAndGet();</span>
-<span class="fc" id="L218">            loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
-<span class="fc" id="L219">                System.out.printf(&quot;%n+%s+%n| TEST %d: %s |%n+%s+%n%n&quot;, dashes, currentCount, msg, dashes);</span>
-<span class="fc" id="L220">                recentLogLines.add(msg);</span>
-<span class="fc" id="L221">            });</span>
+<span class="fc" id="L218">            final int currentCount = testCount.incrementAndGet();</span>
+<span class="fc" id="L219">            loggingActionQueue.enqueue(&quot;Testlogger#test(&quot;+msg+&quot;)&quot;, () -&gt; {</span>
+<span class="fc" id="L220">                System.out.printf(&quot;%n+%s+%n| TEST %d: %s |%n+%s+%n%n&quot;, dashes, currentCount, msg, dashes);</span>
+<span class="fc" id="L221">                recentLogLines.add(msg);</span>
+<span class="fc" id="L222">            });</span>
         } finally {
-<span class="fc" id="L223">            loggingLock.unlock();</span>
+<span class="fc" id="L224">            loggingLock.unlock();</span>
         }
-<span class="fc" id="L225">    }</span>
+<span class="fc" id="L226">    }</span>
 
     /**
      * Returns the count of calls to the {@link TestLogger#test(String)} method
      * for an instance of this class.
      */
     public int getTestCount() {
-<span class="fc" id="L232">        return testCount.get();</span>
+<span class="fc" id="L233">        return testCount.get();</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L237">        return &quot;TestLogger using queue: &quot; + super.loggingActionQueue.toString();</span>
+<span class="fc" id="L238">        return &quot;TestLogger using queue: &quot; + super.loggingActionQueue.toString();</span>
     }
 
 }

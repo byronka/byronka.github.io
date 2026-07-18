@@ -164,7 +164,7 @@ final class DbFileConverter {
      * Here, we are looking at the contents of the files.
      */
     static String deserializeDataFromDbFile(String filename, int startOfSuffixIndex, String fileContents) {
-<span class="fc" id="L167">        int fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));</span>
+<span class="fc" id="L167">        long fileNameIdentifier = Long.parseLong(filename.substring(0, startOfSuffixIndex));</span>
 <span class="fc" id="L168">        int indexOfFirstPipe = fileContents.indexOf('|');</span>
 <span class="fc" id="L169">        String indexString = fileContents.substring(0, indexOfFirstPipe);</span>
 <span class="fc" id="L170">        long index = Long.parseLong(indexString);</span>
@@ -287,7 +287,7 @@ final class DbFileConverter {
      * @param countConvertedFilesModulo modulo this number at which a log statement will be output.
      */
     static void logAlongConversion(ILogger logger, long countConvertedFiles, int countConvertedFilesModulo) {
-<span class="fc bfc" id="L290" title="All 2 branches covered.">        if (countConvertedFiles % countConvertedFilesModulo == 0) {</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">        if (countConvertedFiles % (long) countConvertedFilesModulo == 0) {</span>
 <span class="fc" id="L291">            logger.logDebug(() -&gt; &quot;DbFileConverter has converted %d files to Db Classic form&quot;</span>
 <span class="fc" id="L292">                    .formatted(countConvertedFiles));</span>
         }

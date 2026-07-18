@@ -153,8 +153,8 @@
 <a class="jxr_linenumber" name="L145" href="#L145">145</a>         StatusLine statusLine = extractStatusLine(inputStreamUtils.readLine(is));
 <a class="jxr_linenumber" name="L146" href="#L146">146</a>         List&lt;String&gt; allHeaders = Headers.getAllHeaders(is, inputStreamUtils);
 <a class="jxr_linenumber" name="L147" href="#L147">147</a>         Headers headers = <strong class="jxr_keyword">new</strong> Headers(allHeaders);
-<a class="jxr_linenumber" name="L148" href="#L148">148</a>         <strong class="jxr_keyword">int</strong> bodyLength = headers.contentLength();
-<a class="jxr_linenumber" name="L149" href="#L149">149</a>         byte[] body = inputStreamUtils.read(bodyLength, is);
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>         <strong class="jxr_keyword">long</strong> bodyLength = headers.contentLength();
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>         byte[] body = inputStreamUtils.read(Math.toIntExact(bodyLength), is);
 <a class="jxr_linenumber" name="L150" href="#L150">150</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> MyResponse(statusLine, headers, body);
 <a class="jxr_linenumber" name="L151" href="#L151">151</a>     }
 <a class="jxr_linenumber" name="L152" href="#L152">152</a> 

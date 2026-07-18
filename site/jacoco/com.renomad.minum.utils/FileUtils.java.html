@@ -145,91 +145,96 @@ public final class FileUtils implements IFileUtils {
 <span class="fc" id="L145">        boolean isPreviousCharDot = false;</span>
 <span class="fc" id="L146">        boolean isPreviousCharSlash = false;</span>
 <span class="fc bfc" id="L147" title="All 2 branches covered.">        for (int i = 0; i &lt; path.length(); i++) {</span>
-<span class="fc" id="L148">            char c = path.charAt(i);</span>
-<span class="fc bfc" id="L149" title="All 22 branches covered.">            boolean isWhitelistedChar = c &gt;= 'A' &amp;&amp; c &lt;= 'Z' || c &gt;= 'a' &amp;&amp; c &lt;= 'z' || c &gt;= '0' &amp;&amp; c &lt;= '9' ||</span>
-                    c == '-' || c == '_' || c == '.' || c == '\\' || c == '/';
-<span class="fc bfc" id="L151" title="All 2 branches covered.">            if (!isWhitelistedChar) {</span>
-<span class="fc" id="L152">                throw new ForbiddenUseException(&quot;filename (&quot; + path + &quot;) contained invalid characters (&quot; + c + &quot;).  Allowable characters are alpha-numeric ascii both cases, underscore, forward and backward-slash, period, and dash&quot;);</span>
-            }
-<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (c == '.') {</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">                if (isPreviousCharDot) {</span>
-<span class="fc" id="L156">                    throw new ForbiddenUseException(&quot;filename (&quot;+path+&quot;) contained invalid characters&quot;);</span>
+<span class="fc" id="L148">            char c = checkAgainstWhitelistChars(path, i);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            if (c == '.') {</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                if (isPreviousCharDot) {</span>
+<span class="fc" id="L151">                    throw new ForbiddenUseException(&quot;filename (&quot;+path+&quot;) contained invalid characters&quot;);</span>
                 }
-<span class="fc" id="L158">                isPreviousCharDot = true;</span>
+<span class="fc" id="L153">                isPreviousCharDot = true;</span>
             } else {
-<span class="fc" id="L160">                isPreviousCharDot = false;</span>
+<span class="fc" id="L155">                isPreviousCharDot = false;</span>
             }
-<span class="fc bfc" id="L162" title="All 2 branches covered.">            if (c == '/') {</span>
-<span class="fc bfc" id="L163" title="All 2 branches covered.">                if (isPreviousCharSlash) {</span>
-<span class="fc" id="L164">                    throw new ForbiddenUseException(&quot;filename (&quot;+path+&quot;) contained invalid characters&quot;);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            if (c == '/') {</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">                if (isPreviousCharSlash) {</span>
+<span class="fc" id="L159">                    throw new ForbiddenUseException(&quot;filename (&quot;+path+&quot;) contained invalid characters&quot;);</span>
                 }
-<span class="fc" id="L166">                isPreviousCharSlash = true;</span>
+<span class="fc" id="L161">                isPreviousCharSlash = true;</span>
             } else {
-<span class="fc" id="L168">                isPreviousCharSlash = false;</span>
+<span class="fc" id="L163">                isPreviousCharSlash = false;</span>
             }
         }
-<span class="fc" id="L171">    }</span>
+<span class="fc" id="L166">    }</span>
+
+    private static char checkAgainstWhitelistChars(String path, int i) {
+<span class="fc" id="L169">        char c = path.charAt(i);</span>
+<span class="fc bfc" id="L170" title="All 22 branches covered.">        boolean isWhitelistedChar = c &gt;= 'A' &amp;&amp; c &lt;= 'Z' || c &gt;= 'a' &amp;&amp; c &lt;= 'z' || c &gt;= '0' &amp;&amp; c &lt;= '9' ||</span>
+                c == '-' || c == '_' || c == '.' || c == '\\' || c == '/';
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (!isWhitelistedChar) {</span>
+<span class="fc" id="L173">            throw new ForbiddenUseException(&quot;filename (&quot; + path + &quot;) contained invalid characters (&quot; + c + &quot;).  Allowable characters are alpha-numeric ascii both cases, underscore, forward and backward-slash, period, and dash&quot;);</span>
+        }
+<span class="fc" id="L175">        return c;</span>
+    }
 
     @Override
     public Path safeResolve(String parentDirectory, String path) throws IOException {
-<span class="fc" id="L175">        checkForBadFilePatterns(path);</span>
-<span class="fc" id="L176">        checkFileIsWithinDirectory(path, parentDirectory);</span>
-<span class="fc" id="L177">        return Path.of(parentDirectory).resolve(path);</span>
+<span class="fc" id="L180">        checkForBadFilePatterns(path);</span>
+<span class="fc" id="L181">        checkFileIsWithinDirectory(path, parentDirectory);</span>
+<span class="fc" id="L182">        return Path.of(parentDirectory).resolve(path);</span>
     }
 
     @Override
     public void delete(Path path) throws IOException {
-<span class="fc" id="L182">        Files.delete(path);</span>
-<span class="fc" id="L183">    }</span>
-
-    @Override
-    public void move(Path source, Path target, CopyOption... options) throws IOException {
-<span class="fc" id="L187">        Files.move(source, target, options);</span>
+<span class="fc" id="L187">        Files.delete(path);</span>
 <span class="fc" id="L188">    }</span>
 
     @Override
+    public void move(Path source, Path target, CopyOption... options) throws IOException {
+<span class="fc" id="L192">        Files.move(source, target, options);</span>
+<span class="fc" id="L193">    }</span>
+
+    @Override
     public boolean exists(Path path, LinkOption... options) {
-<span class="fc" id="L192">        return Files.exists(path, options);</span>
+<span class="fc" id="L197">        return Files.exists(path, options);</span>
     }
 
     @Override
     public BufferedWriter newBufferedWriter(Path path, Charset cs, OpenOption... options) throws IOException {
-<span class="fc" id="L197">        return Files.newBufferedWriter(path, cs, options);</span>
+<span class="fc" id="L202">        return Files.newBufferedWriter(path, cs, options);</span>
     }
 
     @Override
     public BufferedReader newBufferedReader(Path path, Charset cs) throws IOException {
-<span class="fc" id="L202">        return Files.newBufferedReader(path, cs);</span>
+<span class="fc" id="L207">        return Files.newBufferedReader(path, cs);</span>
     }
 
     @Override
     public Stream&lt;Path&gt; walk(Path start, FileVisitOption... options) throws IOException {
-<span class="fc" id="L207">        return Files.walk(start, options);</span>
+<span class="fc" id="L212">        return Files.walk(start, options);</span>
     }
 
     @Override
     public boolean isRegularFile(Path path, LinkOption... options) {
-<span class="fc" id="L212">        return Files.isRegularFile(path, options);</span>
+<span class="fc" id="L217">        return Files.isRegularFile(path, options);</span>
     }
 
     @Override
     public Stream&lt;String&gt; lines(Path path, Charset cs) throws IOException {
-<span class="fc" id="L217">        return Files.lines(path, cs);</span>
+<span class="fc" id="L222">        return Files.lines(path, cs);</span>
     }
 
     @Override
     public boolean deleteIfExists(Path path) throws IOException {
-<span class="fc" id="L222">        return Files.deleteIfExists(path);</span>
+<span class="fc" id="L227">        return Files.deleteIfExists(path);</span>
     }
 
     @Override
     public long size(Path path) throws IOException {
-<span class="fc" id="L227">        return Files.size(path);</span>
+<span class="fc" id="L232">        return Files.size(path);</span>
     }
 
     @Override
     public Stream&lt;Path&gt; list(Path dir) throws IOException {
-<span class="fc" id="L232">        return Files.list(dir);</span>
+<span class="fc" id="L237">        return Files.list(dir);</span>
     }
 
 }

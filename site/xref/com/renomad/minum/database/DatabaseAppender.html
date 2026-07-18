@@ -89,7 +89,7 @@
 <a class="jxr_linenumber" name="L81" href="#L81">81</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L82" href="#L82">82</a>  <em class="jxr_javadoccomment">     * This is the count of bytes that have been appended</em>
 <a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L84" href="#L84">84</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">long</strong> appendBytes;
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> appendBytes;
 <a class="jxr_linenumber" name="L85" href="#L85">85</a>  
 <a class="jxr_linenumber" name="L86" href="#L86">86</a>      <a name="DatabaseAppender" href="../../../../com/renomad/minum/database/DatabaseAppender.html#DatabaseAppender">DatabaseAppender</a>(Path persistenceDirectory, <a name="Context" href="../../../../com/renomad/minum/state/Context.html#Context">Context</a> context, <a name="IFileUtils" href="../../../../com/renomad/minum/utils/IFileUtils.html#IFileUtils">IFileUtils</a> fileUtils) <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>          <strong class="jxr_keyword">this</strong>.fileUtils = fileUtils;
@@ -121,7 +121,7 @@
 <a class="jxr_linenumber" name="L113" href="#L113">113</a>             appendCount = lines.size();
 <a class="jxr_linenumber" name="L114" href="#L114">114</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L115" href="#L115">115</a>             <em class="jxr_comment">// reset the count to zero, we're starting a new file.</em>
-<a class="jxr_linenumber" name="L116" href="#L116">116</a>             logger.logDebug(() -&gt; <span class="jxr_string">"Creating a new database append file. Previous file: %,d lines, %.2f megabytes"</span>.formatted(appendCount, (appendBytes / 1_048_576.0)));
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>             logger.logDebug(() -&gt; <span class="jxr_string">"Creating a new database append file. Previous file: %,d lines, %.2f megabytes"</span>.formatted(appendCount, ((<strong class="jxr_keyword">double</strong>) appendBytes / 1_048_576.0)));
 <a class="jxr_linenumber" name="L117" href="#L117">117</a>             appendCount = 0;
 <a class="jxr_linenumber" name="L118" href="#L118">118</a>             appendBytes = 0;
 <a class="jxr_linenumber" name="L119" href="#L119">119</a>         }
@@ -174,7 +174,7 @@
 <a class="jxr_linenumber" name="L166" href="#L166">166</a>                 <em class="jxr_comment">// this code only runs when there is data to add, so no need to take a</em>
 <a class="jxr_linenumber" name="L167" href="#L167">167</a>                 <em class="jxr_comment">// lot of waiting time.  But, if the data is coming fast and furious,</em>
 <a class="jxr_linenumber" name="L168" href="#L168">168</a>                 <em class="jxr_comment">// at least a small wait will allow greater efficiency.</em>
-<a class="jxr_linenumber" name="L169" href="#L169">169</a>                 MyThread.sleep(50);
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>                 MyThread.sleep(50L);
 <a class="jxr_linenumber" name="L170" href="#L170">170</a>             }
 <a class="jxr_linenumber" name="L171" href="#L171">171</a>             flushLoopRunning = false;
 <a class="jxr_linenumber" name="L172" href="#L172">172</a>         };

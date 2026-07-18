@@ -8,7 +8,10 @@ import com.renomad.minum.queue.ActionQueueState;
 import com.renomad.minum.web.FullSystem;
 
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -37,35 +40,49 @@ public final class Context {
     private FullSystem fullSystem;
     private final ActionQueueState actionQueueState;
 
-<span class="fc" id="L40">    public Context(ExecutorService executorService, Constants constants, ILogger logger) {</span>
-<span class="fc" id="L41">        this.executorService = executorService;</span>
-<span class="fc" id="L42">        this.constants = constants;</span>
-<span class="fc" id="L43">        actionQueueState = new ActionQueueState();</span>
-<span class="fc" id="L44">        this.logger = logger;</span>
-<span class="fc" id="L45">    }</span>
+    /**
+     * A record of which paths are registered for database
+     * use, to prevent multiple databases unknowingly pointing
+     * to the same directory.
+     */
+    private final Set&lt;Path&gt; registeredDatabasePaths;
+
+    /**
+     * Used to provide thread-safe access to the {@link #registeredDatabasePaths}
+     */
+    private final ReentrantLock databasePathsLock;
+
+<span class="fc" id="L55">    public Context(ExecutorService executorService, Constants constants, ILogger logger) {</span>
+<span class="fc" id="L56">        this.executorService = executorService;</span>
+<span class="fc" id="L57">        this.constants = constants;</span>
+<span class="fc" id="L58">        actionQueueState = new ActionQueueState();</span>
+<span class="fc" id="L59">        this.logger = logger;</span>
+<span class="fc" id="L60">        this.registeredDatabasePaths = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L61">        this.databasePathsLock = new ReentrantLock();</span>
+<span class="fc" id="L62">    }</span>
 
     public ILogger getLogger() {
-<span class="fc" id="L48">        return logger;</span>
+<span class="fc" id="L65">        return logger;</span>
     }
 
     public ExecutorService getExecutorService() {
-<span class="fc" id="L52">        return executorService;</span>
+<span class="fc" id="L69">        return executorService;</span>
     }
 
     public Constants getConstants() {
-<span class="fc" id="L56">        return constants;</span>
+<span class="fc" id="L73">        return constants;</span>
     }
 
     public void setFullSystem(FullSystem fullSystem) {
-<span class="fc" id="L60">        this.fullSystem = fullSystem;</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L77">        this.fullSystem = fullSystem;</span>
+<span class="fc" id="L78">    }</span>
 
     public FullSystem getFullSystem() {
-<span class="fc" id="L64">        return fullSystem;</span>
+<span class="fc" id="L81">        return fullSystem;</span>
     }
 
     public ActionQueueState getActionQueueState() {
-<span class="fc" id="L68">        return actionQueueState;</span>
+<span class="fc" id="L85">        return actionQueueState;</span>
     }
 
     /**
@@ -85,7 +102,7 @@ public final class Context {
      *                 Db code to deserialize the data when reading.
      */
     public &lt;T extends DbData&lt;?&gt;&gt; Db&lt;T&gt; getDb(String name, T instance) {
-<span class="fc" id="L88">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
+<span class="fc" id="L105">        return new Db&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
     }
 
     /**
@@ -101,9 +118,71 @@ public final class Context {
      * &lt;/p&gt;
      */
     public &lt;T extends DbData&lt;?&gt;&gt; DbEngine2&lt;T&gt; getDb2(String name, T instance) {
-<span class="fc" id="L104">        return new DbEngine2&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
+<span class="fc" id="L121">        return new DbEngine2&lt;&gt;(Path.of(constants.dbDirectory, name), this, instance);</span>
     }
 
+
+    /* ***********************************************
+
+    Database path registrations
+
+    This next section includes some methods for managing
+    the set of registered database paths in use by
+    the system
+
+     *********************************************** */
+
+    /**
+     * Return true if the input path exists in the set
+     */
+    public boolean isDbPathRegistered(Path path) {
+<span class="fc" id="L139">        return this.registeredDatabasePaths.contains(path);</span>
+    }
+
+    /**
+     * Add a path to the set of paths we are tracking as
+     * registered for a database.  This is used to prevent
+     * pointing two databases at the same directory, which
+     * would lead to data corruption.
+     */
+    public void addToDbPaths(Path path) {
+<span class="fc" id="L149">        this.databasePathsLock.lock();</span>
+        try {
+<span class="fc" id="L151">            logger.logDebug(() -&gt; &quot;Adding registration for database path &quot; + path);</span>
+<span class="fc" id="L152">            this.registeredDatabasePaths.add(path);</span>
+        } finally {
+<span class="fc" id="L154">            this.databasePathsLock.unlock();</span>
+        }
+<span class="fc" id="L156">    }</span>
+
+
+    /**
+     * Remove an item from the set of registered database paths,
+     * run when a database shuts down.
+     */
+    public void removeFromPaths(Path path) {
+<span class="fc" id="L164">        this.databasePathsLock.lock();</span>
+        try {
+<span class="fc" id="L166">            logger.logDebug(() -&gt; &quot;Removing registration for database path &quot; + path);</span>
+<span class="fc" id="L167">            this.registeredDatabasePaths.remove(path);</span>
+        } finally {
+<span class="fc" id="L169">            this.databasePathsLock.unlock();</span>
+        }
+<span class="fc" id="L171">    }</span>
+
+    /**
+     * Remove all registered paths from the set, mostly
+     * used when testing
+     */
+    public void clearDatabasePaths() {
+<span class="fc" id="L178">        this.databasePathsLock.lock();</span>
+        try {
+<span class="fc" id="L180">            logger.logDebug(() -&gt; &quot;Removing all registered database paths: &quot; + registeredDatabasePaths);</span>
+<span class="fc" id="L181">            this.registeredDatabasePaths.clear();</span>
+        } finally {
+<span class="fc" id="L183">            this.databasePathsLock.unlock();</span>
+        }
+<span class="fc" id="L185">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

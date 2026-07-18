@@ -18,7 +18,14 @@ public final class TheBrig implements ITheBrig {
     private final ExecutorService es;
     private final AbstractDb&lt;Inmate&gt; inmatesDb;
     private final ILogger logger;
-<span class="fc" id="L21">    private final ReentrantLock lock = new ReentrantLock();</span>
+
+    /**
+     * This lock is around edits to the inmate database, so it is not
+     * possible for two threads to be adding an inmate at the same
+     * time, or deleting an inmate at the same time, or adding an
+     * inmate while deleting an inmate.
+     */
+<span class="fc" id="L28">    private final ReentrantLock lock = new ReentrantLock();</span>
     private Thread myThread;
     private static final String CLIENT_IDENTIFIER_INDEX = &quot;client_identifier_index&quot;;
 
@@ -28,13 +35,14 @@ public final class TheBrig implements ITheBrig {
      */
     private final int sleepTime;
 
-<span class="fc" id="L31">    public TheBrig(int sleepTime, Context context) {</span>
-<span class="fc" id="L32">        this.es = context.getExecutorService();</span>
-<span class="fc" id="L33">        this.logger = context.getLogger();</span>
-<span class="fc" id="L34">        this.inmatesDb = context.getDb2(&quot;the_brig&quot;, Inmate.EMPTY);</span>
-<span class="fc" id="L35">        this.inmatesDb.registerIndex(CLIENT_IDENTIFIER_INDEX, Inmate::getClientId);</span>
-<span class="fc" id="L36">        this.sleepTime = sleepTime;</span>
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L38">    public TheBrig(int sleepTime, Context context) {</span>
+<span class="fc" id="L39">        this.es = context.getExecutorService();</span>
+<span class="fc" id="L40">        this.logger = context.getLogger();</span>
+<span class="fc" id="L41">        this.inmatesDb = context.getDb2(&quot;the_brig&quot;, Inmate.EMPTY)</span>
+<span class="fc" id="L42">                .registerIndex(CLIENT_IDENTIFIER_INDEX, Inmate::getClientId)</span>
+<span class="fc" id="L43">                .loadData();</span>
+<span class="fc" id="L44">        this.sleepTime = sleepTime;</span>
+<span class="fc" id="L45">    }</span>
 
     /**
      * In this class we create a thread that runs throughout the lifetime
@@ -42,21 +50,21 @@ public final class TheBrig implements ITheBrig {
      * under consideration.
      */
     public TheBrig(Context context) {
-<span class="fc" id="L45">        this(10 * 1000, context);</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L53">        this(10 * 1000, context);</span>
+<span class="fc" id="L54">    }</span>
 
     // Regarding the BusyWait - indeed, we expect that the while loop
     // below is an infinite loop unless there's an exception thrown, that's what it is.
     @Override
-    public ITheBrig initialize() {
-<span class="fc" id="L52">        logger.logDebug(() -&gt; &quot;Initializing TheBrig main loop&quot;);</span>
-<span class="fc" id="L53">        ThrowingRunnable innerLoopThread = () -&gt; {</span>
-<span class="fc" id="L54">            Thread.currentThread().setName(&quot;TheBrigThread&quot;);</span>
-<span class="fc" id="L55">            myThread = Thread.currentThread();</span>
+    public TheBrig initialize() {
+<span class="fc" id="L60">        logger.logDebug(() -&gt; &quot;Initializing TheBrig main loop&quot;);</span>
+<span class="fc" id="L61">        ThrowingRunnable innerLoopThread = () -&gt; {</span>
+<span class="fc" id="L62">            Thread.currentThread().setName(&quot;TheBrigThread&quot;);</span>
+<span class="fc" id="L63">            myThread = Thread.currentThread();</span>
             while (true) {
                 try {
-<span class="fc" id="L58">                    reviewCurrentInmates();</span>
-<span class="fc" id="L59">                } catch (InterruptedException ex) {</span>
+<span class="fc" id="L66">                    reviewCurrentInmates();</span>
+<span class="fc" id="L67">                } catch (InterruptedException ex) {</span>
 
                     /*
                     this is what we expect to happen.
@@ -65,103 +73,96 @@ public final class TheBrig implements ITheBrig {
                     down cleanly
                      */
 
-<span class="fc" id="L68">                    logger.logDebug(() -&gt; String.format(&quot;%s TheBrig is stopped.%n&quot;, TimeUtils.getTimestampIsoInstant()));</span>
-<span class="fc" id="L69">                    Thread.currentThread().interrupt();</span>
-<span class="fc" id="L70">                    break;</span>
-<span class="fc" id="L71">                }</span>
+<span class="fc" id="L76">                    logger.logDebug(() -&gt; String.format(&quot;%s TheBrig is stopped.%n&quot;, TimeUtils.getTimestampIsoInstant()));</span>
+<span class="fc" id="L77">                    Thread.currentThread().interrupt();</span>
+<span class="fc" id="L78">                    break;</span>
+<span class="fc" id="L79">                }</span>
             }
-<span class="fc" id="L73">        };</span>
-<span class="fc" id="L74">        es.submit(ThrowingRunnable.throwingRunnableWrapper(innerLoopThread, logger));</span>
-<span class="fc" id="L75">        return this;</span>
+<span class="fc" id="L81">        };</span>
+<span class="fc" id="L82">        es.submit(ThrowingRunnable.throwingRunnableWrapper(innerLoopThread, logger));</span>
+<span class="fc" id="L83">        return this;</span>
     }
 
     private void reviewCurrentInmates() throws InterruptedException {
-<span class="fc" id="L79">        Collection&lt;Inmate&gt; values = inmatesDb.values();</span>
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (! values.isEmpty()) {</span>
-<span class="fc" id="L81">            logger.logTrace(() -&gt; &quot;TheBrig reviewing current inmates. Count: &quot; + values.size());</span>
+<span class="fc" id="L87">        Collection&lt;Inmate&gt; values = inmatesDb.values();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (! values.isEmpty()) {</span>
+<span class="fc" id="L89">            logger.logTrace(() -&gt; &quot;TheBrig reviewing current inmates. Count: &quot; + values.size());</span>
         }
-<span class="fc" id="L83">        var now = System.currentTimeMillis();</span>
-<span class="fc" id="L84">        lock.lock();</span>
-        try {
-<span class="fc" id="L86">            processInmateList(now, values, logger, inmatesDb);</span>
-        } finally {
-<span class="fc" id="L88">            lock.unlock();</span>
-        }
-<span class="fc" id="L90">        Thread.sleep(sleepTime);</span>
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L91">        var now = System.currentTimeMillis();</span>
+<span class="fc" id="L92">        processInmateList(now, values, logger, inmatesDb, lock);</span>
+<span class="fc" id="L93">        Thread.sleep((long) sleepTime);</span>
+<span class="fc" id="L94">    }</span>
 
     /**
      * figure out which clients have paid their dues
-     * @param now the current time, in milliseconds past the epoch
+     *
+     * @param now       the current time, in milliseconds past the epoch
      * @param inmatesDb the database of all inmates
+     * @param lock      a lock around deleting any inmate being released,
+     *                  to avoid conflicts with {@link #sendToJail(String, long)}
      */
-    static void processInmateList(long now, Collection&lt;Inmate&gt; inmates, ILogger logger, AbstractDb&lt;Inmate&gt; inmatesDb) {
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (Inmate clientKeyAndDuration : inmates) {</span>
+    static void processInmateList(long now, Collection&lt;Inmate&gt; inmates, ILogger logger, AbstractDb&lt;Inmate&gt; inmatesDb, ReentrantLock lock) {
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (Inmate clientKeyAndDuration : inmates) {</span>
             // if the release time is in the past (that is, the release time is
             // before / less-than now), add them to the list to be released.
-<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (clientKeyAndDuration.getReleaseTime() &lt; now) {</span>
-<span class="fc" id="L103">                logger.logTrace(() -&gt; &quot;UnderInvestigation: &quot; + clientKeyAndDuration.getClientId() + &quot; has paid its dues as of &quot; + clientKeyAndDuration.getReleaseTime() + &quot; and is getting released. Current time: &quot; + now);</span>
-<span class="fc" id="L104">                inmatesDb.delete(clientKeyAndDuration);</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (clientKeyAndDuration.getReleaseTime() &lt; now) {</span>
+<span class="fc" id="L109">                logger.logTrace(() -&gt; &quot;UnderInvestigation: &quot; + clientKeyAndDuration.getClientId() + &quot; has paid its dues as of &quot; + clientKeyAndDuration.getReleaseTime() + &quot; and is getting released. Current time: &quot; + now);</span>
+<span class="fc" id="L110">                lock.lock();</span>
+                try {
+<span class="fc" id="L112">                    inmatesDb.delete(clientKeyAndDuration);</span>
+                } finally {
+<span class="fc" id="L114">                    lock.unlock();</span>
+                }
             }
-<span class="fc" id="L106">        }</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L117">        }</span>
+<span class="fc" id="L118">    }</span>
 
     @Override
     public void stop() throws IOException {
-<span class="fc" id="L111">        logger.logDebug(() -&gt; &quot;TheBrig has been told to stop&quot;);</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (myThread != null) {</span>
-<span class="fc" id="L113">            logger.logDebug(() -&gt; &quot;TheBrig: Sending interrupt to thread&quot;);</span>
-<span class="fc" id="L114">            myThread.interrupt();</span>
-<span class="fc" id="L115">            this.inmatesDb.stop();</span>
+<span class="fc" id="L122">        logger.logDebug(() -&gt; &quot;TheBrig has been told to stop&quot;);</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (myThread != null) {</span>
+<span class="fc" id="L124">            logger.logDebug(() -&gt; &quot;TheBrig: Sending interrupt to thread&quot;);</span>
+<span class="fc" id="L125">            myThread.interrupt();</span>
+<span class="fc" id="L126">            this.inmatesDb.stop();</span>
         } else {
-<span class="fc" id="L117">            throw new MinumSecurityException(&quot;TheBrig was told to stop, but it was uninitialized&quot;);</span>
+<span class="fc" id="L128">            throw new MinumSecurityException(&quot;TheBrig was told to stop, but it was uninitialized&quot;);</span>
         }
-<span class="fc" id="L119">    }</span>
+<span class="fc" id="L130">    }</span>
 
     @Override
     public boolean sendToJail(String clientIdentifier, long sentenceDuration) {
-<span class="fc" id="L123">        lock.lock(); // block threads here if multiple are trying to get in - only one gets in at a time</span>
+<span class="fc" id="L134">        lock.lock();</span>
         try {
-<span class="fc" id="L125">            long now = System.currentTimeMillis();</span>
+<span class="fc" id="L136">            long now = System.currentTimeMillis();</span>
 
-<span class="fc" id="L127">            Inmate existingInmate = inmatesDb.findExactlyOne(CLIENT_IDENTIFIER_INDEX, clientIdentifier);</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">            if (existingInmate == null) {</span>
+<span class="fc" id="L138">            Inmate existingInmate = inmatesDb.findExactlyOne(CLIENT_IDENTIFIER_INDEX, clientIdentifier);</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (existingInmate == null) {</span>
                 // if this is a new inmate, add them
-<span class="fc" id="L130">                long releaseTime = now + sentenceDuration;</span>
-<span class="fc" id="L131">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
-<span class="fc" id="L132">                Inmate newInmate = new Inmate(0L, clientIdentifier, releaseTime);</span>
-<span class="fc" id="L133">                inmatesDb.write(newInmate);</span>
-<span class="fc" id="L134">            } else {</span>
+<span class="fc" id="L141">                long releaseTime = now + sentenceDuration;</span>
+<span class="fc" id="L142">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
+<span class="fc" id="L143">                Inmate newInmate = new Inmate(0L, clientIdentifier, releaseTime);</span>
+<span class="fc" id="L144">                inmatesDb.write(newInmate);</span>
+<span class="fc" id="L145">            } else {</span>
                 // if this is an existing inmate continuing to attack us, just update their duration
-<span class="fc" id="L136">                long releaseTime = existingInmate.getReleaseTime() + sentenceDuration;</span>
-<span class="fc" id="L137">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
-<span class="fc" id="L138">                inmatesDb.write(new Inmate(existingInmate.getIndex(), existingInmate.getClientId(), releaseTime));</span>
+<span class="fc" id="L147">                long releaseTime = existingInmate.getReleaseTime() + sentenceDuration;</span>
+<span class="fc" id="L148">                logger.logDebug(() -&gt; &quot;TheBrig: Putting away &quot; + clientIdentifier + &quot; for &quot; + sentenceDuration + &quot; milliseconds. Release time: &quot; + releaseTime + &quot;. Current time: &quot; + now);</span>
+<span class="fc" id="L149">                inmatesDb.write(new Inmate(existingInmate.getIndex(), existingInmate.getClientId(), releaseTime));</span>
             }
         } finally {
-<span class="fc" id="L141">            lock.unlock();</span>
+<span class="fc" id="L152">            lock.unlock();</span>
         }
-<span class="fc" id="L143">        return true;</span>
+<span class="fc" id="L154">        return true;</span>
 
     }
 
     @Override
     public boolean isInJail(String clientIdentifier) {
-<span class="fc" id="L149">        lock.lock();</span>
-        try {
-<span class="fc bfc" id="L151" title="All 2 branches covered.">            return inmatesDb.findExactlyOne(CLIENT_IDENTIFIER_INDEX, clientIdentifier) != null;</span>
-        } finally {
-<span class="fc" id="L153">            lock.unlock();</span>
-        }
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            return inmatesDb.findExactlyOne(CLIENT_IDENTIFIER_INDEX, clientIdentifier) != null;</span>
     }
 
     @Override
-    public List&lt;Inmate&gt; getInmates() {
-<span class="fc" id="L159">        lock.lock();</span>
-        try {
-<span class="fc" id="L161">            return inmatesDb.values().stream().toList();</span>
-        } finally {
-<span class="fc" id="L163">            lock.unlock();</span>
-        }
+    public Collection&lt;Inmate&gt; getInmates() {
+<span class="fc" id="L165">            return inmatesDb.values();</span>
     }
 
 }

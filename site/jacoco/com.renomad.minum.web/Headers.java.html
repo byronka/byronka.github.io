@@ -30,7 +30,7 @@ public final class Headers {
 
 <span class="fc" id="L31">    public static final Headers EMPTY = new Headers(List.of());</span>
     private static final int MAX_HEADERS_COUNT = 70;
-    private Integer contentLength;
+    private Long contentLength;
 
     /**
      * Each line of the headers is read into this data structure
@@ -99,22 +99,22 @@ public final class Headers {
      * body of the POST and return that value as an integer. If
      * we do not find a content length, return -1.
      */
-    public int contentLength() {
+    public long contentLength() {
         // if we have a saved value for content length, use that
 <span class="fc bfc" id="L104" title="All 2 branches covered.">        if (contentLength != null) return contentLength;</span>
 
 <span class="fc" id="L106">        List&lt;String&gt; cl = Objects.requireNonNullElse(headersMap.get(&quot;content-length&quot;), List.of());</span>
 <span class="fc bfc" id="L107" title="All 2 branches covered.">        if (cl.isEmpty()) {</span>
-<span class="fc" id="L108">            contentLength = -1;</span>
+<span class="fc" id="L108">            contentLength = -1L;</span>
 <span class="fc bfc" id="L109" title="All 2 branches covered.">        } else if (cl.size() &gt; 1) {</span>
 <span class="fc" id="L110">            throw new BadRequestException(&quot;Received multiple content-length headers, which does not make sense.  Received: &quot; + cl);</span>
         } else {
             try {
-<span class="fc" id="L113">                contentLength = Integer.parseInt(cl.getFirst());</span>
+<span class="fc" id="L113">                contentLength = Long.parseLong(cl.getFirst());</span>
 <span class="fc" id="L114">            } catch (NumberFormatException ex) {</span>
 <span class="fc" id="L115">                throw new BadRequestException(&quot;Received a non-numeric content length value. Received: &quot; + cl.getFirst(), ex);</span>
 <span class="fc" id="L116">            }</span>
-<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (contentLength &lt; 0) {</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (contentLength &lt; 0L) {</span>
 <span class="fc" id="L118">                throw new BadRequestException(&quot;Content length cannot be negative.  Received: &quot; + contentLength);</span>
             }
         }

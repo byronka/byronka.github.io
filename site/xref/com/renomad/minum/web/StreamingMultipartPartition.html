@@ -29,7 +29,7 @@
 <a class="jxr_linenumber" name="L21" href="#L21">21</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="Headers" href="../../../../com/renomad/minum/web/Headers.html#Headers">Headers</a> headers;
 <a class="jxr_linenumber" name="L22" href="#L22">22</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> InputStream inputStream;
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="ContentDisposition" href="../../../../com/renomad/minum/web/ContentDisposition.html#ContentDisposition">ContentDisposition</a> contentDisposition;
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> contentLength;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> contentLength;
 <a class="jxr_linenumber" name="L25" href="#L25">25</a>      <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="L26" href="#L26">26</a>  <em class="jxr_javadoccomment">     * After we hit the boundary, we will set this flag to true, and all</em>
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>  <em class="jxr_javadoccomment">     * subsequent reads will return -1.</em>
@@ -67,7 +67,7 @@
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>                                         <a name="ContentDisposition" href="../../../../com/renomad/minum/web/ContentDisposition.html#ContentDisposition">ContentDisposition</a> contentDisposition,
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>                                         String boundaryValue,
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>                                         <a name="CountBytesRead" href="../../../../com/renomad/minum/web/CountBytesRead.html#CountBytesRead">CountBytesRead</a> countBytesRead,
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>                                         <strong class="jxr_keyword">int</strong> contentLength) {
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>                                         <strong class="jxr_keyword">long</strong> contentLength) {
 <a class="jxr_linenumber" name="L63" href="#L63">63</a>  
 <a class="jxr_linenumber" name="L64" href="#L64">64</a>          <strong class="jxr_keyword">this</strong>.headers = headers;
 <a class="jxr_linenumber" name="L65" href="#L65">65</a>          <strong class="jxr_keyword">this</strong>.inputStream = inputStream;
@@ -167,7 +167,7 @@
 <a class="jxr_linenumber" name="L159" href="#L159">159</a>     <strong class="jxr_keyword">public</strong> byte[] readAllBytes() {
 <a class="jxr_linenumber" name="L160" href="#L160">160</a>         <strong class="jxr_keyword">var</strong> baos = <strong class="jxr_keyword">new</strong> ByteArrayOutputStream();
 <a class="jxr_linenumber" name="L161" href="#L161">161</a>         <strong class="jxr_keyword">while</strong> (<strong class="jxr_keyword">true</strong>) {
-<a class="jxr_linenumber" name="L162" href="#L162">162</a>             <strong class="jxr_keyword">int</strong> result = 0;
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>             <strong class="jxr_keyword">int</strong> result;
 <a class="jxr_linenumber" name="L163" href="#L163">163</a>             result = read();
 <a class="jxr_linenumber" name="L164" href="#L164">164</a>             <strong class="jxr_keyword">if</strong> (result == -1) {
 <a class="jxr_linenumber" name="L165" href="#L165">165</a>                 <strong class="jxr_keyword">return</strong> baos.toByteArray();

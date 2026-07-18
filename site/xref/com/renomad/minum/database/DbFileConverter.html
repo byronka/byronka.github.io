@@ -172,7 +172,7 @@
 <a class="jxr_linenumber" name="L164" href="#L164">164</a> <em class="jxr_javadoccomment">     * Here, we are looking at the contents of the files.</em>
 <a class="jxr_linenumber" name="L165" href="#L165">165</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L166" href="#L166">166</a>     <strong class="jxr_keyword">static</strong> String deserializeDataFromDbFile(String filename, <strong class="jxr_keyword">int</strong> startOfSuffixIndex, String fileContents) {
-<a class="jxr_linenumber" name="L167" href="#L167">167</a>         <strong class="jxr_keyword">int</strong> fileNameIdentifier = Integer.parseInt(filename.substring(0, startOfSuffixIndex));
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>         <strong class="jxr_keyword">long</strong> fileNameIdentifier = Long.parseLong(filename.substring(0, startOfSuffixIndex));
 <a class="jxr_linenumber" name="L168" href="#L168">168</a>         <strong class="jxr_keyword">int</strong> indexOfFirstPipe = fileContents.indexOf('|');
 <a class="jxr_linenumber" name="L169" href="#L169">169</a>         String indexString = fileContents.substring(0, indexOfFirstPipe);
 <a class="jxr_linenumber" name="L170" href="#L170">170</a>         <strong class="jxr_keyword">long</strong> index = Long.parseLong(indexString);
@@ -295,7 +295,7 @@
 <a class="jxr_linenumber" name="L287" href="#L287">287</a> <em class="jxr_javadoccomment">     * @param countConvertedFilesModulo modulo this number at which a log statement will be output.</em>
 <a class="jxr_linenumber" name="L288" href="#L288">288</a> <em class="jxr_javadoccomment">     */</em>
 <a class="jxr_linenumber" name="L289" href="#L289">289</a>     <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> logAlongConversion(<a name="ILogger" href="../../../../com/renomad/minum/logging/ILogger.html#ILogger">ILogger</a> logger, <strong class="jxr_keyword">long</strong> countConvertedFiles, <strong class="jxr_keyword">int</strong> countConvertedFilesModulo) {
-<a class="jxr_linenumber" name="L290" href="#L290">290</a>         <strong class="jxr_keyword">if</strong> (countConvertedFiles % countConvertedFilesModulo == 0) {
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>         <strong class="jxr_keyword">if</strong> (countConvertedFiles % (<strong class="jxr_keyword">long</strong>) countConvertedFilesModulo == 0) {
 <a class="jxr_linenumber" name="L291" href="#L291">291</a>             logger.logDebug(() -&gt; <span class="jxr_string">"DbFileConverter has converted %d files to Db Classic form"</span>
 <a class="jxr_linenumber" name="L292" href="#L292">292</a>                     .formatted(countConvertedFiles));
 <a class="jxr_linenumber" name="L293" href="#L293">293</a>         }

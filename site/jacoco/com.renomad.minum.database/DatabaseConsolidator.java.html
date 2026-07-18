@@ -141,7 +141,7 @@ final class DatabaseConsolidator {
     static void rewriteFiles(Map&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; groupedInstructions,
                              IFileUtils fileUtils, int maxLinesPerFile, ILogger logger, Path consolidatedDataDirectory) throws IOException {
 <span class="fc bfc" id="L143" title="All 2 branches covered.">        for (Map.Entry&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; instructions : groupedInstructions.entrySet()) {</span>
-<span class="fc" id="L144">            String filename = String.format(&quot;%d_to_%d&quot;, instructions.getKey(), instructions.getKey() + (maxLinesPerFile - 1));</span>
+<span class="fc" id="L144">            String filename = String.format(&quot;%d_to_%d&quot;, instructions.getKey(), instructions.getKey() + (long) (maxLinesPerFile - 1));</span>
 <span class="fc" id="L145">            logger.logTrace(() -&gt; &quot;Writing consolidated data to &quot; + filename);</span>
             List&lt;String&gt; data;
             // if the file doesn't exist, we'll just start with an empty list. If it
@@ -193,33 +193,38 @@ final class DatabaseConsolidator {
     static Collection&lt;String&gt; updateData(String filename, List&lt;String&gt; linesOfData, Collection&lt;DatabaseChangeInstruction&gt; instructions) {
 <span class="fc" id="L194">        SortedMap&lt;Long, String&gt; result = new TreeMap&lt;&gt;();</span>
         // put the original data into a map
-<span class="fc bfc" id="L196" title="All 2 branches covered.">        for (String data : linesOfData) {</span>
-            // the first pipe symbol is where the index number ends.  Apologies for
-            // the overlap of terms here, index and index.
-<span class="fc" id="L199">            int indexOfFirstPipe = data.indexOf('|');</span>
-<span class="fc bfc" id="L200" title="All 2 branches covered.">            if (indexOfFirstPipe == -1) {</span>
-<span class="fc" id="L201">                throw new DbException(String.format(&quot;Error parsing line in file.  File: %s line: %s&quot;, filename, data));</span>
-            }
-<span class="fc" id="L203">            String dataIndexString = data.substring(0, indexOfFirstPipe);</span>
-            long dataIndexLong;
-            try {
-<span class="fc" id="L206">                dataIndexLong = Long.parseLong(dataIndexString);</span>
-<span class="fc" id="L207">            } catch (NumberFormatException ex) {</span>
-<span class="fc" id="L208">                throw new DbException(String.format(&quot;Failed to parse index from line in file. File: %s line: %s&quot;, filename, data), ex);</span>
-<span class="fc" id="L209">            }</span>
-<span class="fc" id="L210">            result.put(dataIndexLong, data);</span>
-<span class="fc" id="L211">        }</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        for (String line : linesOfData) {</span>
+<span class="fc" id="L197">            long dataIndexLong = getDataIndexFromLine(filename, line);</span>
+<span class="fc" id="L198">            result.put(dataIndexLong, line);</span>
+<span class="fc" id="L199">        }</span>
 
         // change that data per instructions
-<span class="fc bfc" id="L214" title="All 2 branches covered.">        for (DatabaseChangeInstruction instruction : instructions) {</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">            if (DatabaseChangeAction.UPDATE.equals(instruction.action())) {</span>
-<span class="fc" id="L216">                result.put(instruction.dataIndex(), instruction.data());</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        for (DatabaseChangeInstruction instruction : instructions) {</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            if (DatabaseChangeAction.UPDATE.equals(instruction.action())) {</span>
+<span class="fc" id="L204">                result.put(instruction.dataIndex(), instruction.data());</span>
             } else {
                 // only other option is DELETE
-<span class="fc" id="L219">                result.remove(instruction.dataIndex());</span>
+<span class="fc" id="L207">                result.remove(instruction.dataIndex());</span>
             }
-<span class="fc" id="L221">        }</span>
-<span class="fc" id="L222">        return result.values();</span>
+<span class="fc" id="L209">        }</span>
+<span class="fc" id="L210">        return result.values();</span>
+    }
+
+    private static long getDataIndexFromLine(String filename, String line) {
+        // the first pipe symbol is where the index number ends.  Apologies for
+        // the overlap of terms here, index and index.
+<span class="fc" id="L216">        int indexOfFirstPipe = line.indexOf('|');</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (indexOfFirstPipe == -1) {</span>
+<span class="fc" id="L218">            throw new DbException(String.format(&quot;Error parsing line in file.  File: %s line: %s&quot;, filename, line));</span>
+        }
+<span class="fc" id="L220">        String dataIndexString = line.substring(0, indexOfFirstPipe);</span>
+        long dataIndexLong;
+        try {
+<span class="fc" id="L223">            dataIndexLong = Long.parseLong(dataIndexString);</span>
+<span class="fc" id="L224">        } catch (NumberFormatException ex) {</span>
+<span class="fc" id="L225">            throw new DbException(String.format(&quot;Failed to parse index from line in file. File: %s line: %s&quot;, filename, line), ex);</span>
+<span class="fc" id="L226">        }</span>
+<span class="fc" id="L227">        return dataIndexLong;</span>
     }
 
     /**
@@ -236,23 +241,23 @@ final class DatabaseConsolidator {
             Map&lt;Long, DatabaseChangeInstruction&gt; databaseChangeInstructionMap, int maxLinesPerFile) {
 
         // initialize a data structure to store our results
-<span class="fc" id="L239">        Map&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; instructionsGroupedByPartition = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L244">        Map&lt;Long, Collection&lt;DatabaseChangeInstruction&gt;&gt; instructionsGroupedByPartition = new HashMap&lt;&gt;();</span>
 
         // loop through the incoming data, grouping and ordering as necessary
-<span class="fc bfc" id="L242" title="All 2 branches covered.">        for (var databaseChangeInstruction : databaseChangeInstructionMap.entrySet()) {</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        for (var databaseChangeInstruction : databaseChangeInstructionMap.entrySet()) {</span>
 
             // determine the expected filename for this file.  For example, if the index is 1234, then
             // the filename should be 1001
-<span class="fc" id="L246">            long expectedFilename = (((databaseChangeInstruction.getKey() - 1) / maxLinesPerFile) * maxLinesPerFile) + 1;</span>
+<span class="fc" id="L251">            long expectedFilename = (((databaseChangeInstruction.getKey() - 1) / maxLinesPerFile) * maxLinesPerFile) + 1;</span>
 
             // If there is no key found, we need to add one, and add a new collection
-<span class="fc" id="L249">            instructionsGroupedByPartition.computeIfAbsent(expectedFilename, x -&gt; new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L254">            instructionsGroupedByPartition.computeIfAbsent(expectedFilename, x -&gt; new ArrayList&lt;&gt;());</span>
 
             // add a new item to the collection for this filename
-<span class="fc" id="L252">            instructionsGroupedByPartition.get(expectedFilename).add(databaseChangeInstruction.getValue());</span>
-<span class="fc" id="L253">        }</span>
+<span class="fc" id="L257">            instructionsGroupedByPartition.get(expectedFilename).add(databaseChangeInstruction.getValue());</span>
+<span class="fc" id="L258">        }</span>
 
-<span class="fc" id="L255">        return instructionsGroupedByPartition;</span>
+<span class="fc" id="L260">        return instructionsGroupedByPartition;</span>
     }
 
     /**
@@ -262,27 +267,27 @@ final class DatabaseConsolidator {
      * read the rest of the content
      */
     static DatabaseChangeInstruction parseDatabaseChangeInstructionString(String databaseInstructionString, String filename) {
-<span class="fc" id="L265">        String actionString = databaseInstructionString.substring(0, 6);</span>
+<span class="fc" id="L270">        String actionString = databaseInstructionString.substring(0, 6);</span>
         DatabaseChangeAction action;
-<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (&quot;UPDATE&quot;.equals(actionString)) {</span>
-<span class="fc" id="L268">            action = DatabaseChangeAction.UPDATE;</span>
-<span class="fc bfc" id="L269" title="All 2 branches covered.">        } else if (&quot;DELETE&quot;.equals(actionString)) {</span>
-<span class="fc" id="L270">            action = DatabaseChangeAction.DELETE;</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (&quot;UPDATE&quot;.equals(actionString)) {</span>
+<span class="fc" id="L273">            action = DatabaseChangeAction.UPDATE;</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">        } else if (&quot;DELETE&quot;.equals(actionString)) {</span>
+<span class="fc" id="L275">            action = DatabaseChangeAction.DELETE;</span>
         } else {
-<span class="fc" id="L272">            throw new DbException(&quot;Line in append-only log was missing an action (UPDATE or DELETE) in the first characters. Line was: &quot; + databaseInstructionString);</span>
+<span class="fc" id="L277">            throw new DbException(&quot;Line in append-only log was missing an action (UPDATE or DELETE) in the first characters. Line was: &quot; + databaseInstructionString);</span>
         }
         // confusing overlap of terms - index is used here to mean two things:
         // a) where we find the first pipe symbol
         // b) the index value of the data
-<span class="fc" id="L277">        int indexOfPipe = databaseInstructionString.indexOf('|', 7);</span>
-<span class="fc bfc" id="L278" title="All 2 branches covered.">        if (indexOfPipe == -1) {</span>
-<span class="fc" id="L279">            throw new DbException(</span>
-<span class="fc" id="L280">                    &quot;Failed to find index of the first pipe in the file %s, with content %s&quot;.formatted(filename, databaseInstructionString));</span>
+<span class="fc" id="L282">        int indexOfPipe = databaseInstructionString.indexOf('|', 7);</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">        if (indexOfPipe == -1) {</span>
+<span class="fc" id="L284">            throw new DbException(</span>
+<span class="fc" id="L285">                    &quot;Failed to find index of the first pipe in the file %s, with content %s&quot;.formatted(filename, databaseInstructionString));</span>
         }
-<span class="fc" id="L282">        String dataIndex = databaseInstructionString.substring(7, indexOfPipe);</span>
-<span class="fc" id="L283">        long dataIndexLong = Long.parseLong(dataIndex);</span>
+<span class="fc" id="L287">        String dataIndex = databaseInstructionString.substring(7, indexOfPipe);</span>
+<span class="fc" id="L288">        long dataIndexLong = Long.parseLong(dataIndex);</span>
 
-<span class="fc" id="L285">        return new DatabaseChangeInstruction(action, dataIndexLong, databaseInstructionString.substring(7));</span>
+<span class="fc" id="L290">        return new DatabaseChangeInstruction(action, dataIndexLong, databaseInstructionString.substring(7));</span>
     }
 
     /**
@@ -292,17 +297,17 @@ final class DatabaseConsolidator {
      */
     static List&lt;Date&gt; getSortedAppendLogs(Path appendLogDirectory) throws ParseException {
         // get the list of file names, which are date-time stamps
-<span class="fc" id="L295">        String[] fileList = appendLogDirectory.toFile().list();</span>
+<span class="fc" id="L300">        String[] fileList = appendLogDirectory.toFile().list();</span>
 
         // if there aren't any append-only files, bail out with an empty list
-<span class="fc bfc" id="L298" title="All 2 branches covered.">        if (fileList == null) {</span>
-<span class="fc" id="L299">            return List.of();</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">        if (fileList == null) {</span>
+<span class="fc" id="L304">            return List.of();</span>
         }
 
-<span class="fc" id="L302">        List&lt;Date&gt; appendLogDates = convertFileListToDateList(fileList);</span>
+<span class="fc" id="L307">        List&lt;Date&gt; appendLogDates = convertFileListToDateList(fileList);</span>
 
         // sort
-<span class="fc" id="L305">        return appendLogDates.stream().sorted().toList();</span>
+<span class="fc" id="L310">        return appendLogDates.stream().sorted().toList();</span>
     }
 
     /**
@@ -310,15 +315,15 @@ final class DatabaseConsolidator {
      */
     static List&lt;Date&gt; convertFileListToDateList(String[] listOfFiles) throws ParseException {
         // initialize a list which will hold the dates associated with each file name
-<span class="fc" id="L313">        List&lt;Date&gt; appendLogDates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L318">        List&lt;Date&gt; appendLogDates = new ArrayList&lt;&gt;();</span>
 
         // convert the names to dates
-<span class="fc bfc" id="L316" title="All 2 branches covered.">        for (String file : listOfFiles) {</span>
-<span class="fc" id="L317">            Date date = simpleDateFormat.parse(file);</span>
-<span class="fc" id="L318">            appendLogDates.add(date);</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">        for (String file : listOfFiles) {</span>
+<span class="fc" id="L322">            Date date = simpleDateFormat.parse(file);</span>
+<span class="fc" id="L323">            appendLogDates.add(date);</span>
         }
 
-<span class="fc" id="L321">        return appendLogDates;</span>
+<span class="fc" id="L326">        return appendLogDates;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
