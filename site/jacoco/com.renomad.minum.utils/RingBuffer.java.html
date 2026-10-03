@@ -76,21 +76,12 @@ public class RingBuffer&lt;T&gt; implements Iterable&lt;T&gt;{
 <span class="fc bfc" id="L76" title="All 4 branches covered.">        if (myList == null || myList.isEmpty()) {</span>
 <span class="fc" id="L77">            throw new UtilsException(&quot;expected a valid non-empty list to search for in the RingBuffer&quot;);</span>
         }
-<span class="fc" id="L79">        int myListIndex = 0;</span>
-<span class="fc" id="L80">        int myListLength = myList.size();</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (var value : this) {</span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">            if (myList.get(myListIndex).equals(value)) {</span>
-<span class="fc" id="L83">                myListIndex += 1;</span>
-            } else {
-<span class="fc" id="L85">                myListIndex = 0;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (int i = 0; i &lt; this.limit; i++) {</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            if (this.containsAt(myList, i)) {</span>
+<span class="fc" id="L81">                return true;</span>
             }
-
-<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (myListIndex == myListLength) {</span>
-<span class="fc" id="L89">                return true;</span>
-            }
-
-<span class="fc" id="L92">        }</span>
-<span class="fc" id="L93">        return false;</span>
+        }
+<span class="fc" id="L84">        return false;</span>
     }
 
     /**
@@ -98,67 +89,67 @@ public class RingBuffer&lt;T&gt; implements Iterable&lt;T&gt;{
      * within the RingBuffer at the index provided.
      */
     public boolean containsAt(List&lt;T&gt; myList, int index) {
-<span class="fc bfc" id="L101" title="All 4 branches covered.">        if (myList == null || myList.isEmpty()) {</span>
-<span class="fc" id="L102">            throw new UtilsException(&quot;expected a valid non-empty list to search for in the RingBuffer&quot;);</span>
+<span class="fc bfc" id="L92" title="All 4 branches covered.">        if (myList == null || myList.isEmpty()) {</span>
+<span class="fc" id="L93">            throw new UtilsException(&quot;expected a valid non-empty list to search for in the RingBuffer&quot;);</span>
         }
-<span class="fc bfc" id="L104" title="All 4 branches covered.">        if (index &gt; lastIndex || index &lt; 0) {</span>
-<span class="fc" id="L105">            throw new UtilsException(&quot;expected an index greater than zero and less-than-or-equal to the last index of the buffer (the limit minus one)&quot;);</span>
+<span class="fc bfc" id="L95" title="All 4 branches covered.">        if (index &gt; lastIndex || index &lt; 0) {</span>
+<span class="fc" id="L96">            throw new UtilsException(&quot;expected an index greater than zero and less-than-or-equal to the last index of the buffer (the limit minus one)&quot;);</span>
         }
-<span class="fc" id="L107">        int i = 0;</span>
-<span class="fc" id="L108">        int myListIndex = 0;</span>
-<span class="fc" id="L109">        int myListLastIndex = myList.size() - 1;</span>
-<span class="fc" id="L110">        boolean comparing = false;</span>
-<span class="fc" id="L111">        var iterator = this.iterator();</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        while (iterator.hasNext()) {</span>
-<span class="fc" id="L113">            var value = iterator.next();</span>
-<span class="fc bfc" id="L114" title="All 2 branches covered.">            if (i == index) {</span>
-<span class="fc" id="L115">                comparing = true;</span>
+<span class="fc" id="L98">        int i = 0;</span>
+<span class="fc" id="L99">        int myListIndex = 0;</span>
+<span class="fc" id="L100">        int myListLastIndex = myList.size() - 1;</span>
+<span class="fc" id="L101">        boolean comparing = false;</span>
+<span class="fc" id="L102">        var iterator = this.iterator();</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        while (iterator.hasNext()) {</span>
+<span class="fc" id="L104">            var value = iterator.next();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (i == index) {</span>
+<span class="fc" id="L106">                comparing = true;</span>
             }
 
-<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (comparing) {</span>
-<span class="fc bfc" id="L119" title="All 2 branches covered.">                if (! myList.get(myListIndex).equals(value)) {</span>
-<span class="fc" id="L120">                    return false;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            if (comparing) {</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">                if (! myList.get(myListIndex).equals(value)) {</span>
+<span class="fc" id="L111">                    return false;</span>
                 }
-<span class="fc bfc" id="L122" title="All 2 branches covered.">                if (myListIndex == myListLastIndex) {</span>
-<span class="fc" id="L123">                    return true;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                if (myListIndex == myListLastIndex) {</span>
+<span class="fc" id="L114">                    return true;</span>
                 }
-<span class="fc" id="L125">                myListIndex += 1;</span>
+<span class="fc" id="L116">                myListIndex += 1;</span>
             }
 
-<span class="fc" id="L128">            i += 1;</span>
-<span class="fc" id="L129">        }</span>
-<span class="fc" id="L130">        return false;</span>
+<span class="fc" id="L119">            i += 1;</span>
+<span class="fc" id="L120">        }</span>
+<span class="fc" id="L121">        return false;</span>
     }
 
     @Override
     public Iterator&lt;T&gt; iterator() {
-<span class="fc" id="L135">        return new Iterator&lt;&gt;() {</span>
+<span class="fc" id="L126">        return new Iterator&lt;&gt;() {</span>
 
             /**
              * As we loop through the buffer, we have to use a similar
              * technique to the &quot;nextIndex&quot; - wrapping around when we
              * hit the end
              */
-<span class="fc" id="L142">            int iteratorIndex = nextIndex;</span>
+<span class="fc" id="L133">            int iteratorIndex = nextIndex;</span>
             /**
              * We'll count as we read values, stopping when we've read every slot.
              */
-<span class="fc" id="L146">            int count = 0;</span>
+<span class="fc" id="L137">            int count = 0;</span>
 
             @Override
             public boolean hasNext() {
-<span class="fc bfc" id="L150" title="All 2 branches covered.">                return count &lt; limit;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                return count &lt; limit;</span>
             }
 
             @Override
             public T next() {
-<span class="fc bfc" id="L155" title="All 2 branches covered.">                if (!hasNext()) {</span>
-<span class="fc" id="L156">                    throw new NoSuchElementException();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                if (!hasNext()) {</span>
+<span class="fc" id="L147">                    throw new NoSuchElementException();</span>
                 }
-<span class="fc" id="L158">                var result = innerArray[iteratorIndex];</span>
-<span class="fc" id="L159">                iteratorIndex = incrementIndex(iteratorIndex);</span>
-<span class="fc" id="L160">                count += 1;</span>
-<span class="fc" id="L161">                return result;</span>
+<span class="fc" id="L149">                var result = innerArray[iteratorIndex];</span>
+<span class="fc" id="L150">                iteratorIndex = incrementIndex(iteratorIndex);</span>
+<span class="fc" id="L151">                count += 1;</span>
+<span class="fc" id="L152">                return result;</span>
             }
         };
     }
@@ -168,7 +159,7 @@ public class RingBuffer&lt;T&gt; implements Iterable&lt;T&gt;{
      * this will be null at first while the array starts to get filled.
      */
     public T atNextIndex() {
-<span class="fc" id="L171">        return innerArray[nextIndex];</span>
+<span class="fc" id="L162">        return innerArray[nextIndex];</span>
     }
 
 }

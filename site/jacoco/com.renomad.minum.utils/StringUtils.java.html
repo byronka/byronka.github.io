@@ -52,6 +52,16 @@ public final class StringUtils {
      * &lt;br&gt;&lt;br&gt;
      * If we get a null string, just return an empty string
      * &lt;br&gt;&lt;br&gt;
+     * &lt;p&gt;
+     *     Note: When cleaning data which will be used in an HTML
+     *     attribute, ensure that the output of this method will
+     *     be placed inside single or double quotes. &lt;br&gt;&lt;br&gt;
+     *
+     *     Valid use: the key word HERE in the following: {@code &lt;foo class=&quot;HERE&quot;&gt;} or
+     *     {@code &lt;foo class='HERE'&gt;}&lt;br&gt;&lt;br&gt;
+     *
+     *     Invalid use: {@code &lt;foo class=HERE&gt;}
+     * &lt;/p&gt;
      * &lt;pre&gt;{@code
      * example:
      *   Given
@@ -61,23 +71,23 @@ public final class StringUtils {
      * }&lt;/pre&gt;
      */
     public static String safeAttr(String input) {
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (input == null) {</span>
-<span class="fc" id="L65">            return &quot;&quot;;</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (input == null) {</span>
+<span class="fc" id="L75">            return &quot;&quot;;</span>
         }
-<span class="fc" id="L67">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
-<span class="fc" id="L68">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
-<span class="fc" id="L69">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
-<span class="fc" id="L70">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
+<span class="fc" id="L77">        return input.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
+<span class="fc" id="L78">            .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="fc" id="L79">            .replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
+<span class="fc" id="L80">            .replace(&quot;'&quot;, &quot;&amp;apos;&quot;);</span>
     }
 
     /**
      * Encodes UTF-8 text using URL-encoding
      */
     public static String encode(String str) {
-<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (str == null) {</span>
-<span class="fc" id="L78">            return &quot;%NULL%&quot;;</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (str == null) {</span>
+<span class="fc" id="L88">            return &quot;%NULL%&quot;;</span>
         }
-<span class="fc" id="L80">        return URLEncoder.encode(str, UTF_8);</span>
+<span class="fc" id="L90">        return URLEncoder.encode(str, UTF_8);</span>
     }
 
     /**
@@ -86,42 +96,73 @@ public final class StringUtils {
      * which is our way to signify null.
      */
     public static String decode(String str) {
-<span class="fc" id="L89">        mustNotBeNull(str);</span>
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
-<span class="fc" id="L91">            return null;</span>
+<span class="fc" id="L99">        mustNotBeNull(str);</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (str.equals(&quot;%NULL%&quot;)) {</span>
+<span class="fc" id="L101">            return null;</span>
         }
-<span class="fc" id="L93">        return URLDecoder.decode(str, UTF_8);</span>
+<span class="fc" id="L103">        return URLDecoder.decode(str, UTF_8);</span>
     }
 
+    /**
+     * Returns a string of random characters.
+     * @param length a positive non-zero number less than 1000
+     */
     public static String generateSecureRandomString(int length) {
-<span class="fc" id="L97">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
-<span class="fc" id="L98">        final var sr = new SecureRandom();</span>
+<span class="fc" id="L111">        int maximum = 1000;</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (length &lt;= 0) {</span>
+<span class="fc" id="L113">            throw new UtilsException(&quot;Input must be a positive non-zero number&quot;);</span>
+        }
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (length &gt; maximum) {</span>
+<span class="fc" id="L116">            throw new UtilsException(&quot;Input must be less than &quot; + maximum);</span>
+        }
+<span class="fc" id="L118">        final var allowedChars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;</span>
+<span class="fc" id="L119">        final var sr = new SecureRandom();</span>
 
-<span class="fc" id="L100">        return IntStream.range(1, length+1)</span>
-<span class="fc" id="L101">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
-<span class="fc" id="L102">                .map(Object::toString)</span>
-<span class="fc" id="L103">                .collect(Collectors.joining());</span>
+<span class="fc" id="L121">        return IntStream.range(1, length+1)</span>
+<span class="fc" id="L122">                .mapToObj (x -&gt; allowedChars.charAt(sr.nextInt(allowedChars.length())))</span>
+<span class="fc" id="L123">                .map(Object::toString)</span>
+<span class="fc" id="L124">                .collect(Collectors.joining());</span>
     }
 
     /**
      * Converts a list of bytes to a string. Returns null if the input is null.
      */
     public static String byteListToString(List&lt;Byte&gt; byteList) {
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (byteList == null) return null;</span>
-<span class="fc" id="L111">        final int size = byteList.size();</span>
-<span class="fc" id="L112">        final var buf = new byte[size];</span>
-<span class="fc bfc" id="L113" title="All 2 branches covered.">        for (int i = 0; i &lt; size; i++) {</span>
-<span class="fc" id="L114">            buf[i] = byteList.get(i);</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (byteList == null) return null;</span>
+<span class="fc" id="L132">        final int size = byteList.size();</span>
+<span class="fc" id="L133">        final var buf = new byte[size];</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        for (int i = 0; i &lt; size; i++) {</span>
+<span class="fc" id="L135">            buf[i] = byteList.get(i);</span>
         }
-<span class="fc" id="L116">        return new String(buf, UTF_8);</span>
+<span class="fc" id="L137">        return new String(buf, UTF_8);</span>
     }
 
     /**
      * Converts an array of bytes to a string. Returns null if the input is null.
      */
     public static String byteArrayToString(byte[] byteArray) {
-<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (byteArray == null) return null;</span>
-<span class="fc" id="L124">        return new String(byteArray, UTF_8);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (byteArray == null) return null;</span>
+<span class="fc" id="L145">        return new String(byteArray, UTF_8);</span>
+    }
+
+    /**
+     * A helper method to assess whether the input consists of only digits.
+     * This helps us in the case of checking the content-length header, since
+     * it must be pure numbers, no &quot;-&quot; or &quot;+&quot; symbols preceding it.
+     * @return true if the given string consists exclusively of digits, like &quot;1234&quot;,
+     * false if anything else, like &quot;+1234&quot; or &quot;12.34&quot; or &quot;&quot; or null.
+     */
+    public static boolean isPureDigits(String str) {
+<span class="fc bfc" id="L156" title="All 4 branches covered.">        if (str == null || str.isEmpty()) {</span>
+<span class="fc" id="L157">            return false;</span>
+        }
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (int i = 0; i &lt; str.length(); i++) {</span>
+<span class="fc" id="L160">            char c = str.charAt(i);</span>
+<span class="fc bfc" id="L161" title="All 4 branches covered.">            if (c &lt; '0' || c &gt; '9') {</span>
+<span class="fc" id="L162">                return false;</span>
+            }
+        }
+<span class="fc" id="L165">        return true;</span>
     }
 
 

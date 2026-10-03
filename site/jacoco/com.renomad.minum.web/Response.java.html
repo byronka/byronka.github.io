@@ -104,9 +104,12 @@ public final class Response implements IResponse {
      * @param extraHeaders any extra headers for the response, such as the content-type
      * @param outputGenerator a function that will be given a {@link ISocketWrapper}, providing the
      *                        ability to send bytes on the socket.
+     * @deprecated analysis showed that this will return a content-length of zero, thus will
+     * malfunction when used with clients.  See AIFindingsWebTests#test_Finding_StreamingResponseAdvertisesZeroContentLength
      */
+    @Deprecated
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Headers extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator) {
-<span class="fc" id="L109">        return new Response(statusCode, extraHeaders, null, outputGenerator, 0L, false);</span>
+<span class="fc" id="L112">        return new Response(statusCode, extraHeaders, null, outputGenerator, 0L, false);</span>
     }
 
     /**
@@ -117,9 +120,12 @@ public final class Response implements IResponse {
      *                     key is the header key and the value is the header value. No colon necessary.
      * @param outputGenerator a function that will be given a {@link ISocketWrapper}, providing the
      *                        ability to send bytes on the socket.
+     * @deprecated analysis showed that this will return a content-length of zero, thus will
+     * malfunction when used with clients.  See AIFindingsWebTests#test_Finding_StreamingResponseAdvertisesZeroContentLength
      */
+    @Deprecated
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Map&lt;String,String&gt; extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator) {
-<span class="fc" id="L122">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator);</span>
+<span class="fc" id="L128">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator);</span>
     }
 
     /**
@@ -131,7 +137,7 @@ public final class Response implements IResponse {
      * @param bodyLength the length, in bytes, of the data to be sent to the client
      */
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Headers extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator, long bodyLength) {
-<span class="fc" id="L134">        return new Response(statusCode, extraHeaders, null, outputGenerator, bodyLength, false);</span>
+<span class="fc" id="L140">        return new Response(statusCode, extraHeaders, null, outputGenerator, bodyLength, false);</span>
     }
 
     /**
@@ -144,7 +150,7 @@ public final class Response implements IResponse {
      * @param bodyLength the length, in bytes, of the data to be sent to the client
      */
     public static IResponse buildStreamingResponse(StatusLine.StatusCode statusCode, Map&lt;String,String&gt; extraHeaders, ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator, long bodyLength) {
-<span class="fc" id="L147">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator, bodyLength);</span>
+<span class="fc" id="L153">        return buildStreamingResponse(statusCode, convertMapToHeaders(extraHeaders), outputGenerator, bodyLength);</span>
     }
 
     /**
@@ -158,7 +164,7 @@ public final class Response implements IResponse {
      * @param extraHeaders any extra headers for the response, such as the content-type.
      */
     public static IResponse buildResponse(StatusLine.StatusCode statusCode, Headers extraHeaders, byte[] body) {
-<span class="fc" id="L161">        return new Response(statusCode, extraHeaders, body, socketWrapper -&gt; socketWrapper.send(body), body.length, false);</span>
+<span class="fc" id="L167">        return new Response(statusCode, extraHeaders, body, socketWrapper -&gt; socketWrapper.send(body), body.length, false);</span>
     }
 
     /**
@@ -173,12 +179,12 @@ public final class Response implements IResponse {
      *                     key is the header key and the value is the header value. No colon necessary.
      */
     public static IResponse buildResponse(StatusLine.StatusCode statusCode, Map&lt;String,String&gt; extraHeaders, byte[] body) {
-<span class="fc" id="L176">        return buildResponse(statusCode, convertMapToHeaders(extraHeaders), body);</span>
+<span class="fc" id="L182">        return buildResponse(statusCode, convertMapToHeaders(extraHeaders), body);</span>
     }
 
     private static Headers convertMapToHeaders(Map&lt;String, String&gt; extraHeaders) {
-<span class="fc bfc" id="L180" title="All 2 branches covered.">        if (extraHeaders.isEmpty()) return Headers.EMPTY;</span>
-<span class="fc" id="L181">        return new Headers(extraHeaders.entrySet().stream().map(x -&gt; x.getKey() + &quot;: &quot; + x.getValue()).toList());</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        if (extraHeaders.isEmpty()) return Headers.EMPTY;</span>
+<span class="fc" id="L187">        return new Headers(extraHeaders.entrySet().stream().map(x -&gt; x.getKey() + &quot;: &quot; + x.getValue()).toList());</span>
     }
 
     /**
@@ -186,8 +192,8 @@ public final class Response implements IResponse {
      * @param extraHeaders extra HTTP headers, like &lt;pre&gt;content-type: text/html&lt;/pre&gt;
      */
     public static IResponse buildResponse(StatusLine.StatusCode statusCode, Headers extraHeaders, String body) {
-<span class="fc" id="L189">        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);</span>
-<span class="fc" id="L190">        return new Response(statusCode, extraHeaders, bytes, socketWrapper -&gt; socketWrapper.send(bytes), bytes.length, true);</span>
+<span class="fc" id="L195">        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L196">        return new Response(statusCode, extraHeaders, bytes, socketWrapper -&gt; socketWrapper.send(bytes), bytes.length, true);</span>
     }
 
     /**
@@ -196,7 +202,7 @@ public final class Response implements IResponse {
      *                     key is the header key and the value is the header value. No colon necessary.
      */
     public static IResponse buildResponse(StatusLine.StatusCode statusCode, Map&lt;String,String&gt; extraHeaders, String body) {
-<span class="fc" id="L199">        return buildResponse(statusCode, convertMapToHeaders(extraHeaders), body);</span>
+<span class="fc" id="L205">        return buildResponse(statusCode, convertMapToHeaders(extraHeaders), body);</span>
     }
 
 
@@ -212,7 +218,7 @@ public final class Response implements IResponse {
      *                       response headers in some cases.
      */
     public static IResponse buildLargeFileResponse(Map&lt;String,String&gt; extraHeaders, String filePath, Headers requestHeaders, IFileUtils fileUtils) {
-<span class="fc" id="L215">        return buildLargeFileResponse(convertMapToHeaders(extraHeaders), filePath, requestHeaders, fileUtils);</span>
+<span class="fc" id="L221">        return buildLargeFileResponse(convertMapToHeaders(extraHeaders), filePath, requestHeaders, fileUtils);</span>
     }
 
     /**
@@ -226,35 +232,35 @@ public final class Response implements IResponse {
      *                       response headers in some cases.
      */
     public static IResponse buildLargeFileResponse(Headers extraHeaders, String filePath, Headers requestHeaders, IFileUtils fileUtils) {
-<span class="fc" id="L229">        Headers adjustedHeaders = extraHeaders;</span>
+<span class="fc" id="L235">        Headers adjustedHeaders = extraHeaders;</span>
         long fileSize;
         try {
-<span class="fc" id="L232">            fileSize = fileUtils.size(Path.of(filePath));</span>
-<span class="fc" id="L233">        } catch (IOException e) {</span>
-<span class="fc" id="L234">            throw new WebServerException(&quot;Error in Response.buildLargeFileResponse&quot;, e);</span>
-<span class="fc" id="L235">        }</span>
-<span class="fc" id="L236">        var range = new Range(requestHeaders, fileSize);</span>
-<span class="fc" id="L237">        StatusLine.StatusCode responseCode = CODE_200_OK;</span>
-<span class="fc" id="L238">        long length = fileSize;</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (range.hasRangeHeader()) {</span>
-<span class="fc" id="L240">            long offset = range.getOffset();</span>
-<span class="fc" id="L241">            length = range.getLength();</span>
-<span class="fc" id="L242">            var lastIndex = (offset + length) - 1;</span>
-<span class="fc" id="L243">            List&lt;String&gt; headerStrings = new ArrayList&lt;&gt;(extraHeaders.getHeaderStrings());</span>
-<span class="fc" id="L244">            headerStrings.add(&quot;Content-Range: &quot; + String.format(&quot;bytes %d-%d/%d&quot;, offset, lastIndex, fileSize));</span>
-<span class="fc" id="L245">            adjustedHeaders = new Headers(headerStrings);</span>
-<span class="fc" id="L246">            responseCode = CODE_206_PARTIAL_CONTENT;</span>
+<span class="fc" id="L238">            fileSize = fileUtils.size(Path.of(filePath));</span>
+<span class="fc" id="L239">        } catch (IOException e) {</span>
+<span class="fc" id="L240">            throw new WebServerException(&quot;Error in Response.buildLargeFileResponse&quot;, e);</span>
+<span class="fc" id="L241">        }</span>
+<span class="fc" id="L242">        var range = new Range(requestHeaders, fileSize);</span>
+<span class="fc" id="L243">        StatusLine.StatusCode responseCode = CODE_200_OK;</span>
+<span class="fc" id="L244">        long length = fileSize;</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (range.hasRangeHeader()) {</span>
+<span class="fc" id="L246">            long offset = range.getOffset();</span>
+<span class="fc" id="L247">            length = range.getLength();</span>
+<span class="fc" id="L248">            var lastIndex = (offset + length) - 1;</span>
+<span class="fc" id="L249">            List&lt;String&gt; headerStrings = new ArrayList&lt;&gt;(extraHeaders.getHeaderStrings());</span>
+<span class="fc" id="L250">            headerStrings.add(&quot;Content-Range: &quot; + String.format(&quot;bytes %d-%d/%d&quot;, offset, lastIndex, fileSize));</span>
+<span class="fc" id="L251">            adjustedHeaders = new Headers(headerStrings);</span>
+<span class="fc" id="L252">            responseCode = CODE_206_PARTIAL_CONTENT;</span>
         }
 
-<span class="fc" id="L249">        ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator = socketWrapper -&gt; {</span>
-<span class="fc" id="L250">            try (RandomAccessFile reader = new RandomAccessFile(filePath, &quot;r&quot;)) {</span>
-<span class="fc" id="L251">                reader.seek(range.getOffset());</span>
-<span class="fc" id="L252">                var fileChannel = reader.getChannel();</span>
-<span class="fc" id="L253">                sendFileChannelResponse(socketWrapper, fileChannel, range.getLength());</span>
+<span class="fc" id="L255">        ThrowingConsumer&lt;ISocketWrapper&gt; outputGenerator = socketWrapper -&gt; {</span>
+<span class="fc" id="L256">            try (RandomAccessFile reader = new RandomAccessFile(filePath, &quot;r&quot;)) {</span>
+<span class="fc" id="L257">                reader.seek(range.getOffset());</span>
+<span class="fc" id="L258">                var fileChannel = reader.getChannel();</span>
+<span class="fc" id="L259">                sendFileChannelResponse(socketWrapper, fileChannel, range.getLength());</span>
             }
-<span class="fc" id="L255">        };</span>
+<span class="fc" id="L261">        };</span>
 
-<span class="fc" id="L257">        return new Response(responseCode, adjustedHeaders, null, outputGenerator, length, false);</span>
+<span class="fc" id="L263">        return new Response(responseCode, adjustedHeaders, null, outputGenerator, length, false);</span>
     }
 
     /**
@@ -273,11 +279,11 @@ public final class Response implements IResponse {
     public static IResponse buildLargeFileResponse(Headers extraHeaders, String filePath, String parentDirectory, Headers requestHeaders, IFileUtils fileUtils) {
         Path path;
         try {
-<span class="fc" id="L276">            path = fileUtils.safeResolve(parentDirectory, filePath);</span>
-<span class="fc" id="L277">        } catch (IOException e) {</span>
-<span class="fc" id="L278">            throw new WebServerException(&quot;Error at Response.buildLargeFileResponse&quot;, e);</span>
-<span class="fc" id="L279">        }</span>
-<span class="fc" id="L280">        return buildLargeFileResponse(extraHeaders, path.toString(), requestHeaders, fileUtils);</span>
+<span class="fc" id="L282">            path = fileUtils.safeResolve(parentDirectory, filePath);</span>
+<span class="fc" id="L283">        } catch (IOException e) {</span>
+<span class="fc" id="L284">            throw new WebServerException(&quot;Error at Response.buildLargeFileResponse&quot;, e);</span>
+<span class="fc" id="L285">        }</span>
+<span class="fc" id="L286">        return buildLargeFileResponse(extraHeaders, path.toString(), requestHeaders, fileUtils);</span>
     }
 
     /**
@@ -295,7 +301,7 @@ public final class Response implements IResponse {
      *                        allows the developer to use directories anywhere in the system.
      */
     public static IResponse buildLargeFileResponse(Map&lt;String,String&gt; extraHeaders, String filePath, String parentDirectory, Headers requestHeaders, IFileUtils fileUtils) {
-<span class="fc" id="L298">        return buildLargeFileResponse(convertMapToHeaders(extraHeaders), filePath, parentDirectory, requestHeaders, fileUtils);</span>
+<span class="fc" id="L304">        return buildLargeFileResponse(convertMapToHeaders(extraHeaders), filePath, parentDirectory, requestHeaders, fileUtils);</span>
     }
 
     /**
@@ -303,7 +309,7 @@ public final class Response implements IResponse {
      * @param extraHeaders extra HTTP headers
      */
     public static IResponse buildLeanResponse(StatusLine.StatusCode statusCode, Headers extraHeaders) {
-<span class="fc" id="L306">        return new Response(statusCode, extraHeaders, null, socketWrapper -&gt; {}, 0, false);</span>
+<span class="fc" id="L312">        return new Response(statusCode, extraHeaders, null, socketWrapper -&gt; {}, 0, false);</span>
     }
 
     /**
@@ -312,14 +318,14 @@ public final class Response implements IResponse {
      *                     key is the header key and the value is the header value. No colon necessary.
      */
     public static IResponse buildLeanResponse(StatusLine.StatusCode statusCode, Map&lt;String,String&gt; extraHeaders) {
-<span class="fc" id="L315">        return buildLeanResponse(statusCode, convertMapToHeaders(extraHeaders));</span>
+<span class="fc" id="L321">        return buildLeanResponse(statusCode, convertMapToHeaders(extraHeaders));</span>
     }
 
     /**
      * Build a {@link Response} with only a status code, with no body and no extra headers.
      */
     public static IResponse buildLeanResponse(StatusLine.StatusCode statusCode) {
-<span class="fc" id="L322">        return new Response(statusCode, Headers.EMPTY, null, socketWrapper -&gt; {}, 0, false);</span>
+<span class="fc" id="L328">        return new Response(statusCode, Headers.EMPTY, null, socketWrapper -&gt; {}, 0, false);</span>
     }
 
     /**
@@ -330,11 +336,11 @@ public final class Response implements IResponse {
     public static IResponse redirectTo(String locationUrl) {
         try {
             // check if we can create a URL from this - any failures indicate invalid syntax.
-<span class="fc" id="L333">            URI.create(locationUrl);</span>
-<span class="fc" id="L334">        } catch (Exception ex) {</span>
-<span class="fc" id="L335">            throw new WebServerException(&quot;Failure in redirect to (&quot; + locationUrl + &quot;). Exception: &quot; + ex);</span>
-<span class="fc" id="L336">        }</span>
-<span class="fc" id="L337">        return buildResponse(StatusLine.StatusCode.CODE_303_SEE_OTHER, new Headers(List.of(&quot;location: &quot; + locationUrl, &quot;Content-Type: text/html; charset=UTF-8&quot;)), &quot;&lt;p&gt;See &lt;a href=\&quot;&quot;+locationUrl+&quot;\&quot;&gt;this link&lt;/a&gt;&lt;/p&gt;&quot;);</span>
+<span class="fc" id="L339">            URI.create(locationUrl);</span>
+<span class="fc" id="L340">        } catch (Exception ex) {</span>
+<span class="fc" id="L341">            throw new WebServerException(&quot;Failure in redirect to (&quot; + locationUrl + &quot;). Exception: &quot; + ex);</span>
+<span class="fc" id="L342">        }</span>
+<span class="fc" id="L343">        return buildResponse(StatusLine.StatusCode.CODE_303_SEE_OTHER, new Headers(List.of(&quot;location: &quot; + locationUrl, &quot;Content-Type: text/html; charset=UTF-8&quot;)), &quot;&lt;p&gt;See &lt;a href=\&quot;&quot;+locationUrl+&quot;\&quot;&gt;this link&lt;/a&gt;&lt;/p&gt;&quot;);</span>
     }
 
     /**
@@ -344,10 +350,10 @@ public final class Response implements IResponse {
      * that are needed to specify this is HTML.
      */
     public static IResponse htmlOk(String body, Headers extraHeaders) {
-<span class="fc" id="L347">        List&lt;String&gt; headersList = new ArrayList&lt;&gt;(extraHeaders.getHeaderStrings());</span>
-<span class="fc" id="L348">        headersList.add(&quot;Content-Type: text/html; charset=UTF-8&quot;);</span>
-<span class="fc" id="L349">        var headers =  new Headers(headersList);</span>
-<span class="fc" id="L350">        return buildResponse(StatusLine.StatusCode.CODE_200_OK, headers, body);</span>
+<span class="fc" id="L353">        List&lt;String&gt; headersList = new ArrayList&lt;&gt;(extraHeaders.getHeaderStrings());</span>
+<span class="fc" id="L354">        headersList.add(&quot;Content-Type: text/html; charset=UTF-8&quot;);</span>
+<span class="fc" id="L355">        var headers =  new Headers(headersList);</span>
+<span class="fc" id="L356">        return buildResponse(StatusLine.StatusCode.CODE_200_OK, headers, body);</span>
     }
 
     /**
@@ -355,37 +361,37 @@ public final class Response implements IResponse {
      * lets you skip some of the boilerplate.
      */
     public static IResponse htmlOk(String body) {
-<span class="fc" id="L358">        return htmlOk(body, Headers.EMPTY);</span>
+<span class="fc" id="L364">        return htmlOk(body, Headers.EMPTY);</span>
     }
 
     @Override
     public Headers getExtraHeaders() {
-<span class="fc" id="L363">        return new Headers(this.extraHeaders.getHeaderStrings());</span>
+<span class="fc" id="L369">        return new Headers(this.extraHeaders.getHeaderStrings());</span>
     }
 
     @Override
     public StatusLine.StatusCode getStatusCode() {
-<span class="fc" id="L368">        return statusCode;</span>
+<span class="fc" id="L374">        return statusCode;</span>
     }
 
     @Override
     public boolean isBodyText() {
-<span class="fc" id="L373">        return isBodyText;</span>
+<span class="fc" id="L379">        return isBodyText;</span>
     }
 
     @Override
     public long getBodyLength() {
-<span class="fc bfc" id="L378" title="All 2 branches covered.">        if (body != null) {</span>
-<span class="fc" id="L379">            return body.length;</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">        if (body != null) {</span>
+<span class="fc" id="L385">            return body.length;</span>
         } else {
-<span class="fc" id="L381">            return bodyLength;</span>
+<span class="fc" id="L387">            return bodyLength;</span>
         }
     }
 
     @Override
     public void sendBody(ISocketWrapper sw) throws Exception {
-<span class="fc" id="L387">        outputGenerator.accept(sw);</span>
-<span class="fc" id="L388">    }</span>
+<span class="fc" id="L393">        outputGenerator.accept(sw);</span>
+<span class="fc" id="L394">    }</span>
 
     /**
      * put bytes from a file into the socket, sending to the client
@@ -394,54 +400,54 @@ public final class Response implements IResponse {
      */
     private static void sendFileChannelResponse(ISocketWrapper sw, FileChannel fileChannel, long length) throws IOException {
         try {
-<span class="fc" id="L397">            int bufferSize = 8 * 1024;</span>
-<span class="fc" id="L398">            ByteBuffer buff = ByteBuffer.allocate(bufferSize);</span>
-<span class="fc" id="L399">            long countBytesLeftToSend = length;</span>
+<span class="fc" id="L403">            int bufferSize = 8 * 1024;</span>
+<span class="fc" id="L404">            ByteBuffer buff = ByteBuffer.allocate(bufferSize);</span>
+<span class="fc" id="L405">            long countBytesLeftToSend = length;</span>
             while (true) {
-<span class="fc" id="L401">                int countBytesRead = fileChannel.read(buff);</span>
-<span class="fc bfc" id="L402" title="All 2 branches covered.">                if (countBytesRead &lt;= 0) {</span>
-<span class="fc" id="L403">                    break;</span>
+<span class="fc" id="L407">                int countBytesRead = fileChannel.read(buff);</span>
+<span class="fc bfc" id="L408" title="All 2 branches covered.">                if (countBytesRead &lt;= 0) {</span>
+<span class="fc" id="L409">                    break;</span>
                 } else {
-<span class="fc bfc" id="L405" title="All 2 branches covered.">                    if (countBytesLeftToSend &lt; (long) countBytesRead) {</span>
-<span class="fc" id="L406">                        sw.send(buff.array(), 0, (int)countBytesLeftToSend);</span>
-<span class="fc" id="L407">                        break;</span>
+<span class="fc bfc" id="L411" title="All 2 branches covered.">                    if (countBytesLeftToSend &lt; (long) countBytesRead) {</span>
+<span class="fc" id="L412">                        sw.send(buff.array(), 0, (int)countBytesLeftToSend);</span>
+<span class="fc" id="L413">                        break;</span>
                     } else {
-<span class="fc" id="L409">                        sw.send(buff.array(), 0, countBytesRead);</span>
+<span class="fc" id="L415">                        sw.send(buff.array(), 0, countBytesRead);</span>
                     }
-<span class="fc" id="L411">                    buff.clear();</span>
+<span class="fc" id="L417">                    buff.clear();</span>
                 }
-<span class="fc" id="L413">                countBytesLeftToSend = countBytesLeftToSend - countBytesRead;</span>
-<span class="fc" id="L414">            }</span>
+<span class="fc" id="L419">                countBytesLeftToSend = countBytesLeftToSend - countBytesRead;</span>
+<span class="fc" id="L420">            }</span>
         } finally {
-<span class="fc" id="L416">            fileChannel.close();</span>
+<span class="fc" id="L422">            fileChannel.close();</span>
         }
-<span class="fc" id="L418">    }</span>
+<span class="fc" id="L424">    }</span>
 
     @Override
     public byte[] getBody() {
-<span class="fc" id="L422">        return body;</span>
+<span class="fc" id="L428">        return body;</span>
     }
 
     @Override
     public ThrowingConsumer&lt;ISocketWrapper&gt; getOutputGenerator() {
-<span class="fc" id="L427">        return outputGenerator;</span>
+<span class="fc" id="L433">        return outputGenerator;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L432" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L433">        Response response = (Response) o;</span>
-<span class="fc bfc" id="L434" title="All 10 branches covered.">        return bodyLength == response.bodyLength &amp;&amp; isBodyText == response.isBodyText &amp;&amp; statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Objects.deepEquals(body, response.body);</span>
+<span class="fc bfc" id="L438" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L439">        Response response = (Response) o;</span>
+<span class="fc bfc" id="L440" title="All 10 branches covered.">        return bodyLength == response.bodyLength &amp;&amp; isBodyText == response.isBodyText &amp;&amp; statusCode == response.statusCode &amp;&amp; Objects.equals(extraHeaders, response.extraHeaders) &amp;&amp; Objects.deepEquals(body, response.body);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L439">        return Objects.hash(statusCode, extraHeaders, Arrays.hashCode(body), bodyLength, isBodyText);</span>
+<span class="fc" id="L445">        return Objects.hash(statusCode, extraHeaders, Arrays.hashCode(body), bodyLength, isBodyText);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L444">        return &quot;Response{&quot; +</span>
+<span class="fc" id="L450">        return &quot;Response{&quot; +</span>
                 &quot;statusCode=&quot; + statusCode +
                 &quot;, extraHeaders=&quot; + extraHeaders +
                 &quot;, bodyLength=&quot; + bodyLength +

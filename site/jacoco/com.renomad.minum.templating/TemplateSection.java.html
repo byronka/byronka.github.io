@@ -62,36 +62,39 @@ final class TemplateSection {
 <span class="fc" id="L62">            stringBuilder.append(subString);</span>
         } else {
 <span class="fc" id="L64">            String value = myMap.get(key);</span>
-<span class="fc" id="L65">            List&lt;String&gt; lines = tokenizer(value, '\n', MAXIMUM_LINES_ALLOWED);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (value == null) {</span>
+<span class="fc" id="L66">                throw new TemplateRenderException(&quot;Received null value for key: &quot; + key);</span>
+            }
+<span class="fc" id="L68">            List&lt;String&gt; lines = tokenizer(value, '\n', MAXIMUM_LINES_ALLOWED);</span>
 
             // if, after splitting on newlines, we have more than one line, we'll indent the remaining
             // lines so that they end up at the same column as the first line.
-<span class="fc" id="L69">            stringBuilder.append(lines.getFirst());</span>
-<span class="fc bfc" id="L70" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
-<span class="fc bfc" id="L71" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
-<span class="fc" id="L72">                    stringBuilder.append('\n');</span>
+<span class="fc" id="L72">            stringBuilder.append(lines.getFirst());</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
+<span class="fc" id="L75">                    stringBuilder.append('\n');</span>
                 } else {
-<span class="fc" id="L74">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
+<span class="fc" id="L77">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
                 }
             }
         }
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L81">    }</span>
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L82" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="fc" id="L83">        TemplateSection that = (TemplateSection) o;</span>
-<span class="fc bfc" id="L84" title="All 8 branches covered.">        return indent == that.indent &amp;&amp; Objects.equals(key, that.key) &amp;&amp; Objects.equals(subString, that.subString) &amp;&amp; templateType == that.templateType;</span>
+<span class="fc bfc" id="L85" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L86">        TemplateSection that = (TemplateSection) o;</span>
+<span class="fc bfc" id="L87" title="All 8 branches covered.">        return indent == that.indent &amp;&amp; Objects.equals(key, that.key) &amp;&amp; Objects.equals(subString, that.subString) &amp;&amp; templateType == that.templateType;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L89">        return Objects.hash(key, subString, indent, templateType);</span>
+<span class="fc" id="L92">        return Objects.hash(key, subString, indent, templateType);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L94">        return &quot;TemplateSection{&quot; +</span>
+<span class="fc" id="L97">        return &quot;TemplateSection{&quot; +</span>
                 &quot;key='&quot; + key + '\'' +
                 &quot;, subString='&quot; + subString + '\'' +
                 &quot;, indent=&quot; + indent +

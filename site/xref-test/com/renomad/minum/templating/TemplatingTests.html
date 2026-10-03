@@ -360,7 +360,37 @@
 <a class="jxr_linenumber" name="L352" href="#L352">352</a>                 () -&gt; templateProcessor.renderTemplate(Map.of()));
 <a class="jxr_linenumber" name="L353" href="#L353">353</a>     }
 <a class="jxr_linenumber" name="L354" href="#L354">354</a> 
-<a class="jxr_linenumber" name="L355" href="#L355">355</a> }
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>     @Test
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_EdgeCase_ListIsEmpty() {
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>         TemplateProcessor templateProcessor = TemplateProcessor.buildProcessor(<span class="jxr_string">"I am {{ foo }}"</span>);
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>         assertEquals(<span class="jxr_string">""</span>, templateProcessor.renderTemplate(List.of()));
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>     }
+<a class="jxr_linenumber" name="L360" href="#L360">360</a> 
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L362" href="#L362">362</a> <em class="jxr_javadoccomment">     * If we provide a null map to the renderTemplate method, what happens?</em>
+<a class="jxr_linenumber" name="L363" href="#L363">363</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>     @Test
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_NegativeCase_NullMap() {
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>         TemplateProcessor templateProcessor = TemplateProcessor.buildProcessor(<span class="jxr_string">"I am {{ foo }}"</span>);
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>         Map&lt;String, String&gt; input = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>         assertThrows(TemplateRenderException.<strong class="jxr_keyword">class</strong>,
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>                 <span class="jxr_string">"Input to renderTemplate(Map myMap) was null"</span>,
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>                 () -&gt; templateProcessor.renderTemplate(input));
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>     }
+<a class="jxr_linenumber" name="L372" href="#L372">372</a> 
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L374" href="#L374">374</a> <em class="jxr_javadoccomment">     * If we provide a null list to the renderTemplate method, what happens?</em>
+<a class="jxr_linenumber" name="L375" href="#L375">375</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>     @Test
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> test_NegativeCase_NullList() {
+<a class="jxr_linenumber" name="L378" href="#L378">378</a>         TemplateProcessor templateProcessor = TemplateProcessor.buildProcessor(<span class="jxr_string">"I am {{ foo }}"</span>);
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>         List&lt;Map&lt;String, String&gt;&gt; input = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>         assertThrows(TemplateRenderException.<strong class="jxr_keyword">class</strong>,
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>                 <span class="jxr_string">"Input to renderTemplate(List data) was null"</span>,
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>                 () -&gt; templateProcessor.renderTemplate(input));
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>     }
+<a class="jxr_linenumber" name="L384" href="#L384">384</a> 
+<a class="jxr_linenumber" name="L385" href="#L385">385</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2026. All rights reserved.</div>

@@ -227,25 +227,29 @@ public final class FullSystem {
     static void closeCore(ILogger logger, Context context, IServer server, IServer sslServer, String fullSystemName, IFileUtils fileUtils) throws IOException {
 <span class="fc" id="L228">        logger.logDebug(() -&gt; &quot;Received shutdown command&quot;);</span>
 
-<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (server != null) {</span>
-<span class="fc" id="L231">            logger.logDebug(() -&gt; &quot; Stopping the server: &quot; + server);</span>
-<span class="fc" id="L232">            server.close();</span>
+<span class="fc bfc" id="L230" title="All 4 branches covered.">        if (context.getFullSystem() != null &amp;&amp; context.getFullSystem().getTheBrig() != null) {</span>
+<span class="fc" id="L231">            context.getFullSystem().getTheBrig().stop();</span>
         }
 
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        if (sslServer != null) {</span>
-<span class="fc" id="L236">            logger.logDebug(() -&gt; &quot; Stopping the SSL server: &quot; + server);</span>
-<span class="fc" id="L237">            sslServer.close();</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (server != null) {</span>
+<span class="fc" id="L235">            logger.logDebug(() -&gt; &quot; Stopping the server: &quot; + server);</span>
+<span class="fc" id="L236">            server.close();</span>
         }
 
-<span class="fc" id="L240">        logger.logDebug(() -&gt; &quot;Killing all the action queues: &quot; + context.getActionQueueState().aqQueueAsString());</span>
-<span class="fc" id="L241">        new ActionQueueKiller(context).killAllQueues();</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (sslServer != null) {</span>
+<span class="fc" id="L240">            logger.logDebug(() -&gt; &quot; Stopping the SSL server: &quot; + server);</span>
+<span class="fc" id="L241">            sslServer.close();</span>
+        }
 
-<span class="fc" id="L243">        logger.logDebug(() -&gt; &quot;Deleting SYSTEM_RUNNING file, indicating Minum is no longer running&quot;);</span>
-<span class="fc" id="L244">        fileUtils.deleteIfExists(Path.of(&quot;SYSTEM_RUNNING&quot;));</span>
+<span class="fc" id="L244">        logger.logDebug(() -&gt; &quot;Killing all the action queues: &quot; + context.getActionQueueState().aqQueueAsString());</span>
+<span class="fc" id="L245">        new ActionQueueKiller(context).killAllQueues();</span>
 
-<span class="fc" id="L246">        logger.logDebug(() -&gt; String.format(</span>
-<span class="fc" id="L247">                &quot;%s %s says: Goodbye world!%n&quot;, TimeUtils.getTimestampIsoInstant(), fullSystemName));</span>
-<span class="fc" id="L248">    }</span>
+<span class="fc" id="L247">        logger.logDebug(() -&gt; &quot;Deleting SYSTEM_RUNNING file, indicating Minum is no longer running&quot;);</span>
+<span class="fc" id="L248">        fileUtils.deleteIfExists(Path.of(&quot;SYSTEM_RUNNING&quot;));</span>
+
+<span class="fc" id="L250">        logger.logDebug(() -&gt; String.format(</span>
+<span class="fc" id="L251">                &quot;%s %s says: Goodbye world!%n&quot;, TimeUtils.getTimestampIsoInstant(), fullSystemName));</span>
+<span class="fc" id="L252">    }</span>
 
     /**
      * A blocking call for our multi-threaded application.
@@ -280,24 +284,24 @@ public final class FullSystem {
      * &lt;/p&gt;
      */
     public void block() {
-<span class="fc" id="L283">        blockCore(this.server, this.sslServer, this.logger);</span>
-<span class="fc" id="L284">    }</span>
+<span class="fc" id="L287">        blockCore(this.server, this.sslServer, this.logger);</span>
+<span class="fc" id="L288">    }</span>
 
     static void blockCore(IServer server, IServer sslServer, ILogger logger) {
         try {
-<span class="fc bfc" id="L288" title="All 2 branches covered.">            if (server != null) {</span>
-<span class="fc" id="L289">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), server));</span>
-<span class="fc" id="L290">                server.getCentralLoopFuture().get();</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">            if (server != null) {</span>
+<span class="fc" id="L293">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), server));</span>
+<span class="fc" id="L294">                server.getCentralLoopFuture().get();</span>
             }
-<span class="fc bfc" id="L292" title="All 2 branches covered.">            if (sslServer != null) {</span>
-<span class="fc" id="L293">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), sslServer));</span>
-<span class="fc" id="L294">                sslServer.getCentralLoopFuture().get();</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">            if (sslServer != null) {</span>
+<span class="fc" id="L297">                logger.logTrace(() -&gt; &quot;%s thread has properly finished startup, now waiting on the result of %s&quot;.formatted(Thread.currentThread(), sslServer));</span>
+<span class="fc" id="L298">                sslServer.getCentralLoopFuture().get();</span>
             }
-<span class="fc" id="L296">        } catch (InterruptedException | ExecutionException | CancellationException ex) {</span>
-<span class="fc" id="L297">            Thread.currentThread().interrupt();</span>
-<span class="fc" id="L298">            throw new WebServerException(ex);</span>
-<span class="fc" id="L299">        }</span>
-<span class="fc" id="L300">    }</span>
+<span class="fc" id="L300">        } catch (InterruptedException | ExecutionException | CancellationException ex) {</span>
+<span class="fc" id="L301">            Thread.currentThread().interrupt();</span>
+<span class="fc" id="L302">            throw new WebServerException(ex);</span>
+<span class="fc" id="L303">        }</span>
+<span class="fc" id="L304">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

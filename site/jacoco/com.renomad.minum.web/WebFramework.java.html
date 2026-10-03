@@ -373,43 +373,45 @@ public final class WebFramework {
      *         the handler, set keep-alive to false&lt;/li&gt;
      *     &lt;/ul&gt;
      * &lt;/p&gt;
+     * @param hasAccessedBody pulled from request.hasAccessedBody(), which is set true if the handler
+     *                        has accessed the body of this request.
      */
     static boolean determineIfKeepAlive(IRequest request, ILogger logger, boolean hasAccessedBody) {
-<span class="fc" id="L378">        boolean isKeepAlive = false;</span>
-<span class="fc bfc" id="L379" title="All 2 branches covered.">        if (request.getRequestLine().getVersion() == HttpVersion.ONE_DOT_ZERO) {</span>
-<span class="fc" id="L380">            isKeepAlive = request.getHeaders().hasKeepAlive();</span>
-<span class="fc bfc" id="L381" title="All 2 branches covered.">        } else if (request.getRequestLine().getVersion() == HttpVersion.ONE_DOT_ONE) {</span>
-<span class="fc bfc" id="L382" title="All 2 branches covered.">            isKeepAlive = ! request.getHeaders().hasConnectionClose();</span>
+<span class="fc" id="L380">        boolean isKeepAlive = false;</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">        if (request.getRequestLine().getVersion() == HttpVersion.ONE_DOT_ZERO) {</span>
+<span class="fc" id="L382">            isKeepAlive = request.getHeaders().hasKeepAlive();</span>
+<span class="fc bfc" id="L383" title="All 2 branches covered.">        } else if (request.getRequestLine().getVersion() == HttpVersion.ONE_DOT_ONE) {</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">            isKeepAlive = ! request.getHeaders().hasConnectionClose();</span>
         }
 
-<span class="fc bfc" id="L385" title="All 6 branches covered.">        if (isKeepAlive &amp;&amp; request.getHeaders().contentLength() &gt;= 0 &amp;&amp; !hasAccessedBody) {</span>
+<span class="fc bfc" id="L387" title="All 6 branches covered.">        if (isKeepAlive &amp;&amp; request.getHeaders().contentLength() &gt;= 0 &amp;&amp; !hasAccessedBody) {</span>
             // if there was a body and the user has not read it by this point, we will log the
             // discrepancy and close the socket.
-<span class="fc" id="L388">            logger.logDebug(() -&gt; (&quot;A body sized %d bytes was included in the request, but the endpoint (%s) did not access the body. &quot; +</span>
-<span class="fc" id="L389">                    &quot;Closing socket after request is finished&quot;).formatted(request.getHeaders().contentLength(), request.getRequestLine().getPathDetails().getIsolatedPath()));</span>
-<span class="fc" id="L390">            isKeepAlive = false;</span>
+<span class="fc" id="L390">            logger.logDebug(() -&gt; (&quot;A body sized %d bytes was included in the request, but the endpoint (%s) did not access the body. &quot; +</span>
+<span class="fc" id="L391">                    &quot;Closing socket after request is finished&quot;).formatted(request.getHeaders().contentLength(), request.getRequestLine().getPathDetails().getIsolatedPath()));</span>
+<span class="fc" id="L392">            isKeepAlive = false;</span>
         }
 
-<span class="fc" id="L393">        boolean finalIsKeepAlive = isKeepAlive;</span>
+<span class="fc" id="L395">        boolean finalIsKeepAlive = isKeepAlive;</span>
 
-<span class="fc" id="L395">        logger.logTrace(() -&gt; &quot;Is this a keep-alive connection? %s&quot;.formatted(finalIsKeepAlive));</span>
-<span class="fc" id="L396">        return finalIsKeepAlive;</span>
+<span class="fc" id="L397">        logger.logTrace(() -&gt; &quot;Is this a keep-alive connection? %s&quot;.formatted(finalIsKeepAlive));</span>
+<span class="fc" id="L398">        return finalIsKeepAlive;</span>
     }
 
     RequestLine getProcessedRequestLine(ISocketWrapper sw, String rawStartLine) {
-<span class="fc" id="L400">        logger.logTrace(() -&gt; sw + &quot;: raw request line received: &quot; + rawStartLine);</span>
+<span class="fc" id="L402">        logger.logTrace(() -&gt; sw + &quot;: raw request line received: &quot; + rawStartLine);</span>
 
-<span class="fc" id="L402">        RequestLine extractedRequestLine = validRequestLine.extractRequestLine(rawStartLine);</span>
-<span class="fc" id="L403">        logger.logTrace(() -&gt; sw + &quot;: RequestLine has been derived: &quot; + extractedRequestLine);</span>
-<span class="fc" id="L404">        return extractedRequestLine;</span>
+<span class="fc" id="L404">        RequestLine extractedRequestLine = validRequestLine.extractRequestLine(rawStartLine);</span>
+<span class="fc" id="L405">        logger.logTrace(() -&gt; sw + &quot;: RequestLine has been derived: &quot; + extractedRequestLine);</span>
+<span class="fc" id="L406">        return extractedRequestLine;</span>
     }
 
     void checkIfSuspiciousPath(ISocketWrapper sw, RequestLine requestLine) {
-<span class="fc bfc" id="L408" title="All 2 branches covered.">        if (constants.suspiciousPaths.contains(requestLine.getPathDetails().getIsolatedPath())) {</span>
-<span class="fc" id="L409">            String msg = sw.getRemoteAddr() + &quot; is looking for a vulnerability, for this: &quot; + requestLine.getPathDetails().getIsolatedPath();</span>
-<span class="fc" id="L410">            throw new ForbiddenUseException(msg);</span>
+<span class="fc bfc" id="L410" title="All 2 branches covered.">        if (constants.suspiciousPaths.contains(requestLine.getPathDetails().getIsolatedPath())) {</span>
+<span class="fc" id="L411">            String msg = sw.getRemoteAddr() + &quot; is looking for a vulnerability, for this: &quot; + requestLine.getPathDetails().getIsolatedPath();</span>
+<span class="fc" id="L412">            throw new ForbiddenUseException(msg);</span>
         }
-<span class="fc" id="L412">    }</span>
+<span class="fc" id="L414">    }</span>
 
     /**
      * Drops the connection immediately if the client is recognized
@@ -418,13 +420,13 @@ public final class WebFramework {
      * with a suffix of &quot;_vuln_seeking&quot;
      */
     boolean dumpIfAttacker(ISocketWrapper sw, FullSystem fs) {
-<span class="fc bfc" id="L421" title="All 2 branches covered.">        if (fs == null) {</span>
-<span class="fc" id="L422">            return false;</span>
-<span class="fc bfc" id="L423" title="All 2 branches covered.">        } else if (fs.getTheBrig() == null) {</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">        if (fs == null) {</span>
 <span class="fc" id="L424">            return false;</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">        } else if (fs.getTheBrig() == null) {</span>
+<span class="fc" id="L426">            return false;</span>
         } else {
-<span class="fc" id="L426">            dumpIfAttacker(sw, fs.getTheBrig());</span>
-<span class="fc" id="L427">            return true;</span>
+<span class="fc" id="L428">            dumpIfAttacker(sw, fs.getTheBrig());</span>
+<span class="fc" id="L429">            return true;</span>
         }
     }
 
@@ -432,33 +434,33 @@ public final class WebFramework {
      * For documentation, see {@link #dumpIfAttacker(ISocketWrapper, FullSystem)}
      */
     void dumpIfAttacker(ISocketWrapper sw, ITheBrig theBrig) {
-<span class="fc" id="L435">        String remoteClient = sw.getRemoteAddr();</span>
-<span class="fc bfc" id="L436" title="All 2 branches covered.">        if (theBrig.isInJail(remoteClient + &quot;_vuln_seeking&quot;)) {</span>
+<span class="fc" id="L437">        String remoteClient = sw.getRemoteAddr();</span>
+<span class="fc bfc" id="L438" title="All 2 branches covered.">        if (theBrig.isInJail(remoteClient + &quot;_vuln_seeking&quot;)) {</span>
             // if this client is a vulnerability seeker, throw an exception,
             // causing them to get dumped unceremoniously
-<span class="fc" id="L439">            String message = &quot;closing the socket on &quot; + remoteClient + &quot; due to being found in the brig&quot;;</span>
-<span class="fc" id="L440">            logger.logDebug(() -&gt; message);</span>
-<span class="fc" id="L441">            throw new ForbiddenUseException(message);</span>
+<span class="fc" id="L441">            String message = &quot;closing the socket on &quot; + remoteClient + &quot; due to being found in the brig&quot;;</span>
+<span class="fc" id="L442">            logger.logDebug(() -&gt; message);</span>
+<span class="fc" id="L443">            throw new ForbiddenUseException(message);</span>
         }
-<span class="fc" id="L443">    }</span>
+<span class="fc" id="L445">    }</span>
 
     /**
      * Prepare some of the basic server response headers, like the status code, the
      * date-time stamp, the server name.
      */
     private void addDefaultHeaders(IResponse response, StringBuilder headerStringBuilder) {
-<span class="fc" id="L450">        String date = Objects.requireNonNullElseGet(overrideForDateTime,</span>
-<span class="fc" id="L451">                () -&gt; ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;))).format(DateTimeFormatter.RFC_1123_DATE_TIME);</span>
+<span class="fc" id="L452">        String date = Objects.requireNonNullElseGet(overrideForDateTime,</span>
+<span class="fc" id="L453">                () -&gt; ZonedDateTime.now(ZoneId.of(&quot;UTC&quot;))).format(DateTimeFormatter.RFC_1123_DATE_TIME);</span>
 
         // add the status line
-<span class="fc" id="L454">        headerStringBuilder.append(&quot;HTTP/1.1 &quot;).append(response.getStatusCode().code).append(&quot; &quot;).append(response.getStatusCode().shortDescription).append(HTTP_CRLF);</span>
+<span class="fc" id="L456">        headerStringBuilder.append(&quot;HTTP/1.1 &quot;).append(response.getStatusCode().code).append(&quot; &quot;).append(response.getStatusCode().shortDescription).append(HTTP_CRLF);</span>
 
         // add a date-timestamp
-<span class="fc" id="L457">        headerStringBuilder.append(&quot;Date: &quot;).append(date).append(HTTP_CRLF);</span>
+<span class="fc" id="L459">        headerStringBuilder.append(&quot;Date: &quot;).append(date).append(HTTP_CRLF);</span>
 
         // add the server name
-<span class="fc" id="L460">        headerStringBuilder.append(&quot;Server: minum&quot;).append(HTTP_CRLF);</span>
-<span class="fc" id="L461">    }</span>
+<span class="fc" id="L462">        headerStringBuilder.append(&quot;Server: minum&quot;).append(HTTP_CRLF);</span>
+<span class="fc" id="L463">    }</span>
 
     /**
      * If a response body exists, it needs to have a content-type specified,
@@ -468,13 +470,13 @@ public final class WebFramework {
      */
     static void confirmBodyHasContentType(IRequest request, IResponse response) {
         // check the correctness of the content-type header versus the data length (if any data, that is)
-<span class="fc bfc" id="L471" title="All 2 branches covered.">        boolean hasContentType = response.getExtraHeaders().valueByKey(&quot;content-type&quot;) != null;</span>
+<span class="fc bfc" id="L473" title="All 2 branches covered.">        boolean hasContentType = response.getExtraHeaders().valueByKey(&quot;content-type&quot;) != null;</span>
 
         // if there *is* data, we had better be returning a content type
-<span class="fc bfc" id="L474" title="All 4 branches covered.">        if (response.getBodyLength() &gt; 0 &amp;&amp; !hasContentType) {</span>
-<span class="fc" id="L475">            throw new WebServerException(&quot;a Content-Type header must be specified in the Response object if it returns data. Response details: &quot; + response + &quot; Request: &quot; + request);</span>
+<span class="fc bfc" id="L476" title="All 4 branches covered.">        if (response.getBodyLength() &gt; 0 &amp;&amp; !hasContentType) {</span>
+<span class="fc" id="L477">            throw new WebServerException(&quot;a Content-Type header must be specified in the Response object if it returns data. Response details: &quot; + response + &quot; Request: &quot; + request);</span>
         }
-<span class="fc" id="L477">    }</span>
+<span class="fc" id="L479">    }</span>
 
     /**
      * If this is a keep-alive communication, add a header specifying the
@@ -482,10 +484,10 @@ public final class WebFramework {
      */
     private void addKeepAliveTimeout(boolean isKeepAlive, StringBuilder stringBuilder) {
         // if we're a keep-alive connection, reply with a keep-alive header
-<span class="fc bfc" id="L485" title="All 2 branches covered.">        if (isKeepAlive) {</span>
-<span class="fc" id="L486">            stringBuilder.append(&quot;Keep-Alive: timeout=&quot;).append(constants.keepAliveTimeoutSeconds).append(HTTP_CRLF);</span>
+<span class="fc bfc" id="L487" title="All 2 branches covered.">        if (isKeepAlive) {</span>
+<span class="fc" id="L488">            stringBuilder.append(&quot;Keep-Alive: timeout=&quot;).append(constants.keepAliveTimeoutSeconds).append(HTTP_CRLF);</span>
         }
-<span class="fc" id="L488">    }</span>
+<span class="fc" id="L490">    }</span>
 
     /**
      * The rules regarding the content-length header are byzantine.  Even in the cases
@@ -494,8 +496,8 @@ public final class WebFramework {
      * See &lt;a href=&quot;https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length&quot;&gt;Content-Length in the HTTP spec&lt;/a&gt;
      */
     private static void applyContentLength(StringBuilder stringBuilder, long bodyLength) {
-<span class="fc" id="L497">        stringBuilder.append(&quot;Content-Length: &quot;).append(bodyLength).append(HTTP_CRLF);</span>
-<span class="fc" id="L498">    }</span>
+<span class="fc" id="L499">        stringBuilder.append(&quot;Content-Length: &quot;).append(bodyLength).append(HTTP_CRLF);</span>
+<span class="fc" id="L500">    }</span>
 
     /**
      * This method will examine the content-encoding headers, and if &quot;gzip&quot; is
@@ -512,21 +514,21 @@ public final class WebFramework {
      *                     used for logging.
      */
     static IResponse compressBodyIfRequested(IResponse response, List&lt;String&gt; acceptEncoding, StringBuilder stringBuilder, ILogger logger, String endpointPath) {
-<span class="fc bfc" id="L515" title="All 2 branches covered.">        String allContentEncodingHeaders = acceptEncoding != null ? String.join(&quot;;&quot;, acceptEncoding) : &quot;&quot;;</span>
-<span class="fc bfc" id="L516" title="All 2 branches covered.">        if (allContentEncodingHeaders.contains(&quot;gzip&quot;)) {</span>
-<span class="fc" id="L517">            stringBuilder.append(&quot;Content-Encoding: gzip&quot;).append(HTTP_CRLF);</span>
-<span class="fc" id="L518">            stringBuilder.append(&quot;Vary: accept-encoding&quot;).append(HTTP_CRLF);</span>
-<span class="fc" id="L519">            var out = new ByteArrayOutputStream();</span>
-<span class="fc" id="L520">            compressBody(out, response.getBody());</span>
-<span class="fc" id="L521">            logger.logTrace(() -&gt; &quot;Compressing results of %s.  Compression ratio: %d%%. Original size: %d bytes. Compressed size: %d bytes&quot;.formatted(endpointPath,</span>
-<span class="fc" id="L522">                    Math.round(((double) out.size() / (double) response.getBodyLength()) * 100), response.getBodyLength(), out.size()));</span>
-<span class="fc" id="L523">            return Response.buildResponse(</span>
-<span class="fc" id="L524">                    response.getStatusCode(),</span>
-<span class="fc" id="L525">                    response.getExtraHeaders(),</span>
-<span class="fc" id="L526">                    out.toByteArray()</span>
+<span class="fc bfc" id="L517" title="All 2 branches covered.">        String allContentEncodingHeaders = acceptEncoding != null ? String.join(&quot;;&quot;, acceptEncoding) : &quot;&quot;;</span>
+<span class="fc bfc" id="L518" title="All 2 branches covered.">        if (allContentEncodingHeaders.contains(&quot;gzip&quot;)) {</span>
+<span class="fc" id="L519">            stringBuilder.append(&quot;Content-Encoding: gzip&quot;).append(HTTP_CRLF);</span>
+<span class="fc" id="L520">            stringBuilder.append(&quot;Vary: accept-encoding&quot;).append(HTTP_CRLF);</span>
+<span class="fc" id="L521">            var out = new ByteArrayOutputStream();</span>
+<span class="fc" id="L522">            compressBody(out, response.getBody());</span>
+<span class="fc" id="L523">            logger.logTrace(() -&gt; &quot;Compressing results of %s.  Compression ratio: %d%%. Original size: %d bytes. Compressed size: %d bytes&quot;.formatted(endpointPath,</span>
+<span class="fc" id="L524">                    Math.round(((double) out.size() / (double) response.getBodyLength()) * 100), response.getBodyLength(), out.size()));</span>
+<span class="fc" id="L525">            return Response.buildResponse(</span>
+<span class="fc" id="L526">                    response.getStatusCode(),</span>
+<span class="fc" id="L527">                    response.getExtraHeaders(),</span>
+<span class="fc" id="L528">                    out.toByteArray()</span>
             );
         }
-<span class="fc" id="L529">        return response;</span>
+<span class="fc" id="L531">        return response;</span>
     }
 
     /**
@@ -537,13 +539,13 @@ public final class WebFramework {
      * @param out this is provided as a parameter for better control during testing
      */
     static void compressBody(OutputStream out, byte[] body) {
-<span class="fc" id="L540">        try (var gos = new GZIPOutputStream(out)) {</span>
-<span class="fc" id="L541">            gos.write(body);</span>
-<span class="fc" id="L542">            gos.finish();</span>
-<span class="fc" id="L543">        } catch (IOException e) {</span>
-<span class="fc" id="L544">            throw new WebServerException(&quot;Error in Response.compressBody&quot;, e);</span>
-<span class="fc" id="L545">        }</span>
-<span class="fc" id="L546">    }</span>
+<span class="fc" id="L542">        try (var gos = new GZIPOutputStream(out)) {</span>
+<span class="fc" id="L543">            gos.write(body);</span>
+<span class="fc" id="L544">            gos.finish();</span>
+<span class="fc" id="L545">        } catch (IOException e) {</span>
+<span class="fc" id="L546">            throw new WebServerException(&quot;Error in Response.compressBody&quot;, e);</span>
+<span class="fc" id="L547">        }</span>
+<span class="fc" id="L548">    }</span>
 
     /**
      * Looks through the mappings of {@link MethodPath} and path to registered endpoints
@@ -552,30 +554,30 @@ public final class WebFramework {
      */
     ThrowingFunction&lt;IRequest, IResponse&gt; findEndpointForThisStartline(RequestLine sl, Headers requestHeaders) {
         ThrowingFunction&lt;IRequest, IResponse&gt; handler;
-<span class="fc" id="L555">        logger.logTrace(() -&gt; &quot;Seeking a handler for &quot; + sl);</span>
+<span class="fc" id="L557">        logger.logTrace(() -&gt; &quot;Seeking a handler for &quot; + sl);</span>
 
         // first we check if there's a simple direct match
-<span class="fc" id="L558">        String requestedPath = sl.getPathDetails().getIsolatedPath().toLowerCase(Locale.ROOT);</span>
+<span class="fc" id="L560">        String requestedPath = sl.getPathDetails().getIsolatedPath().toLowerCase(Locale.ROOT);</span>
 
         // if the user is asking for a HEAD request, they want to run a GET command
         // but don't want the body.  We'll simply exclude sending the body, later on, when returning the data
-<span class="fc bfc" id="L562" title="All 2 branches covered.">        RequestLine.Method method = sl.getMethod() == RequestLine.Method.HEAD ? RequestLine.Method.GET : sl.getMethod();</span>
+<span class="fc bfc" id="L564" title="All 2 branches covered.">        RequestLine.Method method = sl.getMethod() == RequestLine.Method.HEAD ? RequestLine.Method.GET : sl.getMethod();</span>
 
-<span class="fc" id="L564">        MethodPath key = new MethodPath(method, requestedPath);</span>
-<span class="fc" id="L565">        handler = registeredDynamicPaths.get(key);</span>
+<span class="fc" id="L566">        MethodPath key = new MethodPath(method, requestedPath);</span>
+<span class="fc" id="L567">        handler = registeredDynamicPaths.get(key);</span>
 
-<span class="fc bfc" id="L567" title="All 2 branches covered.">        if (handler == null) {</span>
-<span class="fc" id="L568">            logger.logTrace(() -&gt; &quot;No direct handler found.  looking for a partial match for &quot; + requestedPath);</span>
-<span class="fc" id="L569">            handler = findHandlerByPathFunction(sl);</span>
+<span class="fc bfc" id="L569" title="All 2 branches covered.">        if (handler == null) {</span>
+<span class="fc" id="L570">            logger.logTrace(() -&gt; &quot;No direct handler found.  looking for a partial match for &quot; + requestedPath);</span>
+<span class="fc" id="L571">            handler = findHandlerByPathFunction(sl);</span>
         }
 
-<span class="fc bfc" id="L572" title="All 2 branches covered.">        if (handler == null) {</span>
-<span class="fc" id="L573">            logger.logTrace(() -&gt; &quot;No partial match found, checking files on disk for &quot; + requestedPath );</span>
-<span class="fc" id="L574">            handler = findHandlerByFilesOnDisk(sl, requestHeaders);</span>
+<span class="fc bfc" id="L574" title="All 2 branches covered.">        if (handler == null) {</span>
+<span class="fc" id="L575">            logger.logTrace(() -&gt; &quot;No partial match found, checking files on disk for &quot; + requestedPath );</span>
+<span class="fc" id="L576">            handler = findHandlerByFilesOnDisk(sl, requestHeaders);</span>
         }
 
         // we'll return this, and it could be a null.
-<span class="fc" id="L578">        return handler;</span>
+<span class="fc" id="L580">        return handler;</span>
     }
 
     /**
@@ -584,12 +586,12 @@ public final class WebFramework {
      * The request method has to be GET or HEAD.
      */
     private ThrowingFunction&lt;IRequest, IResponse&gt; findHandlerByFilesOnDisk(RequestLine sl, Headers requestHeaders) {
-<span class="fc bfc" id="L587" title="All 4 branches covered.">        if (sl.getMethod() == RequestLine.Method.GET || sl.getMethod() == RequestLine.Method.HEAD) {</span>
-<span class="fc" id="L588">            String requestedPath = sl.getPathDetails().getIsolatedPath();</span>
-<span class="fc" id="L589">            IResponse response = readStaticFile(requestedPath, requestHeaders);</span>
-<span class="fc" id="L590">            return request -&gt; response;</span>
+<span class="fc bfc" id="L589" title="All 4 branches covered.">        if (sl.getMethod() == RequestLine.Method.GET || sl.getMethod() == RequestLine.Method.HEAD) {</span>
+<span class="fc" id="L590">            String requestedPath = sl.getPathDetails().getIsolatedPath();</span>
+<span class="fc" id="L591">            IResponse response = readStaticFile(requestedPath, requestHeaders);</span>
+<span class="fc" id="L592">            return request -&gt; response;</span>
         } else {
-<span class="fc" id="L592">            return null;</span>
+<span class="fc" id="L594">            return null;</span>
         }
     }
 
@@ -605,87 +607,87 @@ public final class WebFramework {
      *  if the path has invalid characters, we'll return a &quot;bad request&quot; response.
      */
     IResponse readStaticFile(String path, Headers requestHeaders) {
-<span class="fc" id="L608">        String mimeType = getMimeString(path);</span>
+<span class="fc" id="L610">        String mimeType = getMimeString(path);</span>
         Path staticFilePath;
         try {
-<span class="fc" id="L611">            staticFilePath = staticFilesDirectoryPathBase.resolve(path);</span>
-<span class="fc" id="L612">        } catch (Exception e) {</span>
-<span class="fc" id="L613">            throw new BadRequestException(&quot;Error creating a valid path from: &quot; + path);</span>
-<span class="fc" id="L614">        }</span>
+<span class="fc" id="L613">            staticFilePath = staticFilesDirectoryPathBase.resolve(path);</span>
+<span class="fc" id="L614">        } catch (Exception e) {</span>
+<span class="fc" id="L615">            throw new BadRequestException(&quot;Error creating a valid path from: &quot; + path);</span>
+<span class="fc" id="L616">        }</span>
 
         // move value to a variable - used in several places, may as well
-<span class="fc" id="L617">        String staticFilePathString = staticFilePath.toString();</span>
+<span class="fc" id="L619">        String staticFilePathString = staticFilePath.toString();</span>
 
-<span class="fc bfc" id="L619" title="All 2 branches covered.">        if (constants.useCacheForStaticFiles) {</span>
-<span class="fc" id="L620">            ReentrantLock cacheLock = fileReader.getCacheLock();</span>
-<span class="fc" id="L621">            cacheLock.lock();</span>
+<span class="fc bfc" id="L621" title="All 2 branches covered.">        if (constants.useCacheForStaticFiles) {</span>
+<span class="fc" id="L622">            ReentrantLock cacheLock = fileReader.getCacheLock();</span>
+<span class="fc" id="L623">            cacheLock.lock();</span>
             try {
-<span class="fc" id="L623">                byte[] fileContents = fileReader.getLruCache().get(staticFilePathString);</span>
-<span class="fc bfc" id="L624" title="All 2 branches covered.">                if (fileContents != null) {</span>
-<span class="fc" id="L625">                    logger.logTrace(() -&gt; &quot;%d bytes of data found in cache for request of %s&quot;.formatted(fileContents.length, staticFilePath));</span>
-<span class="fc" id="L626">                    return createOkResponseForStaticFiles(fileContents, mimeType, staticFilePathString);</span>
+<span class="fc" id="L625">                byte[] fileContents = fileReader.getLruCache().get(staticFilePathString);</span>
+<span class="fc bfc" id="L626" title="All 2 branches covered.">                if (fileContents != null) {</span>
+<span class="fc" id="L627">                    logger.logTrace(() -&gt; &quot;%d bytes of data found in cache for request of %s&quot;.formatted(fileContents.length, staticFilePath));</span>
+<span class="fc" id="L628">                    return createOkResponseForStaticFiles(fileContents, mimeType, staticFilePathString);</span>
                 }
             } finally {
-<span class="fc" id="L629">                cacheLock.unlock();</span>
+<span class="fc" id="L631">                cacheLock.unlock();</span>
             }
         }
 
         try {
-<span class="fc" id="L634">            checkForBadFilePatterns(path);</span>
-<span class="fc" id="L635">        } catch (Exception ex) {</span>
-<span class="fc" id="L636">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at readStaticFile: %s.  Exception: %s&quot;, path, ex.getMessage()));</span>
-<span class="fc" id="L637">            return Response.buildLeanResponse(CODE_400_BAD_REQUEST);</span>
-<span class="fc" id="L638">        }</span>
+<span class="fc" id="L636">            checkForBadFilePatterns(path);</span>
+<span class="fc" id="L637">        } catch (Exception ex) {</span>
+<span class="fc" id="L638">            logger.logDebug(() -&gt; String.format(&quot;Bad path requested at readStaticFile: %s.  Exception: %s&quot;, path, ex.getMessage()));</span>
+<span class="fc" id="L639">            return Response.buildLeanResponse(CODE_400_BAD_REQUEST);</span>
+<span class="fc" id="L640">        }</span>
 
         try {
-<span class="fc" id="L641">            fileUtils.checkFileIsWithinDirectory(path, constants.staticFilesDirectory);</span>
-<span class="fc" id="L642">        } catch (Exception ex) {</span>
-<span class="fc" id="L643">            logger.logDebug(() -&gt; String.format(&quot;Unable to find %s in allowed directories&quot;, path));</span>
-<span class="fc" id="L644">            return Response.buildLeanResponse(CODE_404_NOT_FOUND);</span>
-<span class="fc" id="L645">        }</span>
+<span class="fc" id="L643">            fileUtils.checkFileIsWithinDirectory(path, constants.staticFilesDirectory);</span>
+<span class="fc" id="L644">        } catch (Exception ex) {</span>
+<span class="fc" id="L645">            logger.logDebug(() -&gt; String.format(&quot;Unable to find %s in allowed directories&quot;, path));</span>
+<span class="fc" id="L646">            return Response.buildLeanResponse(CODE_404_NOT_FOUND);</span>
+<span class="fc" id="L647">        }</span>
 
         try {
-<span class="fc bfc" id="L648" title="All 2 branches covered.">            if (!fileUtils.isRegularFile(staticFilePath)) {</span>
-<span class="fc" id="L649">                logger.logDebug(() -&gt; String.format(&quot;No readable regular file found at %s&quot;, path));</span>
-<span class="fc" id="L650">                return Response.buildLeanResponse(CODE_404_NOT_FOUND);</span>
+<span class="fc bfc" id="L650" title="All 2 branches covered.">            if (!fileUtils.isRegularFile(staticFilePath)) {</span>
+<span class="fc" id="L651">                logger.logDebug(() -&gt; String.format(&quot;No readable regular file found at %s&quot;, path));</span>
+<span class="fc" id="L652">                return Response.buildLeanResponse(CODE_404_NOT_FOUND);</span>
             }
 
-<span class="fc" id="L653">            long size = fileUtils.size(staticFilePath);</span>
-<span class="fc bfc" id="L654" title="All 2 branches covered.">            if (size == 0) {</span>
-<span class="fc" id="L655">                logger.logTrace(() -&gt; &quot;Requested file, %s, was empty.  Returning 200 OK, content-length 0, with mime of %s&quot;.formatted(staticFilePath, mimeType));</span>
-<span class="fc" id="L656">                return Response.buildLeanResponse(CODE_200_OK, Map.of(&quot;Content-Type&quot;, mimeType));</span>
-<span class="fc bfc" id="L657" title="All 2 branches covered.">            } else if (size &lt; (long) MAX_CACHED_BYTES) {</span>
-<span class="fc" id="L658">                logger.logTrace(() -&gt; &quot;Size of static file, %s was %d bytes.  Since less than max allowed (%d), caching allowed.&quot;.formatted(staticFilePath, size, MAX_CACHED_BYTES));</span>
-<span class="fc" id="L659">                var fileContents = fileReader.readFile(staticFilePathString);</span>
-<span class="fc" id="L660">                return createOkResponseForStaticFiles(fileContents, mimeType, staticFilePathString);</span>
+<span class="fc" id="L655">            long size = fileUtils.size(staticFilePath);</span>
+<span class="fc bfc" id="L656" title="All 2 branches covered.">            if (size == 0) {</span>
+<span class="fc" id="L657">                logger.logTrace(() -&gt; &quot;Requested file, %s, was empty.  Returning 200 OK, content-length 0, with mime of %s&quot;.formatted(staticFilePath, mimeType));</span>
+<span class="fc" id="L658">                return Response.buildLeanResponse(CODE_200_OK, Map.of(&quot;Content-Type&quot;, mimeType));</span>
+<span class="fc bfc" id="L659" title="All 2 branches covered.">            } else if (size &lt; (long) MAX_CACHED_BYTES) {</span>
+<span class="fc" id="L660">                logger.logTrace(() -&gt; &quot;Size of static file, %s was %d bytes.  Since less than max allowed (%d), caching allowed.&quot;.formatted(staticFilePath, size, MAX_CACHED_BYTES));</span>
+<span class="fc" id="L661">                var fileContents = fileReader.readFile(staticFilePathString);</span>
+<span class="fc" id="L662">                return createOkResponseForStaticFiles(fileContents, mimeType, staticFilePathString);</span>
             } else {
-<span class="fc" id="L662">                logger.logTrace(() -&gt; &quot;Size of static file, %s was %d bytes.  Since greater than max allowed (%d), no caching allowed.&quot;.formatted(staticFilePath, size, MAX_CACHED_BYTES));</span>
-<span class="fc" id="L663">                return createOkResponseForLargeStaticFiles(mimeType, staticFilePath, requestHeaders);</span>
+<span class="fc" id="L664">                logger.logTrace(() -&gt; &quot;Size of static file, %s was %d bytes.  Since greater than max allowed (%d), no caching allowed.&quot;.formatted(staticFilePath, size, MAX_CACHED_BYTES));</span>
+<span class="fc" id="L665">                return createOkResponseForLargeStaticFiles(mimeType, staticFilePath, requestHeaders);</span>
             }
 
-<span class="fc" id="L666">        } catch (IOException e) {</span>
-<span class="fc" id="L667">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
-<span class="fc" id="L668">            return Response.buildLeanResponse(CODE_400_BAD_REQUEST);</span>
+<span class="fc" id="L668">        } catch (IOException e) {</span>
+<span class="fc" id="L669">            logger.logAsyncError(() -&gt; String.format(&quot;Error while reading file: %s. %s&quot;, path, StacktraceUtils.stackTraceToString(e)));</span>
+<span class="fc" id="L670">            return Response.buildLeanResponse(CODE_400_BAD_REQUEST);</span>
         }
     }
 
     private String getMimeString(String path) {
-<span class="fc" id="L673">        String mimeType = null;</span>
+<span class="fc" id="L675">        String mimeType = null;</span>
         // if the provided path has a dot in it, use that
         // to obtain a suffix for determining file type
-<span class="fc" id="L676">        int suffixBeginIndex = path.lastIndexOf('.');</span>
-<span class="fc bfc" id="L677" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
-<span class="fc" id="L678">            String suffix = path.substring(suffixBeginIndex+1);</span>
-<span class="fc" id="L679">            mimeType = fileSuffixToMime.get(suffix);</span>
+<span class="fc" id="L678">        int suffixBeginIndex = path.lastIndexOf('.');</span>
+<span class="fc bfc" id="L679" title="All 2 branches covered.">        if (suffixBeginIndex &gt; 0) {</span>
+<span class="fc" id="L680">            String suffix = path.substring(suffixBeginIndex+1);</span>
+<span class="fc" id="L681">            mimeType = fileSuffixToMime.get(suffix);</span>
         }
 
         // if we don't find any registered mime types for this
         // suffix, or if it doesn't have a suffix, set the mime type
         // to application/octet-stream
-<span class="fc bfc" id="L685" title="All 2 branches covered.">        if (mimeType == null) {</span>
-<span class="fc" id="L686">            mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="fc bfc" id="L687" title="All 2 branches covered.">        if (mimeType == null) {</span>
+<span class="fc" id="L688">            mimeType = &quot;application/octet-stream&quot;;</span>
         }
-<span class="fc" id="L688">        return mimeType;</span>
+<span class="fc" id="L690">        return mimeType;</span>
     }
 
     /**
@@ -694,26 +696,26 @@ public final class WebFramework {
      * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds
      */
     private IResponse createOkResponseForStaticFiles(byte[] fileContents, String mimeType, String path) {
-<span class="fc" id="L697">        var headers = new Headers(List.of(</span>
+<span class="fc" id="L699">        var headers = new Headers(List.of(</span>
                 &quot;Cache-Control: max-age=&quot; + constants.staticFileCacheTime,
                 &quot;Content-Type: &quot; + mimeType));
         // if the map does not have this key, then we haven't analyzed this file yet.
-<span class="fc bfc" id="L701" title="All 2 branches covered.">        if (!fileIsCompressible.containsKey(path)) {</span>
-<span class="fc" id="L702">            ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
-<span class="fc" id="L703">            compressBody(out, fileContents);</span>
+<span class="fc bfc" id="L703" title="All 2 branches covered.">        if (!fileIsCompressible.containsKey(path)) {</span>
+<span class="fc" id="L704">            ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="fc" id="L705">            compressBody(out, fileContents);</span>
 
             // we only want to compress it if we get a decent compression.
             // 30% smaller seems fine.
-<span class="fc" id="L707">            long compressionRatio = Math.round(((double) out.size() / (double) fileContents.length) * 100);</span>
-<span class="fc bfc" id="L708" title="All 2 branches covered.">            boolean isWorthCompressing = compressionRatio &lt; 70;</span>
-<span class="fc" id="L709">            logger.logTrace(() -&gt; &quot;static file %s worth compressing? %s.  Compression ratio: %d%%.  Original size: %d bytes. Compressed size: %d bytes&quot;.formatted(</span>
-<span class="fc" id="L710">                    path, isWorthCompressing, compressionRatio, fileContents.length, out.size()));</span>
-<span class="fc" id="L711">            fileIsCompressible.put(path, isWorthCompressing);</span>
+<span class="fc" id="L709">            long compressionRatio = Math.round(((double) out.size() / (double) fileContents.length) * 100);</span>
+<span class="fc bfc" id="L710" title="All 2 branches covered.">            boolean isWorthCompressing = compressionRatio &lt; 70;</span>
+<span class="fc" id="L711">            logger.logTrace(() -&gt; &quot;static file %s worth compressing? %s.  Compression ratio: %d%%.  Original size: %d bytes. Compressed size: %d bytes&quot;.formatted(</span>
+<span class="fc" id="L712">                    path, isWorthCompressing, compressionRatio, fileContents.length, out.size()));</span>
+<span class="fc" id="L713">            fileIsCompressible.put(path, isWorthCompressing);</span>
         }
-<span class="fc" id="L713">        logger.logTrace(() -&gt; &quot;Creating OK response for file %s, mime: %s, length: %s, fileIsCompressible: %s&quot;.formatted(</span>
-<span class="fc" id="L714">                path, mimeType, fileContents.length, fileIsCompressible.get(path)));</span>
-<span class="fc" id="L715">        return new Response(CODE_200_OK, headers, fileContents,</span>
-<span class="fc" id="L716">                socketWrapper -&gt; socketWrapper.send(fileContents), fileContents.length, fileIsCompressible.get(path));</span>
+<span class="fc" id="L715">        logger.logTrace(() -&gt; &quot;Creating OK response for file %s, mime: %s, length: %s, fileIsCompressible: %s&quot;.formatted(</span>
+<span class="fc" id="L716">                path, mimeType, fileContents.length, fileIsCompressible.get(path)));</span>
+<span class="fc" id="L717">        return new Response(CODE_200_OK, headers, fileContents,</span>
+<span class="fc" id="L718">                socketWrapper -&gt; socketWrapper.send(fileContents), fileContents.length, fileIsCompressible.get(path));</span>
     }
 
     /**
@@ -722,15 +724,15 @@ public final class WebFramework {
      * All static responses will get a cache time of STATIC_FILE_CACHE_TIME seconds
      */
     private IResponse createOkResponseForLargeStaticFiles(String mimeType, Path filePath, Headers requestHeaders) {
-<span class="fc" id="L725">        var headers = new Headers(List.of(</span>
+<span class="fc" id="L727">        var headers = new Headers(List.of(</span>
                 &quot;Cache-Control: max-age=&quot; + constants.staticFileCacheTime,
                 &quot;Content-Type: &quot; + mimeType,
                 &quot;Accept-Ranges: bytes&quot;
                 ));
 
-<span class="fc" id="L731">        return Response.buildLargeFileResponse(</span>
+<span class="fc" id="L733">        return Response.buildLargeFileResponse(</span>
                 headers,
-<span class="fc" id="L733">                filePath.toString(),</span>
+<span class="fc" id="L735">                filePath.toString(),</span>
                 requestHeaders,
                 fileUtils
                 );
@@ -742,45 +744,45 @@ public final class WebFramework {
      * between file suffixes and appropriate mime types
      */
     private void addDefaultValuesForMimeMap() {
-<span class="fc" id="L745">        fileSuffixToMime.put(&quot;css&quot;, &quot;text/css&quot;);</span>
-<span class="fc" id="L746">        fileSuffixToMime.put(&quot;js&quot;, &quot;application/javascript&quot;);</span>
-<span class="fc" id="L747">        fileSuffixToMime.put(&quot;webp&quot;, &quot;image/webp&quot;);</span>
-<span class="fc" id="L748">        fileSuffixToMime.put(&quot;jpg&quot;, &quot;image/jpeg&quot;);</span>
-<span class="fc" id="L749">        fileSuffixToMime.put(&quot;jpeg&quot;, &quot;image/jpeg&quot;);</span>
-<span class="fc" id="L750">        fileSuffixToMime.put(&quot;htm&quot;, &quot;text/html&quot;);</span>
-<span class="fc" id="L751">        fileSuffixToMime.put(&quot;html&quot;, &quot;text/html&quot;);</span>
-<span class="fc" id="L752">        fileSuffixToMime.put(&quot;txt&quot;, &quot;text/plain&quot;);</span>
-<span class="fc" id="L753">    }</span>
+<span class="fc" id="L747">        fileSuffixToMime.put(&quot;css&quot;, &quot;text/css&quot;);</span>
+<span class="fc" id="L748">        fileSuffixToMime.put(&quot;js&quot;, &quot;application/javascript&quot;);</span>
+<span class="fc" id="L749">        fileSuffixToMime.put(&quot;webp&quot;, &quot;image/webp&quot;);</span>
+<span class="fc" id="L750">        fileSuffixToMime.put(&quot;jpg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L751">        fileSuffixToMime.put(&quot;jpeg&quot;, &quot;image/jpeg&quot;);</span>
+<span class="fc" id="L752">        fileSuffixToMime.put(&quot;htm&quot;, &quot;text/html&quot;);</span>
+<span class="fc" id="L753">        fileSuffixToMime.put(&quot;html&quot;, &quot;text/html&quot;);</span>
+<span class="fc" id="L754">        fileSuffixToMime.put(&quot;txt&quot;, &quot;text/plain&quot;);</span>
+<span class="fc" id="L755">    }</span>
 
     /**
      * let's see if we can match the registered paths against a path function
      */
     ThrowingFunction&lt;IRequest, IResponse&gt; findHandlerByPathFunction(RequestLine sl) {
-<span class="fc" id="L759">        var functionList = registeredPathFunctions.get(sl.getMethod());</span>
-<span class="fc bfc" id="L760" title="All 2 branches covered.">        if (functionList == null) {</span>
-<span class="fc" id="L761">            return null;</span>
+<span class="fc" id="L761">        var functionList = registeredPathFunctions.get(sl.getMethod());</span>
+<span class="fc bfc" id="L762" title="All 2 branches covered.">        if (functionList == null) {</span>
+<span class="fc" id="L763">            return null;</span>
         }
-<span class="fc" id="L763">        String requestedPath = sl.getPathDetails().getIsolatedPath();</span>
-<span class="fc" id="L764">        return functionList.stream()</span>
-<span class="fc" id="L765">                .map(function -&gt; function.apply(requestedPath))</span>
-<span class="fc" id="L766">                .filter(Objects::nonNull)</span>
-<span class="fc" id="L767">                .findFirst()</span>
-<span class="fc" id="L768">                .orElse(null);</span>
+<span class="fc" id="L765">        String requestedPath = sl.getPathDetails().getIsolatedPath();</span>
+<span class="fc" id="L766">        return functionList.stream()</span>
+<span class="fc" id="L767">                .map(function -&gt; function.apply(requestedPath))</span>
+<span class="fc" id="L768">                .filter(Objects::nonNull)</span>
+<span class="fc" id="L769">                .findFirst()</span>
+<span class="fc" id="L770">                .orElse(null);</span>
     }
 
     /**
      * This constructor is used for the real production system
      */
     WebFramework(Context context) {
-<span class="fc" id="L775">        this(context, null, null, null);</span>
-<span class="fc" id="L776">    }</span>
+<span class="fc" id="L777">        this(context, null, null, null);</span>
+<span class="fc" id="L778">    }</span>
 
     /**
      * This constructor is mainly used for testing
      */
     WebFramework(Context context, ZonedDateTime overrideForDateTime) {
-<span class="fc" id="L782">        this(context, overrideForDateTime, null, null);</span>
-<span class="fc" id="L783">    }</span>
+<span class="fc" id="L784">        this(context, overrideForDateTime, null, null);</span>
+<span class="fc" id="L785">    }</span>
 
     /**
      * A constructor with slots available for testing
@@ -792,61 +794,61 @@ public final class WebFramework {
      * @param fileUtils when we want to provide an instance for better control during testing. Providing
      *                  null here will cause a FileUtils to be instantiated in the constructor.
      */
-<span class="fc" id="L795">    WebFramework(Context context, ZonedDateTime overrideForDateTime, IFileReader fileReader, IFileUtils fileUtils) {</span>
-<span class="fc" id="L796">        this.fs = context.getFullSystem();</span>
-<span class="fc bfc" id="L797" title="All 2 branches covered.">        this.theBrig = this.fs != null ? this.fs.getTheBrig() : null;</span>
-<span class="fc" id="L798">        this.logger = context.getLogger();</span>
-<span class="fc" id="L799">        this.constants = context.getConstants();</span>
-<span class="fc" id="L800">        this.overrideForDateTime = overrideForDateTime;</span>
-<span class="fc" id="L801">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L802">        this.registeredPathFunctions = new EnumMap&lt;&gt;(RequestLine.Method.class);</span>
-<span class="fc" id="L803">        this.inputStreamUtils = new InputStreamUtils(constants.maxReadLineSizeBytes);</span>
-<span class="fc" id="L804">        this.bodyProcessor = new BodyProcessor(context);</span>
-<span class="fc" id="L805">        this.staticFilesDirectoryPathBase = Path.of(constants.staticFilesDirectory);</span>
+<span class="fc" id="L797">    WebFramework(Context context, ZonedDateTime overrideForDateTime, IFileReader fileReader, IFileUtils fileUtils) {</span>
+<span class="fc" id="L798">        this.fs = context.getFullSystem();</span>
+<span class="fc bfc" id="L799" title="All 2 branches covered.">        this.theBrig = this.fs != null ? this.fs.getTheBrig() : null;</span>
+<span class="fc" id="L800">        this.logger = context.getLogger();</span>
+<span class="fc" id="L801">        this.constants = context.getConstants();</span>
+<span class="fc" id="L802">        this.overrideForDateTime = overrideForDateTime;</span>
+<span class="fc" id="L803">        this.registeredDynamicPaths = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L804">        this.registeredPathFunctions = new EnumMap&lt;&gt;(RequestLine.Method.class);</span>
+<span class="fc" id="L805">        this.inputStreamUtils = new InputStreamUtils(constants.maxReadLineSizeBytes);</span>
+<span class="fc" id="L806">        this.bodyProcessor = new BodyProcessor(context);</span>
+<span class="fc" id="L807">        this.staticFilesDirectoryPathBase = Path.of(constants.staticFilesDirectory);</span>
 
-<span class="fc bfc" id="L807" title="All 2 branches covered.">        if (fileUtils != null) {</span>
-<span class="fc" id="L808">            this.fileUtils = fileUtils;</span>
+<span class="fc bfc" id="L809" title="All 2 branches covered.">        if (fileUtils != null) {</span>
+<span class="fc" id="L810">            this.fileUtils = fileUtils;</span>
         } else {
-<span class="fc" id="L810">            this.fileUtils = new FileUtils(logger, constants);</span>
+<span class="fc" id="L812">            this.fileUtils = new FileUtils(logger, constants);</span>
         }
 
         // This random value is purely to help provide correlation between
         // error messages in the UI and error logs.  There are no security concerns.
-<span class="fc" id="L815">        this.randomErrorCorrelationId = new Random();</span>
-<span class="fc" id="L816">        this.validRequestLine =  new RequestLine(</span>
+<span class="fc" id="L817">        this.randomErrorCorrelationId = new Random();</span>
+<span class="fc" id="L818">        this.validRequestLine =  new RequestLine(</span>
                 RequestLine.Method.NONE,
                 PathDetails.empty,
                 HttpVersion.NONE,
                 &quot;&quot;, logger);
 
         // this allows us to inject a IFileReader for deeper testing
-<span class="fc bfc" id="L823" title="All 2 branches covered.">        if (fileReader != null) {</span>
-<span class="fc" id="L824">            this.fileReader = fileReader;</span>
+<span class="fc bfc" id="L825" title="All 2 branches covered.">        if (fileReader != null) {</span>
+<span class="fc" id="L826">            this.fileReader = fileReader;</span>
         } else {
-<span class="fc" id="L826">            this.fileReader = new FileReader(</span>
-<span class="fc" id="L827">                    LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles),</span>
+<span class="fc" id="L828">            this.fileReader = new FileReader(</span>
+<span class="fc" id="L829">                    LRUCache.getLruCache(constants.maxElementsLruCacheStaticFiles),</span>
                     constants.useCacheForStaticFiles,
                     logger);
         }
-<span class="fc" id="L831">        this.fileSuffixToMime = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L832">        this.fileIsCompressible = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="fc" id="L833">        addDefaultValuesForMimeMap();</span>
-<span class="fc" id="L834">        readExtraMimeMappings(constants.extraMimeMappings);</span>
-<span class="fc" id="L835">    }</span>
+<span class="fc" id="L833">        this.fileSuffixToMime = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L834">        this.fileIsCompressible = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L835">        addDefaultValuesForMimeMap();</span>
+<span class="fc" id="L836">        readExtraMimeMappings(constants.extraMimeMappings);</span>
+<span class="fc" id="L837">    }</span>
 
     void readExtraMimeMappings(List&lt;String&gt; input) {
-<span class="fc bfc" id="L838" title="All 4 branches covered.">        if (input == null || input.isEmpty()) return;</span>
-<span class="fc bfc" id="L839" title="All 2 branches covered.">        if (input.size() % 2 != 0) {</span>
-<span class="fc" id="L840">            throw new WebServerException(&quot;input must be even (key + value = 2 items). Your input: &quot; + input);</span>
+<span class="fc bfc" id="L840" title="All 4 branches covered.">        if (input == null || input.isEmpty()) return;</span>
+<span class="fc bfc" id="L841" title="All 2 branches covered.">        if (input.size() % 2 != 0) {</span>
+<span class="fc" id="L842">            throw new WebServerException(&quot;input must be even (key + value = 2 items). Your input: &quot; + input);</span>
         }
 
-<span class="fc bfc" id="L843" title="All 2 branches covered.">        for (int i = 0; i &lt; input.size(); i += 2) {</span>
-<span class="fc" id="L844">            String fileSuffix = input.get(i);</span>
-<span class="fc" id="L845">            String mime = input.get(i+1);</span>
-<span class="fc" id="L846">            logger.logTrace(() -&gt; &quot;Adding mime mapping: &quot; + fileSuffix + &quot; -&gt; &quot; + mime);</span>
-<span class="fc" id="L847">            fileSuffixToMime.put(fileSuffix, mime);</span>
+<span class="fc bfc" id="L845" title="All 2 branches covered.">        for (int i = 0; i &lt; input.size(); i += 2) {</span>
+<span class="fc" id="L846">            String fileSuffix = input.get(i);</span>
+<span class="fc" id="L847">            String mime = input.get(i+1);</span>
+<span class="fc" id="L848">            logger.logTrace(() -&gt; &quot;Adding mime mapping: &quot; + fileSuffix + &quot; -&gt; &quot; + mime);</span>
+<span class="fc" id="L849">            fileSuffixToMime.put(fileSuffix, mime);</span>
         }
-<span class="fc" id="L849">    }</span>
+<span class="fc" id="L851">    }</span>
 
     /**
      * Add a new handler in the web application for a combination
@@ -858,36 +860,36 @@ public final class WebFramework {
      * @throws WebServerException if duplicate paths are registered, or if the path is prefixed with a slash
      */
     public void registerPath(RequestLine.Method method, String pathName, ThrowingFunction&lt;IRequest, IResponse&gt; webHandler) {
-<span class="fc bfc" id="L861" title="All 4 branches covered.">        if (pathName.startsWith(&quot;\\&quot;) || pathName.startsWith(&quot;/&quot;)) {</span>
-<span class="fc" id="L862">            throw new WebServerException(</span>
-<span class="fc" id="L863">                    String.format(&quot;Path should not be prefixed with a slash.  Corrected version: registerPath(%s, \&quot;%s\&quot;, ... )&quot;, method.name(), pathName.substring(1)));</span>
+<span class="fc bfc" id="L863" title="All 4 branches covered.">        if (pathName.startsWith(&quot;\\&quot;) || pathName.startsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L864">            throw new WebServerException(</span>
+<span class="fc" id="L865">                    String.format(&quot;Path should not be prefixed with a slash.  Corrected version: registerPath(%s, \&quot;%s\&quot;, ... )&quot;, method.name(), pathName.substring(1)));</span>
         }
 
-<span class="fc" id="L866">        var result = registeredDynamicPaths.put(new MethodPath(method, pathName), webHandler);</span>
-<span class="fc bfc" id="L867" title="All 2 branches covered.">        if (result != null) {</span>
-<span class="fc" id="L868">            throw new WebServerException(&quot;Duplicate endpoint registered: &quot; + new MethodPath(method, pathName));</span>
+<span class="fc" id="L868">        var result = registeredDynamicPaths.put(new MethodPath(method, pathName), webHandler);</span>
+<span class="fc bfc" id="L869" title="All 2 branches covered.">        if (result != null) {</span>
+<span class="fc" id="L870">            throw new WebServerException(&quot;Duplicate endpoint registered: &quot; + new MethodPath(method, pathName));</span>
         }
 
-<span class="fc" id="L871">        checkForDuplicatePartialPath(method, pathName);</span>
-<span class="fc" id="L872">    }</span>
+<span class="fc" id="L873">        checkForDuplicatePartialPath(method, pathName);</span>
+<span class="fc" id="L874">    }</span>
 
     /**
      * check if the user had already registered a &quot;partial path&quot; with this pathName, which
      * means it would be duplicate endpoints, and throw an exception if so.
      */
     private void checkForDuplicatePartialPath(RequestLine.Method method, String pathName) {
-<span class="fc" id="L879">        List&lt;Function&lt;String, ThrowingFunction&lt;IRequest, IResponse&gt;&gt;&gt; existingPathFunctions = registeredPathFunctions.get(method);</span>
-<span class="fc bfc" id="L880" title="All 2 branches covered.">        if (existingPathFunctions != null) {</span>
-<span class="fc" id="L881">            if (existingPathFunctions.stream()</span>
-<span class="fc" id="L882">                    .filter(PartialPathFunction.class::isInstance)</span>
-<span class="fc" id="L883">                    .map(PartialPathFunction.class::cast)</span>
-<span class="fc" id="L884">                    .map(function -&gt; function.pathName)</span>
-<span class="fc bfc" id="L885" title="All 2 branches covered.">                    .anyMatch(pathName::equals)</span>
+<span class="fc" id="L881">        List&lt;Function&lt;String, ThrowingFunction&lt;IRequest, IResponse&gt;&gt;&gt; existingPathFunctions = registeredPathFunctions.get(method);</span>
+<span class="fc bfc" id="L882" title="All 2 branches covered.">        if (existingPathFunctions != null) {</span>
+<span class="fc" id="L883">            if (existingPathFunctions.stream()</span>
+<span class="fc" id="L884">                    .filter(PartialPathFunction.class::isInstance)</span>
+<span class="fc" id="L885">                    .map(PartialPathFunction.class::cast)</span>
+<span class="fc" id="L886">                    .map(function -&gt; function.pathName)</span>
+<span class="fc bfc" id="L887" title="All 2 branches covered.">                    .anyMatch(pathName::equals)</span>
             ) {
-<span class="fc" id="L887">                throw new WebServerException(&quot;Duplicate partial-path endpoint registered: &quot; + new MethodPath(method, pathName));</span>
+<span class="fc" id="L889">                throw new WebServerException(&quot;Duplicate partial-path endpoint registered: &quot; + new MethodPath(method, pathName));</span>
             }
         }
-<span class="fc" id="L890">    }</span>
+<span class="fc" id="L892">    }</span>
 
     /**
      * Allows adding complex path function handling.
@@ -931,8 +933,8 @@ public final class WebFramework {
      * }&lt;/pre&gt;
      */
     public void registerPath(RequestLine.Method method, Function&lt;String, ThrowingFunction&lt;IRequest, IResponse&gt;&gt; pathFunction) {
-<span class="fc" id="L934">        registeredPathFunctions.computeIfAbsent(method, k -&gt; new ArrayList&lt;&gt;()).add(pathFunction);</span>
-<span class="fc" id="L935">    }</span>
+<span class="fc" id="L936">        registeredPathFunctions.computeIfAbsent(method, k -&gt; new ArrayList&lt;&gt;()).add(pathFunction);</span>
+<span class="fc" id="L937">    }</span>
 
     /**
      * Similar to {@link WebFramework#registerPath(RequestLine.Method, String, ThrowingFunction)} except that the paths
@@ -948,20 +950,20 @@ public final class WebFramework {
      * @throws WebServerException if duplicate paths are registered, or if the path is prefixed with a slash
      */
     public void registerPartialPath(RequestLine.Method method, String pathName, ThrowingFunction&lt;IRequest, IResponse&gt; webHandler) {
-<span class="fc bfc" id="L951" title="All 4 branches covered.">        if (pathName.startsWith(&quot;\\&quot;) || pathName.startsWith(&quot;/&quot;)) {</span>
-<span class="fc" id="L952">            throw new WebServerException(</span>
-<span class="fc" id="L953">                    String.format(&quot;Path should not be prefixed with a slash.  Corrected version: registerPartialPath(%s, \&quot;%s\&quot;, ... )&quot;, method.name(), pathName.substring(1)));</span>
+<span class="fc bfc" id="L953" title="All 4 branches covered.">        if (pathName.startsWith(&quot;\\&quot;) || pathName.startsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L954">            throw new WebServerException(</span>
+<span class="fc" id="L955">                    String.format(&quot;Path should not be prefixed with a slash.  Corrected version: registerPartialPath(%s, \&quot;%s\&quot;, ... )&quot;, method.name(), pathName.substring(1)));</span>
         }
 
         // if the user had previously registered a normal path with this value, it would
         // conflict and so we will throw an exception.
-<span class="fc bfc" id="L958" title="All 2 branches covered.">        if (registeredDynamicPaths.containsKey(new MethodPath(method, pathName))) {</span>
-<span class="fc" id="L959">            throw new WebServerException(&quot;Duplicate endpoint registered: &quot; + new MethodPath(method, pathName));</span>
+<span class="fc bfc" id="L960" title="All 2 branches covered.">        if (registeredDynamicPaths.containsKey(new MethodPath(method, pathName))) {</span>
+<span class="fc" id="L961">            throw new WebServerException(&quot;Duplicate endpoint registered: &quot; + new MethodPath(method, pathName));</span>
         }
 
-<span class="fc" id="L962">        checkForDuplicatePartialPath(method, pathName);</span>
-<span class="fc" id="L963">        registerPath(method, new PartialPathFunction(pathName, webHandler));</span>
-<span class="fc" id="L964">    }</span>
+<span class="fc" id="L964">        checkForDuplicatePartialPath(method, pathName);</span>
+<span class="fc" id="L965">        registerPath(method, new PartialPathFunction(pathName, webHandler));</span>
+<span class="fc" id="L966">    }</span>
 
     /**
      * Sets a handler to process all requests across the board.
@@ -1017,8 +1019,8 @@ public final class WebFramework {
      * }&lt;/pre&gt;
      */
         public void registerPreHandler(ThrowingFunction&lt;PreHandlerInputs, IResponse&gt; preHandler) {
-<span class="fc" id="L1020">        this.preHandler = preHandler;</span>
-<span class="fc" id="L1021">    }</span>
+<span class="fc" id="L1022">        this.preHandler = preHandler;</span>
+<span class="fc" id="L1023">    }</span>
 
     /**
      * Sets a handler to be executed after running the ordinary handler, just
@@ -1036,28 +1038,25 @@ public final class WebFramework {
      * &lt;p&gt;Here is an example&lt;/p&gt;
      * &lt;pre&gt;{@code
      *
+     *     webFramework.registerLastMinuteHandler(TheRegister::lastMinuteHandlerCode);
      *
-     *      webFramework.registerLastMinuteHandler(TheRegister::lastMinuteHandlerCode);
-     *
-     * ...
+     *     ...
      *
      *     private static IResponse lastMinuteHandlerCode(LastMinuteHandlerInputs inputs) {
-     *         switch (inputs.response().statusCode()) {
+     *         return switch (inputs.response().getStatusCode()) {
      *             case CODE_404_NOT_FOUND -&gt; {
-     *                 return Response.buildResponse(
+     *                 yield Response.buildResponse(
      *                         CODE_404_NOT_FOUND,
      *                         Map.of(&quot;Content-Type&quot;, &quot;text/html; charset=UTF-8&quot;),
-     *                         &quot;&lt;p&gt;No document was found&lt;/p&gt;&quot;));
+     *                         &quot;&lt;p&gt;No document was found&lt;/p&gt;&quot;);
      *             }
      *             case CODE_500_INTERNAL_SERVER_ERROR -&gt; {
-     *                 return Response.buildResponse(
+     *                 yield Response.buildResponse(
      *                         CODE_500_INTERNAL_SERVER_ERROR,
      *                         Map.of(&quot;Content-Type&quot;, &quot;text/html; charset=UTF-8&quot;),
-     *                         &quot;&lt;p&gt;Server error occurred.&lt;/p&gt;&quot; ));
+     *                         &quot;&lt;p&gt;Server error occurred.&lt;/p&gt;&quot; );
      *             }
-     *             default -&gt; {
-     *                 return inputs.response();
-     *             }
+     *             default -&gt; inputs.response();
      *         }
      *     }
      * }
@@ -1066,8 +1065,8 @@ public final class WebFramework {
      *                   we use in the other registration methods for this class.
      */
     public void registerLastMinuteHandler(ThrowingFunction&lt;LastMinuteHandlerInputs, IResponse&gt; lastMinuteHandler) {
-<span class="fc" id="L1069">        this.lastMinuteHandler = lastMinuteHandler;</span>
-<span class="fc" id="L1070">    }</span>
+<span class="fc" id="L1068">        this.lastMinuteHandler = lastMinuteHandler;</span>
+<span class="fc" id="L1069">    }</span>
 
     /**
      * This allows users to add extra mappings
@@ -1085,7 +1084,7 @@ public final class WebFramework {
      * &lt;/pre&gt;
      */
     public void addMimeForSuffix(String suffix, String mimeType) {
-<span class="fc" id="L1088">        fileSuffixToMime.put(suffix, mimeType);</span>
-<span class="fc" id="L1089">    }</span>
+<span class="fc" id="L1087">        fileSuffixToMime.put(suffix, mimeType);</span>
+<span class="fc" id="L1088">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

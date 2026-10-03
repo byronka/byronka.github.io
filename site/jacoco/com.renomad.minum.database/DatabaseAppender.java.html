@@ -14,23 +14,19 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static com.renomad.minum.database.AbstractDb.DATE_TIME_FORMATTER;
 
 /**
  * This class provide the capability of appending database changes
  * to the disk, quickly and efficiently.
  */
 final class DatabaseAppender {
-
-    /**
-     * Results in output like &quot;2025_08_30_13_01_49_123&quot;, which is year_month_day_hour_minute_second_millisecond.
-     * This can be used to parse the file names to {@link java.util.Date} so we can process the oldest
-     * file first.
-     */
-<span class="fc" id="L33">    static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(&quot;yyyy_MM_dd_HH_mm_ss_SSS&quot;);</span>
 
     private final Path persistenceDirectory;
     private final IFileUtils fileUtils;
@@ -83,41 +79,45 @@ final class DatabaseAppender {
      */
     private int appendBytes;
 
-<span class="fc" id="L86">    DatabaseAppender(Path persistenceDirectory, Context context, IFileUtils fileUtils) throws IOException {</span>
-<span class="fc" id="L87">        this.fileUtils = fileUtils;</span>
-<span class="fc" id="L88">        this.persistenceDirectory = persistenceDirectory;</span>
-<span class="fc" id="L89">        this.appendLogDirectory = persistenceDirectory.resolve(&quot;append_logs&quot;);</span>
-<span class="fc" id="L90">        this.executorService = context.getExecutorService();</span>
-<span class="fc" id="L91">        this.logger = context.getLogger();</span>
-<span class="fc" id="L92">        Constants constants = context.getConstants();</span>
-<span class="fc" id="L93">        this.maxAppendCount = constants.maxAppendCount;</span>
-<span class="fc" id="L94">        fileUtils.makeDirectory(this.appendLogDirectory);</span>
-<span class="fc" id="L95">        moveFileLock = new ReentrantLock();</span>
-<span class="fc" id="L96">        createNewAppendFile();</span>
-<span class="fc" id="L97">    }</span>
+<span class="fc" id="L82">    DatabaseAppender(Path persistenceDirectory, Context context, IFileUtils fileUtils) throws IOException {</span>
+<span class="fc" id="L83">        this.fileUtils = fileUtils;</span>
+<span class="fc" id="L84">        this.persistenceDirectory = persistenceDirectory;</span>
+<span class="fc" id="L85">        this.appendLogDirectory = persistenceDirectory.resolve(&quot;append_logs&quot;);</span>
+<span class="fc" id="L86">        this.executorService = context.getExecutorService();</span>
+<span class="fc" id="L87">        this.logger = context.getLogger();</span>
+<span class="fc" id="L88">        Constants constants = context.getConstants();</span>
+<span class="fc" id="L89">        this.maxAppendCount = constants.maxAppendCount;</span>
+<span class="fc" id="L90">        fileUtils.makeDirectory(this.appendLogDirectory);</span>
+<span class="fc" id="L91">        moveFileLock = new ReentrantLock();</span>
+<span class="fc" id="L92">        createNewAppendFile();</span>
+<span class="fc" id="L93">    }</span>
 
     /**
      * Creates a new append-file (a file used for appending data) and
      * resets the append count to zero.
      */
     private void createNewAppendFile() throws IOException {
-<span class="fc" id="L104">        Path currentAppendFile = this.persistenceDirectory.resolve(&quot;currentAppendLog&quot;);</span>
+<span class="fc" id="L100">        Path currentAppendFile = this.persistenceDirectory.resolve(&quot;currentAppendLog&quot;);</span>
 
         // if we are starting up with an existing currentAppendLog, set the appendCount
         // appropriately.  Otherwise, initialize to 0.  The currentAppendLog file is
         // never very large - it's mostly a temporary place to store incoming data
         // until we can store it off elsewhere. For that reason, it's not a performance
         // concern to read all the existing lines, just to get the count of current lines.
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (fileUtils.exists(currentAppendFile)) {</span>
-<span class="fc" id="L112">            List&lt;String&gt; lines = fileUtils.readAllLines(currentAppendFile);</span>
-<span class="fc" id="L113">            appendCount = lines.size();</span>
-<span class="fc" id="L114">        } else {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (fileUtils.exists(currentAppendFile)) {</span>
+<span class="fc" id="L108">            List&lt;String&gt; lines = fileUtils.readAllLines(currentAppendFile);</span>
+<span class="fc" id="L109">            appendCount = lines.size();</span>
+<span class="fc" id="L110">        } else {</span>
             // reset the count to zero, we're starting a new file.
-<span class="fc" id="L116">            logger.logDebug(() -&gt; &quot;Creating a new database append file. Previous file: %,d lines, %.2f megabytes&quot;.formatted(appendCount, ((double) appendBytes / 1_048_576.0)));</span>
-<span class="fc" id="L117">            appendCount = 0;</span>
-<span class="fc" id="L118">            appendBytes = 0;</span>
+<span class="fc" id="L112">            logger.logDebug(() -&gt; &quot;Creating a new database append file. Previous file: %,d lines, %.2f megabytes&quot;.formatted(appendCount, ((double) appendBytes / 1_048_576.0)));</span>
+<span class="fc" id="L113">            appendCount = 0;</span>
+<span class="fc" id="L114">            appendBytes = 0;</span>
         }
 
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (bufferedWriter != null) {</span>
+            // Close the writer to avoid file descriptor leaks
+<span class="fc" id="L119">            bufferedWriter.close();</span>
+        }
 <span class="fc" id="L121">        bufferedWriter = fileUtils.newBufferedWriter(currentAppendFile, StandardCharsets.US_ASCII, StandardOpenOption.CREATE, StandardOpenOption.APPEND);</span>
 <span class="fc" id="L122">    }</span>
 
@@ -204,7 +204,7 @@ final class DatabaseAppender {
      * @return the name of the new file
      */
     static String moveToReadyFolder(IFileUtils fileUtils, Path persistenceDirectory, Path appendLogDirectory) throws IOException {
-<span class="fc" id="L207">        String appendFile = simpleDateFormat.format(new java.util.Date());</span>
+<span class="fc" id="L207">        String appendFile = DATE_TIME_FORMATTER.format(Instant.now().atZone(ZoneId.of(&quot;UTC&quot;)));</span>
 <span class="fc" id="L208">        fileUtils.move(persistenceDirectory.resolve(&quot;currentAppendLog&quot;), appendLogDirectory.resolve(appendFile));</span>
 <span class="fc" id="L209">        return appendFile;</span>
     }

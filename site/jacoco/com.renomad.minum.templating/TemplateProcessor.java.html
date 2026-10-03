@@ -90,7 +90,8 @@ public final class TemplateProcessor {
      * Given a map of key names -&gt; value, render a template.
      */
     public String renderTemplate(Map&lt;String, String&gt; myMap) {
-<span class="fc" id="L93">        return renderTemplate(List.of(myMap), &quot;&quot;);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (myMap == null) throw new TemplateRenderException(&quot;Input to renderTemplate(Map myMap) was null&quot;);</span>
+<span class="fc" id="L94">        return renderTemplate(List.of(myMap), &quot;&quot;);</span>
     }
 
     /**
@@ -99,7 +100,7 @@ public final class TemplateProcessor {
      * for control over the delimiter.
      */
     public String renderTemplate(List&lt;Map&lt;String, String&gt;&gt; data) {
-<span class="fc" id="L102">        return renderTemplate(data, &quot;\n&quot;);</span>
+<span class="fc" id="L103">        return renderTemplate(data, &quot;\n&quot;);</span>
     }
 
     /**
@@ -111,21 +112,28 @@ public final class TemplateProcessor {
      * &lt;/p&gt;
      */
     public String renderTemplate(List&lt;Map&lt;String, String&gt;&gt; data, String delimiter) {
-<span class="fc" id="L114">        correctnessCheck(data);</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (data == null) throw new TemplateRenderException(&quot;Input to renderTemplate(List data) was null&quot;);</span>
+
+        // if we are given no information, return an empty string.
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (data.isEmpty()) {</span>
+<span class="fc" id="L119">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L122">        correctnessCheck(data);</span>
 
         // build an appropriately-sized buffer for output
-<span class="fc" id="L117">        int capacity = estimatedSizeOfSingleTemplate * data.size();</span>
-<span class="fc" id="L118">        StringBuilder stringBuilder = new StringBuilder(capacity);</span>
+<span class="fc" id="L125">        int capacity = estimatedSizeOfSingleTemplate * data.size();</span>
+<span class="fc" id="L126">        StringBuilder stringBuilder = new StringBuilder(capacity);</span>
 
-<span class="fc bfc" id="L120" title="All 2 branches covered.">        for (int i = 0; i &lt; data.size(); i++) {</span>
-<span class="fc bfc" id="L121" title="All 2 branches covered.">            for (TemplateSection templateSection : templateSections) {</span>
-<span class="fc" id="L122">                templateSection.render(data.get(i), stringBuilder);</span>
-<span class="fc" id="L123">            }</span>
-<span class="fc bfc" id="L124" title="All 2 branches covered.">            if (i != data.size() - 1) {</span>
-<span class="fc" id="L125">                stringBuilder.append(delimiter);</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        for (int i = 0; i &lt; data.size(); i++) {</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            for (TemplateSection templateSection : templateSections) {</span>
+<span class="fc" id="L130">                templateSection.render(data.get(i), stringBuilder);</span>
+<span class="fc" id="L131">            }</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            if (i != data.size() - 1) {</span>
+<span class="fc" id="L133">                stringBuilder.append(delimiter);</span>
             }
         }
-<span class="fc" id="L128">        return stringBuilder.toString();</span>
+<span class="fc" id="L136">        return stringBuilder.toString();</span>
     }
 
 
@@ -137,37 +145,37 @@ public final class TemplateProcessor {
     public static TemplateProcessor buildProcessor(String template) {
         // this value holds the entire template after processing, comprised
         // of an ordered list of TemplateSections
-<span class="fc" id="L140">        var tSections = new ArrayList&lt;TemplateSection&gt;();</span>
+<span class="fc" id="L148">        var tSections = new ArrayList&lt;TemplateSection&gt;();</span>
 
         // these values are used for logging and setting proper indentation
-<span class="fc" id="L143">        int rowNumber = 1;</span>
-<span class="fc" id="L144">        int columnNumber = 1;</span>
+<span class="fc" id="L151">        int rowNumber = 1;</span>
+<span class="fc" id="L152">        int columnNumber = 1;</span>
 
         // this value records the indent of the beginning of template keys,
         // so we can properly indent the values later.
-<span class="fc" id="L148">        int startOfKey = 0;</span>
+<span class="fc" id="L156">        int startOfKey = 0;</span>
 
-<span class="fc" id="L150">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc" id="L158">        StringBuilder builder = new StringBuilder();</span>
 
         // this flag is to help us understand whether we are currently reading the
         // name of a template literal.
         // e.g. in the case of hello {{ name }}, &quot;name&quot; is the literal.
-<span class="fc" id="L155">        boolean isInsideTemplateKeyLiteral = false;</span>
-<span class="fc bfc" id="L156" title="All 2 branches covered.">        for (int i = 0; i &lt; template.length(); i++) {</span>
-<span class="fc" id="L157">            char charAtCursor = template.charAt(i);</span>
+<span class="fc" id="L163">        boolean isInsideTemplateKeyLiteral = false;</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        for (int i = 0; i &lt; template.length(); i++) {</span>
+<span class="fc" id="L165">            char charAtCursor = template.charAt(i);</span>
 
-<span class="fc bfc" id="L159" title="All 2 branches covered.">            if (justArrivedInside(template, charAtCursor, i)) {</span>
-<span class="fc" id="L160">                isInsideTemplateKeyLiteral = true;</span>
-<span class="fc" id="L161">                startOfKey = columnNumber;</span>
-<span class="fc" id="L162">                i += 1;</span>
-<span class="fc" id="L163">                builder = processSectionInside(builder, tSections);</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">            } else if (justArrivedOutside(template, charAtCursor, i, isInsideTemplateKeyLiteral)) {</span>
-<span class="fc" id="L165">                isInsideTemplateKeyLiteral = false;</span>
-<span class="fc" id="L166">                i += 1;</span>
-<span class="fc" id="L167">                builder = processSectionOutside(builder, tSections, startOfKey);</span>
-<span class="fc" id="L168">                startOfKey = 0;</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">            if (justArrivedInside(template, charAtCursor, i)) {</span>
+<span class="fc" id="L168">                isInsideTemplateKeyLiteral = true;</span>
+<span class="fc" id="L169">                startOfKey = columnNumber;</span>
+<span class="fc" id="L170">                i += 1;</span>
+<span class="fc" id="L171">                builder = processSectionInside(builder, tSections);</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            } else if (justArrivedOutside(template, charAtCursor, i, isInsideTemplateKeyLiteral)) {</span>
+<span class="fc" id="L173">                isInsideTemplateKeyLiteral = false;</span>
+<span class="fc" id="L174">                i += 1;</span>
+<span class="fc" id="L175">                builder = processSectionOutside(builder, tSections, startOfKey);</span>
+<span class="fc" id="L176">                startOfKey = 0;</span>
             } else {
-<span class="fc" id="L170">                builder.append(charAtCursor);</span>
+<span class="fc" id="L178">                builder.append(charAtCursor);</span>
 
                 /*
                  if we're at the end of the template, it's our last chance to
@@ -175,53 +183,53 @@ public final class TemplateProcessor {
                  at the end, and it's not a closing brace, it's a malformed
                  template.
                  */
-<span class="fc bfc" id="L178" title="All 2 branches covered.">                if (i == template.length() - 1) {</span>
-<span class="fc bfc" id="L179" title="All 2 branches covered.">                    if (isInsideTemplateKeyLiteral) {</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">                if (i == template.length() - 1) {</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">                    if (isInsideTemplateKeyLiteral) {</span>
                         // if we're exiting this string while inside a template literal, then
                         // we're reading a corrupted input, and we should make that clear
                         // to our caller.
-<span class="fc bfc" id="L183" title="All 2 branches covered.">                        String templateSample = template.length() &gt; 10 ? template.substring(0, 10) + &quot;...&quot; : template;</span>
-<span class="fc" id="L184">                        throw new TemplateParseException(</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">                        String templateSample = template.length() &gt; 10 ? template.substring(0, 10) + &quot;...&quot; : template;</span>
+<span class="fc" id="L192">                        throw new TemplateParseException(</span>
                                 &quot;parsing failed for string starting with \&quot;&quot; + templateSample + &quot;\&quot; at line &quot; + rowNumber + &quot; and column &quot; + columnNumber);
                     }
-<span class="fc" id="L187">                    tSections.add(new TemplateSection(null, builder.toString(), 0, TemplateType.STATIC_TEXT));</span>
+<span class="fc" id="L195">                    tSections.add(new TemplateSection(null, builder.toString(), 0, TemplateType.STATIC_TEXT));</span>
                 }
             }
 
-<span class="fc bfc" id="L191" title="All 2 branches covered.">            if (charAtCursor == '\n') {</span>
-<span class="fc" id="L192">                rowNumber += 1;</span>
-<span class="fc" id="L193">                columnNumber = 1;</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (charAtCursor == '\n') {</span>
+<span class="fc" id="L200">                rowNumber += 1;</span>
+<span class="fc" id="L201">                columnNumber = 1;</span>
             } else {
-<span class="fc" id="L195">                columnNumber += 1;</span>
+<span class="fc" id="L203">                columnNumber += 1;</span>
             }
 
         }
 
-<span class="fc" id="L200">        return new TemplateProcessor(tSections, template);</span>
+<span class="fc" id="L208">        return new TemplateProcessor(tSections, template);</span>
     }
 
     /**
      * Returns the raw template string provided at creation.
      */
     public String getOriginalText() {
-<span class="fc" id="L207">        return this.originalText;</span>
+<span class="fc" id="L215">        return this.originalText;</span>
     }
 
     static StringBuilder processSectionInside(StringBuilder builder, List&lt;TemplateSection&gt; tSections) {
-<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (!builder.isEmpty()) {</span>
-<span class="fc" id="L212">            tSections.add(new TemplateSection(null, builder.toString(), 0, TemplateType.STATIC_TEXT));</span>
-<span class="fc" id="L213">            builder = new StringBuilder();</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (!builder.isEmpty()) {</span>
+<span class="fc" id="L220">            tSections.add(new TemplateSection(null, builder.toString(), 0, TemplateType.STATIC_TEXT));</span>
+<span class="fc" id="L221">            builder = new StringBuilder();</span>
         }
-<span class="fc" id="L215">        return builder;</span>
+<span class="fc" id="L223">        return builder;</span>
     }
 
     static StringBuilder processSectionOutside(StringBuilder builder, List&lt;TemplateSection&gt; tSections, int indent) {
-<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (!builder.isEmpty()) {</span>
-<span class="fc" id="L220">            String trimmedKey = builder.toString().trim();</span>
-<span class="fc" id="L221">            tSections.add(new TemplateSection(trimmedKey, null, indent, TemplateType.DYNAMIC_TEXT));</span>
-<span class="fc" id="L222">            builder = new StringBuilder();</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        if (!builder.isEmpty()) {</span>
+<span class="fc" id="L228">            String trimmedKey = builder.toString().trim();</span>
+<span class="fc" id="L229">            tSections.add(new TemplateSection(trimmedKey, null, indent, TemplateType.DYNAMIC_TEXT));</span>
+<span class="fc" id="L230">            builder = new StringBuilder();</span>
         }
-<span class="fc" id="L224">        return builder;</span>
+<span class="fc" id="L232">        return builder;</span>
     }
 
     /**
@@ -234,7 +242,7 @@ public final class TemplateProcessor {
      * &lt;/pre&gt;
      */
     static boolean justArrivedOutside(String template, char charAtCursor, int i, boolean isInsideTemplateKeyLiteral) {
-<span class="fc bfc" id="L237" title="All 8 branches covered.">        return charAtCursor == '}' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '}' &amp;&amp; isInsideTemplateKeyLiteral;</span>
+<span class="fc bfc" id="L245" title="All 8 branches covered.">        return charAtCursor == '}' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '}' &amp;&amp; isInsideTemplateKeyLiteral;</span>
     }
 
     /**
@@ -247,7 +255,7 @@ public final class TemplateProcessor {
      * &lt;/pre&gt;
      */
     static boolean justArrivedInside(String template, char charAtCursor, int i) {
-<span class="fc bfc" id="L250" title="All 6 branches covered.">        return charAtCursor == '{' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '{';</span>
+<span class="fc bfc" id="L258" title="All 6 branches covered.">        return charAtCursor == '{' &amp;&amp; (i + 1) &lt; template.length() &amp;&amp; template.charAt(i + 1) == '{';</span>
     }
 
     /**
@@ -258,41 +266,41 @@ public final class TemplateProcessor {
      *
      */
     private void correctnessCheck(List&lt;Map&lt;String, String&gt;&gt; dataList) {
-<span class="fc" id="L261">        HashSet&lt;String&gt; copyOfKeysInTemplate = new HashSet&lt;&gt;(keysFoundInTemplate);</span>
+<span class="fc" id="L269">        HashSet&lt;String&gt; copyOfKeysInTemplate = new HashSet&lt;&gt;(keysFoundInTemplate);</span>
 
         // check for inconsistencies between maps in the data list
-<span class="fc" id="L264">        Set&lt;String&gt; keysInFirstMap = dataList.getFirst().keySet();</span>
+<span class="fc" id="L272">        Set&lt;String&gt; keysInFirstMap = dataList.getFirst().keySet();</span>
 
-<span class="fc bfc" id="L266" title="All 2 branches covered.">        for (Map&lt;String, String&gt; data : dataList) {</span>
-<span class="fc bfc" id="L267" title="All 2 branches covered.">            if (!data.keySet().equals(keysInFirstMap)) {</span>
-<span class="fc" id="L268">                Set&lt;String&gt; result = differenceBetweenSets(data.keySet(), keysInFirstMap);</span>
-<span class="fc" id="L269">                throw new TemplateRenderException(&quot;In registered data, the maps were inconsistent on these keys: &quot; + result);</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">        for (Map&lt;String, String&gt; data : dataList) {</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">            if (!data.keySet().equals(keysInFirstMap)) {</span>
+<span class="fc" id="L276">                Set&lt;String&gt; result = differenceBetweenSets(data.keySet(), keysInFirstMap);</span>
+<span class="fc" id="L277">                throw new TemplateRenderException(&quot;In registered data, the maps were inconsistent on these keys: &quot; + result);</span>
             }
-<span class="fc" id="L271">        }</span>
+<span class="fc" id="L279">        }</span>
 
         // ensure consistency between the registered data and the template keys
-<span class="fc" id="L274">        HashSet&lt;String&gt; copyOfTemplateKeys = new HashSet&lt;&gt;(copyOfKeysInTemplate);</span>
-<span class="fc" id="L275">        copyOfTemplateKeys.removeAll(keysInFirstMap);</span>
-<span class="fc bfc" id="L276" title="All 2 branches covered.">        if (!copyOfTemplateKeys.isEmpty()) {</span>
-<span class="fc" id="L277">            throw new TemplateRenderException(&quot;These keys in the template were not provided data: &quot; + copyOfTemplateKeys);</span>
+<span class="fc" id="L282">        HashSet&lt;String&gt; copyOfTemplateKeys = new HashSet&lt;&gt;(copyOfKeysInTemplate);</span>
+<span class="fc" id="L283">        copyOfTemplateKeys.removeAll(keysInFirstMap);</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (!copyOfTemplateKeys.isEmpty()) {</span>
+<span class="fc" id="L285">            throw new TemplateRenderException(&quot;These keys in the template were not provided data: &quot; + copyOfTemplateKeys);</span>
         }
 
-<span class="fc" id="L280">        HashSet&lt;String&gt; copyOfDataKeys = new HashSet&lt;&gt;(keysInFirstMap);</span>
-<span class="fc" id="L281">        copyOfDataKeys.removeAll(copyOfKeysInTemplate);</span>
-<span class="fc bfc" id="L282" title="All 2 branches covered.">        if (!copyOfDataKeys.isEmpty()) {</span>
-<span class="fc" id="L283">            throw new TemplateRenderException(&quot;These keys in the data did not match anything in the template: &quot; + copyOfDataKeys);</span>
+<span class="fc" id="L288">        HashSet&lt;String&gt; copyOfDataKeys = new HashSet&lt;&gt;(keysInFirstMap);</span>
+<span class="fc" id="L289">        copyOfDataKeys.removeAll(copyOfKeysInTemplate);</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">        if (!copyOfDataKeys.isEmpty()) {</span>
+<span class="fc" id="L291">            throw new TemplateRenderException(&quot;These keys in the data did not match anything in the template: &quot; + copyOfDataKeys);</span>
         }
-<span class="fc" id="L285">    }</span>
+<span class="fc" id="L293">    }</span>
 
     private static Set&lt;String&gt; differenceBetweenSets(Set&lt;String&gt; set1, Set&lt;String&gt; set2) {
-<span class="fc" id="L288">        Set&lt;String&gt; union = new HashSet&lt;&gt;(set2);</span>
-<span class="fc" id="L289">        union.addAll(set1);</span>
-<span class="fc" id="L290">        Set&lt;String&gt; intersection = new HashSet&lt;&gt;(set2);</span>
-<span class="fc" id="L291">        intersection.retainAll(set1);</span>
+<span class="fc" id="L296">        Set&lt;String&gt; union = new HashSet&lt;&gt;(set2);</span>
+<span class="fc" id="L297">        union.addAll(set1);</span>
+<span class="fc" id="L298">        Set&lt;String&gt; intersection = new HashSet&lt;&gt;(set2);</span>
+<span class="fc" id="L299">        intersection.retainAll(set1);</span>
 
-<span class="fc" id="L293">        Set&lt;String&gt; result = new HashSet&lt;&gt;(union);</span>
-<span class="fc" id="L294">        result.removeAll(intersection);</span>
-<span class="fc" id="L295">        return result;</span>
+<span class="fc" id="L301">        Set&lt;String&gt; result = new HashSet&lt;&gt;(union);</span>
+<span class="fc" id="L302">        result.removeAll(intersection);</span>
+<span class="fc" id="L303">        return result;</span>
     }
 
 }

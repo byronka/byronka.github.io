@@ -123,13 +123,16 @@ public final class ActionQueue implements AbstractActionQueue {
 <span class="fc" id="L123">        logger.logDebug(() -&gt;  String.format(&quot;%s Stopping queue %s&quot;, timestamp, this));</span>
 <span class="fc" id="L124">        stop = true;</span>
 <span class="fc bfc" id="L125" title="All 2 branches covered.">        for (int i = 0; i &lt; count; i++) {</span>
-<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (queue.isEmpty()) return;</span>
-<span class="fc" id="L127">            logger.logDebug(() -&gt;  String.format(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;,timestamp, queue.size()));</span>
-<span class="fc" id="L128">            MyThread.sleep(sleepTime);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (queue.isEmpty()) {</span>
+<span class="fc" id="L127">                isStoppedStatus = true;</span>
+<span class="fc" id="L128">                return;</span>
+            }
+<span class="fc" id="L130">            logger.logDebug(() -&gt;  String.format(&quot;%s Queue not yet empty, has %d elements. waiting...%n&quot;,timestamp, queue.size()));</span>
+<span class="fc" id="L131">            MyThread.sleep(sleepTime);</span>
         }
-<span class="fc" id="L130">        isStoppedStatus = true;</span>
-<span class="fc" id="L131">        logger.logDebug(() -&gt; String.format(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, timestamp, this, queue.size(), queue));</span>
-<span class="fc" id="L132">    }</span>
+<span class="fc" id="L133">        isStoppedStatus = true;</span>
+<span class="fc" id="L134">        logger.logDebug(() -&gt; String.format(&quot;%s Queue %s has %d elements left but we're done waiting.  Queue toString: %s&quot;, timestamp, this, queue.size(), queue));</span>
+<span class="fc" id="L135">    }</span>
 
     /**
      * This will prevent any new actions being
@@ -140,26 +143,26 @@ public final class ActionQueue implements AbstractActionQueue {
      */
     @Override
     public void stop() {
-<span class="fc" id="L143">        stop(5, 20L);</span>
-<span class="fc" id="L144">    }</span>
+<span class="fc" id="L146">        stop(5, 20L);</span>
+<span class="fc" id="L147">    }</span>
 
     @Override
     public String toString() {
-<span class="fc" id="L148">        return this.name;</span>
+<span class="fc" id="L151">        return this.name;</span>
     }
 
     Thread getQueueThread() {
-<span class="fc" id="L152">        return queueThread;</span>
+<span class="fc" id="L155">        return queueThread;</span>
     }
 
     @Override
     public LinkedBlockingQueue&lt;RunnableWithDescription&gt; getQueue() {
-<span class="fc" id="L157">        return new LinkedBlockingQueue&lt;&gt;(queue);</span>
+<span class="fc" id="L160">        return new LinkedBlockingQueue&lt;&gt;(queue);</span>
     }
 
     @Override
     public boolean isStopped() {
-<span class="fc" id="L162">        return isStoppedStatus;</span>
+<span class="fc" id="L165">        return isStoppedStatus;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
