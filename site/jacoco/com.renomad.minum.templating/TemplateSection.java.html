@@ -65,16 +65,16 @@ final class TemplateSection {
 <span class="fc bfc" id="L65" title="All 2 branches covered.">            if (value == null) {</span>
 <span class="fc" id="L66">                throw new TemplateRenderException(&quot;Received null value for key: &quot; + key);</span>
             }
-<span class="fc" id="L68">            List&lt;String&gt; lines = tokenizer(value, '\n', MAXIMUM_LINES_ALLOWED);</span>
+<span class="fc" id="L68">            List&lt;String&gt; lines = tokenizer(value, '\n', MAXIMUM_LINES_ALLOWED, true);</span>
 
             // if, after splitting on newlines, we have more than one line, we'll indent the remaining
             // lines so that they end up at the same column as the first line.
 <span class="fc" id="L72">            stringBuilder.append(lines.getFirst());</span>
 <span class="fc bfc" id="L73" title="All 2 branches covered.">            for (int i = 1; i &lt; lines.size(); i++) {</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">                if (lines.get(i).isEmpty()) {</span>
-<span class="fc" id="L75">                    stringBuilder.append('\n');</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                if (lines.get(i).isBlank()) {</span>
+<span class="fc" id="L75">                    stringBuilder.append(lines.get(i));</span>
                 } else {
-<span class="fc" id="L77">                    stringBuilder.append('\n').append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
+<span class="fc" id="L77">                    stringBuilder.append(&quot; &quot;.repeat(indent - 1)).append(lines.get(i));</span>
                 }
             }
         }

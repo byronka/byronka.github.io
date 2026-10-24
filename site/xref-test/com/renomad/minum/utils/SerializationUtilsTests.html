@@ -76,7 +76,33 @@
 <a class="jxr_linenumber" name="L68" href="#L68">68</a>          assertEquals(ex.getMessage(), <span class="jxr_string">"Asked to split content into too many partitions in the tokenizer.  Current max: 2"</span> );
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>          assertThrows(ForbiddenUseException.<strong class="jxr_keyword">class</strong>, () -&gt; SerializationUtils.tokenizer(<span class="jxr_string">"a|b|%NULL%|%NULL%"</span>, '|', 2));
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>      }
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>  }
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_javadoccomment">     * The normal tokenizer excludes the delimiter that was found.</em>
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_javadoccomment">     * The one we're testing now includes it.</em>
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>      @Test
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTokenizerWithDelimiter() {
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>          List&lt;String&gt; tokens = SerializationUtils.tokenizer(<span class="jxr_string">"a|b|%NULL%|%NULL%"</span>, '|', 100, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>          assertEquals(tokens.size(), 4);
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>          assertEquals(tokens.get(0), <span class="jxr_string">"a|"</span>);
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>          assertEquals(tokens.get(1), <span class="jxr_string">"b|"</span>);
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>          assertEquals(tokens.get(2), <span class="jxr_string">"%NULL%|"</span>);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>          assertEquals(tokens.get(3), <span class="jxr_string">"%NULL%"</span>);
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>      }
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      @Test
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTokenizerWithDelimiter_OverMaxTokenCount() {
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>          <em class="jxr_comment">// first two should run fine...</em>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>          assertEquals(SerializationUtils.tokenizer(<span class="jxr_string">"a"</span>, '|', 2, <strong class="jxr_keyword">true</strong>).size(), 1);
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>          assertEquals(SerializationUtils.tokenizer(<span class="jxr_string">"a|b"</span>, '|', 2, <strong class="jxr_keyword">true</strong>).size(), 2);
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>  
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>          <em class="jxr_comment">// third and further tokens should throw exceptions...</em>
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>          <strong class="jxr_keyword">var</strong> ex = assertThrows(ForbiddenUseException.<strong class="jxr_keyword">class</strong>, () -&gt; SerializationUtils.tokenizer(<span class="jxr_string">"a|b|%NULL%"</span>, '|', 2, <strong class="jxr_keyword">true</strong>));
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>          assertEquals(ex.getMessage(), <span class="jxr_string">"Asked to split content into too many partitions in the tokenizer.  Current max: 2"</span> );
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>          assertThrows(ForbiddenUseException.<strong class="jxr_keyword">class</strong>, () -&gt; SerializationUtils.tokenizer(<span class="jxr_string">"a|b|%NULL%|%NULL%"</span>, '|', 2, <strong class="jxr_keyword">true</strong>));
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>      }
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2026. All rights reserved.</div>
